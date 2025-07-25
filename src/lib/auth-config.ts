@@ -11,6 +11,10 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  pages: {
+    signIn: '/auth/login',
+    newUser: '/auth/verify-code', // Redirect new users to verification
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       console.log('🔐 NextAuth signIn callback triggered');
@@ -26,6 +30,14 @@ export const authOptions: NextAuthOptions = {
 
           if (existingUser) {
             console.log('✅ Found existing user:', existingUser.id);
+            
+            // Check if existing user has verified their email
+            if (!existingUser.emailVerified) {
+              console.log('⚠️ Existing user has not verified email, sending to verification');
+              // Allow sign in but they'll be redirected to verification by the session callback
+              return true;
+            }
+            
             return true;
           } else {
             console.log('🆕 Creating new user for:', user.email);
@@ -36,7 +48,7 @@ export const authOptions: NextAuthOptions = {
                 email: user.email!,
                 name: user.name || '',
                 role: 'STUDENT',
-                emailVerified: null,
+                emailVerified: null, // Key: not verified yet
                 profileCompleted: false,
                 subscriptionPlan: 'FREE',
                 subscriptionStatus: 'ACTIVE',
@@ -57,6 +69,7 @@ export const authOptions: NextAuthOptions = {
               console.error('❌ Failed to send verification email:', error);
             }
             
+            // Allow sign in, but they'll be redirected to verification
             return true;
           }
         } catch (error) {
@@ -66,6 +79,20 @@ export const authOptions: NextAuthOptions = {
       }
 
       return true;
+    },
+
+    async redirect({ url, baseUrl }) {
+      console.log('🔀 Redirect callback - URL:', url, 'Base:', baseUrl);
+      
+      // If URL is the role selection page, that means they came from verification
+      if (url.includes('/auth/role-selection')) {
+        return url;
+      }
+      
+      // For any other case, use the default behavior
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
 
     async jwt({ token, user, trigger, session }) {
@@ -113,22 +140,29 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
+      console.log('📋 Session callback triggered');
+      
       if (token && session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = token.role as string;
-        (session.user as any).emailVerified = token.emailVerified as Date | null;
-        (session.user as any).profileCompleted = token.profileCompleted as boolean;
-        (session.user as any).subscriptionPlan = token.subscriptionPlan as string;
-        (session.user as any).subscriptionStatus = token.subscriptionStatus as string;
-        (session.user as any).stripeCustomerId = token.stripeCustomerId as string | null;
-        (session.user as any).stripeSubscriptionId = token.stripeSubscriptionId as string | null;
+        // Add all user data to session
+        (session.user as any).id = token.id;
+        (session.user as any).role = token.role;
+        (session.user as any).emailVerified = token.emailVerified;
+        (session.user as any).profileCompleted = token.profileCompleted;
+        (session.user as any).subscriptionPlan = token.subscriptionPlan;
+        (session.user as any).subscriptionStatus = token.subscriptionStatus;
+        (session.user as any).stripeCustomerId = token.stripeCustomerId;
+        (session.user as any).stripeSubscriptionId = token.stripeSubscriptionId;
+        
+        console.log('📋 Session updated with user data:', {
+          id: token.id,
+          role: token.role,
+          emailVerified: token.emailVerified,
+          profileCompleted: token.profileCompleted,
+        });
       }
+
       return session;
     },
-  },
-  pages: {
-    signIn: '/auth/login',
-    error: '/auth/login',
   },
   session: {
     strategy: 'jwt',

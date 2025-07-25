@@ -247,7 +247,7 @@ function LoginPageContent() {
     setIsLoading(true);
     try {
       await signIn('google', {
-        callbackUrl: '/auth/role-selection',
+        callbackUrl: '/dashboard', // Let middleware handle proper routing
         role: role,
       });
     } catch (error) {
