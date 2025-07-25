@@ -5,31 +5,59 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Sparkles, ArrowRight, Crown } from 'lucide-react'
+import { useSessionRefresh } from '@/lib/session-utils'
 
 export default function SuccessPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { data: session, update } = useSession()
+  const { refreshSession } = useSessionRefresh()
   const [isLoading, setIsLoading] = useState(true)
   const [planName, setPlanName] = useState('')
 
   const sessionId = searchParams.get('session_id')
 
   useEffect(() => {
-    // Simulate loading and plan detection
-    const timer = setTimeout(() => {
+    // Refresh session immediately on success page load
+    const refreshAndDetectPlan = async () => {
+      console.log('🎉 Success page loaded, refreshing session for updated subscription data...')
+      
+      // Wait a moment for webhook to process
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Refresh session to get latest subscription data
+      await refreshSession()
+      
+      // Wait another moment for the refresh to complete
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       setIsLoading(false)
-      // Try to detect plan from user data or session
+      
+      // Try to detect plan from updated user data
       const userRole = session?.user?.role
-      if (userRole === 'COMPANY') {
+      const subscriptionPlan = (session?.user as any)?.subscriptionPlan
+      
+      console.log('Success page - Updated subscription plan:', subscriptionPlan)
+      
+      if (subscriptionPlan === 'STUDENT_PREMIUM') {
+        setPlanName('Student Premium')
+      } else if (subscriptionPlan === 'STUDENT_PRO') {
+        setPlanName('Student Pro')
+      } else if (subscriptionPlan === 'COMPANY_BASIC') {
+        setPlanName('Company Basic')
+      } else if (subscriptionPlan === 'COMPANY_PRO') {
+        setPlanName('Company Pro')
+      } else if (subscriptionPlan === 'COMPANY_PREMIUM') {
+        setPlanName('Company Premium')
+      } else if (userRole === 'COMPANY') {
         setPlanName('Company Premium')
       } else {
         setPlanName('Student Premium')
       }
-    }, 2000)
+    }
 
-    return () => clearTimeout(timer)
-  }, [session])
+    refreshAndDetectPlan()
+  }, [refreshSession, session])
 
   const handleContinue = () => {
     router.push('/dashboard')

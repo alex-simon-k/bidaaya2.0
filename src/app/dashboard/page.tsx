@@ -24,9 +24,14 @@ import {
 } from 'lucide-react'
 import { UsageStatsCard } from '@/components/upgrade-prompt'
 import { DashboardStatsWidget } from '@/components/dashboard-stats-widget'
+import { useSessionRefresh } from '@/lib/session-utils'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function DashboardPage() {
   const { data: session, status, update } = useSession()
+  const { refreshSession: refreshSessionUtils } = useSessionRefresh()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const userRole = session?.user?.role
   const [showPaywallModal, setShowPaywallModal] = useState(false)
   const [showCompanyPaywallModal, setShowCompanyPaywallModal] = useState(false)
@@ -37,6 +42,7 @@ export default function DashboardPage() {
   if (process.env.NODE_ENV === 'development') {
     console.log('Dashboard - Session status:', status)
     console.log('Dashboard - User role:', userRole)
+    console.log('Dashboard - Subscription plan:', (session?.user as any)?.subscriptionPlan)
   }
 
   // Force session refresh function
@@ -44,6 +50,43 @@ export default function DashboardPage() {
     await update()
     window.location.reload()
   }
+
+  // Manual session refresh for testing
+  const manualRefreshSession = async () => {
+    console.log('🔄 Manual session refresh triggered...')
+    setIsRefreshing(true)
+    
+    try {
+      await refreshSessionUtils()
+      console.log('✅ Manual session refresh completed')
+      alert('Session refreshed! Your subscription data should now be up to date.')
+    } catch (error) {
+      console.error('❌ Manual session refresh failed:', error)
+      alert('Session refresh failed. Please try reloading the page.')
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Check for subscription success and refresh session
+  useEffect(() => {
+    const success = searchParams.get('success')
+    const upgraded = searchParams.get('upgraded')
+    
+    if (success === 'true' || upgraded === 'true') {
+      console.log('🎉 Subscription success detected, refreshing session...')
+      
+      // Wait a moment for webhook to process, then refresh
+      setTimeout(async () => {
+        await refreshSessionUtils()
+        console.log('✅ Session refreshed after subscription success')
+        // Clean up URL parameters
+        router.replace('/dashboard', { scroll: false })
+      }, 2000)
+    }
+  }, [searchParams, refreshSessionUtils, router])
 
   // Downgrade to free function
   const downgradeToFree = async () => {
@@ -652,6 +695,13 @@ export default function DashboardPage() {
           className="bg-yellow-600 text-white px-4 py-2 rounded-md text-sm hover:bg-yellow-700"
         >
           🔄 Refresh Session Data
+        </button>
+        <button
+          onClick={manualRefreshSession}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 ml-2"
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? 'Refreshing...' : '🔄 Manual Refresh'}
         </button>
         <button
           onClick={downgradeToFree}

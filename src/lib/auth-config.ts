@@ -169,18 +169,16 @@ export const authOptions: NextAuthOptions = {
       console.log('🔄 JWT callback - User exists:', !!user);
       console.log('🔄 JWT callback - Token exists:', !!token);
       
-      if (trigger === 'update' && session) {
-        console.log('🔄 JWT callback - Session update triggered');
-        console.log('🔄 JWT callback - Session data:', JSON.stringify(session, null, 2));
-        token = { ...token, ...session };
-        return token;
-      }
-
-      if (user?.email) {
-        console.log('🔄 JWT callback - User email found, fetching from database:', user.email);
+      // Always fetch fresh data on session updates or initial login
+      const shouldRefreshFromDB = trigger === 'update' || user?.email;
+      
+      if (shouldRefreshFromDB && (user?.email || token?.email)) {
+        const email = user?.email || token?.email;
+        console.log('🔄 JWT callback - Fetching fresh data from database for:', email);
+        
         try {
           const dbUser = await prisma.user.findUnique({
-            where: { email: user.email },
+            where: { email: email as string },
           });
 
           if (dbUser) {
@@ -201,13 +199,21 @@ export const authOptions: NextAuthOptions = {
             token.stripeCustomerId = dbUser.stripeCustomerId;
             token.stripeSubscriptionId = dbUser.stripeSubscriptionId;
             
-            console.log('🔄 JWT callback - Token updated with database values');
+            console.log('🔄 JWT callback - Token updated with fresh database values');
+            console.log('🔄 Updated subscription plan:', dbUser.subscriptionPlan);
+            console.log('🔄 Updated subscription status:', dbUser.subscriptionStatus);
           } else {
-            console.log('🔄 JWT callback - No database user found for email:', user.email);
+            console.log('🔄 JWT callback - No database user found for email:', email);
           }
         } catch (error) {
           console.error('❌ JWT callback - Error fetching user:', error);
         }
+      }
+
+      // If session update was triggered but no fresh data needed, merge session data
+      if (trigger === 'update' && session && !shouldRefreshFromDB) {
+        console.log('🔄 JWT callback - Merging session update data');
+        token = { ...token, ...session };
       }
 
       console.log('🔄 JWT callback - Final token (excluding sensitive data):', {
@@ -215,7 +221,9 @@ export const authOptions: NextAuthOptions = {
         email: token.email,
         role: token.role,
         emailVerified: token.emailVerified,
-        profileCompleted: token.profileCompleted
+        profileCompleted: token.profileCompleted,
+        subscriptionPlan: token.subscriptionPlan,
+        subscriptionStatus: token.subscriptionStatus
       });
       return token;
     },

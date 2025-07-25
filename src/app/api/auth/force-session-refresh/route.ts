@@ -1,28 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from "@/lib/auth-config"
+import { getToken } from 'next-auth/jwt'
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  console.log('🔄 ===================== FORCE SESSION REFRESH START =====================');
+  
   try {
-    const session = await getServerSession(authOptions)
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
     
-    if (!session?.user?.email) {
+    if (!token || !token.email) {
+      console.log('❌ Force session refresh - No valid token found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('🔄 Force session refresh requested for:', session.user?.email)
+    console.log('✅ Force session refresh - Valid token found for:', token.email);
+    console.log('🔄 Triggering session refresh for user:', token.id);
 
-    // This endpoint will trigger the JWT callback with 'update' trigger
-    // which will fetch fresh data from the database
-    
+    // Return success - the frontend should call update() from useSession after this
     return NextResponse.json({ 
       success: true, 
-      message: 'Session refresh triggered',
-      instruction: 'Call update() on the frontend to refresh session'
+      message: 'Session refresh trigger ready',
+      userId: token.id,
+      email: token.email
     })
-
   } catch (error) {
-    console.error('Error in force session refresh:', error)
+    console.error('❌ Error in force session refresh:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

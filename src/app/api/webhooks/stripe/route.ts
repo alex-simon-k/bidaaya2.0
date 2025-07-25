@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { PrismaClient } from '@prisma/client'
+import Stripe from 'stripe'
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+})
+
 const prisma = new PrismaClient()
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+// Configure the API route to receive raw body
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   console.log('🔔 ===================== STRIPE WEBHOOK START =====================');
   
   try {
+    // Read the raw body
     const body = await request.text()
     const headersList = headers()
     const sig = headersList.get('stripe-signature')
@@ -18,29 +26,46 @@ export async function POST(request: NextRequest) {
     console.log('🔔 Webhook received:', {
       hasSignature: !!sig,
       hasSecret: !!endpointSecret,
-      bodyLength: body.length
+      bodyLength: body.length,
+      signature: sig ? 'present' : 'missing',
+      contentType: headersList.get('content-type')
     });
 
-    if (!sig || !endpointSecret) {
-      console.error('❌ Missing Stripe signature or webhook secret')
-      console.error('❌ Signature present:', !!sig)
-      console.error('❌ Webhook secret present:', !!endpointSecret)
-      return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+    if (!sig) {
+      console.error('❌ Missing Stripe signature in headers')
+      console.error('❌ Available headers:', Object.fromEntries(headersList.entries()))
+      return NextResponse.json({ 
+        error: 'Webhook signature verification failed: No signatures found matching the expected signature for payload. Are you passing the raw request body you received from Stripe? If a webhook request is being forwarded by a third-party tool, ensure that the exact request body, including JSON formatting and new line style, is preserved. Learn more about webhook signing and explore webhook integration examples for various frameworks at https://github.com/stripe/stripe-node#webhook-signing' 
+      }, { status: 400 })
     }
 
-    let event
+    if (!endpointSecret) {
+      console.error('❌ Missing STRIPE_WEBHOOK_SECRET environment variable')
+      return NextResponse.json({ 
+        error: 'Webhook endpoint secret not configured' 
+      }, { status: 500 })
+    }
+
+    let event: Stripe.Event
 
     try {
       event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
-      console.log('✅ Webhook signature verified successfully')
+      console.log('✅ Webhook signature verified successfully for event:', event.type)
     } catch (err: any) {
       console.error('❌ Webhook signature verification failed:', err.message)
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+      console.error('❌ Error details:', {
+        message: err.message,
+        type: err.type,
+        sigHeader: sig,
+        bodyLength: body.length
+      })
+      return NextResponse.json({ 
+        error: `Webhook signature verification failed: ${err.message}` 
+      }, { status: 400 })
     }
 
     console.log('🔄 Processing Stripe webhook event:', event.type)
     console.log('🔄 Event data preview:', {
-      id: event.data.object.id,
       type: event.type,
       livemode: event.livemode
     });
@@ -49,32 +74,32 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed':
         console.log('💳 Handling checkout.session.completed')
-        await handleCheckoutCompleted(event.data.object)
+        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
         break
       
       case 'customer.subscription.created':
         console.log('📋 Handling customer.subscription.created')
-        await handleSubscriptionCreated(event.data.object)
+        await handleSubscriptionCreated(event.data.object as Stripe.Subscription)
         break
       
       case 'customer.subscription.updated':
         console.log('🔄 Handling customer.subscription.updated')
-        await handleSubscriptionUpdated(event.data.object)
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription)
         break
       
       case 'customer.subscription.deleted':
         console.log('🗑️ Handling customer.subscription.deleted')
-        await handleSubscriptionDeleted(event.data.object)
+        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
         break
       
       case 'invoice.payment_succeeded':
         console.log('✅ Handling invoice.payment_succeeded')
-        await handlePaymentSucceeded(event.data.object)
+        await handlePaymentSucceeded(event.data.object as Stripe.Invoice)
         break
       
       case 'invoice.payment_failed':
         console.log('❌ Handling invoice.payment_failed')
-        await handlePaymentFailed(event.data.object)
+        await handlePaymentFailed(event.data.object as Stripe.Invoice)
         break
       
       default:
@@ -92,7 +117,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleCheckoutCompleted(session: any) {
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log('💳 ===================== CHECKOUT COMPLETED START =====================');
   
   try {
@@ -137,7 +162,7 @@ async function handleCheckoutCompleted(session: any) {
     // Get the subscription details
     if (session.subscription) {
       console.log('📋 Retrieving subscription details from Stripe...')
-      const subscription = await stripe.subscriptions.retrieve(session.subscription, {
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string, {
         expand: ['items.data.price']
       })
       console.log('📋 Retrieved subscription:', {
@@ -216,8 +241,8 @@ async function handleCheckoutCompleted(session: any) {
         data: {
           subscriptionPlan: subscriptionPlan as any, // The plan tier (STUDENT_PREMIUM, COMPANY_BASIC, etc.)
           subscriptionStatus: 'ACTIVE' as any, // Status should be ACTIVE for paid subscriptions
-          stripeCustomerId: session.customer,
-          stripeSubscriptionId: session.subscription,
+          stripeCustomerId: session.customer as string,
+          stripeSubscriptionId: session.subscription as string,
         }
       })
 
@@ -243,7 +268,7 @@ async function handleCheckoutCompleted(session: any) {
   }
 }
 
-async function handleSubscriptionCreated(subscription: any) {
+async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   try {
     console.log('✅ Subscription created:', subscription.id)
 
@@ -255,34 +280,34 @@ async function handleSubscriptionCreated(subscription: any) {
 
     const priceId = subscription.items.data[0]?.price.id
     
-         // Map price ID to plan - Using Environment Variables
-     const planMapping = {
-       // Student plans
-       [process.env.STRIPE_STUDENT_PREMIUM_MONTHLY!]: 'STUDENT_PREMIUM',
-       [process.env.STRIPE_STUDENT_PREMIUM_YEARLY!]: 'STUDENT_PREMIUM',
-       [process.env.STRIPE_STUDENT_PRO_MONTHLY!]: 'STUDENT_PRO',
-       [process.env.STRIPE_STUDENT_PRO_YEARLY!]: 'STUDENT_PRO',
-       
-       // Company plans
-       [process.env.STRIPE_COMPANY_BASIC_MONTHLY!]: 'COMPANY_BASIC',
-       [process.env.STRIPE_COMPANY_BASIC_YEARLY!]: 'COMPANY_BASIC',
-       [process.env.STRIPE_COMPANY_PREMIUM_MONTHLY!]: 'COMPANY_PRO',
-       [process.env.STRIPE_COMPANY_PREMIUM_YEARLY!]: 'COMPANY_PRO',
-       [process.env.STRIPE_COMPANY_PRO_MONTHLY!]: 'COMPANY_PREMIUM',
-       [process.env.STRIPE_COMPANY_PRO_YEARLY!]: 'COMPANY_PREMIUM',
-     }
+    // Map price ID to plan - Using Environment Variables
+    const planMapping = {
+      // Student plans
+      [process.env.STRIPE_STUDENT_PREMIUM_MONTHLY!]: 'STUDENT_PREMIUM',
+      [process.env.STRIPE_STUDENT_PREMIUM_YEARLY!]: 'STUDENT_PREMIUM',
+      [process.env.STRIPE_STUDENT_PRO_MONTHLY!]: 'STUDENT_PRO',
+      [process.env.STUDENT_PRO_YEARLY!]: 'STUDENT_PRO',
+      
+      // Company plans
+      [process.env.STRIPE_COMPANY_BASIC_MONTHLY!]: 'COMPANY_BASIC',
+      [process.env.STRIPE_COMPANY_BASIC_YEARLY!]: 'COMPANY_BASIC',
+      [process.env.STRIPE_COMPANY_PREMIUM_MONTHLY!]: 'COMPANY_PRO',
+      [process.env.STRIPE_COMPANY_PREMIUM_YEARLY!]: 'COMPANY_PRO',
+      [process.env.STRIPE_COMPANY_PRO_MONTHLY!]: 'COMPANY_PREMIUM',
+      [process.env.STRIPE_COMPANY_PRO_YEARLY!]: 'COMPANY_PREMIUM',
+    }
 
     const subscriptionPlan = planMapping[priceId as keyof typeof planMapping]
 
     if (subscriptionPlan) {
-             await prisma.user.update({
-         where: { id: userId },
-         data: {
-           subscriptionPlan: subscriptionPlan as any,
-           subscriptionStatus: 'ACTIVE' as any,
-           stripeSubscriptionId: subscription.id,
-         }
-       })
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          subscriptionPlan: subscriptionPlan as any,
+          subscriptionStatus: 'ACTIVE' as any,
+          stripeSubscriptionId: subscription.id,
+        }
+      })
 
       console.log(`✅ Activated subscription for user ${userId}: ${subscriptionPlan}`)
     }
@@ -292,7 +317,7 @@ async function handleSubscriptionCreated(subscription: any) {
   }
 }
 
-async function handleSubscriptionUpdated(subscription: any) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
     console.log('🔄 Subscription updated:', subscription.id)
 
@@ -359,7 +384,7 @@ async function handleSubscriptionUpdated(subscription: any) {
   }
 }
 
-async function handleSubscriptionDeleted(subscription: any) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   try {
     console.log('❌ Subscription deleted:', subscription.id)
 
@@ -392,14 +417,14 @@ async function handleSubscriptionDeleted(subscription: any) {
   }
 }
 
-async function handlePaymentSucceeded(invoice: any) {
+async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
     console.log('✅ Payment succeeded for invoice:', invoice.id)
 
     if (invoice.subscription) {
       // Find user by subscription ID
       const user = await prisma.user.findFirst({
-        where: { stripeSubscriptionId: invoice.subscription }
+        where: { stripeSubscriptionId: invoice.subscription as string }
       })
 
       if (user) {
@@ -419,14 +444,14 @@ async function handlePaymentSucceeded(invoice: any) {
   }
 }
 
-async function handlePaymentFailed(invoice: any) {
+async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
     console.log('❌ Payment failed for invoice:', invoice.id)
 
     if (invoice.subscription) {
       // Find user by subscription ID
       const user = await prisma.user.findFirst({
-        where: { stripeSubscriptionId: invoice.subscription }
+        where: { stripeSubscriptionId: invoice.subscription as string }
       })
 
       if (user) {
