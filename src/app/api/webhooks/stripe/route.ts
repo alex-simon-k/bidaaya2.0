@@ -8,13 +8,23 @@ const prisma = new PrismaClient()
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 export async function POST(request: NextRequest) {
+  console.log('🔔 ===================== STRIPE WEBHOOK START =====================');
+  
   try {
     const body = await request.text()
     const headersList = headers()
     const sig = headersList.get('stripe-signature')
 
+    console.log('🔔 Webhook received:', {
+      hasSignature: !!sig,
+      hasSecret: !!endpointSecret,
+      bodyLength: body.length
+    });
+
     if (!sig || !endpointSecret) {
       console.error('❌ Missing Stripe signature or webhook secret')
+      console.error('❌ Signature present:', !!sig)
+      console.error('❌ Webhook secret present:', !!endpointSecret)
       return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
     }
 
@@ -22,36 +32,48 @@ export async function POST(request: NextRequest) {
 
     try {
       event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
+      console.log('✅ Webhook signature verified successfully')
     } catch (err: any) {
       console.error('❌ Webhook signature verification failed:', err.message)
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
     console.log('🔄 Processing Stripe webhook event:', event.type)
+    console.log('🔄 Event data preview:', {
+      id: event.data.object.id,
+      type: event.type,
+      livemode: event.livemode
+    });
 
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed':
+        console.log('💳 Handling checkout.session.completed')
         await handleCheckoutCompleted(event.data.object)
         break
       
       case 'customer.subscription.created':
+        console.log('📋 Handling customer.subscription.created')
         await handleSubscriptionCreated(event.data.object)
         break
       
       case 'customer.subscription.updated':
+        console.log('🔄 Handling customer.subscription.updated')
         await handleSubscriptionUpdated(event.data.object)
         break
       
       case 'customer.subscription.deleted':
+        console.log('🗑️ Handling customer.subscription.deleted')
         await handleSubscriptionDeleted(event.data.object)
         break
       
       case 'invoice.payment_succeeded':
+        console.log('✅ Handling invoice.payment_succeeded')
         await handlePaymentSucceeded(event.data.object)
         break
       
       case 'invoice.payment_failed':
+        console.log('❌ Handling invoice.payment_failed')
         await handlePaymentFailed(event.data.object)
         break
       
@@ -59,41 +81,80 @@ export async function POST(request: NextRequest) {
         console.log(`🔔 Unhandled event type: ${event.type}`)
     }
 
+    console.log('🔔 ===================== STRIPE WEBHOOK SUCCESS =====================');
     return NextResponse.json({ received: true })
 
   } catch (error) {
     console.error('❌ Webhook error:', error)
+    console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.log('🔔 ===================== STRIPE WEBHOOK ERROR =====================');
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }
 
 async function handleCheckoutCompleted(session: any) {
+  console.log('💳 ===================== CHECKOUT COMPLETED START =====================');
+  
   try {
     console.log('✅ Checkout completed for session:', session.id)
     console.log('📊 Session metadata:', session.metadata)
     console.log('📊 Session client_reference_id:', session.client_reference_id)
+    console.log('📊 Session customer:', session.customer)
+    console.log('📊 Session subscription:', session.subscription)
+    console.log('📊 Session mode:', session.mode)
+    console.log('📊 Session payment_status:', session.payment_status)
 
     const userId = session.client_reference_id || session.metadata?.userId
     const planId = session.metadata?.planId
 
+    console.log('🔍 Extracted data:', { userId, planId })
+
     if (!userId) {
       console.error('❌ No user ID found in checkout session')
+      console.error('❌ Available identifiers:', {
+        client_reference_id: session.client_reference_id,
+        metadata_userId: session.metadata?.userId,
+        metadata: session.metadata
+      })
       return
     }
 
     console.log(`🔄 Processing checkout for user ${userId}, planId: ${planId}`)
 
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, subscriptionPlan: true, subscriptionStatus: true }
+    });
+
+    if (!existingUser) {
+      console.error(`❌ User ${userId} not found in database`)
+      return
+    }
+
+    console.log('👤 Found user:', existingUser)
+
     // Get the subscription details
     if (session.subscription) {
-      const subscription = await stripe.subscriptions.retrieve(session.subscription)
-      const priceId = subscription.items.data[0]?.price.id
+      console.log('📋 Retrieving subscription details from Stripe...')
+      const subscription = await stripe.subscriptions.retrieve(session.subscription, {
+        expand: ['items.data.price']
+      })
+      console.log('📋 Retrieved subscription:', {
+        id: subscription.id,
+        status: subscription.status,
+        current_period_start: subscription.current_period_start,
+        current_period_end: subscription.current_period_end
+      })
 
+      const priceId = subscription.items.data[0]?.price.id
       console.log(`💰 Subscription price ID: ${priceId}`)
 
       // PRIORITY 1: Use planId from metadata (most reliable)
       let subscriptionPlan = null
       
       if (planId) {
+        console.log(`🎯 Mapping planId: ${planId}`)
         // Map planId to subscription plan format
         const planIdMapping = {
           // Student plans
@@ -117,20 +178,21 @@ async function handleCheckoutCompleted(session: any) {
 
       // FALLBACK: Try to map using price ID (for legacy prices)
       if (!subscriptionPlan && priceId) {
+        console.log(`🔄 Fallback: Mapping priceId: ${priceId}`)
         const legacyPriceMapping = {
-          // Student plans (original price IDs)
-          'price_1RoSRXRoQRapPhxpPpjy7RJQ': 'STUDENT_PREMIUM', // Student Premium Monthly
-          'price_1RoSPLnoQRapPhxpyJZJM9K': 'STUDENT_PREMIUM', // Student Premium Yearly
-          'price_1RoSBRoQRapPhxpXXaZSwJ6': 'STUDENT_PRO', // Student Pro Monthly
-          'price_1RoSMwRoQRapPhxpmUpAZUza': 'STUDENT_PRO', // Student Pro Yearly
+          // Student plans (current price IDs from .env)
+          'price_1Rf2hTRoORqpPhxpGi4zduqM': 'STUDENT_PREMIUM', // Student Premium Monthly
+          'price_1Rf2hTRoORqpPhxpIeLvOIYB': 'STUDENT_PREMIUM', // Student Premium Yearly
+          'price_1Rf2jHRoORqpPhxpzUMN5sNM': 'STUDENT_PRO', // Student Pro Monthly
+          'price_1Rf2jrRoORqpPhxpMOVmksOY': 'STUDENT_PRO', // Student Pro Yearly
           
-          // Company plans (original price IDs)
-          'price_1RoSM6RoQRapPhxpqlfJZrqY': 'COMPANY_BASIC', // Company Basic Monthly
-          'price_1Rf2jRoQRapPhxpzUMN6sNM': 'COMPANY_BASIC', // Company Basic Yearly
-          'price_1RoSM6RoQRapPhxproAl4FEc': 'COMPANY_PRO', // HR Booster Monthly
-          'price_1Rf2nTRoQRapPhxpIsLvOlYB': 'COMPANY_PRO', // HR Booster Yearly
-          'price_1Rf2jRoQRapPhxpMOWnksOY': 'COMPANY_PREMIUM', // HR Agent Monthly
-          'price_1Rf2nTRoQRapPhxpGl4zzduqM': 'COMPANY_PREMIUM', // HR Agent Yearly
+          // Company plans (current price IDs from .env)
+          'price_1RoSM6RoORqpPhxproAI4FEc': 'COMPANY_BASIC', // Company Basic Monthly
+          'price_1RoSM6RoORqpPhxpqIfJ2rqY': 'COMPANY_BASIC', // Company Basic Yearly
+          'price_1RoSMwRoORqpPhxpmUpAZUza': 'COMPANY_PRO', // Company Premium Monthly
+          'price_1RoSPLRoORqpPhxpyJZJM9iK': 'COMPANY_PRO', // Company Premium Yearly
+          'price_1RoSRBRoORqpPhxpXXaZSwJ8': 'COMPANY_PREMIUM', // Company Pro Monthly
+          'price_1RoSRXRoORqpPhxpPpjy7RJQ': 'COMPANY_PREMIUM', // Company Pro Yearly
         }
         
         subscriptionPlan = legacyPriceMapping[priceId as keyof typeof legacyPriceMapping]
@@ -139,10 +201,16 @@ async function handleCheckoutCompleted(session: any) {
 
       if (!subscriptionPlan) {
         console.error(`❌ Could not determine subscription plan for planId: ${planId}, priceId: ${priceId}`)
+        console.error(`❌ Available mappings:`)
+        console.error(`❌ PlanId provided: ${planId}`)
+        console.error(`❌ PriceId from Stripe: ${priceId}`)
         return
       }
 
+      console.log(`🎯 Final subscription plan determined: ${subscriptionPlan}`)
+
       // Update user subscription in database - BOTH FIELDS
+      console.log(`💾 Updating user ${userId} in database...`)
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
@@ -153,21 +221,25 @@ async function handleCheckoutCompleted(session: any) {
         }
       })
 
-      console.log(`🎉 SUCCESS: Updated BOTH subscription fields for user ${userId}`)
-      console.log(`📊 User subscription details:`, {
-        id: updatedUser.id,
+      console.log('✅ Successfully updated user subscription:', {
+        userId: updatedUser.id,
         email: updatedUser.email,
-        subscriptionPlan: updatedUser.subscriptionPlan, // Plan tier
-        subscriptionStatus: updatedUser.subscriptionStatus, // Status (should be ACTIVE)
+        newPlan: updatedUser.subscriptionPlan,
+        newStatus: updatedUser.subscriptionStatus,
+        stripeCustomerId: updatedUser.stripeCustomerId,
         stripeSubscriptionId: updatedUser.stripeSubscriptionId
       })
 
+      console.log('💳 ===================== CHECKOUT COMPLETED SUCCESS =====================');
     } else {
-      console.log('⚠️ No subscription found in checkout session - this might be a one-time payment')
+      console.log('⚠️ No subscription found in checkout session - might be a one-time payment')
     }
 
   } catch (error) {
-    console.error('❌ Error handling checkout completed:', error)
+    console.error('❌ Error in handleCheckoutCompleted:', error)
+    console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.log('💳 ===================== CHECKOUT COMPLETED ERROR =====================');
   }
 }
 
