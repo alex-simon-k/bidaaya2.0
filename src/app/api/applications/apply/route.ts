@@ -182,6 +182,7 @@ export async function POST(request: NextRequest) {
     const updatedUser = await prisma.user.findUnique({
       where: { id: session.user?.id },
       select: {
+        id: true,
         applicationsThisMonth: true,
         subscriptionPlan: true,
         lastMonthlyReset: true,
