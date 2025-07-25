@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
@@ -217,7 +217,7 @@ const BidaayaMap = () => {
   );
 };
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams();
   const [isStudentHovered, setIsStudentHovered] = useState(false);
   const [isCompanyHovered, setIsCompanyHovered] = useState(false);
@@ -516,5 +516,13 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 } 

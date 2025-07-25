@@ -33,20 +33,14 @@ export default function DashboardPage() {
   const [showOnboardingChecklist, setShowOnboardingChecklist] = useState(false)
   const [showMembershipPopup, setShowMembershipPopup] = useState(false)
 
-  // Debug logging
-  console.log('Dashboard - Session status:', status)
-  console.log('Dashboard - Session data:', session)
-  console.log('Dashboard - User role:', userRole)
-
-  // Add session debugging
-  console.log('🔍 Dashboard - Full session data:', session)
-  console.log('🔍 Dashboard - User data:', session?.user)
-  console.log('🔍 Dashboard - Subscription plan:', (session?.user as any)?.subscriptionPlan)
-  console.log('🔍 Dashboard - Subscription status:', (session?.user as any)?.subscriptionStatus)
+  // Only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Dashboard - Session status:', status)
+    console.log('Dashboard - User role:', userRole)
+  }
 
   // Force session refresh function
   const refreshSession = async () => {
-    console.log('🔄 Forcing session refresh...')
     await update()
     window.location.reload()
   }

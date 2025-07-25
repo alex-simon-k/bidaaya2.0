@@ -196,8 +196,8 @@ async function getExistingShortlist(projectId: string, company: any): Promise<Sh
         ranking: index + 1,
         user: await applyTierFiltering(app.user, visibilityLevel),
         application: {
-          coverLetter: visibilityLevel !== 'shortlisted_only' ? app.coverLetter : undefined,
-          motivation: visibilityLevel !== 'shortlisted_only' ? app.motivation : undefined,
+          coverLetter: visibilityLevel !== 'shortlisted_only' ? app.coverLetter || undefined : undefined,
+          motivation: visibilityLevel !== 'shortlisted_only' ? app.motivation || undefined : undefined,
           createdAt: app.createdAt,
         }
       }

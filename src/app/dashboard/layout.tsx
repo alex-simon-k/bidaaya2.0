@@ -16,14 +16,10 @@ export default function DashboardLayout({
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [hasCheckedRouting, setHasCheckedRouting] = useState(false)
 
-  console.log('🏠 DashboardLayout - Component loaded!');
-  console.log('🏠 DashboardLayout - Status:', status);
-  console.log('🏠 DashboardLayout - Session exists:', !!session);
-  console.log('🏠 DashboardLayout - hasCheckedRouting:', hasCheckedRouting);
-
-  // Debug logging
-  console.log('DashboardLayout - Session status:', status)
-  console.log('DashboardLayout - Session data:', session)
+  // Only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('DashboardLayout - Session status:', status)
+  }
 
   // Handle authentication and routing in useEffect
   useEffect(() => {
