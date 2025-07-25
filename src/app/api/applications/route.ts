@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { PrismaClient } from '@prisma/client'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from "@/lib/auth-config"'
 import { canUserApply } from '@/lib/subscription'
 
 const prisma = new PrismaClient()
