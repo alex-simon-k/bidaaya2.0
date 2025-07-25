@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                     String                 @id @default(cuid())
+  name                   String?
+  email                  String                 @unique
+  emailVerified          DateTime?
+  image                  String?
+  role                   UserRole               @default(STUDENT)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  university             String?
+  major                  String?
+  graduationYear         Int?
+  skills                 String[]
+  companyName            String?
+  companySize            String?
+  industry               String?
+  bio                    String?
+  goal                   String[]
+  location               String?
+  mena                   Boolean?
+  subjects               String?
+  terms                  Boolean?
+  whatsapp               String?
+  applicationsThisMonth  Int                    @default(0)
+  applicationsThisWeek   Int                    @default(0)
+  calendlyLink           String?
+  companyGoals           String[]
+  companyOneLiner        String?
+  companyRole            String?
+  companyWebsite         String?
+  contactEmail           String?
+  contactPersonName      String?
+  contactPersonType      String?
+  contactWhatsapp        String?
+  dateOfBirth            DateTime?
+  documentsAllowed       Int                    @default(1)
+  education              String?
+  highSchool             String?
+  interests              String[]
+  lastApplicationReset   DateTime               @default(now())
+  lastMonthlyReset       DateTime               @default(now())
+  linkedin               String?
+  profileCompleted       Boolean                @default(false)
+  stripeCurrentPeriodEnd DateTime?
+  stripeCustomerId       String?                @unique
+  stripePriceId          String?
+  stripeSubscriptionId   String?                @unique
+  subscriptionPlan       SubscriptionPlan       @default(FREE)
+  subscriptionStatus     SubscriptionStatus     @default(ACTIVE)
+  accounts               Account[]
+  applications           Application[]
+  applicationAnalytics   ApplicationAnalytics[]
+  externalApplications   ExternalApplication[]
+  payments               Payment[]
+  projects               Project[]
+  sessions               Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Project {
+  id                  String           @id @default(cuid())
+  title               String
+  description         String
+  companyId           String
+  status              ProjectStatus    @default(PENDING_APPROVAL)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  adminFeedback       String?
+  applicationDeadline DateTime?
+  approvedAt          DateTime?
+  approvedBy          String?
+  category            ProjectCategory?
+  compensation        String?
+  currentApplications Int?             @default(0)
+  deliverables        String[]         @default([])
+  department          String?
+  duration            String?
+  durationMonths      Int?             @default(3)
+  experienceLevel     String?          @default("High School")
+  featured            Boolean          @default(false)
+  isPremium           Boolean          @default(false)
+  learningOutcomes    String[]         @default([])
+  location            String?
+  maxApplications     Int?             @default(100)
+  projectType         String?
+  remote              Boolean          @default(false)
+  requirements        String[]         @default([])
+  skillsRequired      String[]         @default([])
+  subcategory         String?
+  teamSize            Int?             @default(1)
+  timeCommitment      String?          @default("Part-time")
+  applications        Application[]
+  company             User             @relation(fields: [companyId], references: [id])
+}
+
+model Application {
+  id                 String            @id @default(cuid())
+  projectId          String
+  status             ApplicationStatus @default(PENDING)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  additionalDocument String?
+  adminNotes         String?
+  compatibilityScore Float?
+  coverLetter        String?
+  feedback           String?
+  motivation         String?
+  userId             String
+  project            Project           @relation(fields: [projectId], references: [id])
+  user               User              @relation(fields: [userId], references: [id])
+
+  @@unique([projectId, userId])
+}
+
+model ExternalApplication {
+  id            String                    @id @default(cuid())
+  userId        String
+  company       String
+  jobTitle      String
+  jobUrl        String?
+  location      String?
+  salary        String?
+  status        ExternalApplicationStatus @default(APPLIED)
+  appliedDate   DateTime
+  followUpDate  DateTime?
+  notes         String?
+  source        String?
+  contactPerson String?
+  contactEmail  String?
+  interviewDate DateTime?
+  responseDate  DateTime?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  user          User                      @relation(fields: [userId], references: [id])
+
+  @@index([userId, appliedDate])
+}
+
+model ApplicationAnalytics {
+  id                   String   @id @default(cuid())
+  userId               String
+  date                 DateTime
+  bidaayaApplications  Int      @default(0)
+  externalApplications Int      @default(0)
+  interviewsScheduled  Int      @default(0)
+  responseRate         Float?
+  averageResponseTime  Int?
+  acceptanceRate       Float?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @default(now())
+  user                 User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  userId          String
+  stripePaymentId String        @unique
+  amount          Int
+  currency        String        @default("usd")
+  status          PaymentStatus
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id])
+}
+
+enum ProjectCategory {
+  MARKETING
+  BUSINESS_DEVELOPMENT
+  COMPUTER_SCIENCE
+  FINANCE
+  PSYCHOLOGY
+}
+
+enum UserRole {
+  STUDENT
+  COMPANY
+  ADMIN
+}
+
+enum ProjectStatus {
+  DRAFT
+  PENDING_APPROVAL
+  LIVE
+  CLOSED
+  REJECTED
+}
+
+enum ApplicationStatus {
+  PENDING
+  SHORTLISTED
+  INTERVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  UNPAID
+}
+
+enum SubscriptionPlan {
+  FREE
+  STUDENT_PREMIUM
+  STUDENT_PRO
+  COMPANY_BASIC
+  COMPANY_PREMIUM
+  COMPANY_PRO
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum ExternalApplicationStatus {
+  APPLIED
+  UNDER_REVIEW
+  PHONE_SCREEN
+  INTERVIEW_SCHEDULED
+  INTERVIEWED
+  FINAL_ROUND
+  OFFER_RECEIVED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  NO_RESPONSE
+}
