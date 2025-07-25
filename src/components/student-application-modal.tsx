@@ -189,7 +189,7 @@ export function StudentApplicationModal({
 
   if (!isOpen || !project) return null
 
-  const userTier = session?.user?.subscriptionPlan || 'FREE'
+  const userTier = (session?.user as any)?.subscriptionPlan || 'FREE'
   const isPremium = userTier !== 'FREE'
 
   return (
