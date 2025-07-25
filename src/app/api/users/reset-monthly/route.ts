@@ -10,7 +10,7 @@ export async function POST() {
     const session = await getServerSession(authOptions)
 
     // Only admins can reset monthly counts
-    if (!session || !session.user || session.user.role?.toUpperCase() !== 'ADMIN') {
+    if (!session || !session.user || session.user?.role?.toUpperCase() !== 'ADMIN') {
       return new NextResponse('Unauthorized - Admin access required', { status: 401 })
     }
 
@@ -49,7 +49,7 @@ export async function GET() {
     const session = await getServerSession(authOptions)
 
     // Only admins can view reset stats
-    if (!session || !session.user || session.user.role?.toUpperCase() !== 'ADMIN') {
+    if (!session || !session.user || session.user?.role?.toUpperCase() !== 'ADMIN') {
       return new NextResponse('Unauthorized - Admin access required', { status: 401 })
     }
 

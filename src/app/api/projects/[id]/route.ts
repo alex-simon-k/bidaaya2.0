@@ -42,7 +42,7 @@ export async function GET(
     // Everyone can view projects, but with different data access
     let applications: any[] = []
     
-    if (session.user.role === 'ADMIN') {
+    if (session.user?.role === 'ADMIN') {
       // Admin sees everything - get applications and user data separately
       const apps = await prisma.application.findMany({
         where: { projectId: projectId },
@@ -64,7 +64,7 @@ export async function GET(
         applications.push({ ...app, user })
       }
       
-    } else if (session.user.role === 'COMPANY' && project.companyId === session.user.id) {
+    } else if (session.user?.role === 'COMPANY' && project.companyId === session.user?.id) {
       // Company sees their own project's applications
       const apps = await prisma.application.findMany({
         where: { projectId: projectId },
@@ -86,12 +86,12 @@ export async function GET(
         applications.push({ ...app, user })
       }
       
-    } else if (session.user.role === 'STUDENT') {
+    } else if (session.user?.role === 'STUDENT') {
       // Students can see their own application only
       const userApplication = await prisma.application.findFirst({
         where: { 
           projectId: projectId,
-          userId: session.user.id, // ✅ Fixed: userId instead of studentId
+          userId: session.user?.id, // ✅ Fixed: userId instead of studentId
         },
       })
       
@@ -111,8 +111,8 @@ export async function GET(
     return NextResponse.json({ 
       ...project, 
       applications,
-      canApply: session.user.role === 'STUDENT' && project.status === 'LIVE',
-      userRole: session.user.role
+      canApply: session.user?.role === 'STUDENT' && project.status === 'LIVE',
+      userRole: session.user?.role
     })
 
   } catch (error) {
@@ -131,7 +131,7 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user || session.user.role !== 'COMPANY') {
+    if (!session?.user || session.user?.role !== 'COMPANY') {
       return new NextResponse('Unauthorized - Companies only', { status: 401 })
     }
 
@@ -142,7 +142,7 @@ export async function PATCH(
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
-        companyId: session.user.id,
+        companyId: session.user?.id,
       },
     })
 
@@ -196,7 +196,7 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user || session.user.role !== 'COMPANY') {
+    if (!session?.user || session.user?.role !== 'COMPANY') {
       return new NextResponse('Unauthorized - Companies only', { status: 401 })
     }
 
@@ -206,7 +206,7 @@ export async function DELETE(
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
-        companyId: session.user.id,
+        companyId: session.user?.id,
         status: 'DRAFT', // Only allow deleting draft projects
       },
     })

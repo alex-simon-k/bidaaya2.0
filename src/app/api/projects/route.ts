@@ -49,12 +49,12 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user.role !== 'COMPANY') {
+    if (!session || !session.user || session.user?.role !== 'COMPANY') {
       console.log('❌ Session check failed:', { session: !!session, user: !!session?.user, role: session?.user?.role })
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    console.log('✅ User authenticated:', { id: session.user.id, role: session.user.role, email: session.user.email })
+    console.log('✅ User authenticated:', { id: session.user?.id, role: session.user?.role, email: session.user?.email })
 
     const body = await request.json()
     const { 
@@ -82,11 +82,11 @@ export async function POST(request: Request) {
 
     // Check if the user exists in the database
     const existingUser = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: session.user?.id }
     })
     
     if (!existingUser) {
-      console.log('❌ User not found in database:', session.user.id)
+      console.log('❌ User not found in database:', session.user?.id)
       return NextResponse.json(
         { 
           error: 'Session expired or user not found', 
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     // Check company project creation limits (drafts + active)
     const allProjectsCount = await prisma.project.count({
       where: {
-        companyId: session.user.id
+        companyId: session.user?.id
       }
     })
 
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       data: {
         title,
         description,
-        companyId: session.user.id,
+        companyId: session.user?.id,
         status: 'DRAFT', // Always start as draft
         compensation: compensation || null,
         location: location || null,

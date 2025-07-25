@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user?.email },
       select: { 
         id: true,
         stripeCustomerId: true, 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    console.log(`🔧 Subscription management - Action: ${action}, User: ${session.user.email}`)
+    console.log(`🔧 Subscription management - Action: ${action}, User: ${session.user?.email}`)
     console.log(`🔧 Current plan: ${user.subscriptionPlan}, Stripe customer: ${user.stripeCustomerId || 'None'}`)
 
     // Handle different actions
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
           }
         })
 
-        console.log(`✅ Downgraded user ${session.user.email} to FREE plan`)
+        console.log(`✅ Downgraded user ${session.user?.email} to FREE plan`)
 
         return NextResponse.json({
           success: true,

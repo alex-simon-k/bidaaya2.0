@@ -13,13 +13,13 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'STUDENT') {
+    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user has access to external tracking feature
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: { subscriptionPlan: true }
     })
 
@@ -38,7 +38,7 @@ export async function PATCH(
     const existingApplication = await prisma.externalApplication.findFirst({
       where: {
         id: params.id,
-        userId: session.user.id
+        userId: session.user?.id
       }
     })
 
@@ -106,13 +106,13 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'STUDENT') {
+    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user has access to external tracking feature
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: { subscriptionPlan: true }
     })
 
@@ -131,7 +131,7 @@ export async function DELETE(
     const existingApplication = await prisma.externalApplication.findFirst({
       where: {
         id: params.id,
-        userId: session.user.id
+        userId: session.user?.id
       }
     })
 

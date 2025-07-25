@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const updatedUser = await prisma.user.update({
-          where: { id: session.user.id },
+          where: { id: session.user?.id },
           data: { 
             subscriptionPlan: subscriptionPlan as any,
             subscriptionStatus: 'ACTIVE'
@@ -140,16 +140,16 @@ export async function POST(request: NextRequest) {
           ],
           success_url: successUrl || `${origin}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: cancelUrl || `${origin}/dashboard?canceled=true`,
-          customer_email: session.user.email,
-          client_reference_id: session.user.id,
+          customer_email: session.user?.email,
+          client_reference_id: session.user?.id,
           metadata: {
-            userId: session.user.id,
+            userId: session.user?.id,
             planId: planId,
-            userRole: session.user.role || 'STUDENT',
+            userRole: session.user?.role || 'STUDENT',
           },
           subscription_data: {
             metadata: {
-              userId: session.user.id,
+              userId: session.user?.id,
               planId: planId,
             },
           },
@@ -219,17 +219,17 @@ export async function POST(request: NextRequest) {
           ],
           success_url: successUrl || `${origin}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: cancelUrl || `${origin}/dashboard?canceled=true`,
-          customer_email: session.user.email,
-          client_reference_id: session.user.id,
+          customer_email: session.user?.email,
+          client_reference_id: session.user?.id,
           metadata: {
-            userId: session.user.id,
+            userId: session.user?.id,
             planId: planId,
-            userRole: session.user.role || 'STUDENT',
+            userRole: session.user?.role || 'STUDENT',
             dynamicPriceId: price.id
           },
           subscription_data: {
             metadata: {
-              userId: session.user.id,
+              userId: session.user?.id,
               planId: planId,
             },
           },
@@ -256,7 +256,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log(`✅ Created Stripe checkout session for user ${session.user.id}, plan ${planId}:`, checkoutSession.id)
+    console.log(`✅ Created Stripe checkout session for user ${session.user?.id}, plan ${planId}:`, checkoutSession.id)
 
     return NextResponse.json({
       url: checkoutSession.url,

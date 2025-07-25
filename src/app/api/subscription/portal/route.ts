@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
     // Get user from database to find their Stripe customer ID
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user?.email },
       select: { stripeCustomerId: true }
     })
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 })
     }
 
-    console.log(`Creating customer portal for ${session.user.email}`)
+    console.log(`Creating customer portal for ${session.user?.email}`)
 
     // Create customer portal session
     const portalSession = await stripe.billingPortal.sessions.create({

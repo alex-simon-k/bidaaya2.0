@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: {
-        id: session.user.id,
+        id: session.user?.id,
       },
       select: {
         name: true,
@@ -69,7 +69,7 @@ export async function PUT(request: Request) {
       email,
     }
 
-    if (session.user.role === 'STUDENT') {
+    if (session.user?.role === 'STUDENT') {
       updateData.university = university
       updateData.major = major
       updateData.graduationYear = graduationYear
@@ -77,7 +77,7 @@ export async function PUT(request: Request) {
       updateData.skills = skills
     }
 
-    if (session.user.role === 'COMPANY') {
+    if (session.user?.role === 'COMPANY') {
       updateData.companyName = companyName
       updateData.companySize = companySize
       updateData.industry = industry
@@ -85,7 +85,7 @@ export async function PUT(request: Request) {
 
     const user = await prisma.user.update({
       where: {
-        id: session.user.id,
+        id: session.user?.id,
       },
       data: updateData,
       select: {

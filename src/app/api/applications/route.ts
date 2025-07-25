@@ -20,19 +20,19 @@ export async function GET(request: Request) {
 
     let where: any = {}
 
-    if (session.user.role === 'STUDENT') {
+    if (session.user?.role === 'STUDENT') {
       // Students can only see their own applications
-      where.userId = session.user.id
-    } else if (session.user.role === 'COMPANY') {
+      where.userId = session.user?.id
+    } else if (session.user?.role === 'COMPANY') {
       // Companies can see applications to their projects
-      where.project = { companyId: session.user.id }
+      where.project = { companyId: session.user?.id }
     }
 
     // Additional filters
     if (projectId) {
       where.projectId = projectId
     }
-    if (userId && session.user.role === 'COMPANY') {
+    if (userId && session.user?.role === 'COMPANY') {
       where.userId = userId
     }
 
@@ -73,12 +73,12 @@ export async function GET(request: Request) {
 
     // Apply plan-based filtering for companies
     let filteredApplications = applications
-    if (session.user.role === 'COMPANY') {
+    if (session.user?.role === 'COMPANY') {
       const { getApplicantVisibilityLevel } = await import('@/lib/subscription')
       
       // Get company's subscription details
       const company = await prisma.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: session.user?.id },
         select: { subscriptionPlan: true, subscriptionStatus: true }
       })
 
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user.role !== 'STUDENT') {
+    if (!session || !session.user || session.user?.role !== 'STUDENT') {
       return new NextResponse('Unauthorized - Students only', { status: 401 })
     }
 
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
       where: { id: projectId },
       include: {
         applications: {
-          where: { userId: session.user.id },
+          where: { userId: session.user?.id },
         },
       },
     })
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
 
     // Check student's application limits based on their tier
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
     })
 
     if (!user) {
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
     // Create the application
     const application = await prisma.application.create({
       data: {
-        userId: session.user.id,
+        userId: session.user?.id,
         projectId,
         coverLetter: coverLetter || '',
         motivation: motivation || '',
@@ -234,7 +234,7 @@ export async function POST(request: Request) {
         },
       }),
       prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: session.user?.id },
         data: {
           applicationsThisMonth: {
             increment: 1,
@@ -255,7 +255,7 @@ export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user.role !== 'COMPANY') {
+    if (!session || !session.user || session.user?.role !== 'COMPANY') {
       return new NextResponse('Unauthorized - Companies only', { status: 401 })
     }
 
@@ -276,7 +276,7 @@ export async function PATCH(request: Request) {
       where: {
         id: applicationId,
         project: {
-          companyId: session.user.id,
+          companyId: session.user?.id,
         },
       },
       include: {

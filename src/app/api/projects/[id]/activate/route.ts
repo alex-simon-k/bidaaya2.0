@@ -13,7 +13,7 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'COMPANY') {
+    if (!session?.user?.id || session.user?.role !== 'COMPANY') {
       return NextResponse.json({ error: 'Unauthorized - Companies only' }, { status: 401 })
     }
 
@@ -39,7 +39,7 @@ export async function POST(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    if (project.companyId !== session.user.id) {
+    if (project.companyId !== session.user?.id) {
       return NextResponse.json({ error: 'You can only activate your own projects' }, { status: 403 })
     }
 
@@ -51,7 +51,7 @@ export async function POST(
 
     // Get user's current active projects for limit checking
     const userProjects = await prisma.project.findMany({
-      where: { companyId: session.user.id },
+      where: { companyId: session.user?.id },
       select: { status: true }
     })
 

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user.role?.toUpperCase() !== 'ADMIN') {
+    if (!session || !session.user || session.user?.role?.toUpperCase() !== 'ADMIN') {
       console.log('Admin API access denied - User role:', session?.user?.role || 'No user')
       return new NextResponse('Unauthorized - Admin access required', { status: 401 })
     }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    if (!session?.user?.id || session.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
     }
 
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
         status: action === 'approve' ? 'LIVE' : 'REJECTED',
         adminFeedback: feedback || null,
         approvedAt: action === 'approve' ? new Date() : null,
-        approvedBy: action === 'approve' ? session.user.id : null,
+        approvedBy: action === 'approve' ? session.user?.id : null,
       }
     })
 

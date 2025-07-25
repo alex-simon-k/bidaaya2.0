@@ -12,7 +12,7 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user.role !== 'COMPANY') {
+    if (!session || !session.user || session.user?.role !== 'COMPANY') {
       return new NextResponse('Unauthorized - Companies only', { status: 401 })
     }
 
@@ -22,7 +22,7 @@ export async function POST(
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
-        companyId: session.user.id,
+        companyId: session.user?.id,
       },
     })
 
@@ -66,7 +66,7 @@ export async function POST(
       projectId,
       title: project.title,
       company: session.user.name,
-      companyId: session.user.id
+      companyId: session.user?.id
     })
 
     return NextResponse.json({

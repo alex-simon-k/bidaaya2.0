@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { planId, action } = body
 
-    console.log(`🧪 TEST ENDPOINT: ${action || 'upgrade'} for user ${session.user.id} to plan ${planId}`)
+    console.log(`🧪 TEST ENDPOINT: ${action || 'upgrade'} for user ${session.user?.id} to plan ${planId}`)
 
     if (action === 'fix_all_users') {
       // Fix all users with inconsistent subscription data
@@ -55,14 +55,14 @@ export async function POST(request: NextRequest) {
       }
 
       const updatedUser = await prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: session.user?.id },
         data: { 
           subscriptionPlan: subscriptionPlan as any,
           subscriptionStatus: 'ACTIVE'
         }
       })
 
-      console.log(`✅ TEST: Updated user ${session.user.id} to plan ${subscriptionPlan}`)
+      console.log(`✅ TEST: Updated user ${session.user?.id} to plan ${subscriptionPlan}`)
 
       return NextResponse.json({
         success: true,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Default: return current user subscription data
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: {
         id: true,
         email: true,
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
 
     // Get current user subscription data
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: {
         id: true,
         email: true,

@@ -12,7 +12,7 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'COMPANY') {
+    if (!session || session.user?.role !== 'COMPANY') {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
@@ -37,7 +37,7 @@ export async function PATCH(
       return new NextResponse('Application not found', { status: 404 })
     }
 
-    if (application.project.companyId !== session.user.id) {
+    if (application.project.companyId !== session.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 

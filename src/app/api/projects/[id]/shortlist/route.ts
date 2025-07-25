@@ -18,7 +18,7 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id || session.user.role !== 'COMPANY') {
+    if (!session?.user?.id || session.user?.role !== 'COMPANY') {
       return NextResponse.json({ error: 'Unauthorized - Companies only' }, { status: 401 })
     }
 
@@ -34,7 +34,7 @@ export async function GET(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    if (project.companyId !== session.user.id) {
+    if (project.companyId !== session.user?.id) {
       return NextResponse.json({ error: 'You can only view shortlists for your own projects' }, { status: 403 })
     }
 
@@ -77,7 +77,7 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id || session.user.role !== 'COMPANY') {
+    if (!session?.user?.id || session.user?.role !== 'COMPANY') {
       return NextResponse.json({ error: 'Unauthorized - Companies only' }, { status: 401 })
     }
 
@@ -99,7 +99,7 @@ export async function POST(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    if (project.companyId !== session.user.id) {
+    if (project.companyId !== session.user?.id) {
       return NextResponse.json({ error: 'You can only manage shortlists for your own projects' }, { status: 403 })
     }
 
@@ -148,7 +148,7 @@ export async function POST(
           }, { status: 403 })
         }
 
-        result = await manualShortlist(projectId, candidateIds, session.user.id)
+        result = await manualShortlist(projectId, candidateIds, session.user?.id)
 
     return NextResponse.json({
           success: true,

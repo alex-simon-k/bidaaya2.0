@@ -12,7 +12,7 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    if (!session?.user?.id || session.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
     }
 
@@ -58,7 +58,7 @@ export async function PATCH(
       }
     })
 
-    console.log(`✅ Application ${applicationId} updated to ${status} by admin ${session.user.id}`)
+    console.log(`✅ Application ${applicationId} updated to ${status} by admin ${session.user?.id}`)
 
     // TODO: Send notification email to student about status change
     // TODO: Send notification to company if relevant
@@ -81,7 +81,7 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    if (!session?.user?.id || session.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
     }
 

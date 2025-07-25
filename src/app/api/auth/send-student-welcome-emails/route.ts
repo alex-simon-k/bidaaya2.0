@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only send emails to the authenticated user's email
-    if (email !== session.user.email) {
+    if (email !== session.user?.email) {
       return NextResponse.json(
         { error: 'Email mismatch' },
         { status: 403 }

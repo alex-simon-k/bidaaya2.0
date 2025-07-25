@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    if (!session?.user?.id || session.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
     }
 

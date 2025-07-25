@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'STUDENT') {
+    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Get user with application limits data
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: {
         id: true,
         subscriptionPlan: true,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       where: {
         projectId_userId: {
           projectId,
-          userId: session.user.id,
+          userId: session.user?.id,
         },
       },
     })
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     const application = await prisma.application.create({
       data: {
         projectId,
-        userId: session.user.id,
+        userId: session.user?.id,
         status: 'PENDING',
         coverLetter,
         motivation,
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Increment application count
-    await incrementApplicationCount(session.user.id, prisma)
+    await incrementApplicationCount(session.user?.id, prisma)
 
     // Update project application count
     await prisma.project.update({
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     // Calculate compatibility score asynchronously
     try {
       const compatibilityResult = await calculateCompatibilityScore(
-        session.user.id, 
+        session.user?.id, 
         projectId
       )
       
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
 
     // Get updated limits for response
     const updatedUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: {
         applicationsThisMonth: true,
         subscriptionPlan: true,

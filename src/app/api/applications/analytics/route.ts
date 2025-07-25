@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'STUDENT') {
+    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -26,27 +26,27 @@ export async function GET(request: NextRequest) {
     const [bidaayaApplications, bidaayaInterviews, bidaayaOffers, bidaayaShortlisted] = await Promise.all([
       prisma.application.count({
         where: {
-          userId: session.user.id,
+          userId: session.user?.id,
           createdAt: { gte: startDate }
         }
       }),
       prisma.application.count({
         where: {
-          userId: session.user.id,
+          userId: session.user?.id,
           status: 'INTERVIEWED',
           createdAt: { gte: startDate }
         }
       }),
       prisma.application.count({
         where: {
-          userId: session.user.id,
+          userId: session.user?.id,
           status: 'ACCEPTED',
           createdAt: { gte: startDate }
         }
       }),
       prisma.application.count({
         where: {
-          userId: session.user.id,
+          userId: session.user?.id,
           status: 'SHORTLISTED',
           createdAt: { gte: startDate }
         }
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user has access to advanced analytics
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: { subscriptionPlan: true }
     })
 

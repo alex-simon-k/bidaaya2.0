@@ -10,13 +10,13 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'STUDENT') {
+    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user has access to external tracking feature
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: { subscriptionPlan: true }
     })
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    let where: any = { userId: session.user.id }
+    let where: any = { userId: session.user?.id }
     
     if (status) {
       where.status = status
@@ -72,13 +72,13 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'STUDENT') {
+    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user has access to external tracking feature
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: { subscriptionPlan: true }
     })
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     const externalApplication = await prisma.externalApplication.create({
       data: {
-        userId: session.user.id,
+        userId: session.user?.id,
         company: company.trim(),
         jobTitle: jobTitle.trim(),
         jobUrl: jobUrl?.trim() || null,
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Update daily analytics
-    await updateApplicationAnalytics(session.user.id, 'external')
+    await updateApplicationAnalytics(session.user?.id, 'external')
 
     return NextResponse.json(externalApplication)
 

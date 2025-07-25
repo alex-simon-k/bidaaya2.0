@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // Get user with application data
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: {
         id: true,
         subscriptionPlan: true,
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       where: {
         projectId_userId: {
           projectId,
-          userId: session.user.id,
+          userId: session.user?.id,
         },
       },
     })

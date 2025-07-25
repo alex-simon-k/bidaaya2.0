@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userRole = session.user.role
+    const userRole = session.user?.role
 
     // Get project counts
     const [liveProjects, upcomingProjects, totalProjects] = await Promise.all([
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's subscription to determine early access
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.user?.id },
       select: { 
         subscriptionPlan: true,
         applicationsThisMonth: true,

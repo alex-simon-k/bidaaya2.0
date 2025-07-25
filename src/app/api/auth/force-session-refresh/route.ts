@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('🔄 Force session refresh requested for:', session.user.email)
+    console.log('🔄 Force session refresh requested for:', session.user?.email)
 
     // This endpoint will trigger the JWT callback with 'update' trigger
     // which will fetch fresh data from the database

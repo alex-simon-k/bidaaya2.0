@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     switch (action) {
       case 'stats':
-        const stats = await getUserGameStats(session.user.id)
+        const stats = await getUserGameStats(session.user?.id)
         return NextResponse.json({ stats })
 
       case 'leaderboard':
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       case 'achievements':
         return NextResponse.json({ 
           achievements: ACHIEVEMENTS,
-          userStats: await getUserGameStats(session.user.id)
+          userStats: await getUserGameStats(session.user?.id)
         })
 
       case 'actions':
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         })
 
       default:
-        const userStats = await getUserGameStats(session.user.id)
+        const userStats = await getUserGameStats(session.user?.id)
         return NextResponse.json({
           stats: userStats,
           availableActions: Object.keys(XP_ACTIONS),
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user.role !== 'STUDENT') {
+    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Unauthorized - Students only' }, { status: 401 })
     }
 
@@ -84,10 +84,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Award XP
-    const result = await awardXP(session.user.id, action, metadata)
+    const result = await awardXP(session.user?.id, action, metadata)
 
     // Get updated stats
-    const updatedStats = await getUserGameStats(session.user.id)
+    const updatedStats = await getUserGameStats(session.user?.id)
 
     return NextResponse.json({
       success: true,

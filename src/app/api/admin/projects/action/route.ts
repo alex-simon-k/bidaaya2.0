@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user.role?.toUpperCase() !== 'ADMIN') {
+    if (!session || !session.user || session.user?.role?.toUpperCase() !== 'ADMIN') {
       return new NextResponse('Unauthorized - Admin access required', { status: 401 })
     }
 
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         status: newStatus,
         adminFeedback: feedback || null,
         approvedAt: action === 'approve' ? new Date() : null,
-        approvedBy: session.user.id,
+        approvedBy: session.user?.id,
         updatedAt: new Date(),
       },
       include: {
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       title: project.title,
       company: project.company.name,
       action,
-      adminId: session.user.id
+      adminId: session.user?.id
     })
 
     // TODO: Send notification email to company about approval/rejection
