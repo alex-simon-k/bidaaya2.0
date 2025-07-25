@@ -12,6 +12,17 @@ const requiredEnvVars = {
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
 };
 
+// Ensure NEXTAUTH_URL is set appropriately
+if (!process.env.NEXTAUTH_URL) {
+  if (process.env.VERCEL_URL) {
+    process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`;
+    console.log('🔧 Set NEXTAUTH_URL from VERCEL_URL:', process.env.NEXTAUTH_URL);
+  } else if (process.env.NODE_ENV === 'development') {
+    process.env.NEXTAUTH_URL = 'http://localhost:3000';
+    console.log('🔧 Set NEXTAUTH_URL for development:', process.env.NEXTAUTH_URL);
+  }
+}
+
 console.log('🔧 Environment variables check:');
 Object.entries(requiredEnvVars).forEach(([key, value]) => {
   console.log(`🔧 ${key}:`, value ? '✅ Set' : '❌ Missing');

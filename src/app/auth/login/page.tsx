@@ -255,31 +255,13 @@ function LoginPageContent() {
         role: role
       });
       
-      // Add redirect: false to get the result instead of automatic redirect
-      const result = await signIn('google', {
+      // Use standard NextAuth flow - this will redirect automatically
+      await signIn('google', {
         callbackUrl: '/dashboard',
-        redirect: false,
       });
       
-      console.log('🎯 NextAuth signIn result:', result);
-      
-      if (result?.error) {
-        console.error('🎯 ❌ SignIn error:', result.error);
-        setIsLoading(false);
-        return;
-      }
-      
-      if (result?.ok) {
-        console.log('🎯 ✅ SignIn successful, should redirect');
-        // Manual redirect if needed
-        window.location.href = '/dashboard';
-      } else {
-        console.log('🎯 ⚠️ SignIn result not OK, trying normal redirect flow');
-        // Fallback: try with redirect: true
-        await signIn('google', {
-          callbackUrl: '/dashboard',
-        });
-      }
+      // This line won't execute because signIn redirects
+      console.log('🎯 ✅ SignIn call completed - should have redirected');
       
     } catch (error) {
       console.error('🎯 ❌ Sign in failed:', error);
