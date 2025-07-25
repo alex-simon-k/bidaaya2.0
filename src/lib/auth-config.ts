@@ -4,6 +4,26 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Validate required environment variables
+const requiredEnvVars = {
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+};
+
+console.log('🔧 Environment variables check:');
+Object.entries(requiredEnvVars).forEach(([key, value]) => {
+  console.log(`🔧 ${key}:`, value ? '✅ Set' : '❌ Missing');
+  if (!value) {
+    console.error(`❌ CRITICAL: ${key} is not set in environment variables`);
+  }
+});
+
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  console.error('❌ CRITICAL: Google OAuth credentials are missing!');
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
