@@ -17,30 +17,41 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log('🔐 ===================== SIGNIN CALLBACK START =====================');
       console.log('🔐 NextAuth signIn callback triggered');
-      console.log('Provider:', account?.provider);
-      console.log('User email:', user.email);
+      console.log('🔐 Provider:', account?.provider);
+      console.log('🔐 User email:', user.email);
+      console.log('🔐 User name:', user.name);
+      console.log('🔐 Account object:', JSON.stringify(account, null, 2));
       
       if (account?.provider === 'google') {
+        console.log('🔐 Processing Google OAuth sign in...');
         try {
           // Always find existing user first
+          console.log('🔐 Searching for existing user with email:', user.email);
           let existingUser = await prisma.user.findUnique({
             where: { email: user.email! },
           });
 
           if (existingUser) {
-            console.log('✅ Found existing user:', existingUser.id);
+            console.log('✅ Found existing user:');
+            console.log('✅ User ID:', existingUser.id);
+            console.log('✅ User role:', existingUser.role);
+            console.log('✅ Email verified:', existingUser.emailVerified);
+            console.log('✅ Profile completed:', existingUser.profileCompleted);
             
             // Check if existing user has verified their email
             if (!existingUser.emailVerified) {
-              console.log('⚠️ Existing user has not verified email, sending to verification');
+              console.log('⚠️ EXISTING USER - Email NOT verified, will redirect to verification');
               // Allow sign in but they'll be redirected to verification by the session callback
               return true;
+            } else {
+              console.log('✅ EXISTING USER - Email IS verified, proceeding with sign in');
             }
             
             return true;
           } else {
-            console.log('🆕 Creating new user for:', user.email);
+            console.log('🆕 NO EXISTING USER - Creating new user for:', user.email);
             
             // Create new user
             const newUser = await prisma.user.create({
@@ -55,72 +66,100 @@ export const authOptions: NextAuthOptions = {
               }
             });
             
-            console.log('✅ New user created:', newUser.id);
+            console.log('✅ NEW USER CREATED:');
+            console.log('✅ New user ID:', newUser.id);
+            console.log('✅ New user email:', newUser.email);
+            console.log('✅ New user role:', newUser.role);
+            console.log('✅ Email verified (should be null):', newUser.emailVerified);
             
             // Send verification email
             try {
-              await fetch(`${process.env.NEXTAUTH_URL}/api/auth/send-verification`, {
+              console.log('📧 Attempting to send verification email...');
+              const verificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/send-verification`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: user.email }),
               });
-              console.log('📧 Verification email sent to:', user.email);
+              
+              if (verificationResponse.ok) {
+                console.log('📧 ✅ Verification email sent successfully to:', user.email);
+              } else {
+                console.log('📧 ❌ Failed to send verification email. Status:', verificationResponse.status);
+                const errorText = await verificationResponse.text();
+                console.log('📧 ❌ Error response:', errorText);
+              }
             } catch (error) {
-              console.error('❌ Failed to send verification email:', error);
+              console.error('❌ Exception while sending verification email:', error);
             }
             
             // Allow sign in, but they'll be redirected to verification
+            console.log('🔐 NEW USER - Allowing sign in, will redirect to verification');
             return true;
           }
         } catch (error) {
-          console.error('❌ Database error during sign in:', error);
+          console.error('❌ DATABASE ERROR during sign in:', error);
+          console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
+          console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
           return false;
         }
       }
 
+      console.log('🔐 Non-Google provider or fallthrough, allowing sign in');
       return true;
     },
 
     async redirect({ url, baseUrl }) {
-      console.log('🔀 Redirect callback - URL:', url, 'Base:', baseUrl);
+      console.log('🔀 ===================== REDIRECT CALLBACK START =====================');
+      console.log('🔀 Redirect callback - URL:', url);
+      console.log('🔀 Redirect callback - Base URL:', baseUrl);
       
       // If URL is the role selection page, that means they came from verification
       if (url.includes('/auth/role-selection')) {
+        console.log('🔀 Redirecting to role selection page');
         return url;
       }
       
       // For any other case, use the default behavior
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (new URL(url).origin === baseUrl) return url;
+      if (url.startsWith("/")) {
+        console.log('🔀 Redirecting to relative URL:', `${baseUrl}${url}`);
+        return `${baseUrl}${url}`;
+      }
+      if (new URL(url).origin === baseUrl) {
+        console.log('🔀 Redirecting to same origin URL:', url);
+        return url;
+      }
+      console.log('🔀 Fallback redirect to base URL:', baseUrl);
       return baseUrl;
     },
 
     async jwt({ token, user, trigger, session }) {
+      console.log('🔄 ===================== JWT CALLBACK START =====================');
       console.log('🔄 JWT callback - Trigger:', trigger);
+      console.log('🔄 JWT callback - User exists:', !!user);
+      console.log('🔄 JWT callback - Token exists:', !!token);
       
       if (trigger === 'update' && session) {
         console.log('🔄 JWT callback - Session update triggered');
+        console.log('🔄 JWT callback - Session data:', JSON.stringify(session, null, 2));
         token = { ...token, ...session };
         return token;
       }
 
       if (user?.email) {
+        console.log('🔄 JWT callback - User email found, fetching from database:', user.email);
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
           });
 
           if (dbUser) {
-            console.log('🔄 JWT callback - Refreshing token with latest user data:', {
-              id: dbUser.id,
-              role: dbUser.role,
-              emailVerified: dbUser.emailVerified,
-              profileCompleted: dbUser.profileCompleted,
-              subscriptionPlan: dbUser.subscriptionPlan,
-              subscriptionStatus: dbUser.subscriptionStatus,
-              stripeCustomerId: dbUser.stripeCustomerId,
-              stripeSubscriptionId: dbUser.stripeSubscriptionId,
-            });
+            console.log('🔄 JWT callback - Database user found:');
+            console.log('🔄 User ID:', dbUser.id);
+            console.log('🔄 User role:', dbUser.role);
+            console.log('🔄 Email verified:', dbUser.emailVerified);
+            console.log('🔄 Profile completed:', dbUser.profileCompleted);
+            console.log('🔄 Subscription plan:', dbUser.subscriptionPlan);
+            console.log('🔄 Subscription status:', dbUser.subscriptionStatus);
 
             token.id = dbUser.id;
             token.role = dbUser.role;
@@ -130,17 +169,31 @@ export const authOptions: NextAuthOptions = {
             token.subscriptionStatus = dbUser.subscriptionStatus;
             token.stripeCustomerId = dbUser.stripeCustomerId;
             token.stripeSubscriptionId = dbUser.stripeSubscriptionId;
+            
+            console.log('🔄 JWT callback - Token updated with database values');
+          } else {
+            console.log('🔄 JWT callback - No database user found for email:', user.email);
           }
         } catch (error) {
-          console.error('❌ Error fetching user in JWT callback:', error);
+          console.error('❌ JWT callback - Error fetching user:', error);
         }
       }
 
+      console.log('🔄 JWT callback - Final token (excluding sensitive data):', {
+        id: token.id,
+        email: token.email,
+        role: token.role,
+        emailVerified: token.emailVerified,
+        profileCompleted: token.profileCompleted
+      });
       return token;
     },
 
     async session({ session, token }) {
+      console.log('📋 ===================== SESSION CALLBACK START =====================');
       console.log('📋 Session callback triggered');
+      console.log('📋 Token exists:', !!token);
+      console.log('📋 Session user exists:', !!session.user);
       
       if (token && session.user) {
         // Add all user data to session
@@ -153,14 +206,15 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).stripeCustomerId = token.stripeCustomerId;
         (session.user as any).stripeSubscriptionId = token.stripeSubscriptionId;
         
-        console.log('📋 Session updated with user data:', {
-          id: token.id,
-          role: token.role,
-          emailVerified: token.emailVerified,
-          profileCompleted: token.profileCompleted,
-        });
+        console.log('📋 Session updated with user data:');
+        console.log('📋 User ID:', token.id);
+        console.log('📋 User role:', token.role);
+        console.log('📋 Email verified:', token.emailVerified);
+        console.log('📋 Profile completed:', token.profileCompleted);
+        console.log('📋 Subscription plan:', token.subscriptionPlan);
       }
 
+      console.log('📋 ===================== SESSION CALLBACK END =====================');
       return session;
     },
   },

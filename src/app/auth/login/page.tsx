@@ -244,16 +244,30 @@ function LoginPageContent() {
   const [isCompanyHovered, setIsCompanyHovered] = useState(false);
 
   const handleGoogleSignIn = async (role: 'STUDENT' | 'ENTERPRISE') => {
+    console.log('🎯 ===================== LOGIN BUTTON CLICKED =====================');
+    console.log('🎯 Google sign in initiated with role:', role);
+    
     setIsLoading(true);
     try {
-      await signIn('google', {
+      console.log('🎯 Calling NextAuth signIn with params:', {
+        provider: 'google',
+        callbackUrl: '/dashboard',
+        role: role
+      });
+      
+      const result = await signIn('google', {
         callbackUrl: '/dashboard', // Let middleware handle proper routing
         role: role,
       });
+      
+      console.log('🎯 NextAuth signIn result:', result);
+      
     } catch (error) {
-      console.error('Sign in failed:', error);
+      console.error('🎯 ❌ Sign in failed:', error);
+      console.error('🎯 ❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
       setIsLoading(false);
     }
+    console.log('🎯 ===================== LOGIN FUNCTION END =====================');
   };
 
   return (
