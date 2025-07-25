@@ -6,8 +6,7 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Rocket, Building2, Users, MapPin } from "lucide-react";
 
-
-// Custom Button Component
+// Custom Button Component with better mobile sizing
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   variant?: "default" | "outline" | "student" | "company";
@@ -20,7 +19,7 @@ const Button = ({
   className = "", 
   ...props 
 }: ButtonProps) => {
-  const baseStyles = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+  const baseStyles = "inline-flex items-center justify-center gap-3 whitespace-nowrap rounded-xl text-base font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 min-h-[56px] px-6";
   
   const variantStyles = {
     default: "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 focus-visible:ring-blue-500",
@@ -39,331 +38,117 @@ const Button = ({
   );
 };
 
-type RoutePoint = {
-  x: number;
-  y: number;
-  delay: number;
-};
-
 const BidaayaMap = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-  // MENA region focused routes
-  const routes: { start: RoutePoint; end: RoutePoint; color: string }[] = [
-    {
-      start: { x: 150, y: 100, delay: 0 }, // UAE
-      end: { x: 120, y: 80, delay: 2 }, // Saudi Arabia
-      color: "#059669", // Emerald
-    },
-    {
-      start: { x: 120, y: 80, delay: 2 }, // Saudi Arabia
-      end: { x: 100, y: 60, delay: 4 }, // Egypt
-      color: "#7c3aed", // Purple
-    },
-    {
-      start: { x: 180, y: 120, delay: 1 }, // Qatar
-      end: { x: 200, y: 140, delay: 3 }, // Jordan
-      color: "#059669",
-    },
-    {
-      start: { x: 90, y: 90, delay: 0.5 }, // Morocco
-      end: { x: 160, y: 110, delay: 2.5 }, // Kuwait
-      color: "#7c3aed",
-    },
-  ];
-
-  // Generate dots for MENA region map
-  const generateDots = (width: number, height: number) => {
-    const dots = [];
-    const gap = 15;
-    const dotRadius = 1.5;
-
-    for (let x = 0; x < width; x += gap) {
-      for (let y = 0; y < height; y += gap) {
-        // Shape dots to form MENA region
-        const isInMenaRegion =
-          // Gulf region
-          ((x < width * 0.7 && x > width * 0.4) && (y < height * 0.6 && y > height * 0.3)) ||
-          // North Africa
-          ((x < width * 0.4 && x > width * 0.1) && (y < height * 0.5 && y > height * 0.2)) ||
-          // Levant
-          ((x < width * 0.5 && x > width * 0.35) && (y < height * 0.4 && y > height * 0.15));
-
-        if (isInMenaRegion && Math.random() > 0.4) {
-          dots.push({
-            x,
-            y,
-            radius: dotRadius,
-            opacity: Math.random() * 0.6 + 0.3,
-          });
-        }
-      }
-    }
-    return dots;
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const resizeObserver = new ResizeObserver(entries => {
-      const { width, height } = entries[0].contentRect;
-      setDimensions({ width, height });
+    const updateDimensions = () => {
+      const container = canvas.parentElement;
+      if (!container) return;
+      
+      const width = Math.min(container.clientWidth, 400);
+      const height = Math.min(width * 0.6, 240);
+      
       canvas.width = width;
       canvas.height = height;
-    });
+      setDimensions({ width, height });
+    };
 
-    resizeObserver.observe(canvas.parentElement as Element);
-    return () => resizeObserver.disconnect();
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  useEffect(() => {
-    if (!dimensions.width || !dimensions.height) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dots = generateDots(dimensions.width, dimensions.height);
-    let animationFrameId: number;
-    let startTime = Date.now();
-
-    function drawDots() {
-      if (!ctx) return;
-      ctx.clearRect(0, 0, dimensions.width, dimensions.height);
-      
-      dots.forEach(dot => {
-        if (!ctx) return;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(16, 185, 129, ${dot.opacity})`;
-        ctx.fill();
-      });
-    }
-
-    function drawRoutes() {
-      if (!ctx) return;
-      const currentTime = (Date.now() - startTime) / 1000;
-      
-      routes.forEach(route => {
-        if (!ctx) return;
-        const elapsed = currentTime - route.start.delay;
-        if (elapsed <= 0) return;
-        
-        const duration = 3;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        const x = route.start.x + (route.end.x - route.start.x) * progress;
-        const y = route.start.y + (route.end.y - route.start.y) * progress;
-        
-        // Draw route line
-        ctx.beginPath();
-        ctx.moveTo(route.start.x, route.start.y);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = route.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Draw points
-        ctx.beginPath();
-        ctx.arc(route.start.x, route.start.y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = route.color;
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#10b981";
-        ctx.fill();
-        
-        // Glow effect
-        ctx.beginPath();
-        ctx.arc(x, y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(16, 185, 129, 0.3)";
-        ctx.fill();
-        
-        if (progress === 1) {
-          ctx.beginPath();
-          ctx.arc(route.end.x, route.end.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = route.color;
-          ctx.fill();
-        }
-      });
-    }
-    
-    function animate() {
-      drawDots();
-      drawRoutes();
-      
-      const currentTime = (Date.now() - startTime) / 1000;
-      if (currentTime > 12) {
-        startTime = Date.now();
-      }
-      
-      animationFrameId = requestAnimationFrame(animate);
-    }
-    
-    animate();
-
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [dimensions]);
-
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+    <div className="w-full max-w-sm mx-auto">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-auto rounded-lg opacity-20"
+        style={{ maxHeight: '200px' }}
+      />
     </div>
   );
 };
 
 function LoginPageContent() {
   const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
   const [isStudentHovered, setIsStudentHovered] = useState(false);
   const [isCompanyHovered, setIsCompanyHovered] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const error = searchParams.get('error');
-  const message = searchParams.get('message');
 
   const handleGoogleSignIn = async (role: 'STUDENT' | 'ENTERPRISE') => {
-    console.log('🚀 Simple Google sign-in attempt...');
     setIsLoading(true);
-    
     try {
-      const result = await signIn('google', { 
-        callbackUrl: '/dashboard',
-        redirect: false
+      await signIn('google', {
+        callbackUrl: '/auth/role-selection',
+        role: role,
       });
-      console.log('🚀 Simple Google sign-in result:', result);
-      
-      if (result?.url) {
-        window.location.href = result.url;
-      }
     } catch (error) {
-      console.error('❌ Simple Google sign-in error:', error);
-    } finally {
+      console.error('Sign in failed:', error);
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-teal-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-purple-200/30 to-indigo-200/30 rounded-full blur-3xl"></div>
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-5xl overflow-hidden rounded-3xl flex bg-white shadow-2xl"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 flex flex-col min-h-screen"
       >
-        {/* Left side - Bidaaya Branding */}
-        <div className="hidden lg:block w-2/5 h-[700px] relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 via-blue-100 to-purple-100">
-            <BidaayaMap />
-            
-            {/* Logo and branding overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-10">
-              <motion.div 
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-                className="mb-8"
-              >
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-xl shadow-emerald-200">
-                  <Rocket className="text-white h-8 w-8" />
-                </div>
-              </motion.div>
-              
-              <motion.h1 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9, duration: 0.6 }}
-                className="text-4xl font-bold mb-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600"
-              >
-                Bidaaya
-              </motion.h1>
-              
-              <motion.p 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0, duration: 0.6 }}
-                className="text-lg text-center text-gray-600 max-w-sm leading-relaxed"
-              >
-                Connecting talent with opportunities across the MENA region
-              </motion.p>
-              
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1, duration: 0.6 }}
-                className="mt-8 flex items-center gap-4 text-sm text-gray-500"
-              >
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>MENA Region</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  <span>Growing Community</span>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Right side - Sign In Options */}
-        <div className="w-full lg:w-3/5 p-8 lg:p-12 flex flex-col justify-center bg-white">
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <div className="text-center mb-10">
-              <h2 className="text-3xl lg:text-4xl font-bold mb-3 text-gray-800">
-            Welcome to Bidaaya
-          </h2>
-              <p className="text-gray-600 text-lg">
-                Choose your path to get started
-          </p>
-        </div>
-
-
-
-        {error && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 rounded-lg bg-red-50 p-4 border border-red-200"
-              >
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  {error === 'OAuthAccountNotLinked'
-                    ? 'This email is already associated with a different sign-in method'
-                    : 'An error occurred during sign in'}
-                </h3>
-              </div>
-            </div>
-              </motion.div>
-            )}
-            
-            {/* Students Section */}
-            <motion.div 
-              className="mb-8"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
+        {/* Header */}
+        <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-8">
+          <div className="w-full max-w-md mx-auto">
+            {/* Logo and Title */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-center mb-8"
             >
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <Users className="text-white h-5 w-5" />
+              <div className="mb-6">
+                <BidaayaMap />
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                Welcome to Bidaaya
+              </h1>
+              <p className="text-lg text-gray-600 leading-relaxed">
+                Choose your path to get started
+              </p>
+            </motion.div>
+
+            {/* Students Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mb-6"
+            >
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100 shadow-sm">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                    <Users className="text-white h-6 w-6" />
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-800">For Students</h3>
-                    <p className="text-sm text-gray-600">Find internships and career opportunities</p>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">For Students</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Find internships and career opportunities
+                    </p>
                   </div>
                 </div>
-                
+
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -372,19 +157,19 @@ function LoginPageContent() {
                 >
                   <Button
                     variant="student"
-                    className="w-full py-4 text-base relative overflow-hidden"
+                    className="w-full relative overflow-hidden"
                     onClick={() => handleGoogleSignIn('STUDENT')}
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
-                        <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
                           <path
                             fill="currentColor"
                             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            fillOpacity=".7"
+                            fillOpacity=".8"
                           />
                           <path
                             fill="white"
@@ -399,7 +184,7 @@ function LoginPageContent() {
                             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                           />
                         </svg>
-                        Continue with Google as Student
+                        <span className="text-center">Continue with Google as Student</span>
                         {isStudentHovered && (
                           <motion.span
                             initial={{ left: "-100%" }}
@@ -422,26 +207,29 @@ function LoginPageContent() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">or</span>
+                <span className="px-4 bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 text-gray-500 font-medium">or</span>
               </div>
             </div>
             
             {/* Companies Section */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="mb-8"
             >
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center">
-                    <Building2 className="text-white h-5 w-5" />
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-100 shadow-sm">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="text-white h-6 w-6" />
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-800">For Companies</h3>
-                    <p className="text-sm text-gray-600">Post opportunities and find talent</p>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">For Companies</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Post opportunities and find talent
+                    </p>
                   </div>
-          </div>
+                </div>
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
@@ -451,19 +239,19 @@ function LoginPageContent() {
                 >
                   <Button
                     variant="company"
-                    className="w-full py-4 text-base relative overflow-hidden"
+                    className="w-full relative overflow-hidden"
                     onClick={() => handleGoogleSignIn('ENTERPRISE')}
                     disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                        <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  >
+                    {isLoading ? (
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
                           <path
                             fill="currentColor"
                             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            fillOpacity=".7"
+                            fillOpacity=".8"
                           />
                           <path
                             fill="white"
@@ -478,7 +266,7 @@ function LoginPageContent() {
                             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                           />
                         </svg>
-                        Continue with Google as Company
+                        <span className="text-center">Continue with Google as Company</span>
                         {isCompanyHovered && (
                           <motion.span
                             initial={{ left: "-100%" }}
@@ -488,31 +276,32 @@ function LoginPageContent() {
                             style={{ filter: "blur(8px)" }}
                           />
                         )}
-              </>
-            )}
+                      </>
+                    )}
                   </Button>
                 </motion.div>
               </div>
             </motion.div>
             
+            {/* Footer */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.2, duration: 0.6 }}
-              className="text-center mt-8"
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="text-center"
             >
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-gray-500 leading-relaxed px-4">
                 By continuing, you agree to our{" "}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium underline">
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium underline">
                   Privacy Policy
                 </a>
               </p>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -521,7 +310,14 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
       <LoginPageContent />
     </Suspense>
   );
