@@ -38,9 +38,72 @@ const Button = ({
   );
 };
 
+type RoutePoint = {
+  x: number;
+  y: number;
+  delay: number;
+};
+
 const BidaayaMap = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  // MENA region focused routes
+  const routes: { start: RoutePoint; end: RoutePoint; color: string }[] = [
+    {
+      start: { x: 0.6, y: 0.55, delay: 0 }, // UAE (using ratios)
+      end: { x: 0.45, y: 0.4, delay: 2 }, // Saudi Arabia
+      color: "#059669", // Emerald
+    },
+    {
+      start: { x: 0.45, y: 0.4, delay: 2 }, // Saudi Arabia
+      end: { x: 0.3, y: 0.25, delay: 4 }, // Egypt
+      color: "#7c3aed", // Purple
+    },
+    {
+      start: { x: 0.7, y: 0.6, delay: 1 }, // Qatar
+      end: { x: 0.55, y: 0.35, delay: 3 }, // Jordan
+      color: "#059669",
+    },
+    {
+      start: { x: 0.2, y: 0.45, delay: 0.5 }, // Morocco
+      end: { x: 0.65, y: 0.5, delay: 2.5 }, // Kuwait
+      color: "#7c3aed",
+    },
+  ];
+
+  // Generate dots for MENA region map
+  const generateDots = (width: number, height: number) => {
+    const dots = [];
+    const gap = Math.max(12, width / 30); // Responsive gap
+    const dotRadius = Math.max(1, width / 200);
+
+    for (let x = 0; x < width; x += gap) {
+      for (let y = 0; y < height; y += gap) {
+        // Shape dots to form MENA region (using relative positions)
+        const relX = x / width;
+        const relY = y / height;
+        
+        const isInMenaRegion =
+          // Gulf region
+          ((relX < 0.8 && relX > 0.4) && (relY < 0.7 && relY > 0.3)) ||
+          // North Africa
+          ((relX < 0.4 && relX > 0.1) && (relY < 0.5 && relY > 0.2)) ||
+          // Levant
+          ((relX < 0.6 && relX > 0.35) && (relY < 0.4 && relY > 0.15));
+
+        if (isInMenaRegion && Math.random() > 0.4) {
+          dots.push({
+            x,
+            y,
+            radius: dotRadius,
+            opacity: Math.random() * 0.6 + 0.3,
+          });
+        }
+      }
+    }
+    return dots;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,8 +113,8 @@ const BidaayaMap = () => {
       const container = canvas.parentElement;
       if (!container) return;
       
-      const width = Math.min(container.clientWidth, 400);
-      const height = Math.min(width * 0.6, 240);
+      const width = Math.min(container.clientWidth, 320);
+      const height = Math.min(width * 0.6, 180);
       
       canvas.width = width;
       canvas.height = height;
@@ -64,12 +127,111 @@ const BidaayaMap = () => {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  useEffect(() => {
+    if (!dimensions.width || !dimensions.height) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dots = generateDots(dimensions.width, dimensions.height);
+    let animationFrameId: number;
+    let startTime = Date.now();
+
+    function drawDots() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+      
+      dots.forEach(dot => {
+        if (!ctx) return;
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(16, 185, 129, ${dot.opacity})`;
+        ctx.fill();
+      });
+    }
+
+    function drawRoutes() {
+      if (!ctx) return;
+      const currentTime = (Date.now() - startTime) / 1000;
+      
+      routes.forEach(route => {
+        if (!ctx) return;
+        const elapsed = currentTime - route.start.delay;
+        if (elapsed <= 0) return;
+        
+        const duration = 3;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Convert relative positions to actual positions
+        const startX = route.start.x * dimensions.width;
+        const startY = route.start.y * dimensions.height;
+        const endX = route.end.x * dimensions.width;
+        const endY = route.end.y * dimensions.height;
+        
+        const x = startX + (endX - startX) * progress;
+        const y = startY + (endY - startY) * progress;
+        
+        // Draw route line
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = route.color;
+        ctx.lineWidth = Math.max(1, dimensions.width / 160);
+        ctx.stroke();
+        
+        // Draw points
+        const pointRadius = Math.max(2, dimensions.width / 100);
+        ctx.beginPath();
+        ctx.arc(startX, startY, pointRadius, 0, Math.PI * 2);
+        ctx.fillStyle = route.color;
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(x, y, pointRadius * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = "#10b981";
+        ctx.fill();
+        
+        // Glow effect
+        ctx.beginPath();
+        ctx.arc(x, y, pointRadius * 3, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(16, 185, 129, 0.3)";
+        ctx.fill();
+        
+        if (progress === 1) {
+          ctx.beginPath();
+          ctx.arc(endX, endY, pointRadius, 0, Math.PI * 2);
+          ctx.fillStyle = route.color;
+          ctx.fill();
+        }
+      });
+    }
+    
+    function animate() {
+      drawDots();
+      drawRoutes();
+      
+      const currentTime = (Date.now() - startTime) / 1000;
+      if (currentTime > 12) {
+        startTime = Date.now();
+      }
+      
+      animationFrameId = requestAnimationFrame(animate);
+    }
+    
+    animate();
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [dimensions]);
+
   return (
-    <div className="w-full max-w-sm mx-auto">
+    <div className="w-full max-w-xs mx-auto mb-4">
       <canvas
         ref={canvasRef}
-        className="w-full h-auto rounded-lg opacity-20"
-        style={{ maxHeight: '200px' }}
+        className="w-full h-auto rounded-lg opacity-60"
+        style={{ maxHeight: '180px' }}
       />
     </div>
   );
@@ -108,8 +270,8 @@ function LoginPageContent() {
         transition={{ duration: 0.8 }}
         className="relative z-10 flex flex-col min-h-screen"
       >
-        {/* Header */}
-        <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header with reduced top padding */}
+        <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-4">
           <div className="w-full max-w-md mx-auto">
             {/* Logo and Title */}
             <motion.div
@@ -118,7 +280,8 @@ function LoginPageContent() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-center mb-8"
             >
-              <div className="mb-6">
+              {/* Animated Map */}
+              <div className="mb-4">
                 <BidaayaMap />
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
