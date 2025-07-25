@@ -20,24 +20,32 @@ export default withAuth(
       return NextResponse.next();
     }
     
+    // Allow public pages
+    if (pathname === "/" || pathname.startsWith("/pricing")) {
+      return NextResponse.next();
+    }
+    
     // If no token and trying to access protected routes
     if (!token && (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding"))) {
       console.log('🛡️ No token, redirecting to login');
       return NextResponse.redirect(new URL("/auth/login", req.url));
     }
     
-    // If user has token but email is not verified
+    // CRITICAL FIX: Only redirect to verification if user is NOT verified AND trying to access protected areas
     if (token && !token.emailVerified) {
-      // Allow access to verification page
+      // Allow access to verification page itself
       if (pathname === "/auth/verify-code") {
         return NextResponse.next();
       }
       
-      // Redirect to verification for any other protected route
-      if (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding") || pathname.startsWith("/auth/role-selection")) {
+      // Only redirect to verification if trying to access dashboard/onboarding
+      if (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding")) {
         console.log('🛡️ Email not verified, redirecting to verification');
         return NextResponse.redirect(new URL("/auth/verify-code", req.url));
       }
+      
+      // For other pages, allow access (don't force verification everywhere)
+      return NextResponse.next();
     }
     
     // If user is verified but profile not completed, redirect to role selection
@@ -72,6 +80,5 @@ export const config = {
     "/onboarding/:path*",
     "/auth/role-selection",
     "/auth/setup-profile",
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 }; 
