@@ -60,7 +60,7 @@ export async function PATCH(
             },
           },
         },
-        student: {
+        user: {
           select: {
             name: true,
             university: true,
