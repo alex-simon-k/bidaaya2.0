@@ -136,6 +136,7 @@ const BidaayaMap = () => {
     let startTime = Date.now();
 
     function drawDots() {
+      if (!ctx) return;
       ctx.clearRect(0, 0, dimensions.width, dimensions.height);
       
       dots.forEach(dot => {
@@ -160,6 +161,7 @@ const BidaayaMap = () => {
         const y = route.start.y + (route.end.y - route.start.y) * progress;
         
         // Draw route line
+        if (!ctx) return;
         ctx.beginPath();
         ctx.moveTo(route.start.x, route.start.y);
         ctx.lineTo(x, y);
