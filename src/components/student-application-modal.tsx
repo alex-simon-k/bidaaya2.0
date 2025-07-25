@@ -61,6 +61,8 @@ export function StudentApplicationModal({
   const [limits, setLimits] = useState<ApplicationLimits | null>(null)
   const [canApplyToProject, setCanApplyToProject] = useState(true)
   const [applicationError, setApplicationError] = useState<string | null>(null)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<string>('')
   
   // Form state
   const [coverLetter, setCoverLetter] = useState('')
