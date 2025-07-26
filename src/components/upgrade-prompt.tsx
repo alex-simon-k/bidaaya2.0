@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Crown, X, ArrowRight, Zap } from 'lucide-react'
-import { getUpgradePrompt, getSubscriptionTier } from '@/lib/subscription'
+import { SubscriptionManager } from '@/lib/subscription-manager'
+import { getPlansByRole } from '@/lib/subscription-config'
 
 interface UpgradePromptProps {
   reason: string
@@ -169,7 +170,13 @@ export function UsageStatsCard() {
 
   const userRole = session.user.role as 'STUDENT' | 'COMPANY'
   const currentPlan = (session.user as any).subscriptionPlan || 'FREE'
-  const currentTier = getSubscriptionTier(currentPlan, userRole)
+  const userData = {
+    id: (session.user as any).id || '',
+    role: userRole,
+    subscriptionPlan: currentPlan,
+    subscriptionStatus: (session.user as any).subscriptionStatus
+  }
+  const currentTier = SubscriptionManager.getUserPlan(userData)
 
   if (!currentTier || !limits) return null
 

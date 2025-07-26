@@ -26,6 +26,7 @@ import { UsageStatsCard } from '@/components/upgrade-prompt'
 import { DashboardStatsWidget } from '@/components/dashboard-stats-widget'
 import { useSessionRefresh } from '@/lib/session-utils'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { SubscriptionDebug } from '@/components/subscription-debug'
 
 export default function DashboardPage() {
   const { data: session, status, update } = useSession()
@@ -191,6 +192,8 @@ export default function DashboardPage() {
   const studentContent = (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Subscription Debug Panel */}
+        <SubscriptionDebug />
         {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -327,6 +330,9 @@ export default function DashboardPage() {
   const companyContent = (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Subscription Debug Panel */}
+        <SubscriptionDebug />
+        
         {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

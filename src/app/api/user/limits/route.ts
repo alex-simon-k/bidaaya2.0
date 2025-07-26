@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from "@/lib/auth-config"
 import { PrismaClient } from '@prisma/client'
-import { checkApplicationLimits } from '@/lib/application-limits'
+import { SubscriptionManager } from '@/lib/subscription-manager'
 
 const prisma = new PrismaClient()
 
@@ -14,15 +14,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user with application data
+    // Get user with subscription data
     const user = await prisma.user.findUnique({
       where: { id: session.user?.id },
       select: {
         id: true,
         subscriptionPlan: true,
+        subscriptionStatus: true,
         applicationsThisMonth: true,
         lastMonthlyReset: true,
         role: true,
+        email: true
       }
     })
 
@@ -30,16 +32,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get application limits
-    const limits = checkApplicationLimits(user)
+    // Use centralized subscription manager
+    const subscriptionStatus = SubscriptionManager.getSubscriptionStatusDisplay(user)
+    const debugInfo = SubscriptionManager.getDebugInfo(user)
+    
+    let limits = null
+    try {
+      if (user.role === 'STUDENT') {
+        limits = SubscriptionManager.getApplicationLimits(user)
+      }
+    } catch (error) {
+      console.error('❌ Error getting application limits:', error)
+    }
 
     return NextResponse.json({
       success: true,
       user: {
-        subscriptionPlan: user.subscriptionPlan,
+        id: user.id,
         role: user.role,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionStatus: user.subscriptionStatus
       },
-      limits
+      subscription: subscriptionStatus,
+      limits,
+      debug: debugInfo
     })
 
   } catch (error) {
