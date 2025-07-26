@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Crown, X, ArrowRight, Zap } from 'lucide-react'
 import { SubscriptionManager } from '@/lib/subscription-manager'
-import { getPlansByRole } from '@/lib/subscription-config'
 
 interface UpgradePromptProps {
   reason: string
@@ -30,8 +29,14 @@ export function UpgradePrompt({ reason, onClose, compact = false }: UpgradePromp
     return null
   }
   
-  const currentTier = getSubscriptionTier(currentPlan, userRole)
-  const upgradeMessage = getUpgradePrompt(currentPlan, userRole)
+  const userData = {
+    id: (session.user as any).id || '',
+    role: userRole,
+    subscriptionPlan: currentPlan,
+    subscriptionStatus: (session.user as any).subscriptionStatus
+  }
+  const currentTier = SubscriptionManager.getUserPlan(userData)
+  const upgradeMessage = `Upgrade from ${currentTier?.name || 'your current plan'} for more features!`
 
   const handleUpgrade = () => {
     router.push('/subscription')
@@ -114,7 +119,7 @@ export function UpgradePrompt({ reason, onClose, compact = false }: UpgradePromp
               <div className="flex items-center justify-between text-sm mt-1">
                 <span className="text-gray-600">Applications/Month:</span>
                 <span className="font-medium text-gray-900">
-                  {currentTier.applicationsPerMonth === -1 ? 'Unlimited' : currentTier.applicationsPerMonth}
+                  {currentTier.features.applicationsPerMonth === -1 ? 'Unlimited' : currentTier.features.applicationsPerMonth}
                 </span>
               </div>
             </div>
@@ -170,13 +175,13 @@ export function UsageStatsCard() {
 
   const userRole = session.user.role as 'STUDENT' | 'COMPANY'
   const currentPlan = (session.user as any).subscriptionPlan || 'FREE'
-  const userData = {
-    id: (session.user as any).id || '',
-    role: userRole,
-    subscriptionPlan: currentPlan,
-    subscriptionStatus: (session.user as any).subscriptionStatus
-  }
-  const currentTier = SubscriptionManager.getUserPlan(userData)
+      const userData = {
+        id: (session.user as any).id || '',
+        role: userRole,
+        subscriptionPlan: currentPlan,
+        subscriptionStatus: (session.user as any).subscriptionStatus
+      }
+      const currentTier = SubscriptionManager.getUserPlan(userData)
 
   if (!currentTier || !limits) return null
 
