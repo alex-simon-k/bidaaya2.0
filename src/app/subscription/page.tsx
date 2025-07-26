@@ -3,7 +3,9 @@
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { STUDENT_TIERS, COMPANY_TIERS, getSubscriptionTier, type SubscriptionTier } from '@/lib/subscription'
+import { SubscriptionManager } from '@/lib/subscription-manager'
+import { getPlansByRole, getPlanById } from '@/lib/subscription-config'
+import { SubscriptionManagement } from '@/components/subscription-management'
 // Note: Install @heroicons/react for icons: npm install @heroicons/react
 // For now, using text symbols as placeholders
 const CheckIcon = ({ className }: { className: string }) => <span className={className}>✓</span>
@@ -36,10 +38,16 @@ export default function SubscriptionPage() {
 
   const userRole = session.user.role as 'STUDENT' | 'COMPANY'
   const currentPlan = (session.user as any).subscriptionPlan || 'FREE'
-  const availableTiers = userRole === 'STUDENT' ? STUDENT_TIERS : COMPANY_TIERS
-  const currentTier = getSubscriptionTier(currentPlan, userRole)
+  const userData = {
+    id: (session.user as any).id || '',
+    role: userRole,
+    subscriptionPlan: currentPlan,
+    subscriptionStatus: (session.user as any).subscriptionStatus
+  }
+  const availableTiers = getPlansByRole(userRole)
+  const currentTier = SubscriptionManager.getUserPlan(userData)
 
-  const handleUpgrade = async (tier: SubscriptionTier) => {
+  const handleUpgrade = async (tier: any) => {
     if (!tier) {
       setError('Invalid plan selected. Please try again.')
       return
@@ -156,29 +164,8 @@ export default function SubscriptionPage() {
           </p>
         </div>
 
-        {/* Current Plan Status */}
-        {currentTier && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Current Plan</h2>
-                <p className="text-gray-600">
-                  You're currently on the <span className="font-medium text-blue-600">{currentTier.name}</span> plan
-                  {currentTier.price > 0 && ` for $${currentTier.price}/month`}
-                </p>
-              </div>
-              {currentTier.price > 0 && (
-                <button
-                  onClick={handleCancelSubscription}
-                  disabled={loading}
-                  className="px-4 py-2 text-blue-600 border border-blue-300 rounded-md hover:bg-blue-50 disabled:opacity-50"
-                >
-                  Manage Subscription
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Subscription Management */}
+        <SubscriptionManagement />
 
         {/* Error Message */}
         {error && (
@@ -261,7 +248,7 @@ export default function SubscriptionPage() {
                 </div>
 
                 <ul className="space-y-3 mb-8">
-                  {tier.features.map((feature, index) => (
+                  {tier.displayFeatures.map((feature, index) => (
                     <li key={index} className="flex items-start">
                       <CheckIcon className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
                       <span className="text-gray-700">{feature}</span>
@@ -330,7 +317,7 @@ export default function SubscriptionPage() {
                     </td>
                     {availableTiers.map((tier) => (
                       <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                        {tier.applicationsPerMonth === -1 ? 'Unlimited' : tier.applicationsPerMonth}
+                        {tier.features.applicationsPerMonth === -1 ? 'Unlimited' : tier.features.applicationsPerMonth}
                       </td>
                     ))}
                   </tr>
@@ -341,7 +328,7 @@ export default function SubscriptionPage() {
                       </td>
                       {availableTiers.map((tier) => (
                         <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                          {tier.projectsAllowed === -1 ? 'Unlimited' : tier.projectsAllowed || 'N/A'}
+                          {tier.features.activeProjectsAllowed === -1 ? 'Unlimited' : tier.features.activeProjectsAllowed || 'N/A'}
                         </td>
                       ))}
                     </tr>
@@ -352,7 +339,7 @@ export default function SubscriptionPage() {
                     </td>
                     {availableTiers.map((tier) => (
                       <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        {tier.externalTracking ? (
+                        {tier.features.externalJobTracking ? (
                           <CheckIcon className="h-5 w-5 text-green-500 mx-auto" />
                         ) : (
                           <XMarkIcon className="h-5 w-5 text-gray-300 mx-auto" />
@@ -366,7 +353,7 @@ export default function SubscriptionPage() {
                     </td>
                     {availableTiers.map((tier) => (
                       <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        {tier.prioritySupport ? (
+                        {tier.features.prioritySupport || tier.features.priorityCustomerSupport ? (
                           <CheckIcon className="h-5 w-5 text-green-500 mx-auto" />
                         ) : (
                           <XMarkIcon className="h-5 w-5 text-gray-300 mx-auto" />
