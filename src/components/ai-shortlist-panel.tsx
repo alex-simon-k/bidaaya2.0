@@ -519,7 +519,7 @@ export function AIShortlistPanel({
                applicationsPerMonth: -1
              },
             ctaText: `Upgrade to ${shortlistData.upgradePrompt.nextTier}`,
-            urgency: 'Used by 500+ companies for better hiring'
+            urgency: 'Used by leading companies for better hiring'
           }}
                      trigger="project_limit"
         />

@@ -327,8 +327,8 @@ export function getCompanyActivationUpgradePrompt(user: any): CompanyUpgradeProm
     ],
     currentPlan,
     recommendedPlan: recommendedTier,
-    ctaText: `Upgrade to ${recommendedTier.name} - $${recommendedTier.price}/month`,
-    urgency: "Join 500+ companies already hiring through Bidaaya"
+    ctaText: `Upgrade to ${recommendedTier.name} - £${recommendedTier.price}/month`,
+    urgency: "Join leading companies already hiring through Bidaaya"
   }
 }
 

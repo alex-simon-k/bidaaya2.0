@@ -71,19 +71,19 @@ export function CompanyPaywallModal({
   const getSuccessStories = () => {
     return [
       {
-        company: "TechStart Dubai",
-        result: "Hired 5 developers in 2 weeks",
-        plan: "Pro"
+        company: "Tech Startup",
+        result: "Found skilled developers quickly",
+        plan: "HR Agent"
       },
       {
-        company: "Innovation Labs",
-        result: "90% faster hiring process", 
-        plan: "Premium"
+        company: "Growing Agency",
+        result: "Streamlined hiring process", 
+        plan: "HR Booster"
       },
       {
-        company: "Digital Agency",
-        result: "Found perfect marketing intern",
-        plan: "Basic"
+        company: "Local Business",
+        result: "Connected with talented interns",
+        plan: "Company Basic"
       }
     ]
   }
@@ -186,7 +186,7 @@ export function CompanyPaywallModal({
                           <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                         ))}
                       </div>
-                      <span className="text-sm text-gray-600 font-medium">4.8/5 from 150+ companies</span>
+                      <span className="text-sm text-gray-600 font-medium">Trusted by companies</span>
         </div>
 
                     <h4 className="font-semibold text-gray-900 mb-3">Recent Success Stories:</h4>
