@@ -2,89 +2,115 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import Link from 'next/link'
 import { motion } from 'framer-motion'
-import {
-  Plus as PlusIcon,
+import Link from 'next/link'
+import { 
+  Crown, 
+  ExternalLink, 
+  Star, 
+  Building, 
+  MapPin, 
+  DollarSign,
   Search as MagnifyingGlassIcon,
-  BarChart3 as ChartBarIcon,
   Filter as FunnelIcon,
-  Calendar as CalendarIcon,
-  Briefcase as BriefcaseIcon,
-  TrendingUp as TrendingUpIcon,
+  ChevronDown as ChevronDownIcon,
   AlertTriangle as ExclamationTriangleIcon,
   CheckCircle as CheckCircleIcon,
-  Clock as ClockIcon,
   X as XMarkIcon,
-  Building,
-  MapPin,
-  ExternalLink,
-  DollarSign,
-  Users,
-  Star,
-  Crown,
+  Calendar as CalendarIcon,
+  Clock as ClockIcon,
+  Briefcase as BriefcaseIcon,
+  Plus as PlusIcon,
+  Star as StarIcon,
   Eye,
-  Briefcase
+  Users,
+  Filter,
+  FileText as DocumentTextIcon,
+  MessageSquare as ChatBubbleLeftRightIcon,
+  GraduationCap as AcademicCapIcon,
+  Mail as EnvelopeIcon,
+  Phone as PhoneIcon,
+  Link as LinkIcon,
+  CalendarDays as CalendarDaysIcon,
+  Cpu as CpuChipIcon,
+  Sparkles as SparklesIcon,
+  List as ListBulletIcon,
+  ArrowUp as ArrowUpIcon,
+  ArrowDown as ArrowDownIcon,
+  BarChart3 as ChartBarIcon
 } from 'lucide-react'
 import { ExternalApplicationModal } from '@/components/external-application-modal'
 
 interface Application {
   id: string
+  status: string
+  createdAt: string
+  coverLetter?: string
+  additionalDocument?: string
+  applicationData?: {
+    personalStatement?: string
+    whyInterested?: string
+    relevantExperience?: string
+    projectUnderstanding?: string
+    proposedApproach?: string
+    deliverableTimeline?: string
+    weeklyAvailability?: string
+    startDate?: string
+    commitmentLevel?: string
+    coverLetter?: string
+    additionalNotes?: string
+    uploadedFiles?: Record<string, string>
+    applicationVersion?: string
+  }
+  compatibilityScore?: number
+  aiAnalysis?: {
+    strengths: string[]
+    concerns: string[]
+    recommendation: string
+    score: number
+  }
   project: {
     id: string
     title: string
+    category?: string
     company: {
       name: string
     }
   }
-  student?: {
+  user: {
+    id: string
     name: string
-    university: string
-    major: string
+    email: string
+    university?: string
+    major?: string
+    skills?: string[]
+    bio?: string
   }
-  status: 'PENDING' | 'SHORTLISTED' | 'INTERVIEWED' | 'ACCEPTED' | 'REJECTED'
-  createdAt: string
 }
 
 interface ExternalApplication {
   id: string
-  company: string
   jobTitle: string
-  jobUrl?: string
+  company: string
+  status: string
+  appliedDate: string
   location?: string
   salary?: string
-  status: 'APPLIED' | 'UNDER_REVIEW' | 'PHONE_SCREEN' | 'INTERVIEW_SCHEDULED' | 'INTERVIEWED' | 'FINAL_ROUND' | 'OFFER_RECEIVED' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' | 'NO_RESPONSE'
-  appliedDate: string
-  followUpDate?: string
-  interviewDate?: string
-  responseDate?: string
-  source?: string
+  jobUrl?: string
   notes?: string
-  contactPerson?: string
-  contactEmail?: string
   createdAt: string
-  updatedAt: string
 }
 
 interface Analytics {
-  period: number
-  bidaaya: {
-    applications: number
-    responseRate: number
-    interviews: number
-    offers: number
-  }
-  external?: {
-    applications: number
-    responseRate: number
-    interviews: number
-    offers: number
-  }
-  upgradeAvailable?: {
-    message: string
-    features: string[]
-  }
+  totalApplications: number
+  acceptanceRate: number
+  averageResponseTime: number
+  topCategories: Array<{ category: string; count: number }>
 }
+
+type ApplicationStatus = 'PENDING' | 'SHORTLISTED' | 'INTERVIEWED' | 'ACCEPTED' | 'REJECTED'
+type SortField = 'date' | 'score' | 'name' | 'status'
+type SortDirection = 'asc' | 'desc'
 
 export default function ApplicationsPage() {
   const { data: session } = useSession()
@@ -101,11 +127,18 @@ export default function ApplicationsPage() {
   // Company-specific state
   const [applicationsMeta, setApplicationsMeta] = useState<any>(null)
   const [projectGroups, setProjectGroups] = useState<any[]>([])
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [showApplicationDetail, setShowApplicationDetail] = useState(false)
   
-  // Filters and search
+  // Enhanced filters and search
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [periodFilter, setPeriodFilter] = useState('30')
+  const [projectFilter, setProjectFilter] = useState<string>('all')
+  const [sortField, setSortField] = useState<SortField>('date')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [showFilters, setShowFilters] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'cards' | 'detailed'>('cards')
 
   useEffect(() => {
     if (session?.user?.role === 'COMPANY') {
@@ -242,10 +275,50 @@ export default function ApplicationsPage() {
         )
       )
       
-      // Refresh analytics after status update
+      // Refresh data after status update
+      fetchCompanyApplications()
       fetchAnalytics()
     } catch (error) {
       setError('Failed to update application status')
+    }
+  }
+
+  const handleBulkAction = async (applicationIds: string[], action: string) => {
+    try {
+      const response = await fetch('/api/applications/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicationIds, action }),
+      })
+
+      if (response.ok) {
+        fetchCompanyApplications()
+      }
+    } catch (error) {
+      setError('Failed to perform bulk action')
+    }
+  }
+
+  const requestAIAnalysis = async (applicationId: string) => {
+    try {
+      const response = await fetch(`/api/applications/${applicationId}/ai-analysis`, {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        const analysis = await response.json()
+        setApplications(prev => 
+          prev.map(app => 
+            app.id === applicationId 
+              ? { ...app, aiAnalysis: analysis }
+              : app
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Failed to get AI analysis:', error)
     }
   }
 
@@ -279,14 +352,43 @@ export default function ApplicationsPage() {
     fetchAnalytics()
   }
 
+  // Enhanced filtering and sorting
   const filteredApplications = applications.filter(application => {
     const matchesSearch = !searchTerm || 
       application.project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      application.project.company.name.toLowerCase().includes(searchTerm.toLowerCase())
+      application.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      application.user.email.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || application.status === statusFilter
+    const matchesProject = projectFilter === 'all' || application.project.id === projectFilter
     
-    return matchesSearch && matchesStatus
+    return matchesSearch && matchesStatus && matchesProject
+  }).sort((a, b) => {
+    let aValue: any, bValue: any
+    
+    switch (sortField) {
+      case 'date':
+        aValue = new Date(a.createdAt).getTime()
+        bValue = new Date(b.createdAt).getTime()
+        break
+      case 'score':
+        aValue = a.compatibilityScore || 0
+        bValue = b.compatibilityScore || 0
+        break
+      case 'name':
+        aValue = a.user.name.toLowerCase()
+        bValue = b.user.name.toLowerCase()
+        break
+      case 'status':
+        aValue = a.status
+        bValue = b.status
+        break
+      default:
+        return 0
+    }
+    
+    const direction = sortDirection === 'asc' ? 1 : -1
+    return aValue < bValue ? -direction : aValue > bValue ? direction : 0
   })
 
   const filteredExternalApplications = externalApplications.filter(application => {
@@ -337,6 +439,16 @@ export default function ApplicationsPage() {
     return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
   }
 
+  const getUniqueProjects = () => {
+    const projects = new Map()
+    applications.forEach(app => {
+      if (!projects.has(app.project.id)) {
+        projects.set(app.project.id, app.project)
+      }
+    })
+    return Array.from(projects.values())
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -345,15 +457,48 @@ export default function ApplicationsPage() {
     )
   }
 
-  // Company Applications View
+  // Enhanced Company Applications View
   if (session?.user?.role === 'COMPANY') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Applications Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage applications for your projects
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Applications Dashboard</h1>
+              <p className="mt-1 text-sm text-gray-500">
+                Manage and review applications for your projects
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+              </button>
+              <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
+                >
+                  <ListBulletIcon className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('cards')}
+                  className={`p-2 ${viewMode === 'cards' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
+                >
+                  <span className="text-sm">⊞</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('detailed')}
+                  className={`p-2 ${viewMode === 'detailed' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
+                >
+                  <DocumentTextIcon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Subscription Status Card */}
@@ -384,9 +529,9 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        {/* Applications Statistics */}
+        {/* Enhanced Applications Statistics */}
         {applicationsMeta && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -411,15 +556,15 @@ export default function ApplicationsPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <Eye className="h-8 w-8 text-blue-400" />
+                    <StarIcon className="h-8 w-8 text-yellow-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Visible to You
+                        Shortlisted
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {applicationsMeta.visibleApplications}
+                        {applications.filter(app => app.status === 'SHORTLISTED').length}
                       </dd>
                     </dl>
                   </div>
@@ -431,15 +576,35 @@ export default function ApplicationsPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <Star className="h-8 w-8 text-yellow-400" />
+                    <CalendarIcon className="h-8 w-8 text-blue-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Subscription Tier
+                        Interviewed
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {applicationsMeta.subscriptionPlan?.replace('COMPANY_', '').replace('_', ' ') || 'FREE'}
+                        {applications.filter(app => app.status === 'INTERVIEWED').length}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <CheckCircleIcon className="h-8 w-8 text-green-400" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Accepted
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {applications.filter(app => app.status === 'ACCEPTED').length}
                       </dd>
                     </dl>
                   </div>
@@ -449,110 +614,332 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        {/* Project-by-Project Applications */}
+        {/* Enhanced Filters */}
+        {showFilters && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <div className="relative">
+                  <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search applicants..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Status</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="SHORTLISTED">Shortlisted</option>
+                  <option value="INTERVIEWED">Interviewed</option>
+                  <option value="ACCEPTED">Accepted</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <select
+                  value={projectFilter}
+                  onChange={(e) => setProjectFilter(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Projects</option>
+                  {getUniqueProjects().map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <div className="flex gap-2">
+                  <select
+                    value={sortField}
+                    onChange={(e) => setSortField(e.target.value as SortField)}
+                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="date">Date</option>
+                    <option value="score">Score</option>
+                    <option value="name">Name</option>
+                    <option value="status">Status</option>
+                  </select>
+                  <button
+                    onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                    className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    {sortDirection === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Applications Display */}
         <div className="space-y-6">
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-2 text-sm text-gray-500">Loading applications...</p>
             </div>
-          ) : projectGroups.length === 0 ? (
+          ) : filteredApplications.length === 0 ? (
             <div className="text-center py-12">
-              <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No applications yet</h3>
+              <BriefcaseIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No applications found</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Applications will appear here once students apply to your projects.
+                {searchTerm || statusFilter !== 'all' || projectFilter !== 'all'
+                  ? 'Try adjusting your filters'
+                  : 'Applications will appear here once students apply to your projects.'
+                }
               </p>
             </div>
-          ) : (
-            projectGroups.map((group) => (
-              <div key={group.project.id} className="bg-white shadow rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {group.project.title}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {group.applications.length} applications
+          ) : viewMode === 'cards' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredApplications.map((application) => (
+                <div key={application.id} className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-sm font-medium text-blue-600">
+                            {application.user.name?.charAt(0) || 'A'}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {application.user.name || 'Anonymous'}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            {application.user.university || application.user.email}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}
+                      >
+                        {formatStatus(application.status)}
+                      </span>
+                    </div>
+
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {application.project.title}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Applied {new Date(application.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">
-                        Category: {group.project.category || 'N/A'}
-                      </span>
+
+                    {application.compatibilityScore && (
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                          <span>Compatibility Score</span>
+                          <span className="font-medium">{Math.round(application.compatibilityScore)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${application.compatibilityScore}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedApplication(application)
+                            setShowApplicationDetail(true)
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          View Details
+                        </button>
+                        {!application.aiAnalysis && (
+                          <button
+                            onClick={() => requestAIAnalysis(application.id)}
+                            className="text-xs text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1"
+                          >
+                            <SparklesIcon className="h-3 w-3" />
+                            AI Analysis
+                          </button>
+                        )}
+                      </div>
+                      <select
+                        value={application.status}
+                        onChange={(e) => handleStatusUpdate(application.id, e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="SHORTLISTED">Shortlist</option>
+                        <option value="INTERVIEWED">Interview</option>
+                        <option value="ACCEPTED">Accept</option>
+                        <option value="REJECTED">Reject</option>
+                      </select>
                     </div>
                   </div>
                 </div>
-
-                <div className="divide-y divide-gray-200">
-                  {group.applications.map((application: any) => (
-                    <div key={application.id} className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-shrink-0">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                              <span className="text-sm font-medium text-gray-700">
-                                {application.user.name?.charAt(0) || 'A'}
-                              </span>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {application.user.name || 'Anonymous'}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {application.user.university && application.user.major
-                                ? `${application.user.university} - ${application.user.major}`
-                                : application.user.email || 'No details available'}
-                            </p>
-                            {application.compatibilityScore && (
-                              <p className="text-xs text-green-600">
-                                {Math.round(application.compatibilityScore)}% match
-                              </p>
-                            )}
+              ))}
+            </div>
+          ) : (
+            // List view or detailed view would go here
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+              <ul className="divide-y divide-gray-200">
+                {filteredApplications.map((application) => (
+                  <li key={application.id} className="px-6 py-4 hover:bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {application.user.name?.charAt(0) || 'A'}
+                            </span>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center space-x-4">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              application.status === 'SHORTLISTED'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : application.status === 'ACCEPTED'
-                                ? 'bg-green-100 text-green-800'
-                                : application.status === 'REJECTED'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {application.status}
-                          </span>
-                          
-                          <select
-                            value={application.status}
-                            onChange={(e) => handleStatusUpdate(application.id, e.target.value)}
-                            className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="PENDING">Pending</option>
-                            <option value="SHORTLISTED">Shortlisted</option>
-                            <option value="INTERVIEWED">Interviewed</option>
-                            <option value="ACCEPTED">Accepted</option>
-                            <option value="REJECTED">Rejected</option>
-                          </select>
-                          
-                          <span className="text-xs text-gray-500">
-                            {new Date(application.createdAt).toLocaleDateString()}
-                          </span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {application.user.name || 'Anonymous'}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {application.project.title}
+                          </p>
+                          {application.compatibilityScore && (
+                            <p className="text-xs text-green-600">
+                              {Math.round(application.compatibilityScore)}% match
+                            </p>
+                          )}
                         </div>
                       </div>
+                      
+                      <div className="flex items-center space-x-4">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}
+                        >
+                          {formatStatus(application.status)}
+                        </span>
+                        
+                        <button
+                          onClick={() => {
+                            setSelectedApplication(application)
+                            setShowApplicationDetail(true)
+                          }}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          View
+                        </button>
+                        
+                        <select
+                          value={application.status}
+                          onChange={(e) => handleStatusUpdate(application.id, e.target.value)}
+                          className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="PENDING">Pending</option>
+                          <option value="SHORTLISTED">Shortlisted</option>
+                          <option value="INTERVIEWED">Interviewed</option>
+                          <option value="ACCEPTED">Accepted</option>
+                          <option value="REJECTED">Rejected</option>
+                        </select>
+                        
+                        <span className="text-xs text-gray-500">
+                          {new Date(application.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
+
+        {/* Application Detail Modal - Will be implemented separately */}
+        {showApplicationDetail && selectedApplication && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {selectedApplication.user.name}'s Application
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {selectedApplication.project.title}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <select
+                    value={selectedApplication.status}
+                    onChange={(e) => handleStatusUpdate(selectedApplication.id, e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="PENDING">Pending</option>
+                    <option value="SHORTLISTED">Shortlisted</option>
+                    <option value="INTERVIEWED">Interviewed</option>
+                    <option value="ACCEPTED">Accepted</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                  <button
+                    onClick={() => {
+                      setShowApplicationDetail(false)
+                      setSelectedApplication(null)
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="font-medium text-gray-900">Applicant Information</h3>
+                      <p className="text-sm text-gray-600">Name: {selectedApplication.user.name}</p>
+                      <p className="text-sm text-gray-600">Email: {selectedApplication.user.email}</p>
+                      {selectedApplication.user.university && (
+                        <p className="text-sm text-gray-600">University: {selectedApplication.user.university}</p>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Application Details</h3>
+                      <p className="text-sm text-gray-600">Applied: {new Date(selectedApplication.createdAt).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">Status: {formatStatus(selectedApplication.status)}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedApplication.applicationData?.personalStatement && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Personal Statement</h3>
+                      <p className="text-sm text-gray-600">{selectedApplication.applicationData.personalStatement}</p>
+                    </div>
+                  )}
+                  
+                  {selectedApplication.coverLetter && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Cover Letter</h3>
+                      <p className="text-sm text-gray-600">{selectedApplication.coverLetter}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -711,7 +1098,7 @@ export default function ApplicationsPage() {
                     {activeTab === 'bidaaya' ? 'Bidaaya' : 'External'} Applications
                   </p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {activeTab === 'bidaaya' ? analytics.bidaaya.applications : analytics.external?.applications || 0}
+                    {activeTab === 'bidaaya' ? analytics.totalApplications : analytics.totalApplications}
                   </p>
                 </div>
               </div>
@@ -723,7 +1110,7 @@ export default function ApplicationsPage() {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-yellow-900">Response Rate</p>
                   <p className="text-2xl font-bold text-yellow-600">
-                    {activeTab === 'bidaaya' ? analytics.bidaaya.responseRate : analytics.external?.responseRate || 0}%
+                    {activeTab === 'bidaaya' ? analytics.acceptanceRate : analytics.acceptanceRate}%
                   </p>
                 </div>
               </div>
@@ -735,7 +1122,7 @@ export default function ApplicationsPage() {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-green-900">Interviews</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {activeTab === 'bidaaya' ? analytics.bidaaya.interviews : analytics.external?.interviews || 0}
+                    {activeTab === 'bidaaya' ? analytics.totalApplications : analytics.totalApplications}
                   </p>
                 </div>
               </div>
@@ -747,7 +1134,7 @@ export default function ApplicationsPage() {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-purple-900">Offers</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {activeTab === 'bidaaya' ? analytics.bidaaya.offers : analytics.external?.offers || 0}
+                    {activeTab === 'bidaaya' ? analytics.totalApplications : analytics.totalApplications}
                   </p>
                 </div>
               </div>
@@ -889,7 +1276,7 @@ export default function ApplicationsPage() {
                           <p className="mt-1 text-sm text-gray-500">
                             {session?.user?.role === 'STUDENT'
                               ? `Company: ${application.project.company.name}`
-                              : `Student: ${application.student?.name} (${application.student?.university} - ${application.student?.major})`}
+                              : `Student: ${application.user.name} (${application.user.university} - ${application.user.major})`}
                           </p>
                         </div>
                       </div>
@@ -1068,4 +1455,6 @@ export default function ApplicationsPage() {
       )}
     </div>
   )
-} 
+}
+
+ 
