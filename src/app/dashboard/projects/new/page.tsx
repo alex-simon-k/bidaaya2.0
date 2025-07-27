@@ -258,9 +258,25 @@ export default function NewProjectPage() {
     }
 
     try {
+      // Create description from the form fields to match API expectations
+      const description = `${formData.problemStatement}\n\n${formData.solutionDirection}\n\nDefinition of Done: ${formData.definitionOfDone}`.trim()
+      
       const projectData = {
-        ...formData,
+        title: formData.title,
+        description: description,
+        category: formData.category,
+        subcategory: formData.subcategory,
         projectType: selectedTemplate ? 'Template' : 'Custom',
+        teamSize: formData.teamSize,
+        durationMonths: formData.durationMonths,
+        experienceLevel: formData.experienceLevel,
+        timeCommitment: `${formData.hoursPerWeek} hours/week`,
+        requirements: formData.idealCandidateRequirements,
+        deliverables: [formData.definitionOfDone],
+        skillsRequired: formData.idealCandidateRequirements,
+        compensation: formData.paymentType === 'PAID' ? 'Paid' : 'Unpaid',
+        location: formData.workType === 'VIRTUAL' ? 'Remote' : 'On-site',
+        remote: formData.workType === 'VIRTUAL',
         applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline) : null
       }
       
