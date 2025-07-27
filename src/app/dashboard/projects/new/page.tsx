@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { SubscriptionManager } from '@/lib/subscription-manager'
 import { 
   TrendingUp, 
   Users, 
@@ -18,7 +19,8 @@ import {
   Building,
   Target,
   Lightbulb,
-  UserCheck
+  UserCheck,
+  Lock
 } from 'lucide-react'
 
 interface ProjectTemplate {
@@ -145,6 +147,7 @@ export default function NewProjectPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [subscriptionData, setSubscriptionData] = useState<any>(null)
 
   // Form state
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null)
@@ -174,12 +177,45 @@ export default function NewProjectPage() {
     applicationDeadline: ''
   })
 
+  // Load subscription data
+  useEffect(() => {
+    const loadSubscriptionData = async () => {
+      if (session?.user) {
+        try {
+          const currentPlan = SubscriptionManager.getUserPlan(session.user as any)
+          setSubscriptionData(currentPlan)
+        } catch (error) {
+          console.error('Failed to load subscription data:', error)
+        }
+      }
+    }
+    loadSubscriptionData()
+  }, [session])
+
   const handleTemplateSelect = (template: ProjectTemplate) => {
     setSelectedTemplate(template)
     setFormData(prev => ({
       ...prev,
       category: template.category,
       idealCandidateRequirements: [...template.commonRequirements]
+    }))
+    setCurrentStep(2)
+  }
+
+  const handleCustomProjectSelect = () => {
+    // Check if user has access to custom projects
+    const hasCustomProjectAccess = subscriptionData?.features?.customProjectCreation || false
+    
+    if (!hasCustomProjectAccess) {
+      setError('Custom projects require a Pro or Premium subscription. Please upgrade to access this feature.')
+      return
+    }
+
+    setSelectedTemplate(null)
+    setFormData(prev => ({
+      ...prev,
+      category: 'CUSTOM',
+      idealCandidateRequirements: []
     }))
     setCurrentStep(2)
   }
@@ -372,6 +408,78 @@ export default function NewProjectPage() {
                 </motion.div>
               )
             })}
+
+            {/* Custom Project Option - Subscription Gated */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: subscriptionData?.features?.customProjectCreation ? 1.02 : 1.0 }}
+              className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-transparent transition-all duration-300 ${
+                subscriptionData?.features?.customProjectCreation 
+                  ? 'cursor-pointer hover:border-gray-200' 
+                  : 'cursor-not-allowed opacity-75'
+              }`}
+              onClick={handleCustomProjectSelect}
+            >
+              <div className="h-24 bg-gradient-to-r from-gray-800 to-gray-900 flex items-center justify-center relative">
+                <Code2 className="h-12 w-12 text-white" />
+                {!subscriptionData?.features?.customProjectCreation && (
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                    <Lock className="h-8 w-8 text-white" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Custom Project
+                  </h3>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    subscriptionData?.features?.customProjectCreation 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-purple-100 text-purple-700'
+                  }`}>
+                    {subscriptionData?.features?.customProjectCreation ? 'AVAILABLE' : 'PRO'}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Create a completely custom project with your own requirements, categories, and specifications.
+                </p>
+                
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Full flexibility:</p>
+                  <div className="flex flex-wrap gap-1">
+                    <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                      Any Category
+                    </span>
+                    <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                      Custom Requirements
+                    </span>
+                    <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                      Unique Deliverables
+                    </span>
+                  </div>
+                </div>
+                
+                <button 
+                  className={`w-full py-2 px-4 rounded-lg transition-colors font-medium ${
+                    subscriptionData?.features?.customProjectCreation
+                      ? 'bg-gray-800 hover:bg-gray-900 text-white'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }`}
+                  disabled={!subscriptionData?.features?.customProjectCreation}
+                >
+                  {subscriptionData?.features?.customProjectCreation ? 'Create Custom Project' : 'Upgrade Required'}
+                </button>
+                
+                {!subscriptionData?.features?.customProjectCreation && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Available with Pro or Premium subscription
+                  </p>
+                )}
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -444,12 +552,29 @@ export default function NewProjectPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Project Category
                 </label>
-                <input
-                  type="text"
-                  value={selectedTemplate?.category.replace('_', ' ') || 'Custom'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900"
-                  readOnly
-                />
+                {formData.category === 'CUSTOM' ? (
+                  <select
+                    value={formData.subcategory}
+                    onChange={(e) => handleInputChange('subcategory', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="BUSINESS_DEVELOPMENT">Business Development</option>
+                    <option value="COMPUTER_SCIENCE">Computer Science</option>
+                    <option value="FINANCE">Finance</option>
+                    <option value="PSYCHOLOGY">Psychology</option>
+                    <option value="OTHER">Other (Custom)</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={selectedTemplate?.category.replace('_', ' ') || 'Custom'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900"
+                    readOnly
+                  />
+                )}
               </div>
             </div>
           </div>
