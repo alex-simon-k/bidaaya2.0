@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
         skills: true,
         bio: true,
         linkedin: true,
+        calendlyLink: true,
         graduationYear: true,
         profileCompleted: true,
         emailVerified: true
@@ -68,6 +69,7 @@ export async function PATCH(request: NextRequest) {
       skills,
       bio,
       linkedin,
+      calendlyLink,
       graduationYear,
       discoveryProfile,
       discoveryCompleted
@@ -83,6 +85,7 @@ export async function PATCH(request: NextRequest) {
     if (skills !== undefined) updateData.skills = skills
     if (bio !== undefined) updateData.bio = bio
     if (linkedin !== undefined) updateData.linkedin = linkedin
+    if (calendlyLink !== undefined) updateData.calendlyLink = calendlyLink
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
     
     // If this is a comprehensive profile update (has key fields), mark profile as completed
@@ -128,11 +131,12 @@ export async function PATCH(request: NextRequest) {
          university: true,
          major: true,
          skills: true,
-         bio: true,
-         linkedin: true,
-         graduationYear: true,
-         profileCompleted: true,
-         emailVerified: true
+                 bio: true,
+        linkedin: true,
+        calendlyLink: true,
+        graduationYear: true,
+        profileCompleted: true,
+        emailVerified: true
        }
     })
 

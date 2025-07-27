@@ -14,6 +14,7 @@ import {
   Phone, 
   Mail, 
   Globe, 
+  Calendar,
   CheckCircle, 
   ArrowLeft,
   ArrowRight,
@@ -46,6 +47,7 @@ interface CompanyProfileFormData {
   contactEmail: string;
   contactWhatsapp: string;
   companyWebsite: string;
+  calendlyLink: string;
   [key: string]: string | string[];
 }
 
@@ -149,6 +151,15 @@ const steps: Step[] = [
     icon: <Globe className="w-8 h-8 text-purple-600" />,
     description: 'Company website URL'
   },
+  {
+    key: 'calendlyLink',
+    label: 'Interview Scheduling Link (Calendly)',
+    type: 'text',
+    required: false,
+    placeholder: 'https://calendly.com/your-username/interview',
+    icon: <Calendar className="w-8 h-8 text-purple-600" />,
+    description: 'Your Calendly link for scheduling interviews with shortlisted candidates'
+  },
 ]
 
 export default function CompanyOnboardingPage() {
@@ -172,6 +183,7 @@ export default function CompanyOnboardingPage() {
     contactEmail: '',
     contactWhatsapp: '',
     companyWebsite: '',
+    calendlyLink: '',
   })
   const [error, setError] = useState<string | null>(null)
 
@@ -348,6 +360,7 @@ export default function CompanyOnboardingPage() {
           contactEmail: formData.contactEmail,
           contactWhatsapp: formData.contactWhatsapp,
           companyWebsite: formData.companyWebsite,
+          calendlyLink: formData.calendlyLink,
           email: session?.user?.email, // Add email to request body
         }),
       });

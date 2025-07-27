@@ -42,6 +42,7 @@ interface ProfileData {
   location?: string
   website?: string
   phone?: string
+  calendlyLink?: string // Add Calendly link field
   
   // Professional Info
   title?: string
@@ -119,15 +120,33 @@ export default function ProfilePage() {
   const userRole = session?.user?.role as 'STUDENT' | 'COMPANY'
 
   const transformApiResponse = (apiData: any): ProfileData => {
+    // Parse bio field to extract original bio if it contains discovery profile data
+    let actualBio = apiData.bio || ''
+    let discoveryProfile = null
+    
+    try {
+      if (apiData.bio && typeof apiData.bio === 'string' && apiData.bio.startsWith('{')) {
+        const bioData = JSON.parse(apiData.bio)
+        if (bioData.originalBio !== undefined) {
+          actualBio = bioData.originalBio || ''
+          discoveryProfile = bioData.discoveryProfile
+        }
+      }
+    } catch (e) {
+      // If parsing fails, use the bio as-is
+      actualBio = apiData.bio || ''
+    }
+
     return {
       id: apiData.id || session?.user?.id || '',
       name: apiData.name || session?.user?.name || '',
       email: apiData.email || session?.user?.email || '',
-      bio: apiData.bio || '',
+      bio: actualBio,
       location: apiData.location || '',
       university: apiData.university || '',
       major: apiData.major || '',
       graduationYear: apiData.graduationYear || undefined,
+      calendlyLink: apiData.calendlyLink || '', // Add Calendly link support
       skills: Array.isArray(apiData.skills) ? apiData.skills : 
               (apiData.skills ? apiData.skills.split(',').map((s: string) => s.trim()) : []),
       interests: Array.isArray(apiData.interests) ? apiData.interests : [],
@@ -392,22 +411,66 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Company Description */}
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-2">About the Company</h3>
-                    {isEditing ? (
-                      <textarea
-                        value={editData.bio || ''}
-                        onChange={(e) => setEditData({...editData, bio: e.target.value})}
-                        placeholder="Tell students about your company culture, mission, and what makes you special..."
-                        rows={4}
+                                  <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">About the Company</h3>
+                  {isEditing ? (
+                    <textarea
+                      value={editData.bio || ''}
+                      onChange={(e) => setEditData({...editData, bio: e.target.value})}
+                      placeholder="Tell students about your company culture, mission, and what makes you special..."
+                      rows={4}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                                       ) : (
+                     <p className="text-gray-700">
+                       {profileData?.bio || 'Tell students about your company culture, mission, and what makes you special...'}
+                     </p>
+                   )}
+                </div>
+
+                {/* Calendly Link Section */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">📅 Interview Scheduling (Calendly Link)</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Add your Calendly link so students can easily schedule interviews when shortlisted.
+                  </p>
+                  {isEditing ? (
+                    <div>
+                      <input
+                        type="url"
+                        value={editData.calendlyLink || ''}
+                        onChange={(e) => setEditData({...editData, calendlyLink: e.target.value})}
+                        placeholder="https://calendly.com/your-username/interview"
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                                         ) : (
-                       <p className="text-gray-700">
-                         {profileData?.bio || 'Tell students about your company culture, mission, and what makes you special...'}
-                       </p>
-                     )}
-                  </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Example: https://calendly.com/company-name/30min-interview
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      {profileData?.calendlyLink ? (
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={profileData.calendlyLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-700 underline break-all"
+                          >
+                            {profileData.calendlyLink}
+                          </a>
+                          <span className="text-green-600 text-sm">✅ Active</span>
+                        </div>
+                      ) : (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <p className="text-yellow-800 text-sm">
+                            ⚠️ No Calendly link set. Click "Edit Profile" to add your interview scheduling link.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 </div>
 
                 {/* Company Stats & Info */}
