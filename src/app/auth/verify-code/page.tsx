@@ -27,7 +27,9 @@ export default function VerifyCodePage() {
   const router = useRouter()
   const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isResending, setIsResending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [hasCheckedStatus, setHasCheckedStatus] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [canVerify, setCanVerify] = useState(false)
@@ -203,6 +205,49 @@ export default function VerifyCodePage() {
     }
   };
 
+  // Add resend functionality
+  const handleResend = async () => {
+    if (!session?.user?.email) {
+      setError('No email address found. Please log in again.');
+      return;
+    }
+
+    setIsResending(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch('/api/auth/send-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: session.user.email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to resend verification code');
+      }
+
+      // Show success message
+      setSuccessMessage(data.developmentMode 
+        ? `Development Mode: Use code ${data.verificationCode} to verify`
+        : 'New verification code sent! Check your email.'
+      );
+
+      // Clear any existing code
+      setCode('');
+
+    } catch (error) {
+      console.error('Resend error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to resend verification code');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   // Custom OTP handler
   const handleOtpChange = (val: string) => {
     setCode(val);
@@ -306,16 +351,20 @@ export default function VerifyCodePage() {
             transition={{ delay: 0.6, duration: 0.5 }}
             className="mt-6 text-center"
           >
+            {successMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm">
+                {successMessage}
+              </div>
+            )}
+            
             <p className="text-sm text-gray-500">
               Didn't receive the code?{' '}
               <button
-                onClick={() => {
-                  // Resend verification code logic here
-                  console.log('Resend code clicked')
-                }}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                onClick={handleResend}
+                disabled={isResending}
+                className="text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Resend
+                {isResending ? 'Sending...' : 'Resend'}
               </button>
             </p>
           </motion.div>
