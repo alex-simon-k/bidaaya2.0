@@ -227,7 +227,7 @@ export default function ProfilePage() {
 
   if (!profileData) return null
 
-  const activityLevel = getActivityLevel(profileData.stats.weeklyActivity)
+  const activityLevel = getActivityLevel(profileData.stats?.weeklyActivity || 1)
   const completionScore = calculateCompletionScore()
 
   // Render different layouts based on user role
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                     </button>
                   </div>
                   
-                  {profileData.stats.projectsCompleted > 0 ? (
+                  {(profileData?.stats?.projectsCompleted || 0) > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Placeholder for project cards */}
                       <div className="border border-gray-200 rounded-lg p-6">
@@ -619,7 +619,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-white p-2 shadow-lg">
                   <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-4xl font-bold">
-                    {profileData.name.charAt(0).toUpperCase()}
+                    {profileData?.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                 </div>
                 {isEditing && (
@@ -672,9 +672,9 @@ export default function ProfilePage() {
                       onChange={(e) => setEditData({...editData, name: e.target.value})}
                       className="text-3xl font-bold text-gray-900 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500"
                     />
-                  ) : (
-                    <h1 className="text-3xl font-bold text-gray-900">{profileData.name}</h1>
-                  )}
+                                  ) : (
+                  <h1 className="text-3xl font-bold text-gray-900">{profileData?.name || 'User Name'}</h1>
+                )}
                   
                   {isEditing ? (
                     <input
@@ -684,11 +684,11 @@ export default function ProfilePage() {
                       placeholder="Your title (e.g., Computer Science Student)"
                       className="text-lg text-gray-600 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500 mt-2"
                     />
-                  ) : (
-                    <p className="text-lg text-gray-600 mt-2">
-                      {profileData.title || `${userRole === 'STUDENT' ? 'Student' : 'Company'} Member`}
-                    </p>
-                  )}
+                                  ) : (
+                  <p className="text-lg text-gray-600 mt-2">
+                    {profileData?.title || `${userRole === 'STUDENT' ? 'Student' : 'Company'} Member`}
+                  </p>
+                )}
                 </div>
 
                 {/* Location & Contact */}
@@ -703,9 +703,9 @@ export default function ProfilePage() {
                         placeholder="Location"
                         className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
                       />
-                    ) : (
-                      <span>{profileData.location || 'Location not specified'}</span>
-                    )}
+                                    ) : (
+                  <span>{profileData?.location || 'Location not specified'}</span>
+                )}
                   </div>
                   
                   <div className="flex items-center gap-1">
