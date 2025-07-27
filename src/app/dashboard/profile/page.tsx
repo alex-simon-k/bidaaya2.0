@@ -779,21 +779,21 @@ export default function ProfilePage() {
                       <div className="text-gray-600">Projects</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-green-600">{profileData.stats.acceptanceRate}%</div>
+                      <div className="font-bold text-green-600">{profileData?.stats?.acceptanceRate || 0}%</div>
                       <div className="text-gray-600">Success Rate</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Badges */}
-                {profileData.stats.badgesEarned.length > 0 && (
+                {(profileData?.stats?.badgesEarned || []).length > 0 && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                       <Award className="h-4 w-4" />
                       Achievements
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {profileData.stats.badgesEarned.map((badgeId) => {
+                      {(profileData?.stats?.badgesEarned || []).map((badgeId) => {
                         const badge = BADGES[badgeId as keyof typeof BADGES]
                         return badge ? (
                           <div
@@ -849,8 +849,8 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {profileData.skills.length > 0 ? (
-                      profileData.skills.map((skill, index) => (
+                    {(profileData?.skills || []).length > 0 ? (
+                      (profileData?.skills || []).map((skill, index) => (
                         <span
                           key={index}
                           className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
@@ -868,22 +868,22 @@ export default function ProfilePage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Connect</h3>
                   <div className="flex gap-3">
-                    {profileData.socialLinks.linkedin && (
-                      <a href={profileData.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
+                    {profileData?.socialLinks?.linkedin && (
+                      <a href={profileData?.socialLinks?.linkedin} target="_blank" rel="noopener noreferrer"
                          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                         <Linkedin className="h-4 w-4" />
                         LinkedIn
                       </a>
                     )}
-                    {profileData.socialLinks.github && (
-                      <a href={profileData.socialLinks.github} target="_blank" rel="noopener noreferrer"
+                    {profileData?.socialLinks?.github && (
+                      <a href={profileData?.socialLinks?.github} target="_blank" rel="noopener noreferrer"
                          className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900">
                         <Github className="h-4 w-4" />
                         GitHub
                       </a>
                     )}
-                    {profileData.website && (
-                      <a href={profileData.website} target="_blank" rel="noopener noreferrer"
+                    {profileData?.website && (
+                      <a href={profileData?.website} target="_blank" rel="noopener noreferrer"
                          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                         <Globe className="h-4 w-4" />
                         Website
@@ -906,9 +906,9 @@ export default function ProfilePage() {
                   )}
                 </div>
                 
-                {profileData.experience.length > 0 ? (
+                {(profileData?.experience || []).length > 0 ? (
                   <div className="space-y-6">
-                    {profileData.experience.map((exp, index) => (
+                    {(profileData?.experience || []).map((exp, index) => (
                       <div key={index} className="border-l-2 border-blue-200 pl-6 relative">
                         <div className="absolute -left-2 top-0 w-4 h-4 bg-blue-500 rounded-full"></div>
                         <h4 className="font-semibold text-gray-900">{exp.title}</h4>
@@ -932,7 +932,7 @@ export default function ProfilePage() {
                   <div>
                     <h4 className="font-medium text-gray-900 mb-3">Technical Skills</h4>
                     <div className="flex flex-wrap gap-2">
-                      {profileData.skills.map((skill, index) => (
+                      {(profileData?.skills || []).map((skill, index) => (
                         <span
                           key={index}
                           className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
@@ -946,7 +946,7 @@ export default function ProfilePage() {
                   <div>
                     <h4 className="font-medium text-gray-900 mb-3">Interests</h4>
                     <div className="flex flex-wrap gap-2">
-                      {profileData.interests.map((interest, index) => (
+                      {(profileData?.interests || []).map((interest, index) => (
                         <span
                           key={index}
                           className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
@@ -964,7 +964,7 @@ export default function ProfilePage() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Bidaaya Projects</h3>
                 
-                {profileData.stats.projectsCompleted > 0 ? (
+                {(profileData?.stats?.projectsCompleted || 0) > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Placeholder for project cards */}
                     <div className="border border-gray-200 rounded-lg p-6">
