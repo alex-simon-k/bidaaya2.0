@@ -298,15 +298,24 @@ export default function DashboardLayout({
               👤 Profile
             </Link>
             
-            {/* Mentorship link for students only */}
+            {/* Student-only links */}
             {session.user.role === 'STUDENT' && (
-              <Link 
-                href="/dashboard/mentorship" 
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-3 py-3 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-              >
-                🎯 Book Mentorship
-              </Link>
+              <>
+                <Link 
+                  href="/dashboard/discovery-quiz" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  🧩 Discovery Quiz
+                </Link>
+                <Link 
+                  href="/dashboard/mentorship" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  🎯 Book Mentorship
+                </Link>
+              </>
             )}
             <Link 
               href="/subscription" 

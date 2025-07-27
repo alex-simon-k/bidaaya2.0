@@ -1,51 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from "@/lib/auth-config"
 import { PrismaClient } from '@prisma/client'
+import { authOptions } from "@/lib/auth-config"
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
+// GET - Get user profile data
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user profile with extended data
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user?.id },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
-        createdAt: true,
-        // Available profile fields from schema
-        bio: true,
-        location: true,
         university: true,
         major: true,
-        graduationYear: true,
         skills: true,
-        interests: true,
-        companyName: true,
+        bio: true,
         linkedin: true,
-        applicationsThisMonth: true,
-        // We'll calculate other stats from relations
-        applications: {
-          select: {
-            status: true,
-            createdAt: true
-          }
-        },
-        projects: {
-          select: {
-            status: true,
-            createdAt: true
-          }
-        }
+        graduationYear: true,
+        profileCompleted: true,
+        emailVerified: true
       }
     })
 
@@ -53,122 +36,96 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Calculate activity metrics from actual data
-    const totalApplications = user.applications.length
-    const acceptedApplications = user.applications.filter(app => app.status === 'ACCEPTED').length
-    const acceptanceRate = totalApplications > 0 
-      ? Math.round((acceptedApplications / totalApplications) * 100) 
-      : 0
-    
-    // Calculate weekly activity based on recent logins (simplified for now)
-    const weeklyActivity = Math.min(user.applicationsThisMonth / 4, 7) || 1
-
-    // Calculate Bidaaya level based on projects and activity
-    const calculateLevel = (projects: number, activity: number) => {
-      const baseLevel = Math.floor(projects / 3) + 1
-      const activityBonus = activity >= 5 ? 1 : 0
-      return Math.min(baseLevel + activityBonus, 10)
-    }
-
-    const profileData = {
-      id: user.id,
-      name: user.name || '',
-      email: user.email,
-      profilePicture: null, // Will be added later
-      bio: user.bio || '',
-      location: user.location || '',
-      website: '', // Will be added later
-      phone: '', // Will be added later
-      title: '', // Will be added later
-      company: user.companyName || '',
-      university: user.university || '',
-      degree: '', // Will be added later
-      graduationYear: user.graduationYear,
-      major: user.major || '',
-      
-      // Arrays
-      skills: user.skills || [],
-      interests: user.interests || [],
-      experience: [], // Will be populated from separate experience table in future
-      
-      // Social links
-      socialLinks: {
-        linkedin: user.linkedin || '',
-        github: '', // Will be added later
-        portfolio: '', // Will be added later
-        twitter: '' // Will be added later
-      },
-      
-      // Gamification stats
-      stats: {
-        projectsCompleted: user.projects.filter(p => p.status === 'LIVE').length,
-        applicationsSubmitted: totalApplications,
-        acceptanceRate: acceptanceRate,
-        totalExperience: user.projects.length * 3, // Assume 3 months per project
-        bidaayaLevel: calculateLevel(user.projects.length, weeklyActivity),
-        badgesEarned: ['early_adopter'], // Will be calculated based on achievements
-        lastActiveDate: new Date().toISOString(),
-        weeklyActivity: weeklyActivity,
-        memberSince: user.createdAt.toISOString()
-      },
-      
-      // Preferences (default values)
-      preferences: {
-        lookingForWork: true,
-        availabilityStatus: 'available' as const,
-        remoteWork: true,
-        projectTypes: [],
-        timeCommitment: 'part-time'
-      }
-    }
-
-    return NextResponse.json(profileData)
+    return NextResponse.json({
+      success: true,
+      profile: user
+    })
 
   } catch (error) {
-    console.error('Error fetching profile:', error)
+    console.error('❌ Error fetching user profile:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch profile data' },
+      { error: 'Failed to fetch profile' },
       { status: 500 }
     )
   }
 }
 
-export async function POST(req: NextRequest) {
+// PATCH - Update user profile
+export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const profileData = await req.json()
+    const body = await request.json()
+    const {
+      name,
+      university,
+      major,
+      skills,
+      bio,
+      linkedin,
+      graduationYear,
+      discoveryProfile,
+      discoveryCompleted
+    } = body
 
-         // Update user profile (only update fields that exist in schema)
-     const updatedUser = await prisma.user.update({
-       where: { email: session.user.email },
-       data: {
-         name: profileData.name,
-         bio: profileData.bio,
-         location: profileData.location,
-         university: profileData.university,
-         major: profileData.major,
-         graduationYear: profileData.graduationYear,
-         skills: profileData.skills || [],
-         interests: profileData.interests || [],
-         companyName: profileData.company,
-         linkedin: profileData.socialLinks?.linkedin,
-         // Update profile completion flag
-         profileCompleted: true
+    // Build update data object
+    const updateData: any = {}
+
+    if (name !== undefined) updateData.name = name
+    if (university !== undefined) updateData.university = university
+    if (major !== undefined) updateData.major = major
+    if (skills !== undefined) updateData.skills = skills
+    if (bio !== undefined) updateData.bio = bio
+    if (linkedin !== undefined) updateData.linkedin = linkedin
+    if (graduationYear !== undefined) updateData.graduationYear = graduationYear
+    
+    // Store discovery quiz data in bio field temporarily
+    // TODO: Add discoveryProfile JSON field to User schema
+    if (discoveryProfile !== undefined) {
+      updateData.bio = JSON.stringify({
+        originalBio: updateData.bio || bio,
+        discoveryProfile,
+        discoveryCompleted: discoveryCompleted || false
+      })
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user?.id },
+      data: updateData,
+             select: {
+         id: true,
+         name: true,
+         email: true,
+         role: true,
+         university: true,
+         major: true,
+         skills: true,
+         bio: true,
+         linkedin: true,
+         graduationYear: true,
+         profileCompleted: true,
+         emailVerified: true
        }
-     })
+    })
 
-    // Return updated profile data
-    return GET(req)
+    console.log(`✅ User profile updated for ${session.user?.email}:`, {
+      fieldsUpdated: Object.keys(updateData)
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Profile updated successfully',
+      profile: updatedUser
+    })
 
   } catch (error) {
-    console.error('Error updating profile:', error)
+    console.error('❌ Error updating user profile:', error)
     return NextResponse.json(
-      { error: 'Failed to update profile data' },
+      { error: 'Failed to update profile' },
       { status: 500 }
     )
   }
