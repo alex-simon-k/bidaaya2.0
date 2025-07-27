@@ -38,12 +38,61 @@ export function CompanyPaywallModal({
   const [isAnimating, setIsAnimating] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState(promptConfig.recommendedPlan.id)
 
+  const getSelectedTier = () => {
+    return getPaidCompanyTiers().find(tier => tier.id === selectedPlan) || promptConfig.recommendedPlan
+  }
+
   const handleUpgrade = async () => {
+    await handlePlanUpgrade(selectedPlan)
+  }
+
+  const handlePlanUpgrade = async (planId: string) => {
     setIsAnimating(true)
-    // Add slight delay for better UX
-    setTimeout(() => {
-      router.push(`/pricing?source=company_modal&trigger=${trigger}&plan=${selectedPlan}`)
-    }, 300)
+    
+    try {
+      // Map internal plan IDs to Stripe plan IDs
+      const stripePlanMap: Record<string, string> = {
+        'COMPANY_BASIC': 'company_basic_monthly',
+        'COMPANY_PREMIUM': 'company_hr_booster_monthly', 
+        'COMPANY_PRO': 'company_hr_agent_monthly'
+      }
+      
+      const stripePlanId = stripePlanMap[planId]
+      
+      if (!stripePlanId) {
+        throw new Error('Invalid plan selected')
+      }
+
+      const response = await fetch('/api/subscription/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId: stripePlanId,
+          successUrl: `${window.location.origin}/dashboard/subscription?success=true&plan=${planId}`,
+          cancelUrl: window.location.href
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url
+      } else {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Failed to start checkout. Please try again.')
+      setIsAnimating(false)
+    }
+  }
+
+  const handleManageSubscription = () => {
+    router.push('/dashboard/subscription')
+    onClose()
   }
 
   const getTriggerIcon = () => {
@@ -260,6 +309,24 @@ export function CompanyPaywallModal({
                             </div>
                           )}
                         </div>
+
+                        {/* Individual upgrade button for each tier */}
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <button
+                            onClick={() => handlePlanUpgrade(tier.id)}
+                            disabled={isAnimating}
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all"
+                          >
+                            {isAnimating ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Processing...
+                              </div>
+                            ) : (
+                              `Upgrade to ${tier.name} - £${tier.price}/month`
+                            )}
+                          </button>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
@@ -281,7 +348,7 @@ export function CompanyPaywallModal({
                   ) : (
                     <>
                       <Crown className="h-6 w-6" />
-                      {promptConfig.ctaText}
+                      Upgrade to {getSelectedTier().name} - £{getSelectedTier().price}/month
                       <ArrowRight className="h-6 w-6" />
                     </>
           )}
@@ -298,12 +365,21 @@ export function CompanyPaywallModal({
           </div>
         </div>
 
-                <button
-                  onClick={onClose}
-                  className="w-full text-gray-600 font-medium py-3 px-6 rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  I'll Upgrade Later
-                </button>
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    onClick={handleManageSubscription}
+                    className="text-blue-600 font-medium hover:text-blue-700 transition-colors underline"
+                  >
+                    Manage Subscription
+                  </button>
+                  <span className="text-gray-300">•</span>
+                  <button
+                    onClick={onClose}
+                    className="text-gray-600 font-medium hover:text-gray-700 transition-colors"
+                  >
+                    I'll Upgrade Later
+                  </button>
+                </div>
               </div>
 
               {/* Fine print */}
