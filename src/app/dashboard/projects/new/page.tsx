@@ -703,7 +703,7 @@ export default function NewProjectPage() {
                   required
                 />
                 <label htmlFor="partTimeTerms" className="text-sm text-gray-700">
-                  <span className="font-medium">I confirm this is a part-time project only.</span> This project is designed to be completed alongside students' studies and day-to-day activities, not as full-time employment. Students will work maximum {formData.hoursPerWeek} hours per week on this project.
+                  <span className="font-medium">I confirm this is a part-time project only.</span> This project is designed to be completed alongside students' studies and day-to-day activities, not as full-time employment.
                 </label>
               </div>
             </div>
