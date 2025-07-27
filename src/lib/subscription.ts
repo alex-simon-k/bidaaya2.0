@@ -100,10 +100,10 @@ export const COMPANY_TIERS: SubscriptionTier[] = [
   },
   {
     id: 'COMPANY_BASIC',
-    name: 'Basic',
+    name: 'Company Basic',
     description: 'Perfect for small teams getting started',
-    price: 49,
-    priceId: 'price_company_basic', // TODO: Replace with actual Stripe price ID
+    price: 20,
+    priceId: 'price_company_basic',
     projectsAllowed: 1,
     applicationsPerMonth: -1, // Unlimited applications
     shortlistingOnly: true,
@@ -118,11 +118,11 @@ export const COMPANY_TIERS: SubscriptionTier[] = [
     ]
   },
   {
-    id: 'COMPANY_PRO',
+    id: 'COMPANY_PREMIUM',
     name: 'HR Booster',
     description: 'Enhanced hiring with multiple projects',
-    price: 149,
-    priceId: 'price_company_pro', // TODO: Replace with actual Stripe price ID
+    price: 75,
+    priceId: 'price_company_premium',
     projectsAllowed: 5,
     customProjects: true,
     applicationsPerMonth: -1, // Unlimited
@@ -141,11 +141,11 @@ export const COMPANY_TIERS: SubscriptionTier[] = [
     ]
   },
   {
-    id: 'COMPANY_PREMIUM',
-    name: 'Full-Service',
+    id: 'COMPANY_PRO',
+    name: 'HR Agent',
     description: 'Complete hands-off hiring solution',
-    price: 299,
-    priceId: 'price_company_premium', // TODO: Replace with actual Stripe price ID
+    price: 175,
+    priceId: 'price_company_pro',
     projectsAllowed: -1, // Unlimited
     customProjects: true,
     applicationsPerMonth: -1, // Unlimited
@@ -168,6 +168,11 @@ export const COMPANY_TIERS: SubscriptionTier[] = [
     ]
   }
 ]
+
+// Helper function to get only paid company tiers (excludes FREE for upgrade options)
+export function getPaidCompanyTiers(): SubscriptionTier[] {
+  return COMPANY_TIERS.filter(tier => tier.id !== 'FREE')
+}
 
 export function getSubscriptionTier(plan: string, role: 'STUDENT' | 'COMPANY'): SubscriptionTier | null {
   const tiers = role === 'STUDENT' ? STUDENT_TIERS : COMPANY_TIERS
@@ -312,7 +317,7 @@ export interface CompanyUpgradePrompt {
 
 export function getCompanyActivationUpgradePrompt(user: any): CompanyUpgradePrompt {
   const currentPlan = user?.subscriptionPlan || 'FREE'
-  const recommendedTier = COMPANY_TIERS[0] // Basic plan
+  const recommendedTier = COMPANY_TIERS[1] // Company Basic (skip FREE tier)
   
   return {
     title: "🚀 Ready to Publish Your Project?",

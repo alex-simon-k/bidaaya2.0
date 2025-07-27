@@ -19,7 +19,7 @@ import {
   Clock,
   Shield
 } from 'lucide-react'
-import { CompanyUpgradePrompt, COMPANY_TIERS } from '@/lib/subscription'
+import { CompanyUpgradePrompt, getPaidCompanyTiers, SubscriptionTier } from '@/lib/subscription'
 
 interface CompanyPaywallModalProps {
   isOpen: boolean
@@ -216,7 +216,7 @@ export function CompanyPaywallModal({
                   </h3>
                   
                   <div className="space-y-4">
-                    {COMPANY_TIERS.map((tier, index) => (
+                    {getPaidCompanyTiers().map((tier, index) => (
                       <motion.div
                         key={tier.id}
                         initial={{ opacity: 0, x: 20 }}
@@ -240,7 +240,7 @@ export function CompanyPaywallModal({
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="text-lg font-bold text-gray-900">{tier.name}</h4>
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-gray-900">${tier.price}</div>
+                            <div className="text-2xl font-bold text-gray-900">£{tier.price}</div>
                             <div className="text-sm text-gray-500">/month</div>
                           </div>
         </div>
