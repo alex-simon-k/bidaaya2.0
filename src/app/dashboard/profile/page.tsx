@@ -138,13 +138,13 @@ export default function ProfilePage() {
         // Create profile with default data
         createDefaultProfile()
       }
-    } catch (error) {
+      } catch (error) {
       console.error('Error fetching profile:', error)
       createDefaultProfile()
-    } finally {
-      setIsLoading(false)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
 
   const createDefaultProfile = () => {
     const defaultProfile: ProfileData = {
@@ -581,7 +581,7 @@ export default function ProfilePage() {
               {activeTab === 'culture' && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-6">Company Culture</h3>
-                  <div className="text-center py-12">
+      <div className="text-center py-12">
                     <div className="text-gray-400 mb-4">
                       <Star className="h-12 w-12 mx-auto" />
                     </div>
@@ -598,7 +598,7 @@ export default function ProfilePage() {
   }
 
      function renderStudentProfile() {
-     return (
+  return (
        <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
@@ -666,8 +666,8 @@ export default function ProfilePage() {
               <div className="lg:col-span-2">
                 <div className="mb-6">
                   {isEditing ? (
-                    <input
-                      type="text"
+          <input
+            type="text"
                       value={editData.name || ''}
                       onChange={(e) => setEditData({...editData, name: e.target.value})}
                       className="text-3xl font-bold text-gray-900 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500"
@@ -677,7 +677,7 @@ export default function ProfilePage() {
                 )}
                   
                   {isEditing ? (
-                    <input
+          <input
                       type="text"
                       value={editData.title || ''}
                       onChange={(e) => setEditData({...editData, title: e.target.value})}
@@ -689,15 +689,15 @@ export default function ProfilePage() {
                     {profileData?.title || `${userRole === 'STUDENT' ? 'Student' : 'Company'} Member`}
                   </p>
                 )}
-                </div>
+        </div>
 
                 {/* Location & Contact */}
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
                     {isEditing ? (
-                      <input
-                        type="text"
+              <input
+                type="text"
                         value={editData.location || ''}
                         onChange={(e) => setEditData({...editData, location: e.target.value})}
                         placeholder="Location"
@@ -706,30 +706,30 @@ export default function ProfilePage() {
                                     ) : (
                   <span>{profileData?.location || 'Location not specified'}</span>
                 )}
-                  </div>
-                  
+            </div>
+
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>Joined {profileData?.stats ? new Date(profileData.stats.memberSince).toLocaleDateString() : 'Recently'}</span>
-                  </div>
-                  
+            </div>
+
                   <div className="flex items-center gap-1">
                     <Activity className="h-4 w-4" />
                     <span className={activityLevel.color}>
                       {activityLevel.icon} {activityLevel.label}
                     </span>
                   </div>
-                </div>
+            </div>
 
                 {/* Bio */}
                 <div className="mb-6">
                   <h3 className="font-semibold text-gray-900 mb-2">About</h3>
                   {isEditing ? (
-                    <textarea
+              <textarea
                       value={editData.bio || ''}
                       onChange={(e) => setEditData({...editData, bio: e.target.value})}
                       placeholder="Tell us about yourself, your goals, and what you're passionate about..."
-                      rows={4}
+                rows={4}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (
@@ -759,7 +759,7 @@ export default function ProfilePage() {
                       Complete your profile to stand out to companies!
                     </p>
                   )}
-                </div>
+            </div>
 
                 {/* Bidaaya Level */}
                 <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4">
@@ -767,7 +767,7 @@ export default function ProfilePage() {
                     <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
                       <Zap className="h-4 w-4 text-white" />
                     </div>
-                    <div>
+            <div>
                       <div className="font-semibold text-gray-900">Level {profileData?.stats?.bidaayaLevel || 1}</div>
                       <div className="text-xs text-gray-600">Bidaaya Member</div>
                     </div>
@@ -895,7 +895,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'experience' && (
-              <div>
+            <div>
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Experience</h3>
                   {isEditing && (
@@ -904,8 +904,8 @@ export default function ProfilePage() {
                       Add Experience
                     </button>
                   )}
-                </div>
-                
+            </div>
+
                 {(profileData?.experience || []).length > 0 ? (
                   <div className="space-y-6">
                     {(profileData?.experience || []).map((exp, index) => (
@@ -929,7 +929,7 @@ export default function ProfilePage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Skills & Interests</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
+            <div>
                     <h4 className="font-medium text-gray-900 mb-3">Technical Skills</h4>
                     <div className="flex flex-wrap gap-2">
                       {(profileData?.skills || []).map((skill, index) => (
@@ -941,9 +941,9 @@ export default function ProfilePage() {
                         </span>
                       ))}
                     </div>
-                  </div>
-                  
-                  <div>
+            </div>
+
+            <div>
                     <h4 className="font-medium text-gray-900 mb-3">Interests</h4>
                     <div className="flex flex-wrap gap-2">
                       {(profileData?.interests || []).map((interest, index) => (
@@ -957,7 +957,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
-              </div>
+            </div>
             )}
 
             {activeTab === 'projects' && (
@@ -983,12 +983,12 @@ export default function ProfilePage() {
                     </div>
                     <h4 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h4>
                     <p className="text-gray-600 mb-4">Start applying to projects to build your portfolio!</p>
-                    <button 
+          <button
                       onClick={() => router.push('/dashboard/projects')}
                       className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
-                    >
+          >
                       Browse Projects
-                    </button>
+          </button>
                   </div>
                 )}
               </div>
@@ -997,6 +997,6 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
-    )
+  )
   }
 } 

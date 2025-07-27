@@ -28,6 +28,7 @@ import {
   FileText as DocumentTextIcon,
   MessageSquare as ChatBubbleLeftRightIcon,
   GraduationCap as AcademicCapIcon,
+  TrendingUp as TrendingUpIcon,
   Mail as EnvelopeIcon,
   Phone as PhoneIcon,
   Link as LinkIcon,
@@ -98,14 +99,34 @@ interface ExternalApplication {
   salary?: string
   jobUrl?: string
   notes?: string
+  source?: string
   createdAt: string
 }
 
 interface Analytics {
-  totalApplications: number
-  acceptanceRate: number
-  averageResponseTime: number
-  topCategories: Array<{ category: string; count: number }>
+  period: number
+  bidaaya: {
+    applications: number
+    shortlisted: number
+    interviews: number
+    offers: number
+    responseRate: number
+  }
+  total: {
+    applications: number
+    interviews: number
+    offers: number
+    responseRate: number
+  }
+  summary: {
+    totalApplicationsThisMonth: number
+    averageApplicationsPerWeek: number
+    successRate: number
+  }
+  upgradeAvailable?: {
+    message: string
+    features: string[]
+  }
 }
 
 type ApplicationStatus = 'PENDING' | 'SHORTLISTED' | 'INTERVIEWED' | 'ACCEPTED' | 'REJECTED'
@@ -1098,7 +1119,7 @@ export default function ApplicationsPage() {
                     {activeTab === 'bidaaya' ? 'Bidaaya' : 'External'} Applications
                   </p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {activeTab === 'bidaaya' ? analytics.totalApplications : analytics.totalApplications}
+                    {activeTab === 'bidaaya' ? analytics.bidaaya.applications : analytics.total.applications}
                   </p>
                 </div>
               </div>
@@ -1110,7 +1131,7 @@ export default function ApplicationsPage() {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-yellow-900">Response Rate</p>
                   <p className="text-2xl font-bold text-yellow-600">
-                    {activeTab === 'bidaaya' ? analytics.acceptanceRate : analytics.acceptanceRate}%
+                    {activeTab === 'bidaaya' ? analytics.bidaaya.responseRate : analytics.total.responseRate}%
                   </p>
                 </div>
               </div>
@@ -1122,7 +1143,7 @@ export default function ApplicationsPage() {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-green-900">Interviews</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {activeTab === 'bidaaya' ? analytics.totalApplications : analytics.totalApplications}
+                    {activeTab === 'bidaaya' ? analytics.bidaaya.interviews : analytics.total.interviews}
                   </p>
                 </div>
               </div>
@@ -1134,7 +1155,7 @@ export default function ApplicationsPage() {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-purple-900">Offers</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {activeTab === 'bidaaya' ? analytics.totalApplications : analytics.totalApplications}
+                    {activeTab === 'bidaaya' ? analytics.bidaaya.offers : analytics.total.offers}
                   </p>
                 </div>
               </div>
