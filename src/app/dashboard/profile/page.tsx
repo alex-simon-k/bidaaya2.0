@@ -734,7 +734,7 @@ export default function ProfilePage() {
                     />
                   ) : (
                     <p className="text-gray-700">
-                      {profileData.bio || 'No bio added yet. Click edit to add your story!'}
+                                             {profileData?.bio || 'No bio added yet. Click edit to add your story!'}
                     </p>
                   )}
                 </div>
