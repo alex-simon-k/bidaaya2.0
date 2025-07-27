@@ -768,7 +768,7 @@ export default function ProfilePage() {
                       <Zap className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">Level {profileData.stats.bidaayaLevel}</div>
+                      <div className="font-semibold text-gray-900">Level {profileData?.stats?.bidaayaLevel || 1}</div>
                       <div className="text-xs text-gray-600">Bidaaya Member</div>
                     </div>
                   </div>
