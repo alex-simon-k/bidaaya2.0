@@ -511,9 +511,9 @@ export function AIShortlistPanel({
             benefits: shortlistData.upgradePrompt.benefits,
             currentPlan: shortlistData.upgradePrompt.currentTier,
                          recommendedPlan: {
-               id: 'COMPANY_PRO',
-               name: 'Pro',
-               price: 149,
+               id: 'COMPANY_PREMIUM',
+               name: 'HR Booster',
+               price: 75,
                description: 'Full candidate visibility',
                features: shortlistData.upgradePrompt.benefits,
                applicationsPerMonth: -1

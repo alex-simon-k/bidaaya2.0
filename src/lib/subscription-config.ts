@@ -148,36 +148,11 @@ export const STUDENT_PLANS: SubscriptionPlan[] = [
  */
 export const COMPANY_PLANS: SubscriptionPlan[] = [
   {
-    id: 'FREE',
-    name: 'Free Trial',
-    description: 'Test the platform with limited features',
-    role: 'COMPANY',
-    price: 0,
-    features: {
-      applicationsPerMonth: -1, // can receive unlimited if they had active projects
-      documentsPerApplication: 0, // not applicable for companies
-      externalJobTracking: false, // not applicable for companies
-      activeProjectsAllowed: 0, // cannot activate projects
-      draftProjectsAllowed: 3, // can create drafts to test
-      candidateVisibility: 'shortlisted',
-      candidatePoolSize: 10,
-      customProjectCreation: false,
-      emailSupport: true
-    },
-    displayFeatures: [
-      'Create up to 3 draft projects',
-      'Browse student profiles',
-      'Test platform features',
-      'Basic project templates',
-      'Email notifications'
-    ]
-  },
-  {
     id: 'COMPANY_BASIC',
-    name: 'Basic',
+    name: 'Company Basic',
     description: 'Perfect for small teams getting started',
     role: 'COMPANY',
-    price: 49,
+    price: 20,
     stripeMonthlyPriceId: process.env.STRIPE_COMPANY_BASIC_MONTHLY,
     stripeYearlyPriceId: process.env.STRIPE_COMPANY_BASIC_YEARLY,
     popular: true,
@@ -203,14 +178,13 @@ export const COMPANY_PLANS: SubscriptionPlan[] = [
     ]
   },
   {
-    id: 'COMPANY_PRO',
+    id: 'COMPANY_PREMIUM',
     name: 'HR Booster',
     description: 'Enhanced hiring with multiple projects',
     role: 'COMPANY',
-    price: 149,
+    price: 75,
     stripeMonthlyPriceId: process.env.STRIPE_COMPANY_PREMIUM_MONTHLY,
     stripeYearlyPriceId: process.env.STRIPE_COMPANY_PREMIUM_YEARLY,
-    recommended: true,
     features: {
       applicationsPerMonth: -1,
       documentsPerApplication: 0, // not applicable for companies
@@ -236,11 +210,11 @@ export const COMPANY_PLANS: SubscriptionPlan[] = [
     ]
   },
   {
-    id: 'COMPANY_PREMIUM',
-    name: 'Full-Service',
+    id: 'COMPANY_PRO',
+    name: 'HR Agent',
     description: 'Complete hands-off hiring solution',
     role: 'COMPANY',
-    price: 299,
+    price: 175,
     stripeMonthlyPriceId: process.env.STRIPE_COMPANY_PRO_MONTHLY,
     stripeYearlyPriceId: process.env.STRIPE_COMPANY_PRO_YEARLY,
     features: {

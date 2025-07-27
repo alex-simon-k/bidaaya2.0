@@ -86,20 +86,9 @@ export function MembershipSelectionPopup({
 
   const getCompanyPlans = (cycle: 'monthly' | 'yearly'): Plan[] => [
     {
-      id: 'free',
-      name: 'Free Trial',
-      price: 0,
-      description: 'Test the platform',
-      features: ['Create draft projects', 'Browse students', 'Basic features'],
-      buttonText: 'Start Free',
-      color: 'gray',
-      popular: false,
-      note: 'Projects require upgrade to publish'
-    },
-    {
       id: cycle === 'monthly' ? 'company_basic_monthly' : 'company_basic_yearly',
       name: 'Company Basic',
-      price: cycle === 'monthly' ? 49 : 490,
+      price: cycle === 'monthly' ? 20 : 199.99,
       description: 'Perfect for small teams',
       features: ['1 active project', 'AI shortlisting', 'Interview tools', 'Basic analytics'],
       buttonText: 'Start Hiring',
@@ -110,9 +99,9 @@ export function MembershipSelectionPopup({
     {
       id: cycle === 'monthly' ? 'company_hr_booster_monthly' : 'company_hr_booster_yearly',
       name: 'HR Booster',
-      price: cycle === 'monthly' ? 149 : 1490,
+      price: cycle === 'monthly' ? 75 : 747,
       description: 'For growing companies',
-      features: ['3 active projects', 'Full applicant visibility', 'Advanced analytics', 'Priority support'],
+      features: ['5 active projects', 'Full applicant visibility', 'Advanced analytics', 'Priority support'],
       buttonText: 'Boost Hiring',
       color: 'purple',
       popular: false,
@@ -121,7 +110,7 @@ export function MembershipSelectionPopup({
     {
       id: cycle === 'monthly' ? 'company_hr_agent_monthly' : 'company_hr_agent_yearly',
       name: 'HR Agent',
-      price: cycle === 'monthly' ? 299 : 2990,
+      price: cycle === 'monthly' ? 175 : 1745,
       description: 'Complete hiring solution',
       features: ['Unlimited projects', 'White-glove service', 'Custom integrations', 'Dedicated support'],
       buttonText: 'Go Full Agent',
@@ -140,11 +129,6 @@ export function MembershipSelectionPopup({
     setIsUpgrading(true)
 
     try {
-      if (price === 0) {
-        // Free plan - just close modal
-        onClose()
-        return
-      }
 
       // Paid plan - redirect to Stripe
       const response = await fetch('/api/subscription/checkout', {

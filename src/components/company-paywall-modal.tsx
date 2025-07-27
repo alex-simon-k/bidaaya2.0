@@ -308,7 +308,7 @@ export function CompanyPaywallModal({
 
               {/* Fine print */}
               <p className="text-xs text-gray-500 text-center mt-6">
-                ✨ Start your free trial today • All plans include onboarding support
+                ✨ All plans include onboarding support • 30-day money back guarantee
               </p>
             </div>
           </motion.div>

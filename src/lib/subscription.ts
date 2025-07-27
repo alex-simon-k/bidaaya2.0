@@ -216,11 +216,11 @@ export function canCompanyActivateProject(user: any, activeProjectCount: number)
   
   const subscriptionPlan = user.subscriptionPlan || 'FREE'
   
-  // Block FREE tier from activating ANY projects
+  // Block FREE tier from activating ANY projects - all companies must have a paid plan
   if (subscriptionPlan === 'FREE') {
     return { 
       canActivate: false, 
-      reason: '🚀 Ready to publish your project? Upgrade to our Basic plan ($49/month) to activate projects and start receiving applications from talented students!',
+      reason: '🚀 Ready to publish your project? Upgrade to our Company Basic plan (£20/month) to activate projects and start receiving applications from talented students!',
       upgradeRequired: 'COMPANY_BASIC'
     }
   }

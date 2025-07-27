@@ -118,7 +118,7 @@ export async function GET(request: Request) {
             upgradePrompt: visibilityLevel === 'shortlisted_only' ? {
               message: 'Upgrade to HR Booster to see all applicants and their full profiles',
               currentLimit: 'Only shortlisted candidates (max 10)',
-              nextTier: 'HR Booster ($149/month)'
+              nextTier: 'HR Booster (£75/month)'
             } : null
           }
         })

@@ -33,12 +33,12 @@ const PLAN_METADATA = {
   student_pro_monthly: { amount: 1500, currency: 'usd', interval: 'month', name: 'Student Pro' }, // $15
   student_premium_yearly: { amount: 4800, currency: 'usd', interval: 'year', name: 'Student Premium' }, // $48 (20% off)
   student_pro_yearly: { amount: 14400, currency: 'usd', interval: 'year', name: 'Student Pro' }, // $144 (20% off)
-  company_basic_monthly: { amount: 4900, currency: 'usd', interval: 'month', name: 'Company Basic' }, // $49
-  company_hr_booster_monthly: { amount: 14900, currency: 'usd', interval: 'month', name: 'HR Booster' }, // $149
-  company_hr_agent_monthly: { amount: 29900, currency: 'usd', interval: 'month', name: 'HR Agent' }, // $299
-  company_basic_yearly: { amount: 47040, currency: 'usd', interval: 'year', name: 'Company Basic' }, // $470.40 (20% off)
-  company_hr_booster_yearly: { amount: 142560, currency: 'usd', interval: 'year', name: 'HR Booster' }, // $1425.60 (20% off)
-  company_hr_agent_yearly: { amount: 287040, currency: 'usd', interval: 'year', name: 'HR Agent' }, // $2870.40 (20% off)
+  company_basic_monthly: { amount: 2000, currency: 'gbp', interval: 'month', name: 'Company Basic' }, // £20
+  company_hr_booster_monthly: { amount: 7500, currency: 'gbp', interval: 'month', name: 'HR Booster' }, // £75
+  company_hr_agent_monthly: { amount: 17500, currency: 'gbp', interval: 'month', name: 'HR Agent' }, // £175
+  company_basic_yearly: { amount: 19999, currency: 'gbp', interval: 'year', name: 'Company Basic' }, // £199.99
+  company_hr_booster_yearly: { amount: 74700, currency: 'gbp', interval: 'year', name: 'HR Booster' }, // £747
+  company_hr_agent_yearly: { amount: 174500, currency: 'gbp', interval: 'year', name: 'HR Agent' }, // £1745
 } as const
 
 export async function POST(request: NextRequest) {

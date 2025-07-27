@@ -71,8 +71,8 @@ export const PRICING_PLANS = {
   // Company Plans
   COMPANY_BASIC: {
     id: 'company_basic',
-    name: 'Basic',
-    price: 49,
+    name: 'Company Basic',
+    price: 20,
     interval: 'month' as const, 
     description: 'Perfect for small teams getting started',
     features: [
@@ -87,12 +87,13 @@ export const PRICING_PLANS = {
       'Only see shortlisted candidates',
       'Single project limit',
       'Template projects only',
-    ]
+    ],
+    popular: true
   },
   COMPANY_PREMIUM: {
     id: 'company_premium',
     name: 'HR Booster',
-    price: 149, 
+    price: 75, 
     interval: 'month' as const,
     description: 'Enhanced hiring with multiple projects',
     features: [
@@ -104,14 +105,12 @@ export const PRICING_PLANS = {
       'Candidate communication tools',
       'Advanced analytics dashboard',
       'Priority email support',
-    ],
-    popular: true,
-    badge: 'Most Popular'
+    ]
   },
   COMPANY_PRO: {
     id: 'company_pro',
-    name: 'Full-Service',
-    price: 299,
+    name: 'HR Agent',
+    price: 175,
     interval: 'month' as const,
     description: 'Complete hands-off hiring solution',
     features: [
