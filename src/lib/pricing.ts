@@ -168,6 +168,7 @@ export const hasFeatureAccess = (userPlan: string, feature: string): boolean => 
     'multiple_projects': ['company_premium', 'company_pro'],
     'custom_projects': ['company_premium', 'company_pro'],
     'full_applicant_visibility': ['company_premium', 'company_pro'],
+    'advanced_ai_shortlisting': ['company_premium', 'company_pro'],
     'interview_service': ['company_pro'],
     'dedicated_manager': ['company_pro'],
     'white_label': ['company_pro'],
