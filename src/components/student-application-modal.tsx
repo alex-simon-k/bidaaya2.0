@@ -13,7 +13,16 @@ import {
   CheckCircle,
   Crown,
   Zap,
-  Lock
+  Lock,
+  User,
+  MapPin,
+  Calendar,
+  Target,
+  MessageSquare,
+  Paperclip,
+  Award,
+  BookOpen,
+  Send
 } from 'lucide-react'
 import { StudentPaywallModal } from '@/components/student-paywall-modal'
 import { 
@@ -29,6 +38,17 @@ interface Project {
   title: string
   description: string
   skillsRequired: string[]
+  category?: string
+  workType?: string
+  paymentType?: string
+  hoursPerWeek?: number
+  durationMonths?: number
+  experienceLevel?: string
+  hiringIntent?: string
+  definitionOfDone?: string
+  problemStatement?: string
+  solutionDirection?: string
+  idealCandidateRequirements?: string[]
   company: {
     companyName?: string
     name?: string
@@ -39,8 +59,6 @@ interface Project {
   location?: string
   remote: boolean
 }
-
-// Remove local interface since we're importing from lib
 
 interface StudentApplicationModalProps {
   project: Project | null
@@ -56,6 +74,7 @@ export function StudentApplicationModal({
   onSuccess 
 }: StudentApplicationModalProps) {
   const { data: session } = useSession()
+  const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingLimits, setIsCheckingLimits] = useState(false)
   const [limits, setLimits] = useState<ApplicationLimits | null>(null)
@@ -64,16 +83,60 @@ export function StudentApplicationModal({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<string>('')
   
-  // Form state
-  const [coverLetter, setCoverLetter] = useState('')
-  const [additionalDocument, setAdditionalDocument] = useState<File | null>(null)
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  // Enhanced form state
+  const [formData, setFormData] = useState({
+    // Step 1: Personal Interest
+    personalStatement: '',
+    whyInterested: '',
+    relevantExperience: '',
+    
+    // Step 2: Project Understanding
+    projectUnderstanding: '',
+    proposedApproach: '',
+    deliverableTimeline: '',
+    
+    // Step 3: Availability & Commitment
+    weeklyAvailability: '',
+    startDate: '',
+    commitmentLevel: '',
+    
+    // Step 4: Additional Materials
+    coverLetter: '',
+    additionalNotes: '',
+  })
+  
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    resume?: File
+    portfolio?: File
+    transcript?: File
+    other?: File
+  }>({})
 
   useEffect(() => {
     if (isOpen && project && session?.user?.id) {
       checkApplicationLimits()
+      resetForm()
     }
   }, [isOpen, project, session])
+
+  const resetForm = () => {
+    setCurrentStep(1)
+    setFormData({
+      personalStatement: '',
+      whyInterested: '',
+      relevantExperience: '',
+      projectUnderstanding: '',
+      proposedApproach: '',
+      deliverableTimeline: '',
+      weeklyAvailability: '',
+      startDate: '',
+      commitmentLevel: '',
+      coverLetter: '',
+      additionalNotes: '',
+    })
+    setUploadedFiles({})
+    setApplicationError(null)
+  }
 
   const checkApplicationLimits = async () => {
     if (!project || !session?.user?.id) return
@@ -99,57 +162,74 @@ export function StudentApplicationModal({
     }
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleFileUpload = (type: 'resume' | 'portfolio' | 'transcript' | 'other', event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setApplicationError('File size must be less than 5MB')
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setApplicationError('File size must be less than 10MB')
         return
       }
       
       // Check file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png']
       if (!allowedTypes.includes(file.type)) {
-        setApplicationError('Please upload a PDF or Word document')
+        setApplicationError('Please upload a PDF, Word document, or image file')
         return
       }
       
-      setAdditionalDocument(file)
+      setUploadedFiles(prev => ({ ...prev, [type]: file }))
       setApplicationError(null)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const nextStep = () => {
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const handleSubmit = async () => {
     if (!project || !session?.user?.id || !canApplyToProject) return
 
     setIsLoading(true)
     setApplicationError(null)
 
     try {
-      let documentUrl = null
+      const uploadedFileUrls: Record<string, string> = {}
       
-      // Upload document if provided
-      if (additionalDocument) {
-        const formData = new FormData()
-        formData.append('file', additionalDocument)
-        formData.append('type', 'application-document')
-        
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        })
-        
-        if (uploadResponse.ok) {
-          const uploadData = await uploadResponse.json()
-          documentUrl = uploadData.url
-        } else {
-          throw new Error('Failed to upload document')
+      // Upload all files
+      for (const [type, file] of Object.entries(uploadedFiles)) {
+        if (file) {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('type', `application-${type}`)
+          
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+          
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json()
+            uploadedFileUrls[type] = uploadData.url
+          } else {
+            throw new Error(`Failed to upload ${type}`)
+          }
         }
       }
 
-      // Submit application
+      // Submit comprehensive application
       const response = await fetch('/api/applications/apply', {
         method: 'POST',
         headers: {
@@ -157,8 +237,12 @@ export function StudentApplicationModal({
         },
         body: JSON.stringify({
           projectId: project.id,
-          coverLetter: coverLetter.trim(),
-          additionalDocument: documentUrl,
+          applicationData: {
+            ...formData,
+            uploadedFiles: uploadedFileUrls,
+            submittedAt: new Date().toISOString(),
+            applicationVersion: '2.0' // Enhanced application format
+          }
         }),
       })
 
@@ -174,7 +258,7 @@ export function StudentApplicationModal({
         
         // Show upgrade prompt if user hit their limit
         if (data.error?.includes('limit') && data.error?.includes('Upgrade')) {
-          setShowUpgradePrompt(true)
+          setShowUpgradeModal(true)
         }
       }
     } catch (error) {
@@ -185,7 +269,6 @@ export function StudentApplicationModal({
   }
 
   const handleUpgrade = () => {
-    // Redirect to pricing or open upgrade modal
     window.location.href = '/pricing'
   }
 
@@ -194,16 +277,36 @@ export function StudentApplicationModal({
   const userTier = (session?.user as any)?.subscriptionPlan || 'FREE'
   const isPremium = userTier !== 'FREE'
 
+  const getStepIcon = (step: number) => {
+    switch (step) {
+      case 1: return User
+      case 2: return Target
+      case 3: return Calendar
+      case 4: return Paperclip
+      default: return User
+    }
+  }
+
+  const isStepValid = (step: number) => {
+    switch (step) {
+      case 1: return formData.personalStatement.length > 50 && formData.whyInterested.length > 30
+      case 2: return formData.projectUnderstanding.length > 50 && formData.proposedApproach.length > 30
+      case 3: return formData.weeklyAvailability && formData.startDate && formData.commitmentLevel
+      case 4: return true // Optional step
+      default: return false
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden"
+        className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-8 text-white relative">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-6 text-white relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
@@ -218,8 +321,41 @@ export function StudentApplicationModal({
             <div className="flex-1">
               <h2 className="text-2xl font-bold mb-2">Apply to Project</h2>
               <h3 className="text-xl font-semibold text-blue-100">{project.title}</h3>
-                              <p className="text-blue-200">{project.company.companyName || project.company.name}</p>
+              <p className="text-blue-200">{project.company.companyName || project.company.name}</p>
             </div>
+          </div>
+
+          {/* Progress Steps */}
+          <div className="mt-6 flex items-center justify-between">
+            {[1, 2, 3, 4].map((step) => {
+              const StepIcon = getStepIcon(step)
+              const isActive = step === currentStep
+              const isCompleted = step < currentStep
+              const isValid = isStepValid(step)
+              
+              return (
+                <div key={step} className="flex items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+                    isCompleted 
+                      ? 'bg-white text-blue-600 border-white' 
+                      : isActive 
+                        ? 'bg-white/20 text-white border-white' 
+                        : 'bg-transparent text-blue-200 border-blue-200'
+                  }`}>
+                    {isCompleted ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      <StepIcon className="w-5 h-5" />
+                    )}
+                  </div>
+                  {step < 4 && (
+                    <div className={`w-16 h-0.5 mx-2 ${
+                      step < currentStep ? 'bg-white' : 'bg-blue-200'
+                    }`} />
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -296,116 +432,371 @@ export function StudentApplicationModal({
                 </div>
               )}
 
-              {/* Application Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Cover Letter */}
-                <div>
-                  <label htmlFor="coverLetter" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Cover Letter *
-                  </label>
-                  <textarea
-                    id="coverLetter"
-                    value={coverLetter}
-                    onChange={(e) => setCoverLetter(e.target.value)}
-                    placeholder="Tell the company why you're interested in this project and what value you can bring..."
-                    className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
-                    required
-                    maxLength={1000}
-                  />
-                  <div className="flex justify-between items-center mt-2">
-                    <p className="text-xs text-gray-500">Express your interest and relevant experience</p>
-                    <p className="text-xs text-gray-400">{coverLetter.length} / 1000</p>
-                  </div>
-                </div>
+              {/* Step Content */}
+              <div className="min-h-[400px]">
+                {currentStep === 1 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <User className="h-5 w-5 text-blue-600" />
+                        Personal Interest & Experience
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Why are you interested in this project? *
+                          </label>
+                          <textarea
+                            value={formData.whyInterested}
+                            onChange={(e) => handleInputChange('whyInterested', e.target.value)}
+                            placeholder="What excites you about this opportunity? How does it align with your goals?"
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
+                            required
+                            maxLength={500}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.whyInterested.length} / 500 (minimum 30 characters)</p>
+                        </div>
 
-                {/* Additional Document */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Additional Document 
-                    {!isPremium && limits && limits.documentsAllowed < 2 && (
-                      <span className="text-purple-600 text-xs ml-2">(Premium Feature)</span>
-                    )}
-                  </label>
-                  
-                  {isPremium || (limits && limits.documentsAllowed >= 2) ? (
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                      <input
-                        type="file"
-                        id="documentUpload"
-                        onChange={handleFileUpload}
-                        accept=".pdf,.doc,.docx"
-                        className="hidden"
-                      />
-                      <label htmlFor="documentUpload" className="cursor-pointer">
-                        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm font-medium text-gray-600">
-                          {additionalDocument ? additionalDocument.name : 'Upload Resume, Portfolio, or Cover Letter'}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">PDF or Word document, max 5MB</p>
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-purple-200 rounded-xl p-6 text-center bg-gradient-to-br from-purple-50 to-pink-50 relative overflow-hidden">
-                      <div className="absolute top-2 right-2">
-                        <Lock className="h-5 w-5 text-purple-400" />
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Personal Statement *
+                          </label>
+                          <textarea
+                            value={formData.personalStatement}
+                            onChange={(e) => handleInputChange('personalStatement', e.target.value)}
+                            placeholder="Tell us about yourself, your background, and what makes you a great fit for this project..."
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
+                            required
+                            maxLength={1000}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.personalStatement.length} / 1000 (minimum 50 characters)</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Relevant Experience
+                          </label>
+                          <textarea
+                            value={formData.relevantExperience}
+                            onChange={(e) => handleInputChange('relevantExperience', e.target.value)}
+                            placeholder="Describe any relevant experience, projects, or skills that relate to this project..."
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
+                            maxLength={800}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.relevantExperience.length} / 800</p>
+                        </div>
                       </div>
-                      <Crown className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                      <p className="text-sm font-medium text-purple-700 mb-1">Premium Feature</p>
-                      <p className="text-xs text-purple-600 mb-3">Upload portfolios, transcripts & certificates to stand out!</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUpgradeModalTrigger('file_upload')
-                          setShowUpgradeModal(true)
-                        }}
-                        className="inline-flex items-center gap-1 text-xs bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium"
-                      >
-                        <Crown className="h-3 w-3" />
-                        Upgrade Now
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Error Message */}
-                {applicationError && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                      <p className="text-red-700 text-sm">{applicationError}</p>
                     </div>
                   </div>
                 )}
 
-                {/* Submit Button */}
-                <div className="flex gap-4 pt-4">
+                {currentStep === 2 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Target className="h-5 w-5 text-blue-600" />
+                        Project Understanding & Approach
+                      </h3>
+                      
+                      {/* Project Context */}
+                      <div className="bg-blue-50 rounded-xl p-4 mb-6">
+                        <h4 className="font-semibold text-blue-900 mb-2">Project Context</h4>
+                        {project.definitionOfDone && (
+                          <div className="mb-3">
+                            <p className="text-sm font-medium text-blue-800">Goal:</p>
+                            <p className="text-sm text-blue-700">{project.definitionOfDone}</p>
+                          </div>
+                        )}
+                        {project.problemStatement && (
+                          <div className="mb-3">
+                            <p className="text-sm font-medium text-blue-800">Problem:</p>
+                            <p className="text-sm text-blue-700">{project.problemStatement}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            How do you understand this project? *
+                          </label>
+                          <textarea
+                            value={formData.projectUnderstanding}
+                            onChange={(e) => handleInputChange('projectUnderstanding', e.target.value)}
+                            placeholder="In your own words, explain what you think this project is about and what needs to be accomplished..."
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
+                            required
+                            maxLength={800}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.projectUnderstanding.length} / 800 (minimum 50 characters)</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Your Proposed Approach *
+                          </label>
+                          <textarea
+                            value={formData.proposedApproach}
+                            onChange={(e) => handleInputChange('proposedApproach', e.target.value)}
+                            placeholder="How would you approach this project? What steps would you take to achieve the goals?"
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
+                            required
+                            maxLength={800}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.proposedApproach.length} / 800 (minimum 30 characters)</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Deliverable Timeline
+                          </label>
+                          <textarea
+                            value={formData.deliverableTimeline}
+                            onChange={(e) => handleInputChange('deliverableTimeline', e.target.value)}
+                            placeholder="How would you structure the deliverables over the project duration?"
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
+                            maxLength={500}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.deliverableTimeline.length} / 500</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                        Availability & Commitment
+                      </h3>
+                      
+                      {/* Project Requirements */}
+                      <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                        <h4 className="font-semibold text-gray-900 mb-2">Project Requirements</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-700">Work Type: </span>
+                            <span className="text-gray-600">{project.workType || 'Not specified'}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Hours/Week: </span>
+                            <span className="text-gray-600">{project.hoursPerWeek || 'Not specified'}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Duration: </span>
+                            <span className="text-gray-600">{project.durationMonths} months</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Payment: </span>
+                            <span className="text-gray-600">{project.paymentType || 'Not specified'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Weekly Availability *
+                          </label>
+                          <select
+                            value={formData.weeklyAvailability}
+                            onChange={(e) => handleInputChange('weeklyAvailability', e.target.value)}
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300"
+                            required
+                          >
+                            <option value="">Select your availability</option>
+                            <option value="1-5 hours">1-5 hours per week</option>
+                            <option value="5-10 hours">5-10 hours per week</option>
+                            <option value="10-15 hours">10-15 hours per week</option>
+                            <option value="15-20 hours">15-20 hours per week</option>
+                            <option value="20+ hours">20+ hours per week</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Preferred Start Date *
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.startDate}
+                            onChange={(e) => handleInputChange('startDate', e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Commitment Level *
+                          </label>
+                          <select
+                            value={formData.commitmentLevel}
+                            onChange={(e) => handleInputChange('commitmentLevel', e.target.value)}
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300"
+                            required
+                          >
+                            <option value="">Select commitment level</option>
+                            <option value="casual">Casual - Flexible hours, learning focused</option>
+                            <option value="regular">Regular - Consistent weekly commitment</option>
+                            <option value="dedicated">Dedicated - High priority, reliable schedule</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 4 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Paperclip className="h-5 w-5 text-blue-600" />
+                        Additional Materials
+                      </h3>
+                      
+                      <div className="space-y-6">
+                        {/* File Uploads */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {['resume', 'portfolio', 'transcript', 'other'].map((type) => (
+                            <div key={type} className="space-y-2">
+                              <label className="block text-sm font-semibold text-gray-700 capitalize">
+                                {type === 'other' ? 'Other Document' : type}
+                                {!isPremium && (
+                                  <span className="text-purple-600 text-xs ml-2">(Premium)</span>
+                                )}
+                              </label>
+                              
+                              {isPremium || (limits && limits.documentsAllowed >= 2) ? (
+                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition-colors">
+                                  <input
+                                    type="file"
+                                    id={`${type}Upload`}
+                                    onChange={(e) => handleFileUpload(type as any, e)}
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                    className="hidden"
+                                  />
+                                  <label htmlFor={`${type}Upload`} className="cursor-pointer">
+                                    <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                                    <p className="text-sm font-medium text-gray-600">
+                                      {uploadedFiles[type as keyof typeof uploadedFiles]?.name || `Upload ${type}`}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">PDF, Word, or Image</p>
+                                  </label>
+                                </div>
+                              ) : (
+                                <div className="border-2 border-dashed border-purple-200 rounded-xl p-4 text-center bg-gradient-to-br from-purple-50 to-pink-50 relative">
+                                  <Lock className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+                                  <p className="text-sm text-purple-600">Premium Feature</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Cover Letter */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Cover Letter
+                          </label>
+                          <textarea
+                            value={formData.coverLetter}
+                            onChange={(e) => handleInputChange('coverLetter', e.target.value)}
+                            placeholder="Optional: Add a traditional cover letter if you prefer this format..."
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
+                            maxLength={1000}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.coverLetter.length} / 1000</p>
+                        </div>
+
+                        {/* Additional Notes */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Additional Notes
+                          </label>
+                          <textarea
+                            value={formData.additionalNotes}
+                            onChange={(e) => handleInputChange('additionalNotes', e.target.value)}
+                            placeholder="Any additional information you'd like to share..."
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
+                            maxLength={500}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{formData.additionalNotes.length} / 500</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Error Message */}
+              {applicationError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mt-6">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                    <p className="text-red-700 text-sm">{applicationError}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between items-center pt-6 border-t mt-6">
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300"
+                    className="px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300"
                   >
                     Cancel
                   </button>
                   
-                  <button
-                    type="submit"
-                    disabled={isLoading || !coverLetter.trim() || !canApplyToProject}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-5 w-5" />
-                        Submit Application
-                      </>
-                    )}
-                  </button>
+                  {currentStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={prevStep}
+                      className="px-6 py-3 border-2 border-blue-200 text-blue-600 rounded-xl font-semibold hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
+                    >
+                      Previous
+                    </button>
+                  )}
                 </div>
-              </form>
+
+                <div className="flex gap-2">
+                  {currentStep < 4 ? (
+                    <button
+                      type="button"
+                      onClick={nextStep}
+                      disabled={!isStepValid(currentStep)}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                    >
+                      Next Step
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={isLoading || !canApplyToProject}
+                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-5 w-5" />
+                          Submit Application
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
             </>
           )}
         </div>
