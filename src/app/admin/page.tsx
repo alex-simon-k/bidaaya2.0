@@ -103,12 +103,14 @@ export default function AdminDashboard() {
 
       if (projectsRes.ok) {
         const projectsData = await projectsRes.json()
-        setProjects(projectsData)
+        // Handle both object and array responses
+        setProjects(Array.isArray(projectsData) ? projectsData : projectsData.projects || [])
       }
 
       if (usersRes.ok) {
         const usersData = await usersRes.json()
-        setUsers(usersData)
+        // Handle both object and array responses
+        setUsers(Array.isArray(usersData) ? usersData : usersData.users || [])
       }
     } catch (error) {
       console.error('Failed to fetch admin data:', error)
@@ -219,7 +221,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = (Array.isArray(projects) ? projects : []).filter(project => {
     const matchesStatus = !filterStatus || project.status === filterStatus
     const matchesSearch = !searchTerm || 
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -230,12 +232,12 @@ export default function AdminDashboard() {
   })
 
   const stats = {
-    totalProjects: projects.length,
-    pendingProjects: projects.filter(p => p.status === 'PENDING_APPROVAL').length,
-    liveProjects: projects.filter(p => p.status === 'LIVE').length,
-    totalUsers: users.length,
-    companies: users.filter(u => u.role === 'COMPANY').length,
-    students: users.filter(u => u.role === 'STUDENT').length
+    totalProjects: Array.isArray(projects) ? projects.length : 0,
+    pendingProjects: Array.isArray(projects) ? projects.filter(p => p.status === 'PENDING_APPROVAL').length : 0,
+    liveProjects: Array.isArray(projects) ? projects.filter(p => p.status === 'LIVE').length : 0,
+    totalUsers: Array.isArray(users) ? users.length : 0,
+    companies: Array.isArray(users) ? users.filter(u => u.role === 'COMPANY').length : 0,
+    students: Array.isArray(users) ? users.filter(u => u.role === 'STUDENT').length : 0
   }
 
   if (!session || session.user?.role?.toUpperCase() !== 'ADMIN') {
