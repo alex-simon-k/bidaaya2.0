@@ -2,303 +2,632 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { 
+  Camera, 
+  MapPin, 
+  Calendar, 
+  Briefcase, 
+  GraduationCap,
+  Star,
+  Award,
+  Activity,
+  Users,
+  Eye,
+  Edit2,
+  Plus,
+  Link,
+  Github,
+  Linkedin,
+  Globe,
+  Mail,
+  Phone,
+  Save,
+  X,
+  CheckCircle,
+  Zap,
+  TrendingUp,
+  Badge as BadgeIcon
+} from 'lucide-react'
 
-interface Profile {
+interface ProfileData {
+  // Basic Info
+  id: string
   name: string
   email: string
-  university?: string
-  major?: string
-  graduationYear?: number
+  profilePicture?: string
+  coverImage?: string
   bio?: string
-  skills?: string[]
-  companyName?: string
-  companySize?: string
-  industry?: string
+  location?: string
+  website?: string
+  phone?: string
+  
+  // Professional Info
+  title?: string
+  company?: string
+  university?: string
+  degree?: string
+  graduationYear?: number
+  major?: string
+  
+  // Skills & Experience
+  skills: string[]
+  interests: string[]
+  experience: {
+    title: string
+    company: string
+    duration: string
+    description: string
+  }[]
+  
+  // Social Links
+  socialLinks: {
+    linkedin?: string
+    github?: string
+    portfolio?: string
+    twitter?: string
+  }
+  
+  // Bidaaya Stats (Gamification)
+  stats: {
+    projectsCompleted: number
+    applicationsSubmitted: number
+    acceptanceRate: number
+    totalExperience: number // months
+    bidaayaLevel: number
+    badgesEarned: string[]
+    lastActiveDate: string
+    weeklyActivity: number // sign-ins per week
+    memberSince: string
+  }
+  
+  // Preferences
+  preferences: {
+    lookingForWork: boolean
+    availabilityStatus: 'available' | 'busy' | 'not_available'
+    remoteWork: boolean
+    projectTypes: string[]
+    timeCommitment: string
+  }
+}
+
+const ACTIVITY_LEVELS = {
+  high: { label: 'Highly Active', color: 'text-green-600', bgColor: 'bg-green-100', icon: '🔥' },
+  medium: { label: 'Active', color: 'text-blue-600', bgColor: 'bg-blue-100', icon: '⚡' },
+  low: { label: 'Less Active', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: '💤' }
+}
+
+const BADGES = {
+  'early_adopter': { name: 'Early Adopter', icon: '🌟', description: 'One of the first Bidaaya members' },
+  'project_starter': { name: 'Project Starter', icon: '🚀', description: 'Completed first project' },
+  'collaborator': { name: 'Great Collaborator', icon: '🤝', description: 'Highly rated by teammates' },
+  'consistent': { name: 'Consistent Contributor', icon: '📈', description: '10+ projects completed' },
+  'mentor': { name: 'Community Mentor', icon: '👨‍🏫', description: 'Helped other students succeed' },
+  'innovator': { name: 'Innovator', icon: '💡', description: 'Led breakthrough solutions' }
 }
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
+  const [profileData, setProfileData] = useState<ProfileData | null>(null)
+  const [editData, setEditData] = useState<Partial<ProfileData>>({})
+  const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch('/api/profile')
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile')
-        }
-        const data = await response.json()
-        setProfile(data)
-      } catch (error) {
-        setError('Failed to load profile')
-      } finally {
-        setIsLoading(false)
-      }
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
     }
-
-    fetchProfile()
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSaving(true)
-    setError(null)
-
-    const formData = new FormData(e.currentTarget)
-    const data = {
-      name: formData.get('name') as string,
-      email: formData.get('email') as string,
-      ...(session?.user?.role === 'STUDENT' && {
-        university: formData.get('university') as string,
-        major: formData.get('major') as string,
-        graduationYear: parseInt(formData.get('graduationYear') as string),
-        bio: formData.get('bio') as string,
-        skills: (formData.get('skills') as string).split(',').map((s) => s.trim()),
-      }),
-      ...(session?.user?.role === 'COMPANY' && {
-        companyName: formData.get('companyName') as string,
-        companySize: formData.get('companySize') as string,
-        industry: formData.get('industry') as string,
-      }),
+    if (session?.user) {
+      fetchProfileData()
     }
+  }, [session, status, router])
 
+  const fetchProfileData = async () => {
     try {
-      const response = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile')
+      const response = await fetch('/api/user/profile')
+      if (response.ok) {
+        const data = await response.json()
+        setProfileData(data)
+        setEditData(data)
+      } else {
+        // Create profile with default data
+        createDefaultProfile()
       }
-
-      const updatedProfile = await response.json()
-      setProfile(updatedProfile)
     } catch (error) {
-      setError('Failed to update profile. Please try again.')
+      console.error('Error fetching profile:', error)
+      createDefaultProfile()
     } finally {
-      setIsSaving(false)
+      setIsLoading(false)
     }
   }
+
+  const createDefaultProfile = () => {
+    const defaultProfile: ProfileData = {
+      id: session?.user?.id || '',
+      name: session?.user?.name || '',
+      email: session?.user?.email || '',
+      bio: '',
+      location: '',
+      skills: [],
+      interests: [],
+      experience: [],
+      socialLinks: {},
+      stats: {
+        projectsCompleted: 0,
+        applicationsSubmitted: 0,
+        acceptanceRate: 0,
+        totalExperience: 0,
+        bidaayaLevel: 1,
+        badgesEarned: ['early_adopter'],
+        lastActiveDate: new Date().toISOString(),
+        weeklyActivity: 1,
+        memberSince: new Date().toISOString()
+      },
+      preferences: {
+        lookingForWork: true,
+        availabilityStatus: 'available',
+        remoteWork: true,
+        projectTypes: [],
+        timeCommitment: 'part-time'
+      }
+    }
+    setProfileData(defaultProfile)
+    setEditData(defaultProfile)
+  }
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData)
+      })
+
+      if (response.ok) {
+        const updatedData = await response.json()
+        setProfileData(updatedData)
+        setIsEditing(false)
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error)
+    }
+  }
+
+  const getActivityLevel = (weeklyActivity: number) => {
+    if (weeklyActivity >= 5) return ACTIVITY_LEVELS.high
+    if (weeklyActivity >= 2) return ACTIVITY_LEVELS.medium
+    return ACTIVITY_LEVELS.low
+  }
+
+  const calculateCompletionScore = () => {
+    if (!profileData) return 0
+    const fields = [
+      profileData.bio,
+      profileData.location,
+      profileData.title,
+      profileData.skills.length > 0,
+      profileData.experience.length > 0,
+      profileData.socialLinks.linkedin || profileData.socialLinks.github
+    ]
+    return Math.round((fields.filter(Boolean).length / fields.length) * 100)
+  }
+
+  const userRole = session?.user?.role as 'STUDENT' | 'COMPANY'
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-red-500">{error}</p>
-      </div>
-    )
-  }
+  if (!profileData) return null
+
+  const activityLevel = getActivityLevel(profileData.stats.weeklyActivity)
+  const completionScore = calculateCompletionScore()
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Profile</h1>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+          {/* Cover Image */}
+          <div className="h-48 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 relative">
+            {isEditing && (
+              <button className="absolute top-4 right-4 bg-black/20 text-white p-2 rounded-full hover:bg-black/40">
+                <Camera className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Full Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            defaultValue={profile?.name}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          />
+          {/* Profile Header */}
+          <div className="relative px-8 pb-8">
+            {/* Profile Picture */}
+            <div className="absolute -top-16 left-8">
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full bg-white p-2 shadow-lg">
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-4xl font-bold">
+                    {profileData.name.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+                {isEditing && (
+                  <button className="absolute bottom-2 right-2 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
+                    <Camera className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Edit Button */}
+            <div className="flex justify-end pt-4">
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    Save Profile
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  Edit Profile
+                </button>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Basic Info */}
+              <div className="lg:col-span-2">
+                <div className="mb-6">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.name || ''}
+                      onChange={(e) => setEditData({...editData, name: e.target.value})}
+                      className="text-3xl font-bold text-gray-900 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500"
+                    />
+                  ) : (
+                    <h1 className="text-3xl font-bold text-gray-900">{profileData.name}</h1>
+                  )}
+                  
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.title || ''}
+                      onChange={(e) => setEditData({...editData, title: e.target.value})}
+                      placeholder="Your title (e.g., Computer Science Student)"
+                      className="text-lg text-gray-600 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500 mt-2"
+                    />
+                  ) : (
+                    <p className="text-lg text-gray-600 mt-2">
+                      {profileData.title || `${userRole === 'STUDENT' ? 'Student' : 'Company'} Member`}
+                    </p>
+                  )}
+                </div>
+
+                {/* Location & Contact */}
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editData.location || ''}
+                        onChange={(e) => setEditData({...editData, location: e.target.value})}
+                        placeholder="Location"
+                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
+                      />
+                    ) : (
+                      <span>{profileData.location || 'Location not specified'}</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>Joined {new Date(profileData.stats.memberSince).toLocaleDateString()}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <Activity className="h-4 w-4" />
+                    <span className={activityLevel.color}>
+                      {activityLevel.icon} {activityLevel.label}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">About</h3>
+                  {isEditing ? (
+                    <textarea
+                      value={editData.bio || ''}
+                      onChange={(e) => setEditData({...editData, bio: e.target.value})}
+                      placeholder="Tell us about yourself, your goals, and what you're passionate about..."
+                      rows={4}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-gray-700">
+                      {profileData.bio || 'No bio added yet. Click edit to add your story!'}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats & Activity */}
+              <div className="space-y-6">
+                {/* Profile Completion */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">Profile Completion</span>
+                    <span className="text-sm font-bold text-blue-600">{completionScore}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${completionScore}%` }}
+                    ></div>
+                  </div>
+                  {completionScore < 100 && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      Complete your profile to stand out to companies!
+                    </p>
+                  )}
+                </div>
+
+                {/* Bidaaya Level */}
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                      <Zap className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Level {profileData.stats.bidaayaLevel}</div>
+                      <div className="text-xs text-gray-600">Bidaaya Member</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">{profileData.stats.projectsCompleted}</div>
+                      <div className="text-gray-600">Projects</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-green-600">{profileData.stats.acceptanceRate}%</div>
+                      <div className="text-gray-600">Success Rate</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Badges */}
+                {profileData.stats.badgesEarned.length > 0 && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      Achievements
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profileData.stats.badgesEarned.map((badgeId) => {
+                        const badge = BADGES[badgeId as keyof typeof BADGES]
+                        return badge ? (
+                          <div
+                            key={badgeId}
+                            className="bg-white border border-gray-200 rounded-lg p-2 text-center min-w-[60px]"
+                            title={badge.description}
+                          >
+                            <div className="text-lg">{badge.icon}</div>
+                            <div className="text-xs text-gray-600 mt-1">{badge.name}</div>
+                          </div>
+                        ) : null
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            name="email"
-            id="email"
-            defaultValue={profile?.email}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          />
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-lg mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-8">
+              {['overview', 'experience', 'skills', 'projects'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${
+                    activeTab === tab
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="p-8">
+            {activeTab === 'overview' && (
+              <div className="space-y-8">
+                {/* Skills */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Skills</h3>
+                    {isEditing && (
+                      <button className="text-blue-500 hover:text-blue-600 flex items-center gap-1">
+                        <Plus className="h-4 w-4" />
+                        Add Skill
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {profileData.skills.length > 0 ? (
+                      profileData.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No skills added yet. Click edit to add your skills!</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Social Links */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Connect</h3>
+                  <div className="flex gap-3">
+                    {profileData.socialLinks.linkedin && (
+                      <a href={profileData.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        <Linkedin className="h-4 w-4" />
+                        LinkedIn
+                      </a>
+                    )}
+                    {profileData.socialLinks.github && (
+                      <a href={profileData.socialLinks.github} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900">
+                        <Github className="h-4 w-4" />
+                        GitHub
+                      </a>
+                    )}
+                    {profileData.website && (
+                      <a href={profileData.website} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        <Globe className="h-4 w-4" />
+                        Website
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'experience' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Experience</h3>
+                  {isEditing && (
+                    <button className="text-blue-500 hover:text-blue-600 flex items-center gap-1">
+                      <Plus className="h-4 w-4" />
+                      Add Experience
+                    </button>
+                  )}
+                </div>
+                
+                {profileData.experience.length > 0 ? (
+                  <div className="space-y-6">
+                    {profileData.experience.map((exp, index) => (
+                      <div key={index} className="border-l-2 border-blue-200 pl-6 relative">
+                        <div className="absolute -left-2 top-0 w-4 h-4 bg-blue-500 rounded-full"></div>
+                        <h4 className="font-semibold text-gray-900">{exp.title}</h4>
+                        <p className="text-blue-600">{exp.company}</p>
+                        <p className="text-sm text-gray-600 mb-2">{exp.duration}</p>
+                        <p className="text-gray-700">{exp.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No experience added yet. Click edit to add your work history!</p>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'skills' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Skills & Interests</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Technical Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profileData.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Interests</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profileData.interests.map((interest, index) => (
+                        <span
+                          key={index}
+                          className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'projects' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Bidaaya Projects</h3>
+                
+                {profileData.stats.projectsCompleted > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Placeholder for project cards */}
+                    <div className="border border-gray-200 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-2">Project Name</h4>
+                      <p className="text-gray-600 text-sm mb-3">Project description goes here...</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>✅ Completed</span>
+                        <span>⭐ 4.8 rating</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <Briefcase className="h-12 w-12 mx-auto" />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h4>
+                    <p className="text-gray-600 mb-4">Start applying to projects to build your portfolio!</p>
+                    <button 
+                      onClick={() => router.push('/dashboard/projects')}
+                      className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+                    >
+                      Browse Projects
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-
-        {session?.user?.role === 'STUDENT' && (
-          <>
-            <div>
-              <label
-                htmlFor="university"
-                className="block text-sm font-medium text-gray-700"
-              >
-                University
-              </label>
-              <input
-                type="text"
-                name="university"
-                id="university"
-                defaultValue={profile?.university}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="major"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Major
-              </label>
-              <input
-                type="text"
-                name="major"
-                id="major"
-                defaultValue={profile?.major}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="graduationYear"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Graduation Year
-              </label>
-              <input
-                type="number"
-                name="graduationYear"
-                id="graduationYear"
-                defaultValue={profile?.graduationYear}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="bio"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Bio
-              </label>
-              <textarea
-                name="bio"
-                id="bio"
-                rows={4}
-                defaultValue={profile?.bio}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="skills"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Skills (comma-separated)
-              </label>
-              <input
-                type="text"
-                name="skills"
-                id="skills"
-                defaultValue={profile?.skills?.join(', ')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-          </>
-        )}
-
-        {session?.user?.role === 'COMPANY' && (
-          <>
-            <div>
-              <label
-                htmlFor="companyName"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Company Name
-              </label>
-              <input
-                type="text"
-                name="companyName"
-                id="companyName"
-                defaultValue={profile?.companyName}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="companySize"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Company Size
-              </label>
-              <select
-                name="companySize"
-                id="companySize"
-                defaultValue={profile?.companySize}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              >
-                <option value="">Select company size</option>
-                <option value="1-10">1-10 employees</option>
-                <option value="11-50">11-50 employees</option>
-                <option value="51-200">51-200 employees</option>
-                <option value="201-500">201-500 employees</option>
-                <option value="501+">501+ employees</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="industry"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Industry
-              </label>
-              <input
-                type="text"
-                name="industry"
-                id="industry"
-                defaultValue={profile?.industry}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-          </>
-        )}
-
-        {error && (
-          <div className="text-red-500 text-sm text-center">{error}</div>
-        )}
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   )
 } 

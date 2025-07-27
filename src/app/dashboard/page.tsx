@@ -26,7 +26,7 @@ import { UsageStatsCard } from '@/components/upgrade-prompt'
 import { DashboardStatsWidget } from '@/components/dashboard-stats-widget'
 import { useSessionRefresh } from '@/lib/session-utils'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { SubscriptionDebug } from '@/components/subscription-debug'
+
 
 export default function DashboardPage() {
   const { data: session, status, update } = useSession()
@@ -46,30 +46,9 @@ export default function DashboardPage() {
     console.log('Dashboard - Subscription plan:', (session?.user as any)?.subscriptionPlan)
   }
 
-  // Force session refresh function
-  const refreshSession = async () => {
-    await update()
-    window.location.reload()
-  }
 
-  // Manual session refresh for testing
-  const manualRefreshSession = async () => {
-    console.log('🔄 Manual session refresh triggered...')
-    setIsRefreshing(true)
-    
-    try {
-      await refreshSessionUtils()
-      console.log('✅ Manual session refresh completed')
-      alert('Session refreshed! Your subscription data should now be up to date.')
-    } catch (error) {
-      console.error('❌ Manual session refresh failed:', error)
-      alert('Session refresh failed. Please try reloading the page.')
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
-  const [isRefreshing, setIsRefreshing] = useState(false)
+
 
   // Check for subscription success and refresh session
   useEffect(() => {
@@ -89,32 +68,7 @@ export default function DashboardPage() {
     }
   }, [searchParams, refreshSessionUtils, router])
 
-  // Downgrade to free function
-  const downgradeToFree = async () => {
-    if (confirm('Are you sure you want to downgrade to the free plan?')) {
-      try {
-        const response = await fetch('/api/subscription/manage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'downgrade_to_free' })
-        })
 
-        if (response.ok) {
-          const data = await response.json()
-          console.log('✅ Downgraded to free:', data)
-          alert('Successfully downgraded to free plan!')
-          await update() // Refresh session
-          window.location.reload()
-        } else {
-          const error = await response.json()
-          alert(`Error: ${error.error}`)
-        }
-      } catch (error) {
-        console.error('Error downgrading:', error)
-        alert('Failed to downgrade. Please try again.')
-      }
-    }
-  }
 
   // Show membership selection popup every time they visit dashboard
   useEffect(() => {
@@ -192,8 +146,6 @@ export default function DashboardPage() {
   const studentContent = (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Subscription Debug Panel */}
-        <SubscriptionDebug />
         {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -330,9 +282,6 @@ export default function DashboardPage() {
   const companyContent = (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Subscription Debug Panel */}
-        <SubscriptionDebug />
-        
         {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -689,33 +638,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Debug/Test Section - Temporary */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 m-4">
-        <h3 className="font-medium text-yellow-800 mb-2">🧪 Subscription Debug</h3>
-        <p className="text-sm text-yellow-700 mb-3">
-          Current Plan: <strong>{(session?.user as any)?.subscriptionPlan || 'undefined'}</strong> | 
-          Status: <strong>{(session?.user as any)?.subscriptionStatus || 'undefined'}</strong>
-        </p>
-        <button
-          onClick={refreshSession}
-          className="bg-yellow-600 text-white px-4 py-2 rounded-md text-sm hover:bg-yellow-700"
-        >
-          🔄 Refresh Session Data
-        </button>
-        <button
-          onClick={manualRefreshSession}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 ml-2"
-          disabled={isRefreshing}
-        >
-          {isRefreshing ? 'Refreshing...' : '🔄 Manual Refresh'}
-        </button>
-        <button
-          onClick={downgradeToFree}
-          className="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700 ml-2"
-        >
-          🔙 Downgrade to Free
-        </button>
-      </div>
+
 
       {/* Original Dashboard Content */}
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 py-8">

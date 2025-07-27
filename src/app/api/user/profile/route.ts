@@ -1,43 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from "@/lib/auth-config"
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const email = searchParams.get('email')
+    const session = await getServerSession(authOptions)
     
-    console.log('🔐 Profile GET API - Email:', email);
-    
-    if (!email) {
-      console.log('❌ Profile GET API - No email provided');
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user profile with extended data
     const user = await prisma.user.findUnique({
-      where: { email: email },
+      where: { email: session.user.email },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        createdAt: true,
+        // Available profile fields from schema
+        bio: true,
+        location: true,
         university: true,
         major: true,
         graduationYear: true,
         skills: true,
-        bio: true,
-        linkedin: true,
-        whatsapp: true,
-        subjects: true,
-        goal: true,
         interests: true,
-        highSchool: true,
-        mena: true,
         companyName: true,
-        companySize: true,
-        industry: true,
-        companyRole: true,
+        linkedin: true,
+        applicationsThisMonth: true,
+        // We'll calculate other stats from relations
+        applications: {
+          select: {
+            status: true,
+            createdAt: true
+          }
+        },
+        projects: {
+          select: {
+            status: true,
+            createdAt: true
+          }
+        }
       }
     })
 
@@ -45,95 +53,123 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json(user)
+    // Calculate activity metrics from actual data
+    const totalApplications = user.applications.length
+    const acceptedApplications = user.applications.filter(app => app.status === 'ACCEPTED').length
+    const acceptanceRate = totalApplications > 0 
+      ? Math.round((acceptedApplications / totalApplications) * 100) 
+      : 0
+    
+    // Calculate weekly activity based on recent logins (simplified for now)
+    const weeklyActivity = Math.min(user.applicationsThisMonth / 4, 7) || 1
+
+    // Calculate Bidaaya level based on projects and activity
+    const calculateLevel = (projects: number, activity: number) => {
+      const baseLevel = Math.floor(projects / 3) + 1
+      const activityBonus = activity >= 5 ? 1 : 0
+      return Math.min(baseLevel + activityBonus, 10)
+    }
+
+    const profileData = {
+      id: user.id,
+      name: user.name || '',
+      email: user.email,
+      profilePicture: null, // Will be added later
+      bio: user.bio || '',
+      location: user.location || '',
+      website: '', // Will be added later
+      phone: '', // Will be added later
+      title: '', // Will be added later
+      company: user.companyName || '',
+      university: user.university || '',
+      degree: '', // Will be added later
+      graduationYear: user.graduationYear,
+      major: user.major || '',
+      
+      // Arrays
+      skills: user.skills || [],
+      interests: user.interests || [],
+      experience: [], // Will be populated from separate experience table in future
+      
+      // Social links
+      socialLinks: {
+        linkedin: user.linkedin || '',
+        github: '', // Will be added later
+        portfolio: '', // Will be added later
+        twitter: '' // Will be added later
+      },
+      
+      // Gamification stats
+      stats: {
+        projectsCompleted: user.projects.filter(p => p.status === 'LIVE').length,
+        applicationsSubmitted: totalApplications,
+        acceptanceRate: acceptanceRate,
+        totalExperience: user.projects.length * 3, // Assume 3 months per project
+        bidaayaLevel: calculateLevel(user.projects.length, weeklyActivity),
+        badgesEarned: ['early_adopter'], // Will be calculated based on achievements
+        lastActiveDate: new Date().toISOString(),
+        weeklyActivity: weeklyActivity,
+        memberSince: user.createdAt.toISOString()
+      },
+      
+      // Preferences (default values)
+      preferences: {
+        lookingForWork: true,
+        availabilityStatus: 'available' as const,
+        remoteWork: true,
+        projectTypes: [],
+        timeCommitment: 'part-time'
+      }
+    }
+
+    return NextResponse.json(profileData)
+
   } catch (error) {
-    console.error('Error fetching user profile:', error)
+    console.error('Error fetching profile:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch profile' },
+      { error: 'Failed to fetch profile data' },
       { status: 500 }
     )
   }
 }
 
-export async function POST(request: NextRequest) {
-  console.log('--- PROFILE UPDATE REQUEST RECEIVED ---')
-
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json()
-    const { email } = body
+    const session = await getServerSession(authOptions)
     
-    console.log('🔐 Profile POST API - Email:', email);
-    console.log('🔐 Profile POST API - Request body keys:', Object.keys(body));
-    
-    if (!email) {
-      console.log('❌ Profile POST API - No email provided');
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user to check role
-    const user = await prisma.user.findUnique({
-      where: { email: email },
-      select: { id: true, email: true, role: true }
-    })
+    const profileData = await req.json()
 
-    if (!user) {
-      console.log(`❌ User not found: ${email}`);
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
+         // Update user profile (only update fields that exist in schema)
+     const updatedUser = await prisma.user.update({
+       where: { email: session.user.email },
+       data: {
+         name: profileData.name,
+         bio: profileData.bio,
+         location: profileData.location,
+         university: profileData.university,
+         major: profileData.major,
+         graduationYear: profileData.graduationYear,
+         skills: profileData.skills || [],
+         interests: profileData.interests || [],
+         companyName: profileData.company,
+         linkedin: profileData.socialLinks?.linkedin,
+         // Update profile completion flag
+         profileCompleted: true
+       }
+     })
 
-    console.log(`✅ Authentication successful for: ${email}, role: ${user.role}`)
-    console.log('📝 Received profile data:', body)
+    // Return updated profile data
+    return GET(req)
 
-    const updateData: any = {
-      profileCompleted: true,
-    }
-
-    if (body.name) updateData.name = body.name
-    if (body.bio) updateData.bio = body.bio
-    if (body.linkedin) updateData.linkedin = body.linkedin
-    if (body.whatsapp) updateData.whatsapp = body.whatsapp
-
-    if (user.role === 'STUDENT') {
-      if (body.university) updateData.university = body.university
-      if (body.highSchool) updateData.highSchool = body.highSchool
-      if (body.subjects) updateData.subjects = body.subjects
-      if (body.dateOfBirth) updateData.dateOfBirth = new Date(body.dateOfBirth)
-      if (body.goal) updateData.goal = Array.isArray(body.goal) ? body.goal : [body.goal]
-      if (body.interests) updateData.interests = Array.isArray(body.interests) ? body.interests : [body.interests]
-      if (typeof body.mena === 'boolean') updateData.mena = body.mena
-      if (typeof body.terms === 'boolean') updateData.terms = body.terms
-    }
-
-    if (user.role === 'COMPANY') {
-      if (body.companyName) updateData.companyName = body.companyName
-      if (body.companySize) updateData.companySize = body.companySize
-      if (body.industry) updateData.industry = body.industry
-      if (body.companyRole) updateData.companyRole = body.companyRole
-      if (body.companyOneLiner) updateData.companyOneLiner = body.companyOneLiner
-      if (body.companyGoals) updateData.companyGoals = Array.isArray(body.companyGoals) ? body.companyGoals : [body.companyGoals]
-      if (body.contactPersonType) updateData.contactPersonType = body.contactPersonType
-      if (body.contactPersonName) updateData.contactPersonName = body.contactPersonName
-      if (body.contactEmail) updateData.contactEmail = body.contactEmail
-      if (body.contactWhatsapp) updateData.contactWhatsapp = body.contactWhatsapp
-      if (body.companyWebsite) updateData.companyWebsite = body.companyWebsite
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { email: email },
-      data: updateData,
-    })
-
-    console.log('✅ User profile updated successfully in database.')
-    return NextResponse.json({ 
-      success: true,
-      message: 'Profile updated successfully' 
-    })
   } catch (error) {
-    console.error('❌ Error updating profile:', error)
-    
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      message: 'Failed to update profile'
-    }, { status: 500 })
+    console.error('Error updating profile:', error)
+    return NextResponse.json(
+      { error: 'Failed to update profile data' },
+      { status: 500 }
+    )
   }
 }
