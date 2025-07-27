@@ -639,7 +639,7 @@ export class FakeProjectsGenerator {
               role: 'COMPANY',
               companyName: projectData.companyName,
               bio: projectData.companyDescription,
-              emailVerified: true,
+              emailVerified: new Date(),
               profileCompleted: true,
               subscriptionPlan: index % 3 === 0 ? 'COMPANY_BASIC' : 
                                index % 3 === 1 ? 'COMPANY_PREMIUM' : 'COMPANY_PRO'
@@ -714,7 +714,7 @@ export class FakeProjectsGenerator {
               role: 'STUDENT',
               university: studentData.university,
               major: studentData.major,
-              emailVerified: true,
+              emailVerified: new Date(),
               profileCompleted: true
             }
           })
