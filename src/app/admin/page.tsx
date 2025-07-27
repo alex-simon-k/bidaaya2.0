@@ -72,6 +72,11 @@ export default function AdminDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [feedbackText, setFeedbackText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Add states for new admin tools
+  const [isGeneratingProjects, setIsGeneratingProjects] = useState(false)
+  const [isSlackEnabled, setIsSlackEnabled] = useState(false)
+  const [showTools, setShowTools] = useState(false)
 
   useEffect(() => {
     if (!session?.user?.role) {
@@ -144,6 +149,73 @@ export default function AdminDashboard() {
       console.error('Error updating project:', error)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Add admin tools functions
+  const handleGenerateFakeProjects = async () => {
+    if (!confirm('This will create 15 fake projects with companies. Continue?')) return
+    
+    setIsGeneratingProjects(true)
+    try {
+      const response = await fetch('/api/admin/fake-projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create' })
+      })
+      
+      const data = await response.json()
+      if (response.ok) {
+        alert(`✅ ${data.message}\n${data.description}`)
+        fetchData() // Refresh the dashboard
+      } else {
+        alert(`❌ Error: ${data.error}`)
+      }
+    } catch (error) {
+      alert('❌ Failed to generate projects')
+    } finally {
+      setIsGeneratingProjects(false)
+    }
+  }
+
+  const handleCleanupFakeProjects = async () => {
+    if (!confirm('This will DELETE all fake projects and companies. This cannot be undone!')) return
+    
+    try {
+      const response = await fetch('/api/admin/fake-projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cleanup' })
+      })
+      
+      const data = await response.json()
+      if (response.ok) {
+        alert(`✅ ${data.message}`)
+        fetchData() // Refresh the dashboard
+      } else {
+        alert(`❌ Error: ${data.error}`)
+      }
+    } catch (error) {
+      alert('❌ Failed to cleanup projects')
+    }
+  }
+
+  const handleSlackTest = async () => {
+    try {
+      const response = await fetch('/api/admin/slack-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'test' })
+      })
+      
+      const data = await response.json()
+      if (response.ok) {
+        alert('✅ Slack test message sent!')
+      } else {
+        alert(`❌ Slack Error: ${data.error}`)
+      }
+    } catch (error) {
+      alert('❌ Failed to send Slack test')
     }
   }
 
@@ -256,7 +328,199 @@ export default function AdminDashboard() {
               </div>
             </div>
           </motion.div>
+                  </div>
+
+        {/* Navigation Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('projects')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'projects'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Building className="inline-block w-4 h-4 mr-2" />
+                Projects ({stats.totalProjects})
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'users'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Users className="inline-block w-4 h-4 mr-2" />
+                Users ({stats.totalUsers})
+              </button>
+              <button
+                onClick={() => setActiveTab('tools')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'tools'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Settings className="inline-block w-4 h-4 mr-2" />
+                Admin Tools
+              </button>
+            </nav>
+          </div>
         </div>
+
+        {/* Admin Tools Tab Content */}
+        {activeTab === 'tools' && (
+          <div className="space-y-6">
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Platform Management Tools</h3>
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  
+                  {/* Fake Projects Generator */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">🎭 Fake Projects Generator</h4>
+                    <p className="text-xs text-gray-600 mb-4">
+                      Generate 15 realistic projects with companies for testing and demonstration
+                    </p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleGenerateFakeProjects}
+                        disabled={isGeneratingProjects}
+                        className="w-full bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {isGeneratingProjects ? 'Generating...' : 'Generate 15 Projects'}
+                      </button>
+                      <button
+                        onClick={handleCleanupFakeProjects}
+                        className="w-full bg-red-600 text-white py-2 px-3 rounded text-sm hover:bg-red-700"
+                      >
+                        Cleanup Fake Data
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Slack Integration */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">📱 Slack Integration</h4>
+                    <p className="text-xs text-gray-600 mb-4">
+                      Daily summaries and live signup notifications
+                    </p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleSlackTest}
+                        className="w-full bg-purple-600 text-white py-2 px-3 rounded text-sm hover:bg-purple-700"
+                      >
+                        Test Slack Integration
+                      </button>
+                      <button
+                        onClick={() => window.open('/api/admin/slack-summary', '_blank')}
+                        className="w-full bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700"
+                      >
+                        Send Daily Summary
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Email & Calendly Tools */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">📧 Email & Calendly</h4>
+                    <p className="text-xs text-gray-600 mb-4">
+                      Email automation and interview scheduling
+                    </p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => router.push('/admin/applications')}
+                        className="w-full bg-indigo-600 text-white py-2 px-3 rounded text-sm hover:bg-indigo-700"
+                      >
+                        View Applications
+                      </button>
+                      <button
+                        onClick={() => alert('Calendly integration: Check company profiles for individual Calendly links')}
+                        className="w-full bg-yellow-600 text-white py-2 px-3 rounded text-sm hover:bg-yellow-700"
+                      >
+                        Calendly Setup Info
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Database Tools */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">🗄️ Database Tools</h4>
+                    <p className="text-xs text-gray-600 mb-4">
+                      Analytics and data management
+                    </p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => window.open('/api/admin/analytics', '_blank')}
+                        className="w-full bg-teal-600 text-white py-2 px-3 rounded text-sm hover:bg-teal-700"
+                      >
+                        View Analytics
+                      </button>
+                      <button
+                        onClick={() => window.open('/api/admin/debug-users', '_blank')}
+                        className="w-full bg-gray-600 text-white py-2 px-3 rounded text-sm hover:bg-gray-700"
+                      >
+                        Debug Users
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* System Status */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">⚡ System Status</h4>
+                    <p className="text-xs text-gray-600 mb-4">
+                      Current system health and statistics
+                    </p>
+                    <div className="text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span>Projects:</span>
+                        <span className="font-semibold">{stats.totalProjects}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Companies:</span>
+                        <span className="font-semibold">{stats.companies}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Students:</span>
+                        <span className="font-semibold">{stats.students}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pending:</span>
+                        <span className="font-semibold text-yellow-600">{stats.pendingProjects}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">🚀 Quick Actions</h4>
+                    <p className="text-xs text-gray-600 mb-4">
+                      Common administrative tasks
+                    </p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => fetchData()}
+                        className="w-full bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700"
+                      >
+                        Refresh Data
+                      </button>
+                      <button
+                        onClick={() => window.open('/dashboard/projects', '_blank')}
+                        className="w-full bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700"
+                      >
+                        View Public Projects
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow">
