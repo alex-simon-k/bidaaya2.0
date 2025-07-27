@@ -109,7 +109,8 @@ export class DailySummaryService {
         ]
       }
 
-      return await SlackService.sendMessage(message)
+      const { slackService } = await import('@/lib/slack-service')
+      return await slackService.sendDailySummary()
     } catch (error) {
       console.error('Error sending daily summary:', error)
       return false

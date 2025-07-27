@@ -121,12 +121,14 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail(companyWelcomeEmail)
     
     // Send Slack notification to admin about new company signup
-    await SlackService.notifyNewCompanySignup({
+    const { slackService } = await import('@/lib/slack-service')
+    await slackService.notifyNewUserSignup({
+      id: 'company-welcome', // Temporary ID for welcome emails
       name: contactPersonName,
       email,
+      role: 'COMPANY',
       companyName,
-      industry: industry || undefined,
-      role: 'COMPANY'
+      signupTime: new Date().toISOString()
     })
     
     console.log(`✅ Company welcome email sent to: ${email} (${companyName})`)

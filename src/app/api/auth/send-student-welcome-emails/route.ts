@@ -49,12 +49,14 @@ export async function POST(request: NextRequest) {
     await triggerNewStudentEmails(studentData)
 
     // Send Slack notification to admin about new student signup
-    await SlackService.notifyNewStudentSignup({
+    const { slackService } = await import('@/lib/slack-service')
+    await slackService.notifyNewUserSignup({
+      id: 'student-welcome', // Temporary ID for welcome emails
       name,
       email,
+      role: 'STUDENT',
       university: university || undefined,
-      major: major || undefined,
-      role: 'STUDENT'
+      signupTime: new Date().toISOString()
     })
 
     console.log(`✅ Welcome emails sent successfully to ${email}`)
