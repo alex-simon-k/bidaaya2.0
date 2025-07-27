@@ -21,6 +21,7 @@ import {
   X,
   ChevronDown,
   Rocket,
+  Send,
   Crown,
   Lock,
   CheckCircle
@@ -375,21 +376,39 @@ export default function ProjectsPage() {
                       {isCompany && (
                         <div className="flex gap-1">
                           {project.status === 'DRAFT' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleActivateProject(project.id)
-                              }}
-                              disabled={activatingProject === project.id}
-                              className="p-2 bg-orange-100 hover:bg-orange-200 text-orange-600 hover:text-orange-700 rounded-lg transition-colors disabled:opacity-50"
-                              title="Activate Project"
-                            >
-                              {activatingProject === project.id ? (
-                                <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <Rocket className="h-4 w-4" />
-                              )}
-                            </button>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleActivateProject(project.id)
+                                }}
+                                disabled={activatingProject === project.id}
+                                className="p-2 bg-gradient-to-r from-orange-100 to-red-100 hover:from-orange-200 hover:to-red-200 text-orange-600 hover:text-orange-700 rounded-lg transition-all disabled:opacity-50 border border-orange-200"
+                                title="🚀 Publish & Activate Project"
+                              >
+                                {activatingProject === project.id ? (
+                                  <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Rocket className="h-4 w-4" />
+                                )}
+                              </button>
+                              
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleActivateProject(project.id)
+                                }}
+                                disabled={activatingProject === project.id}
+                                className="p-2 bg-gradient-to-r from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 text-blue-600 hover:text-blue-700 rounded-lg transition-all disabled:opacity-50 border border-blue-200"
+                                title="📤 Publish Project"
+                              >
+                                {activatingProject === project.id ? (
+                                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Send className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
                           )}
                           
                           {(project.status === 'DRAFT' || project.status === 'REJECTED') && (

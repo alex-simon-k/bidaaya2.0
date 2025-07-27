@@ -57,14 +57,38 @@ export async function POST(
 
     const projectCounts = getProjectCounts(userProjects)
 
-    // Check if company can activate projects (requires paid subscription)
-    const activationCheck = canCompanyActivateProject(project.company, projectCounts.active)
+    // Get current user data (not the stored project company data) for subscription check
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user?.id },
+      select: {
+        id: true,
+        role: true,
+        subscriptionPlan: true,
+        subscriptionStatus: true,
+        companyName: true,
+        name: true
+      }
+    })
+
+    if (!currentUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Check if company can activate projects using CURRENT subscription status
+    console.log(`🔍 Activation check for user ${currentUser.id}:`, {
+      subscriptionPlan: currentUser.subscriptionPlan,
+      subscriptionStatus: currentUser.subscriptionStatus,
+      activeProjects: projectCounts.active,
+      role: currentUser.role
+    })
+    
+    const activationCheck = canCompanyActivateProject(currentUser, projectCounts.active)
     
     if (!activationCheck.canActivate) {
       return NextResponse.json({
         error: activationCheck.reason,
         upgradeRequired: activationCheck.upgradeRequired,
-        currentPlan: project.company.subscriptionPlan || 'FREE',
+        currentPlan: currentUser.subscriptionPlan || 'FREE',
         code: 'ACTIVATION_BLOCKED',
         projectCounts
       }, { status: 402 }) // 402 Payment Required
