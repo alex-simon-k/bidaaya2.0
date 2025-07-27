@@ -65,7 +65,16 @@ export async function POST(req: Request) {
       expires: verificationToken.expires
     });
 
-    // Check if email credentials are configured
+    // Check if email credentials are configured with detailed logging
+    console.log('📧 Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      EMAIL_USER_SET: !!process.env.EMAIL_USER,
+      EMAIL_USER_LENGTH: process.env.EMAIL_USER?.length || 0,
+      EMAIL_PASS_SET: !!process.env.EMAIL_PASS,
+      EMAIL_PASS_LENGTH: process.env.EMAIL_PASS?.length || 0,
+      EMAIL_USER_PREVIEW: process.env.EMAIL_USER ? `${process.env.EMAIL_USER.substring(0, 3)}***@${process.env.EMAIL_USER.split('@')[1]}` : 'NOT_SET'
+    });
+
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('📧 ⚠️ Email credentials not configured - Using development mode');
       console.log('📧 🔑 DEVELOPMENT MODE: Verification code:', verificationCode);
@@ -78,89 +87,120 @@ export async function POST(req: Request) {
         verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
         instructions: process.env.NODE_ENV === 'development' 
           ? 'Use the verification code above to complete verification' 
-          : 'Please configure EMAIL_USER and EMAIL_PASS environment variables'
+          : 'Please configure EMAIL_USER and EMAIL_PASS environment variables',
+        debug: {
+          emailUserSet: !!process.env.EMAIL_USER,
+          emailPassSet: !!process.env.EMAIL_PASS,
+          environment: process.env.NODE_ENV
+        }
       });
     }
 
     // Configure email transporter
     console.log('📧 Configuring email transporter...');
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
 
-    console.log('📧 Email configuration:', {
-      service: 'gmail',
-      user: process.env.EMAIL_USER ? 'Set' : 'Not set',
-      pass: process.env.EMAIL_PASS ? 'Set' : 'Not set'
-    });
+      console.log('📧 Email configuration:', {
+        service: 'gmail',
+        user: process.env.EMAIL_USER ? 'Set' : 'Not set',
+        pass: process.env.EMAIL_PASS ? 'Set' : 'Not set'
+      });
 
-    // Send verification email
-    console.log('📧 Sending verification email...');
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Bidaaya - Verify Your Email',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #3B82F6; margin: 0;">Bidaaya</h1>
-            <p style="color: #6B7280; margin: 5px 0;">Student-Company Internship Platform</p>
-          </div>
-          
-          <h2 style="color: #1F2937; margin-bottom: 20px;">Welcome to Bidaaya! 🚀</h2>
-          
-          <p style="color: #374151; line-height: 1.6; margin-bottom: 20px;">
-            Thank you for joining our platform connecting talented students with innovative companies. 
-            Please verify your email address to complete your registration and start your journey.
-          </p>
-          
-          <div style="background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%); color: white; padding: 25px; margin: 25px 0; text-align: center; border-radius: 12px;">
-            <p style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">Your verification code is:</p>
-            <h3 style="margin: 0; font-size: 32px; letter-spacing: 8px; font-weight: bold;">${verificationCode}</h3>
-          </div>
-          
-          <div style="background: #F3F4F6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #6B7280; font-size: 14px;">
-              ⏰ This code will expire in <strong>10 minutes</strong><br>
-              🔒 Keep this code secure and don't share it with anyone
+      // Test the email connection
+      console.log('📧 Testing email connection...');
+      await transporter.verify();
+      console.log('📧 ✅ Email connection verified successfully');
+
+      // Send verification email
+      console.log('📧 Sending verification email...');
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Bidaaya - Verify Your Email',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #3B82F6; margin: 0;">Bidaaya</h1>
+              <p style="color: #6B7280; margin: 5px 0;">Student-Company Internship Platform</p>
+            </div>
+            
+            <h2 style="color: #1F2937; margin-bottom: 20px;">Welcome to Bidaaya! 🚀</h2>
+            
+            <p style="color: #374151; line-height: 1.6; margin-bottom: 20px;">
+              Thank you for joining our platform connecting talented students with innovative companies. 
+              Please verify your email address to complete your registration and start your journey.
             </p>
+            
+            <div style="background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%); color: white; padding: 25px; margin: 25px 0; text-align: center; border-radius: 12px;">
+              <p style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">Your verification code is:</p>
+              <h3 style="margin: 0; font-size: 32px; letter-spacing: 8px; font-weight: bold;">${verificationCode}</h3>
+            </div>
+            
+            <div style="background: #F3F4F6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; color: #6B7280; font-size: 14px;">
+                ⏰ This code will expire in <strong>10 minutes</strong><br>
+                🔒 Keep this code secure and don't share it with anyone
+              </p>
+            </div>
+            
+            <p style="color: #6B7280; font-size: 14px; margin-top: 30px;">
+              If you didn't create a Bidaaya account, you can safely ignore this email.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 30px 0;">
+            
+            <div style="text-align: center; color: #9CA3AF; font-size: 12px;">
+              <p>© 2024 Bidaaya - Connecting Students & Companies</p>
+            </div>
           </div>
-          
-          <p style="color: #6B7280; font-size: 14px; margin-top: 30px;">
-            If you didn't create a Bidaaya account, you can safely ignore this email.
-          </p>
-          
-          <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 30px 0;">
-          
-          <div style="text-align: center; color: #9CA3AF; font-size: 12px;">
-            <p>© 2024 Bidaaya - Connecting Students & Companies</p>
-          </div>
-        </div>
-      `,
-    };
+        `,
+      };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('📧 ✅ Email sent successfully:', {
-      messageId: info.messageId,
-      accepted: info.accepted,
-      rejected: info.rejected
-    });
+      const info = await transporter.sendMail(mailOptions);
+      console.log('📧 ✅ Email sent successfully:', {
+        messageId: info.messageId,
+        accepted: info.accepted,
+        rejected: info.rejected
+      });
 
-    console.log('📧 ===================== SEND VERIFICATION SUCCESS =====================');
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Verification code sent successfully',
-      debug: {
-        email,
-        codeGenerated: true,
-        emailSent: true,
-        messageId: info.messageId
-      }
-    });
+      console.log('📧 ===================== SEND VERIFICATION SUCCESS =====================');
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Verification code sent successfully',
+        debug: {
+          email,
+          codeGenerated: true,
+          emailSent: true,
+          messageId: info.messageId,
+          emailConfigured: true
+        }
+      });
+
+    } catch (emailError) {
+      console.error('📧 ❌ Email sending failed:', emailError);
+      
+      // Return the verification code in response for debugging (production fallback)
+      return NextResponse.json({ 
+        success: false,
+        error: 'Failed to send email',
+        fallbackMode: true,
+        verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
+        message: 'Email service unavailable. Check console for verification code or try again later.',
+        debug: {
+          emailError: emailError instanceof Error ? emailError.message : 'Unknown email error',
+          emailConfigured: true,
+          fallback: true
+        }
+      }, { status: 503 });
+    }
 
   } catch (error) {
     console.error('📧 ❌ Error sending verification email:', error);
