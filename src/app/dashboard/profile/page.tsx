@@ -775,7 +775,7 @@ export default function ProfilePage() {
                   
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="text-center">
-                      <div className="font-bold text-blue-600">{profileData.stats.projectsCompleted}</div>
+                      <div className="font-bold text-blue-600">{profileData?.stats?.projectsCompleted || 0}</div>
                       <div className="text-gray-600">Projects</div>
                     </div>
                     <div className="text-center">
