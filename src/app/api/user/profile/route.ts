@@ -64,6 +64,7 @@ export async function PATCH(request: NextRequest) {
       name,
       university,
       major,
+      subjects,
       skills,
       bio,
       linkedin,
@@ -78,16 +79,32 @@ export async function PATCH(request: NextRequest) {
     if (name !== undefined) updateData.name = name
     if (university !== undefined) updateData.university = university
     if (major !== undefined) updateData.major = major
+    if (subjects !== undefined) updateData.major = subjects  // Map subjects to major field
     if (skills !== undefined) updateData.skills = skills
     if (bio !== undefined) updateData.bio = bio
     if (linkedin !== undefined) updateData.linkedin = linkedin
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
     
     // If this is a comprehensive profile update (has key fields), mark profile as completed
-    const hasRequiredFields = name && (university || major || skills)
+    console.log('🔍 Profile completion check:', {
+      name: !!name,
+      university: !!university,
+      major: !!major,
+      subjects: !!subjects,
+      skills: !!skills,
+      nameValue: name,
+      universityValue: university,
+      subjectsValue: subjects
+    })
+    
+    const hasRequiredFields = name && (university || major || subjects || skills)
+    console.log('🔍 Has required fields for completion:', hasRequiredFields)
+    
     if (hasRequiredFields) {
       updateData.profileCompleted = true
-      console.log('✅ Marking profile as completed in database')
+      console.log('✅ Marking profile as completed in database - profileCompleted will be set to TRUE')
+    } else {
+      console.log('❌ NOT marking profile as completed - missing required fields')
     }
     
     // Store discovery quiz data in bio field temporarily
