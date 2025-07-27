@@ -118,6 +118,47 @@ export default function ProfilePage() {
 
   const userRole = session?.user?.role as 'STUDENT' | 'COMPANY'
 
+  const transformApiResponse = (apiData: any): ProfileData => {
+    return {
+      id: apiData.id || session?.user?.id || '',
+      name: apiData.name || session?.user?.name || '',
+      email: apiData.email || session?.user?.email || '',
+      bio: apiData.bio || '',
+      location: apiData.location || '',
+      university: apiData.university || '',
+      major: apiData.major || '',
+      graduationYear: apiData.graduationYear || undefined,
+      skills: Array.isArray(apiData.skills) ? apiData.skills : 
+              (apiData.skills ? apiData.skills.split(',').map((s: string) => s.trim()) : []),
+      interests: Array.isArray(apiData.interests) ? apiData.interests : [],
+      experience: Array.isArray(apiData.experience) ? apiData.experience : [],
+      socialLinks: {
+        linkedin: apiData.linkedin || '',
+        github: apiData.github || '',
+        portfolio: apiData.portfolio || '',
+        twitter: apiData.twitter || ''
+      },
+      stats: {
+        projectsCompleted: apiData.projectsCompleted || 0,
+        applicationsSubmitted: apiData.applicationsSubmitted || 0,
+        acceptanceRate: apiData.acceptanceRate || 0,
+        totalExperience: apiData.totalExperience || 0,
+        bidaayaLevel: apiData.bidaayaLevel || 1,
+        badgesEarned: Array.isArray(apiData.badgesEarned) ? apiData.badgesEarned : ['early_adopter'],
+        lastActiveDate: apiData.lastActiveDate || new Date().toISOString(),
+        weeklyActivity: apiData.weeklyActivity || 1,
+        memberSince: apiData.memberSince || apiData.createdAt || new Date().toISOString()
+      },
+      preferences: {
+        lookingForWork: apiData.lookingForWork ?? true,
+        availabilityStatus: apiData.availabilityStatus || 'available',
+        remoteWork: apiData.remoteWork ?? true,
+        projectTypes: Array.isArray(apiData.projectTypes) ? apiData.projectTypes : [],
+        timeCommitment: apiData.timeCommitment || 'part-time'
+      }
+    }
+  }
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/login')
@@ -132,10 +173,24 @@ export default function ProfilePage() {
       const response = await fetch('/api/user/profile')
       if (response.ok) {
         const data = await response.json()
+        console.log('🔍 Profile API Response:', data)
+        
         // Handle the API response structure { success: true, profile: user }
-        const profileData = data.profile || data
-        setProfileData(profileData)
-        setEditData(profileData)
+        const rawProfileData = data.profile || data
+        console.log('🔍 Raw Profile Data:', rawProfileData)
+        
+        // Transform API response to match ProfileData interface
+        try {
+          const profileData = transformApiResponse(rawProfileData)
+          console.log('🔍 Transformed Profile Data:', profileData)
+          setProfileData(profileData)
+          setEditData(profileData)
+        } catch (transformError) {
+          console.error('❌ Error transforming profile data:', transformError)
+          console.error('❌ Raw data that caused error:', rawProfileData)
+          // Fallback to default profile
+          createDefaultProfile()
+        }
       } else {
         // Create profile with default data
         createDefaultProfile()
@@ -149,35 +204,7 @@ export default function ProfilePage() {
     }
 
   const createDefaultProfile = () => {
-    const defaultProfile: ProfileData = {
-      id: session?.user?.id || '',
-      name: session?.user?.name || '',
-      email: session?.user?.email || '',
-      bio: '',
-      location: '',
-      skills: [],
-      interests: [],
-      experience: [],
-      socialLinks: {},
-      stats: {
-        projectsCompleted: 0,
-        applicationsSubmitted: 0,
-        acceptanceRate: 0,
-        totalExperience: 0,
-        bidaayaLevel: 1,
-        badgesEarned: ['early_adopter'],
-        lastActiveDate: new Date().toISOString(),
-        weeklyActivity: 1,
-        memberSince: new Date().toISOString()
-      },
-      preferences: {
-        lookingForWork: true,
-        availabilityStatus: 'available',
-        remoteWork: true,
-        projectTypes: [],
-        timeCommitment: 'part-time'
-      }
-    }
+    const defaultProfile = transformApiResponse({})
     setProfileData(defaultProfile)
     setEditData(defaultProfile)
   }
@@ -193,7 +220,8 @@ export default function ProfilePage() {
       if (response.ok) {
         const responseData = await response.json()
         // Handle the API response structure { success: true, profile: user }
-        const updatedData = responseData.profile || responseData
+        const rawUpdatedData = responseData.profile || responseData
+        const updatedData = transformApiResponse(rawUpdatedData)
         setProfileData(updatedData)
         setIsEditing(false)
       }
