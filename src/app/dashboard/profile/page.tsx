@@ -710,7 +710,7 @@ export default function ProfilePage() {
                   
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>Joined {new Date(profileData.stats.memberSince).toLocaleDateString()}</span>
+                    <span>Joined {profileData?.stats ? new Date(profileData.stats.memberSince).toLocaleDateString() : 'Recently'}</span>
                   </div>
                   
                   <div className="flex items-center gap-1">
