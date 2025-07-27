@@ -132,8 +132,10 @@ export default function ProfilePage() {
       const response = await fetch('/api/user/profile')
       if (response.ok) {
         const data = await response.json()
-        setProfileData(data)
-        setEditData(data)
+        // Handle the API response structure { success: true, profile: user }
+        const profileData = data.profile || data
+        setProfileData(profileData)
+        setEditData(profileData)
       } else {
         // Create profile with default data
         createDefaultProfile()
@@ -189,7 +191,9 @@ export default function ProfilePage() {
       })
 
       if (response.ok) {
-        const updatedData = await response.json()
+        const responseData = await response.json()
+        // Handle the API response structure { success: true, profile: user }
+        const updatedData = responseData.profile || responseData
         setProfileData(updatedData)
         setIsEditing(false)
       }
