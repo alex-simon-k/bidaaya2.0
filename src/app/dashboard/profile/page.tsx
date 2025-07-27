@@ -183,7 +183,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       const response = await fetch('/api/user/profile', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData)
       })

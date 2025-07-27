@@ -349,7 +349,7 @@ export default function SetupProfilePage() {
       console.log('🔐 Submitting profile with email:', session.user.email);
       
       const response = await fetch('/api/user/profile', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
