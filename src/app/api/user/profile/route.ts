@@ -83,6 +83,13 @@ export async function PATCH(request: NextRequest) {
     if (linkedin !== undefined) updateData.linkedin = linkedin
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
     
+    // If this is a comprehensive profile update (has key fields), mark profile as completed
+    const hasRequiredFields = name && (university || major || skills)
+    if (hasRequiredFields) {
+      updateData.profileCompleted = true
+      console.log('✅ Marking profile as completed in database')
+    }
+    
     // Store discovery quiz data in bio field temporarily
     // TODO: Add discoveryProfile JSON field to User schema
     if (discoveryProfile !== undefined) {
