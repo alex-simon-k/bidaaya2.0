@@ -125,16 +125,37 @@ export default function ProfilePage() {
     let discoveryProfile = null
     
     try {
-      if (apiData.bio && typeof apiData.bio === 'string' && apiData.bio.startsWith('{')) {
-        const bioData = JSON.parse(apiData.bio)
-        if (bioData.originalBio !== undefined) {
-          actualBio = bioData.originalBio || ''
-          discoveryProfile = bioData.discoveryProfile
+      if (apiData.bio && typeof apiData.bio === 'string') {
+        // Handle different JSON formats
+        let bioToCheck = apiData.bio.trim()
+        
+        // Fix common malformed JSON patterns
+        if (bioToCheck.startsWith('("') && bioToCheck.includes('discoveryProfile')) {
+          // Fix malformed JSON that starts with ("
+          bioToCheck = '{' + bioToCheck.substring(1)
+        }
+        
+        // Try to parse if it looks like JSON
+        if (bioToCheck.startsWith('{') && bioToCheck.includes('discoveryProfile')) {
+          const bioData = JSON.parse(bioToCheck)
+          if (bioData.originalBio !== undefined) {
+            actualBio = bioData.originalBio || ''
+            discoveryProfile = bioData.discoveryProfile
+          } else if (bioData.discoveryProfile) {
+            // If there's discovery profile but no originalBio, bio should be empty
+            actualBio = ''
+            discoveryProfile = bioData.discoveryProfile
+          }
         }
       }
     } catch (e) {
-      // If parsing fails, use the bio as-is
-      actualBio = apiData.bio || ''
+      console.log('Bio parsing failed, using raw bio:', e)
+      // If bio contains discovery data but parsing fails, clear it
+      if (apiData.bio && apiData.bio.includes('discoveryProfile')) {
+        actualBio = '' // Clear malformed discovery data
+      } else {
+        actualBio = apiData.bio || ''
+      }
     }
 
     return {

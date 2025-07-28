@@ -64,7 +64,7 @@ export default withAuth(
       return NextResponse.next();
     }
     
-    // If user is verified but profile not completed, redirect to role selection
+    // If user is verified but profile not completed, redirect to appropriate onboarding
     if (token && token.emailVerified && !token.profileCompleted) {
       console.log('🛡️ ⚠️ User verified but profile NOT completed');
       
@@ -74,11 +74,25 @@ export default withAuth(
         return NextResponse.next();
       }
       
-      // Redirect to role selection if trying to access other areas
-      if (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding")) {
-        console.log('🛡️ ❌ Profile not completed, redirecting to role selection from:', pathname);
-        return NextResponse.redirect(new URL("/auth/role-selection", req.url));
+      // Allow access to onboarding pages (this is where they complete their profile!)
+      if (pathname.startsWith("/onboarding")) {
+        console.log('🛡️ Allowing access to onboarding for profile completion:', pathname);
+        return NextResponse.next();
       }
+      
+             // Redirect to role selection ONLY if they don't have a role yet OR trying to access dashboard
+       if (pathname.startsWith("/dashboard")) {
+         if (!token.role) {
+           console.log('🛡️ ❌ No role set, redirecting to role selection from:', pathname);
+           return NextResponse.redirect(new URL("/auth/role-selection", req.url));
+         } else if (token.role === 'COMPANY') {
+           console.log('🛡️ ❌ Company role but profile incomplete, redirecting to company onboarding from:', pathname);
+           return NextResponse.redirect(new URL("/onboarding/company", req.url));
+         } else if (token.role === 'STUDENT') {
+           console.log('🛡️ ❌ Student role but profile incomplete, redirecting to profile setup from:', pathname);
+           return NextResponse.redirect(new URL("/auth/setup-profile", req.url));
+         }
+       }
     }
 
     console.log('🛡️ ✅ All checks passed, allowing access to:', pathname);
