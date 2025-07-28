@@ -9,7 +9,28 @@ import {
   Filter, Search, CheckCircle, XCircle, Eye, Linkedin, Download,
   GraduationCap, Building, Clock, TrendingUp, Send, MoreVertical
 } from 'lucide-react'
-import { interviewAutomation, CandidateInfo, InterviewAutomationFeatures } from '@/lib/interview-automation'
+
+// Import types only (no runtime imports of server-side modules)
+interface CandidateInfo {
+  id: string
+  name: string
+  email: string
+  university?: string
+  major?: string
+  skills: string[]
+  score?: number
+  rank?: number
+  applicationId: string
+}
+
+interface InterviewAutomationFeatures {
+  canSeeAllApplicants: boolean
+  canSeeScores: boolean
+  automatedEmails: boolean
+  fullInterviewService: boolean
+  candidatePoolSize: number
+  manualEmailsOnly: boolean
+}
 
 interface Project {
   id: string
@@ -66,16 +87,28 @@ export default function EnhancedApplicationManagement() {
       const projectData = await projectRes.json()
       setProject(projectData)
 
-      // Get processed candidates with subscription-based features
-      const candidatesData = await interviewAutomation.getProcessedCandidates(
-        projectId, 
-        (session?.user as any)?.subscriptionPlan || 'FREE'
-      )
-
-      setCandidates(candidatesData.candidates)
-      setTotalApplications(candidatesData.totalApplications)
-      setFeatures(candidatesData.features)
-      setHasScoring(candidatesData.hasScoring)
+      // Get processed candidates via API call
+      const candidatesResponse = await fetch(`/api/projects/${projectId}/candidates?subscription=${(session?.user as any)?.subscriptionPlan || 'FREE'}`)
+      if (candidatesResponse.ok) {
+        const candidatesData = await candidatesResponse.json()
+        setCandidates(candidatesData.candidates || [])
+        setTotalApplications(candidatesData.totalApplications || 0)
+        setFeatures(candidatesData.features || {})
+        setHasScoring(candidatesData.hasScoring || false)
+      } else {
+        // Fallback: basic data without advanced features
+        setCandidates([])
+        setTotalApplications(0)
+        setFeatures({
+          canSeeAllApplicants: false,
+          canSeeScores: false,
+          automatedEmails: false,
+          fullInterviewService: false,
+          candidatePoolSize: 0,
+          manualEmailsOnly: true
+        })
+        setHasScoring(false)
+      }
 
     } catch (error) {
       console.error('Failed to fetch data:', error)
@@ -116,7 +149,7 @@ export default function EnhancedApplicationManagement() {
     })
 
   // Handle interview invitation
-  const handleSendInterview = async (candidateId: string) => {
+  const handleSendInterview = async (applicationId: string) => {
     if (!features?.automatedEmails) {
       setShowUpgradeModal(true)
       return
@@ -124,17 +157,24 @@ export default function EnhancedApplicationManagement() {
 
     try {
       setIsProcessing(true)
-      const result = await interviewAutomation.sendInterviewInvitation(
-        candidateId,
-        session?.user?.id || '',
-        'initial'
-      )
+      const response = await fetch('/api/interview/send-invitation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          applicationId,
+          interviewType: 'initial'
+        }),
+      })
+
+      const result = await response.json()
 
       if (result.success) {
         alert('✅ Interview invitation sent!')
         fetchData() // Refresh data
       } else {
-        alert(`❌ ${result.message}`)
+        alert(`❌ ${result.message || result.error}`)
       }
     } catch (error) {
       alert('Failed to send interview invitation')
@@ -152,17 +192,24 @@ export default function EnhancedApplicationManagement() {
 
     try {
       setIsProcessing(true)
-      const result = await interviewAutomation.bulkShortlistCandidates(
-        selectedCandidates,
-        session?.user?.id || ''
-      )
+      const response = await fetch('/api/applications/bulk-shortlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          applicationIds: selectedCandidates
+        }),
+      })
+
+      const result = await response.json()
 
       if (result.success) {
         alert(`✅ ${result.message}`)
         setSelectedCandidates([])
         fetchData()
       } else {
-        alert(`❌ ${result.message}`)
+        alert(`❌ ${result.message || result.error}`)
       }
     } catch (error) {
       alert('Failed to shortlist candidates')
@@ -174,11 +221,48 @@ export default function EnhancedApplicationManagement() {
   // Get subscription tier info
   const getSubscriptionInfo = () => {
     const currentPlan = (session?.user as any)?.subscriptionPlan || 'FREE'
-    const upgrade = interviewAutomation.getUpgradePrompts(currentPlan)
+    
+    const upgradePrompts: { [key: string]: any } = {
+      'FREE': {
+        showUpgrade: true,
+        message: 'Upgrade to Company Basic to see top 10 candidate emails and start hiring!',
+        targetPlan: 'COMPANY_BASIC',
+        features: [
+          'Access to top 10 candidate emails',
+          'Manual interview scheduling',
+          'Basic application management',
+          '1 active project'
+        ]
+      },
+      'COMPANY_BASIC': {
+        showUpgrade: true,
+        message: 'Upgrade to HR Booster for automated interview scheduling and full candidate visibility!',
+        targetPlan: 'COMPANY_PREMIUM',
+        features: [
+          'See ALL candidate details',
+          'AI-powered candidate scoring',
+          'Automated interview emails',
+          'Bulk candidate actions',
+          'Up to 5 active projects'
+        ]
+      },
+      'COMPANY_PREMIUM': {
+        showUpgrade: true,
+        message: 'Upgrade to HR Agent for hands-off hiring with interview service!',
+        targetPlan: 'COMPANY_PRO',
+        features: [
+          'We conduct interviews for you',
+          'Interview transcript analysis',
+          'Team recommendations',
+          'Unlimited projects',
+          'Dedicated account manager'
+        ]
+      }
+    }
     
     return {
       current: currentPlan,
-      ...upgrade
+      ...(upgradePrompts[currentPlan] || { showUpgrade: false, message: '', targetPlan: '', features: [] })
     }
   }
 
@@ -505,13 +589,13 @@ export default function EnhancedApplicationManagement() {
                   {subscriptionInfo.message}
                 </p>
                 
-                <div className="space-y-2 mb-6 text-left">
-                  {subscriptionInfo.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      {feature}
-                    </div>
-                  ))}
+                                 <div className="space-y-2 mb-6 text-left">
+                   {subscriptionInfo.features.map((feature: string, idx: number) => (
+                     <div key={idx} className="flex items-center gap-2 text-sm">
+                       <CheckCircle className="w-4 h-4 text-green-500" />
+                       {feature}
+                     </div>
+                   ))}
                 </div>
 
                 <div className="flex gap-3">

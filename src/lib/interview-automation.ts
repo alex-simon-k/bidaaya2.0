@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import { emailAutomation } from './email-automation'
 import { aiScoring, ApplicationScore } from './ai-scoring'
 
 const prisma = new PrismaClient()
@@ -196,7 +195,7 @@ export class InterviewAutomationService {
     applicationId: string,
     companyId: string,
     interviewType: 'initial' | 'technical' | 'final' = 'initial'
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
       // Get application and company details
       const [application, company] = await Promise.all([
@@ -260,27 +259,16 @@ export class InterviewAutomationService {
         companyContactEmail: company.email
       }
 
-      // Send automated interview invitation
-      const emailSent = await emailAutomation.sendInterviewInvitation(schedulingInfo)
-
-      if (emailSent) {
-        // Update application status
-        await prisma.application.update({
-          where: { id: applicationId },
-          data: { 
-            status: 'INTERVIEWED',
-            updatedAt: new Date()
-          }
-        })
-
-        return { 
-          success: true, 
-          message: 'Interview invitation sent successfully! Candidate will receive an email with your Calendly link.' 
-        }
-      } else {
-        return { 
-          success: false, 
-          message: 'Failed to send interview invitation. Please try again.' 
+      // Note: Email sending will be handled by server-side API
+      // This method now just validates and prepares the data
+      return { 
+        success: true, 
+        message: 'Ready to send interview invitation via API call',
+        data: {
+          applicationId,
+          candidateInfo,
+          schedulingInfo,
+          companyId
         }
       }
 

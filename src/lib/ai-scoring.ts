@@ -303,4 +303,93 @@ export class AIApplicationScoring {
   }
 }
 
-export const aiScoring = new AIApplicationScoring() 
+export const aiScoring = new AIApplicationScoring()
+
+// Backward compatibility exports for existing code
+export interface CompatibilityResult {
+  score: number
+  reasoning: string
+  keyMatches: string[]
+  improvements: string[]
+}
+
+export async function calculateCompatibilityScore(
+  studentId: string, 
+  projectId: string
+): Promise<CompatibilityResult> {
+  // Simple compatibility calculation for backward compatibility
+  try {
+    const [student, project] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: studentId },
+        select: {
+          skills: true,
+          university: true,
+          major: true,
+          bio: true
+        }
+      }),
+      prisma.project.findUnique({
+        where: { id: projectId },
+        select: {
+          skillsRequired: true,
+          title: true,
+          description: true
+        }
+      })
+    ])
+
+    if (!student || !project) {
+      throw new Error('Student or project not found')
+    }
+
+    // Simple skill matching calculation
+    const studentSkills = student.skills || []
+    const requiredSkills = project.skillsRequired || []
+    
+    const skillMatches = requiredSkills.filter(skill => 
+      studentSkills.some(studentSkill => 
+        studentSkill.toLowerCase().includes(skill.toLowerCase()) ||
+        skill.toLowerCase().includes(studentSkill.toLowerCase())
+      )
+    )
+    
+    const matchRatio = requiredSkills.length > 0 ? skillMatches.length / requiredSkills.length : 0.5
+    const score = Math.min(100, Math.max(20, Math.round(50 + (matchRatio * 40))))
+
+    return {
+      score,
+      reasoning: skillMatches.length > 0 
+        ? `Good skill match: ${skillMatches.slice(0, 3).join(', ')}`
+        : 'Limited skill alignment found',
+      keyMatches: skillMatches,
+      improvements: skillMatches.length < requiredSkills.length 
+        ? [`Consider developing: ${requiredSkills.filter(s => !skillMatches.includes(s)).slice(0, 2).join(', ')}`]
+        : []
+    }
+  } catch (error) {
+    console.error('Compatibility calculation error:', error)
+    return {
+      score: 50,
+      reasoning: 'Unable to calculate compatibility',
+      keyMatches: [],
+      improvements: ['Complete your profile for better matching']
+    }
+  }
+}
+
+export async function updateApplicationScore(
+  applicationId: string,
+  compatibilityResult: CompatibilityResult
+): Promise<void> {
+  try {
+    await prisma.application.update({
+      where: { id: applicationId },
+      data: {
+        compatibilityScore: compatibilityResult.score
+      }
+    })
+  } catch (error) {
+    console.error('Failed to update application score:', error)
+  }
+} 
