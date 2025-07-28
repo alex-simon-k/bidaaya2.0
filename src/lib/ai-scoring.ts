@@ -2,342 +2,305 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-interface StudentProfile {
-  skills: string[]
-  interests: string[]
-  university: string | null
-  major: string | null
-  graduationYear: number | null
-  education: string | null
-  bio: string | null
+export interface ApplicationScore {
+  applicationId: string
+  score: number
+  breakdown: {
+    skillsMatch: number
+    experienceLevel: number
+    careerGoals: number
+    industryFit: number
+    availability: number
+  }
+  reasoning: string[]
+  rank: number
 }
 
-interface ProjectRequirements {
-  title: string
-  description: string
-  skillsRequired: string[]
-  department: string | null
-  industry: string | null
-  companyName: string | null
-  duration: string | null
-  location: string | null
-  remote: boolean
+export interface ScoringCriteria {
+  requiredSkills: string[]
+  preferredSkills?: string[]
+  experienceLevel: 'entry' | 'mid' | 'senior'
+  industry: string
+  projectDuration: string
+  teamSize: string
 }
 
-export interface CompatibilityResult {
-  score: number // 0-100
-  reasoning: string
-  keyMatches: string[]
-  improvements: string[]
-}
-
-export async function calculateCompatibilityScore(
-  studentId: string, 
-  projectId: string
-): Promise<CompatibilityResult> {
-  // Fetch student and project data
-  const [student, project] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: studentId },
-      select: {
-        skills: true,
-        interests: true,
-        university: true,
-        major: true,
-        graduationYear: true,
-        education: true,
-        bio: true,
-      }
-    }),
-    prisma.project.findUnique({
-      where: { id: projectId },
-      include: {
-        company: {
-          select: {
-            companyName: true,
-            industry: true,
+export class AIApplicationScoring {
+  /**
+   * Calculate compatibility scores for all applications to a project
+   * Only returns scores if there are 20+ applications for statistical significance
+   */
+  async scoreApplications(projectId: string): Promise<ApplicationScore[] | null> {
+    try {
+      // Get project with applications
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        include: {
+          applications: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  skills: true,
+                  major: true,
+                  university: true,
+                  bio: true,
+                  graduationYear: true
+                }
+              }
+            }
           }
         }
+      })
+
+      if (!project) {
+        throw new Error('Project not found')
       }
-    })
-  ])
 
-  if (!student || !project) {
-    throw new Error('Student or project not found')
-  }
-
-  const studentProfile: StudentProfile = {
-    skills: student.skills || [],
-    interests: student.interests || [],
-    university: student.university,
-    major: student.major,
-    graduationYear: student.graduationYear,
-    education: student.education,
-    bio: student.bio,
-  }
-
-  const projectRequirements: ProjectRequirements = {
-    title: project.title,
-    description: project.description,
-    skillsRequired: project.skillsRequired || [],
-    department: project.department,
-    industry: project.company?.industry || null,
-    companyName: project.company?.companyName || null,
-    duration: project.duration,
-    location: project.location,
-    remote: project.remote,
-  }
-
-  // Try DeepSeq API first, fallback to OpenAI
-  try {
-    if (process.env.DEEPSEQ_API_KEY) {
-      return await calculateWithDeepSeq(studentProfile, projectRequirements)
-    } else {
-      return await calculateWithOpenAI(studentProfile, projectRequirements)
-    }
-  } catch (error) {
-    console.error('AI scoring error:', error)
-    // Fallback to simple rule-based scoring
-    return calculateBasicCompatibility(studentProfile, projectRequirements)
-  }
-}
-
-async function calculateWithDeepSeq(
-  student: StudentProfile, 
-  project: ProjectRequirements
-): Promise<CompatibilityResult> {
-  const response = await fetch('https://api.deepseq.ai/v1/compatibility', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.DEEPSEQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      student: student,
-      project: project,
-      options: {
-        includeReasoning: true,
-        includeMatches: true,
-        includeSuggestions: true,
+      // Require minimum 20 applications for statistical significance
+      if (project.applications.length < 20) {
+        console.log(`🤖 AI Scoring: Only ${project.applications.length} applications, need 20+ for scoring`)
+        return null
       }
-    })
-  })
 
-  if (!response.ok) {
-    throw new Error(`DeepSeq API error: ${response.status}`)
+      console.log(`🤖 AI Scoring: Processing ${project.applications.length} applications for project ${project.title}`)
+
+      // Extract scoring criteria from project
+      const criteria = this.extractScoringCriteria(project)
+
+      // Score each application
+      const scoredApplications = project.applications.map(application => {
+        return this.scoreIndividualApplication(application, criteria)
+      })
+
+      // Sort by score (highest first) and assign ranks
+      const rankedApplications = scoredApplications
+        .sort((a, b) => b.score - a.score)
+        .map((app, index) => ({
+          ...app,
+          rank: index + 1
+        }))
+
+      console.log(`🤖 AI Scoring: Completed scoring for ${rankedApplications.length} applications`)
+      
+      return rankedApplications
+
+    } catch (error) {
+      console.error('🤖 AI Scoring Error:', error)
+      return null
+    }
   }
 
-  const result = await response.json()
-  
-  return {
-    score: Math.round(result.compatibilityScore * 100),
-    reasoning: result.reasoning || 'AI-generated compatibility analysis',
-    keyMatches: result.keyMatches || [],
-    improvements: result.suggestions || [],
-  }
-}
-
-async function calculateWithOpenAI(
-  student: StudentProfile, 
-  project: ProjectRequirements
-): Promise<CompatibilityResult> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('No OpenAI API key configured')
+  /**
+   * Extract scoring criteria from project data
+   */
+  private extractScoringCriteria(project: any): ScoringCriteria {
+    return {
+      requiredSkills: project.skillsRequired || [],
+      preferredSkills: project.skillsPreferred || [],
+      experienceLevel: this.mapExperienceLevel(project.experienceLevel),
+      industry: project.category || project.industry || 'technology',
+      projectDuration: project.durationMonths ? `${project.durationMonths} months` : '3-6 months',
+      teamSize: project.teamSize ? `${project.teamSize} people` : 'small team'
+    }
   }
 
-  const prompt = `
-Analyze the compatibility between this student and project opportunity:
+  /**
+   * Score an individual application against project criteria
+   */
+  private scoreIndividualApplication(application: any, criteria: ScoringCriteria): ApplicationScore {
+    const user = application.user
+    let reasoning: string[] = []
 
-STUDENT PROFILE:
-- Skills: ${student.skills.join(', ')}
-- Interests: ${student.interests.join(', ')}
-- University: ${student.university || 'Not specified'}
-- Major: ${student.major || 'Not specified'}
-- Graduation Year: ${student.graduationYear || 'Not specified'}
-- Bio: ${student.bio || 'Not provided'}
+    // Parse discovery profile data from bio if available
+    let discoveryProfile = null
+    try {
+      if (user.bio && user.bio.includes('discoveryProfile')) {
+        const bioData = JSON.parse(user.bio)
+        discoveryProfile = bioData.discoveryProfile
+      }
+    } catch (e) {
+      // No discovery profile data
+    }
 
-PROJECT REQUIREMENTS:
-- Title: ${project.title}
-- Description: ${project.description}
-- Required Skills: ${project.skillsRequired.join(', ')}
-- Department: ${project.department || 'Not specified'}
-- Industry: ${project.industry || 'Not specified'}
-- Company: ${project.companyName || 'Not specified'}
-- Duration: ${project.duration || 'Not specified'}
-- Location: ${project.location || 'Not specified'}
-- Remote: ${project.remote ? 'Yes' : 'No'}
+    // 1. Skills Match (30% weight)
+    const skillsScore = this.calculateSkillsMatch(user.skills, criteria.requiredSkills, criteria.preferredSkills)
+    reasoning.push(`Skills match: ${Math.round(skillsScore * 100)}% - ${this.getSkillsReasoning(user.skills, criteria.requiredSkills)}`)
 
-Please provide a JSON response with:
-{
-  "score": number between 0-100,
-  "reasoning": "brief explanation of the match",
-  "keyMatches": ["list", "of", "key", "matching", "factors"],
-  "improvements": ["suggestions", "for", "student", "improvement"]
-}
-`
+    // 2. Experience Level Match (25% weight)
+    const experienceScore = this.calculateExperienceMatch(user, discoveryProfile, criteria.experienceLevel)
+    reasoning.push(`Experience level: ${Math.round(experienceScore * 100)}% fit for ${criteria.experienceLevel} role`)
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert career counselor and recruiter. Analyze student-project compatibility and provide objective scoring.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.3,
-    })
-  })
+    // 3. Career Goals Alignment (20% weight)
+    const careerGoalsScore = this.calculateCareerGoalsMatch(discoveryProfile, criteria)
+    reasoning.push(`Career goals: ${Math.round(careerGoalsScore * 100)}% alignment with project objectives`)
 
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.status}`)
-  }
+    // 4. Industry Fit (15% weight)
+    const industryScore = this.calculateIndustryFit(user, discoveryProfile, criteria.industry)
+    reasoning.push(`Industry fit: ${Math.round(industryScore * 100)}% match for ${criteria.industry}`)
 
-  const data = await response.json()
-  const result = JSON.parse(data.choices[0].message.content)
-  
-  return {
-    score: Math.round(result.score),
-    reasoning: result.reasoning,
-    keyMatches: result.keyMatches || [],
-    improvements: result.improvements || [],
-  }
-}
+    // 5. Availability/Commitment (10% weight)
+    const availabilityScore = this.calculateAvailabilityMatch(discoveryProfile, criteria)
+    reasoning.push(`Availability: ${Math.round(availabilityScore * 100)}% match for project timeline`)
 
-function calculateBasicCompatibility(
-  student: StudentProfile, 
-  project: ProjectRequirements
-): CompatibilityResult {
-  let score = 50 // Base score
-  const keyMatches: string[] = []
-  const improvements: string[] = []
-
-  // Skill matching (40% weight)
-  const studentSkills = student.skills.map(s => s.toLowerCase())
-  const requiredSkills = project.skillsRequired.map(s => s.toLowerCase())
-  
-  const skillMatches = requiredSkills.filter(skill => 
-    studentSkills.some(studentSkill => 
-      studentSkill.includes(skill) || skill.includes(studentSkill)
+    // Calculate weighted final score
+    const finalScore = (
+      skillsScore * 0.30 +
+      experienceScore * 0.25 +
+      careerGoalsScore * 0.20 +
+      industryScore * 0.15 +
+      availabilityScore * 0.10
     )
-  )
-  
-  const skillMatchRatio = requiredSkills.length > 0 ? skillMatches.length / requiredSkills.length : 0.5
-  score += (skillMatchRatio * 40)
-  
-  if (skillMatches.length > 0) {
-    keyMatches.push(`Matching skills: ${skillMatches.join(', ')}`)
+
+    return {
+      applicationId: application.id,
+      score: Math.round(finalScore * 100), // Convert to 0-100 scale
+      breakdown: {
+        skillsMatch: Math.round(skillsScore * 100),
+        experienceLevel: Math.round(experienceScore * 100),
+        careerGoals: Math.round(careerGoalsScore * 100),
+        industryFit: Math.round(industryScore * 100),
+        availability: Math.round(availabilityScore * 100)
+      },
+      reasoning,
+      rank: 0 // Will be assigned after sorting
+    }
   }
 
-  // Interest alignment (20% weight)
-  const studentInterests = student.interests.map(i => i.toLowerCase())
-  const projectKeywords = [
-    ...project.title.toLowerCase().split(' '),
-    ...project.description.toLowerCase().split(' '),
-    project.industry?.toLowerCase() || '',
-    project.department?.toLowerCase() || '',
-  ].filter(word => word.length > 3)
+  /**
+   * Calculate skills match score
+   */
+  private calculateSkillsMatch(userSkills: string[], requiredSkills: string[], preferredSkills: string[] = []): number {
+    if (!userSkills || userSkills.length === 0) return 0
 
-  const interestMatches = studentInterests.filter(interest =>
-    projectKeywords.some(keyword => keyword.includes(interest))
-  )
+    const normalizedUserSkills = userSkills.map(s => s.toLowerCase().trim())
+    const normalizedRequired = requiredSkills.map(s => s.toLowerCase().trim())
+    const normalizedPreferred = preferredSkills.map(s => s.toLowerCase().trim())
 
-  if (interestMatches.length > 0) {
-    score += Math.min(20, interestMatches.length * 5)
-    keyMatches.push(`Interest alignment: ${interestMatches.join(', ')}`)
+    // Check required skills match
+    const requiredMatches = normalizedRequired.filter(skill => 
+      normalizedUserSkills.some(userSkill => userSkill.includes(skill) || skill.includes(userSkill))
+    ).length
+
+    // Check preferred skills match
+    const preferredMatches = normalizedPreferred.filter(skill => 
+      normalizedUserSkills.some(userSkill => userSkill.includes(skill) || skill.includes(userSkill))
+    ).length
+
+    // Weight required skills more heavily
+    const requiredScore = normalizedRequired.length > 0 ? requiredMatches / normalizedRequired.length : 1
+    const preferredScore = normalizedPreferred.length > 0 ? preferredMatches / normalizedPreferred.length : 0.5
+
+    return Math.min(1, requiredScore * 0.8 + preferredScore * 0.2)
   }
 
-  // Education relevance (20% weight)
-  if (student.major && project.description) {
-    const majorKeywords = student.major.toLowerCase().split(' ')
-    const descriptionWords = project.description.toLowerCase().split(' ')
+  /**
+   * Calculate experience level match
+   */
+  private calculateExperienceMatch(user: any, discoveryProfile: any, targetLevel: string): number {
+    // Get experience indicators
+    const hasUniversity = !!user.university
+    const isGraduating = user.graduationYear && user.graduationYear >= new Date().getFullYear()
+    const experienceLevel = discoveryProfile?.experienceLevel
+
+    switch (targetLevel) {
+      case 'entry':
+        if (experienceLevel === 'Student - No prior internship/work experience') return 1.0
+        if (experienceLevel === 'Student - Some internship/work experience') return 0.8
+        if (isGraduating) return 0.9
+        return 0.6
+
+      case 'mid':
+        if (experienceLevel === 'Student - Some internship/work experience') return 1.0
+        if (experienceLevel === 'Recent Graduate - 0-2 years experience') return 1.0
+        if (experienceLevel === 'Career Changer - New field, existing skills') return 0.8
+        return 0.5
+
+      case 'senior':
+        if (experienceLevel === 'Recent Graduate - 0-2 years experience') return 0.7
+        if (experienceLevel === 'Career Changer - New field, existing skills') return 0.9
+        return 0.4
+
+      default:
+        return 0.5
+    }
+  }
+
+  /**
+   * Calculate career goals alignment
+   */
+  private calculateCareerGoalsMatch(discoveryProfile: any, criteria: ScoringCriteria): number {
+    if (!discoveryProfile?.careerGoals) return 0.5
+
+    const careerGoals = discoveryProfile.careerGoals
+    let score = 0.5 // Base score
+
+    // Look for alignment with project type
+    if (careerGoals.includes('Contribute to meaningful projects')) score += 0.3
+    if (careerGoals.includes('Prepare for full-time roles')) score += 0.2
+    if (careerGoals.includes('Earn recommendations/references')) score += 0.2
+
+    return Math.min(1, score)
+  }
+
+  /**
+   * Calculate industry fit
+   */
+  private calculateIndustryFit(user: any, discoveryProfile: any, targetIndustry: string): number {
+    const userIndustries = discoveryProfile?.industries || []
     
-    const educationMatch = majorKeywords.some(major =>
-      descriptionWords.some(word => word.includes(major) || major.includes(word))
+    if (userIndustries.length === 0) return 0.5
+
+    const industryMatch = userIndustries.some((industry: string) => 
+      industry.toLowerCase().includes(targetIndustry.toLowerCase()) ||
+      targetIndustry.toLowerCase().includes(industry.toLowerCase())
+    )
+
+    return industryMatch ? 1.0 : 0.3
+  }
+
+  /**
+   * Calculate availability match
+   */
+  private calculateAvailabilityMatch(discoveryProfile: any, criteria: ScoringCriteria): number {
+    if (!discoveryProfile?.workPreferences) return 0.7
+
+    const workPrefs = discoveryProfile.workPreferences
+    let score = 0.5
+
+    // Time commitment match
+    if (workPrefs.timeCommitment === '35+ hours - Full-time internship') score += 0.3
+    else if (workPrefs.timeCommitment === '20-30 hours - Part-time') score += 0.2
+
+    // Project duration preference
+    if (workPrefs.projectDuration?.includes('3-4 months')) score += 0.2
+
+    return Math.min(1, score)
+  }
+
+  /**
+   * Helper methods
+   */
+  private mapExperienceLevel(level: string): 'entry' | 'mid' | 'senior' {
+    if (!level) return 'entry'
+    const l = level.toLowerCase()
+    if (l.includes('senior') || l.includes('lead')) return 'senior'
+    if (l.includes('mid') || l.includes('intermediate')) return 'mid'
+    return 'entry'
+  }
+
+  private getSkillsReasoning(userSkills: string[], requiredSkills: string[]): string {
+    if (!userSkills || userSkills.length === 0) return 'No skills listed'
+    
+    const matches = requiredSkills.filter(req => 
+      userSkills.some(skill => skill.toLowerCase().includes(req.toLowerCase()))
     )
     
-    if (educationMatch) {
-      score += 15
-      keyMatches.push(`Educational background aligns with project requirements`)
-    }
-  }
-
-  // Experience level (10% weight)
-  const currentYear = new Date().getFullYear()
-  if (student.graduationYear) {
-    const yearsToGraduation = student.graduationYear - currentYear
-    if (yearsToGraduation >= 0 && yearsToGraduation <= 2) {
-      score += 10
-      keyMatches.push('Graduation timeline aligns well')
-    }
-  }
-
-  // Generate improvements
-  if (skillMatches.length < requiredSkills.length) {
-    const missingSkills = requiredSkills.filter(skill => !skillMatches.includes(skill))
-    improvements.push(`Consider developing skills in: ${missingSkills.slice(0, 3).join(', ')}`)
-  }
-
-  if (keyMatches.length === 0) {
-    improvements.push('Update your profile with relevant skills and interests')
-    improvements.push('Add more details to your bio and education background')
-  }
-
-  return {
-    score: Math.min(100, Math.max(0, Math.round(score))),
-    reasoning: keyMatches.length > 0 
-      ? `Strong match based on ${keyMatches.length} key factors`
-      : 'Limited alignment found - consider profile improvements',
-    keyMatches,
-    improvements,
+    if (matches.length === 0) return 'No required skills match'
+    return `Matches: ${matches.slice(0, 3).join(', ')}`
   }
 }
 
-export async function updateApplicationScore(
-  applicationId: string,
-  compatibilityResult: CompatibilityResult
-): Promise<void> {
-  await prisma.application.update({
-    where: { id: applicationId },
-    data: {
-      compatibilityScore: compatibilityResult.score,
-    }
-  })
-}
-
-export async function getProjectApplicationStats(projectId: string): Promise<{
-  totalApplications: number
-  averageScore: number
-  topScores: number[]
-  shouldShowScores: boolean
-}> {
-  const applications = await prisma.application.findMany({
-    where: { projectId },
-    select: { compatibilityScore: true }
-  })
-
-  const scoresWithValues = applications
-    .filter(app => app.compatibilityScore !== null)
-    .map(app => app.compatibilityScore!)
-
-  const shouldShowScores = applications.length >= 3 // Show scores after 3+ applications
-
-  return {
-    totalApplications: applications.length,
-    averageScore: scoresWithValues.length > 0 
-      ? Math.round(scoresWithValues.reduce((a, b) => a + b, 0) / scoresWithValues.length)
-      : 0,
-    topScores: scoresWithValues.sort((a, b) => b - a).slice(0, 5),
-    shouldShowScores,
-  }
-} 
+export const aiScoring = new AIApplicationScoring() 

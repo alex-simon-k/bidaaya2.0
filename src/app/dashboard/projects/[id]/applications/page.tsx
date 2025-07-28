@@ -3,165 +3,218 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { 
-  ArrowLeft,
-  Users,
-  FileText,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Mail,
-  Linkedin,
-  GraduationCap,
-  Building,
-  Calendar,
-  Star,
-  Filter,
-  Search,
-  Download
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ArrowLeft, Users, Zap, Crown, Mail, Phone, Calendar, Star, 
+  Filter, Search, CheckCircle, XCircle, Eye, Linkedin, Download,
+  GraduationCap, Building, Clock, TrendingUp, Send, MoreVertical
 } from 'lucide-react'
-
-interface Application {
-  id: string
-  status: string
-  createdAt: string
-  coverLetter?: string
-  resumeUrl?: string
-  compatibilityScore?: number
-  appliedVia: string
-  user: {
-    id: string
-    name: string
-    email: string
-    university: string
-    major: string
-    linkedin?: string
-  }
-}
+import { interviewAutomation, CandidateInfo, InterviewAutomationFeatures } from '@/lib/interview-automation'
 
 interface Project {
   id: string
   title: string
-  category: string
   description: string
   status: string
+  skillsRequired: string[]
+  company: {
+    name: string
+    email: string
+  }
 }
 
-export default function ProjectApplicationsPage() {
+export default function EnhancedApplicationManagement() {
   const { data: session } = useSession()
   const router = useRouter()
   const params = useParams()
   const projectId = params.id as string
 
+  // State
   const [project, setProject] = useState<Project | null>(null)
-  const [applications, setApplications] = useState<Application[]>([])
+  const [candidates, setCandidates] = useState<CandidateInfo[]>([])
+  const [totalApplications, setTotalApplications] = useState(0)
+  const [features, setFeatures] = useState<InterviewAutomationFeatures | null>(null)
+  const [hasScoring, setHasScoring] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
-  const [showApplicationDetail, setShowApplicationDetail] = useState(false)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  
+  // UI State
+  const [selectedCandidates, setSelectedCandidates] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState<'rank' | 'score' | 'name' | 'university'>('rank')
+  const [filterBy, setFilterBy] = useState<'all' | 'top10' | 'scored'>('all')
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
 
+  // Load data
   useEffect(() => {
-    if (session?.user?.role !== 'COMPANY') {
+    if (!session?.user?.role || session.user.role !== 'COMPANY') {
       router.push('/dashboard')
       return
     }
     
-    fetchProjectAndApplications()
+    fetchData()
   }, [session, projectId, router])
 
-  const fetchProjectAndApplications = async () => {
+  const fetchData = async () => {
     try {
       setIsLoading(true)
       
-      // Fetch project details and applications
-      const response = await fetch(`/api/projects/${projectId}`)
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch project data')
-      }
-      
-      const data = await response.json()
-      setProject(data.project)
-      setApplications(data.applications || [])
-      
+      // Fetch project details
+      const projectRes = await fetch(`/api/projects/${projectId}`)
+      if (!projectRes.ok) throw new Error('Failed to fetch project')
+      const projectData = await projectRes.json()
+      setProject(projectData)
+
+      // Get processed candidates with subscription-based features
+      const candidatesData = await interviewAutomation.getProcessedCandidates(
+        projectId, 
+        (session?.user as any)?.subscriptionPlan || 'FREE'
+      )
+
+      setCandidates(candidatesData.candidates)
+      setTotalApplications(candidatesData.totalApplications)
+      setFeatures(candidatesData.features)
+      setHasScoring(candidatesData.hasScoring)
+
     } catch (error) {
-      console.error('Error fetching project applications:', error)
-      setError('Failed to load project applications')
+      console.error('Failed to fetch data:', error)
+      setError('Failed to load application data')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleStatusUpdate = async (applicationId: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/applications/${applicationId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      })
+  // Filter and sort candidates
+  const filteredCandidates = candidates
+    .filter(candidate => {
+      const matchesSearch = !searchTerm || 
+        candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        candidate.university?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        candidate.major?.toLowerCase().includes(searchTerm.toLowerCase())
 
-      if (!response.ok) {
-        throw new Error('Failed to update application status')
+      const matchesFilter = filterBy === 'all' ||
+        (filterBy === 'top10' && candidate.rank && candidate.rank <= 10) ||
+        (filterBy === 'scored' && candidate.score !== undefined)
+
+      return matchesSearch && matchesFilter
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'score':
+          return (b.score || 0) - (a.score || 0)
+        case 'rank':
+          return (a.rank || 999) - (b.rank || 999)
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'university':
+          return (a.university || '').localeCompare(b.university || '')
+        default:
+          return 0
       }
+    })
 
-      // Refresh applications
-      fetchProjectAndApplications()
+  // Handle interview invitation
+  const handleSendInterview = async (candidateId: string) => {
+    if (!features?.automatedEmails) {
+      setShowUpgradeModal(true)
+      return
+    }
+
+    try {
+      setIsProcessing(true)
+      const result = await interviewAutomation.sendInterviewInvitation(
+        candidateId,
+        session?.user?.id || '',
+        'initial'
+      )
+
+      if (result.success) {
+        alert('✅ Interview invitation sent!')
+        fetchData() // Refresh data
+      } else {
+        alert(`❌ ${result.message}`)
+      }
     } catch (error) {
-      console.error('Error updating application status:', error)
-      setError('Failed to update application status')
+      alert('Failed to send interview invitation')
+    } finally {
+      setIsProcessing(false)
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      SHORTLISTED: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
-      INTERVIEWED: { color: 'bg-purple-100 text-purple-800', icon: Users },
-      ACCEPTED: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      REJECTED: { color: 'bg-red-100 text-red-800', icon: XCircle }
+  // Handle bulk shortlist
+  const handleBulkShortlist = async () => {
+    if (!features?.automatedEmails) {
+      setShowUpgradeModal(true)
+      return
     }
+
+    try {
+      setIsProcessing(true)
+      const result = await interviewAutomation.bulkShortlistCandidates(
+        selectedCandidates,
+        session?.user?.id || ''
+      )
+
+      if (result.success) {
+        alert(`✅ ${result.message}`)
+        setSelectedCandidates([])
+        fetchData()
+      } else {
+        alert(`❌ ${result.message}`)
+      }
+    } catch (error) {
+      alert('Failed to shortlist candidates')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // Get subscription tier info
+  const getSubscriptionInfo = () => {
+    const currentPlan = (session?.user as any)?.subscriptionPlan || 'FREE'
+    const upgrade = interviewAutomation.getUpgradePrompts(currentPlan)
     
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING
-    const Icon = config.icon
-    
+    return {
+      current: currentPlan,
+      ...upgrade
+    }
+  }
+
+  if (!session || session.user?.role !== 'COMPANY') {
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <Icon className="h-3 w-3" />
-        {status}
-      </span>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Building className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600">This page is for company accounts only.</p>
+        </div>
+      </div>
     )
   }
 
-  const filteredApplications = applications.filter(app => {
-    const matchesStatus = statusFilter === 'all' || app.status === statusFilter
-    const matchesSearch = searchTerm === '' || 
-      app.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.user.university.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    return matchesStatus && matchesSearch
-  })
-
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading candidates...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">{error}</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Error</h1>
+          <p className="text-gray-600">{error}</p>
           <button 
             onClick={() => router.back()}
-            className="mt-2 text-red-600 hover:text-red-700 underline"
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Go Back
           </button>
@@ -170,245 +223,316 @@ export default function ProjectApplicationsPage() {
     )
   }
 
+  const subscriptionInfo = getSubscriptionInfo()
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Projects
-        </button>
-        
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Applications for {project?.title}
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Header */}
+      <div className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="px-4 py-4 flex items-center gap-3">
+          <button 
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-semibold text-gray-900 truncate">
+              {project?.title || 'Project Applications'}
             </h1>
-            <p className="mt-1 text-gray-600">
-              {filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search applicants..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <span className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                {totalApplications} applications
+              </span>
+              {hasScoring && (
+                <span className="flex items-center gap-1 text-blue-600">
+                  <Zap className="w-4 h-4" />
+                  AI Scoring
+                </span>
+              )}
             </div>
-            
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="SHORTLISTED">Shortlisted</option>
-              <option value="INTERVIEWED">Interviewed</option>
-              <option value="ACCEPTED">Accepted</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
+          </div>
+        </div>
+
+        {/* Subscription Status Bar */}
+        <div className={`px-4 py-2 text-sm ${
+          subscriptionInfo.current === 'FREE' ? 'bg-red-50 text-red-700' :
+          subscriptionInfo.current === 'COMPANY_BASIC' ? 'bg-yellow-50 text-yellow-700' :
+          subscriptionInfo.current === 'COMPANY_PREMIUM' ? 'bg-blue-50 text-blue-700' :
+          'bg-purple-50 text-purple-700'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              {subscriptionInfo.current === 'COMPANY_PRO' ? (
+                <Crown className="w-4 h-4" />
+              ) : (
+                <Building className="w-4 h-4" />
+              )}
+              {subscriptionInfo.current === 'FREE' ? 'Free Trial' :
+               subscriptionInfo.current === 'COMPANY_BASIC' ? 'Company Basic' :
+               subscriptionInfo.current === 'COMPANY_PREMIUM' ? 'HR Booster' :
+               'HR Agent'}
+            </span>
+            {subscriptionInfo.showUpgrade && (
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="text-xs px-2 py-1 bg-white rounded font-medium"
+              >
+                Upgrade
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Applications List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        {filteredApplications.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
-            <p className="text-gray-600">
-              {applications.length === 0 
-                ? "No one has applied to this project yet." 
-                : "No applications match your current filters."}
-            </p>
+      {/* Search and Filter - Mobile First */}
+      <div className="bg-white border-b px-4 py-3">
+        <div className="space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search candidates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {filteredApplications.map((application) => (
-              <motion.div
-                key={application.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-6 hover:bg-gray-50 transition-colors"
+
+          {/* Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm whitespace-nowrap"
+            >
+              <option value="rank">Sort by Rank</option>
+              {hasScoring && <option value="score">Sort by Score</option>}
+              <option value="name">Sort by Name</option>
+              <option value="university">Sort by University</option>
+            </select>
+
+            <select
+              value={filterBy}
+              onChange={(e) => setFilterBy(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm whitespace-nowrap"
+            >
+              <option value="all">All Candidates</option>
+              <option value="top10">Top 10</option>
+              {hasScoring && <option value="scored">With Scores</option>}
+            </select>
+
+            {features?.automatedEmails && selectedCandidates.length > 0 && (
+              <button
+                onClick={handleBulkShortlist}
+                disabled={isProcessing}
+                className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm whitespace-nowrap disabled:opacity-50"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {application.user.name}
-                      </h3>
-                      {getStatusBadge(application.status)}
-                      {application.compatibilityScore && (
-                        <div className="flex items-center gap-1 text-yellow-600">
-                          <Star className="h-4 w-4 fill-current" />
-                          <span className="text-sm font-medium">
-                            {Math.round(application.compatibilityScore * 100)}% match
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-1 text-sm text-gray-600 mb-3">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        {application.user.email}
-                      </div>
-                      {application.user.university && (
-                        <div className="flex items-center gap-2">
-                          <GraduationCap className="h-4 w-4" />
-                          {application.user.university} - {application.user.major}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Applied {new Date(application.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    
-                    {application.coverLetter && (
-                      <p className="text-gray-700 text-sm line-clamp-2 mb-3">
-                        {application.coverLetter}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 ml-4">
-                    {application.user.linkedin && (
-                      <a
-                        href={application.user.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                      >
-                        <Linkedin className="h-4 w-4" />
-                      </a>
-                    )}
-                    
-                    <button
-                      onClick={() => {
-                        setSelectedApplication(application)
-                        setShowApplicationDetail(true)
-                      }}
-                      className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View Details
-                    </button>
-                    
-                    {application.status === 'PENDING' && (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleStatusUpdate(application.id, 'SHORTLISTED')}
-                          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                        >
-                          Shortlist
-                        </button>
-                        <button
-                          onClick={() => handleStatusUpdate(application.id, 'REJECTED')}
-                          className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                Shortlist ({selectedCandidates.length})
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Application Detail Modal */}
-      {showApplicationDetail && selectedApplication && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Application Details
-                </h2>
-                <button
-                  onClick={() => setShowApplicationDetail(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <XCircle className="h-6 w-6" />
-                </button>
-              </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Applicant Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Name:</strong> {selectedApplication.user.name}</p>
-                    <p><strong>Email:</strong> {selectedApplication.user.email}</p>
-                    <p><strong>University:</strong> {selectedApplication.user.university}</p>
-                    <p><strong>Major:</strong> {selectedApplication.user.major}</p>
-                    <p><strong>Applied:</strong> {new Date(selectedApplication.createdAt).toLocaleDateString()}</p>
-                    <p><strong>Status:</strong> {getStatusBadge(selectedApplication.status)}</p>
-                  </div>
-                </div>
-                
-                {selectedApplication.coverLetter && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Cover Letter</h3>
-                    <p className="text-gray-700 whitespace-pre-wrap">
-                      {selectedApplication.coverLetter}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="flex gap-3 pt-6 border-t">
-                  {selectedApplication.status === 'PENDING' && (
-                    <>
-                      <button
-                        onClick={() => {
-                          handleStatusUpdate(selectedApplication.id, 'SHORTLISTED')
-                          setShowApplicationDetail(false)
-                        }}
-                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        Shortlist Candidate
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleStatusUpdate(selectedApplication.id, 'REJECTED')
-                          setShowApplicationDetail(false)
-                        }}
-                        className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
-                      >
-                        Reject Application
-                      </button>
-                    </>
-                  )}
-                  
-                  {selectedApplication.status === 'SHORTLISTED' && (
-                    <button
-                      onClick={() => {
-                        handleStatusUpdate(selectedApplication.id, 'INTERVIEWED')
-                        setShowApplicationDetail(false)
-                      }}
-                      className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                      Mark as Interviewed
-                    </button>
-                  )}
-                </div>
-              </div>
+      {/* No scoring message */}
+      {!hasScoring && totalApplications < 20 && (
+        <div className="mx-4 mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <TrendingUp className="w-5 h-5 text-yellow-600 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-yellow-800">AI Scoring Not Available</h3>
+              <p className="text-sm text-yellow-700 mt-1">
+                AI matching scores will appear when you have 20+ applications for statistical significance. 
+                Currently: {totalApplications}/20 applications.
+              </p>
             </div>
           </div>
         </div>
       )}
+
+      {/* Candidates List */}
+      <div className="px-4 py-4 space-y-3">
+        {filteredCandidates.length === 0 ? (
+          <div className="text-center py-12">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No candidates found</h3>
+            <p className="text-gray-600">
+              {searchTerm ? 'Try adjusting your search terms' : 'No applications received yet'}
+            </p>
+          </div>
+        ) : (
+          filteredCandidates.map((candidate, index) => (
+            <motion.div
+              key={candidate.applicationId}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="bg-white rounded-lg border border-gray-200 overflow-hidden"
+            >
+              {/* Candidate Header */}
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {features?.automatedEmails && (
+                      <input
+                        type="checkbox"
+                        checked={selectedCandidates.includes(candidate.applicationId)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedCandidates([...selectedCandidates, candidate.applicationId])
+                          } else {
+                            setSelectedCandidates(selectedCandidates.filter(id => id !== candidate.applicationId))
+                          }
+                        }}
+                        className="mt-1"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-gray-900 truncate">{candidate.name}</h3>
+                        {candidate.rank && candidate.rank <= 3 && (
+                          <Star className="w-4 h-4 text-yellow-500" />
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <div className="flex items-center gap-1">
+                          <Mail className="w-3 h-3" />
+                          {candidate.email}
+                        </div>
+                        {candidate.university && (
+                          <div className="flex items-center gap-1">
+                            <GraduationCap className="w-3 h-3" />
+                            {candidate.university}
+                            {candidate.major && ` - ${candidate.major}`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Score/Rank */}
+                  <div className="text-right">
+                    {hasScoring && candidate.score !== undefined ? (
+                      <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                        {candidate.score}%
+                      </div>
+                    ) : candidate.rank ? (
+                      <div className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm">
+                        #{candidate.rank}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Skills */}
+                {candidate.skills && candidate.skills.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex flex-wrap gap-1">
+                      {candidate.skills.slice(0, 3).map((skill, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                      {candidate.skills.length > 3 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
+                          +{candidate.skills.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  {features?.automatedEmails ? (
+                    <button
+                      onClick={() => handleSendInterview(candidate.applicationId)}
+                      disabled={isProcessing}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+                    >
+                      <Send className="w-4 h-4" />
+                      Send Interview
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm"
+                    >
+                      <Crown className="w-4 h-4" />
+                      Upgrade to Contact
+                    </button>
+                  )}
+                  
+                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                    <Eye className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
+
+      {/* Upgrade Modal */}
+      <AnimatePresence>
+        {showUpgradeModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={() => setShowUpgradeModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl p-6 max-w-md w-full"
+            >
+              <div className="text-center">
+                <Crown className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Upgrade Required
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {subscriptionInfo.message}
+                </p>
+                
+                <div className="space-y-2 mb-6 text-left">
+                  {subscriptionInfo.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowUpgradeModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Later
+                  </button>
+                  <button
+                    onClick={() => router.push('/subscription')}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Upgrade Now
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 } 
