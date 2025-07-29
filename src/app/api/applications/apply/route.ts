@@ -10,6 +10,7 @@ import {
   getApplicationUpgradePrompt 
 } from '@/lib/application-limits'
 import { calculateCompatibilityScore, updateApplicationScore } from '@/lib/ai-scoring'
+import { slackService } from '@/lib/slack-service'
 
 const prisma = new PrismaClient()
 
@@ -154,6 +155,31 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    // Check for application milestones and send Slack notifications
+    const updatedProject = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: {
+        title: true,
+        currentApplications: true
+      }
+    })
+
+    if (updatedProject) {
+      const applicationCount = updatedProject.currentApplications || 0
+      const milestones = [10, 25, 50, 100]
+      if (milestones.includes(applicationCount)) {
+        try {
+          await slackService.notifyApplicationMilestone(
+            updatedProject.title, 
+            applicationCount
+          )
+          console.log(`📱 Slack milestone notification sent: ${updatedProject.title} reached ${applicationCount} applications`)
+        } catch (slackError) {
+          console.error('Failed to send Slack milestone notification (non-blocking):', slackError)
+        }
+      }
+    }
 
     // Calculate compatibility score asynchronously
     try {

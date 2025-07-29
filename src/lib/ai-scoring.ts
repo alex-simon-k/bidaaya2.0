@@ -319,36 +319,36 @@ export async function calculateCompatibilityScore(
 ): Promise<CompatibilityResult> {
   // Simple compatibility calculation for backward compatibility
   try {
-    const [student, project] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: studentId },
-        select: {
-          skills: true,
-          university: true,
-          major: true,
+  const [student, project] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: studentId },
+      select: {
+        skills: true,
+        university: true,
+        major: true,
           bio: true
-        }
-      }),
-      prisma.project.findUnique({
-        where: { id: projectId },
-        select: {
+      }
+    }),
+    prisma.project.findUnique({
+      where: { id: projectId },
+          select: {
           skillsRequired: true,
           title: true,
           description: true
-        }
-      })
-    ])
+      }
+    })
+  ])
 
-    if (!student || !project) {
-      throw new Error('Student or project not found')
-    }
+  if (!student || !project) {
+    throw new Error('Student or project not found')
+  }
 
     // Simple skill matching calculation
     const studentSkills = student.skills || []
     const requiredSkills = project.skillsRequired || []
-    
-    const skillMatches = requiredSkills.filter(skill => 
-      studentSkills.some(studentSkill => 
+  
+  const skillMatches = requiredSkills.filter(skill => 
+    studentSkills.some(studentSkill => 
         studentSkill.toLowerCase().includes(skill.toLowerCase()) ||
         skill.toLowerCase().includes(studentSkill.toLowerCase())
       )
@@ -383,9 +383,9 @@ export async function updateApplicationScore(
   compatibilityResult: CompatibilityResult
 ): Promise<void> {
   try {
-    await prisma.application.update({
-      where: { id: applicationId },
-      data: {
+  await prisma.application.update({
+    where: { id: applicationId },
+    data: {
         compatibilityScore: compatibilityResult.score
       }
     })

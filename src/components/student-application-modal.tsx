@@ -83,7 +83,7 @@ export function StudentApplicationModal({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<string>('')
   
-  // Enhanced form state
+  // Simplified form state
   const [formData, setFormData] = useState({
     // Step 1: Personal Interest
     personalStatement: '',
@@ -93,24 +93,14 @@ export function StudentApplicationModal({
     // Step 2: Project Understanding
     projectUnderstanding: '',
     proposedApproach: '',
-    deliverableTimeline: '',
     
     // Step 3: Availability & Commitment
     weeklyAvailability: '',
     startDate: '',
     commitmentLevel: '',
-    
-    // Step 4: Additional Materials
-    coverLetter: '',
-    additionalNotes: '',
   })
   
-  const [uploadedFiles, setUploadedFiles] = useState<{
-    resume?: File
-    portfolio?: File
-    transcript?: File
-    other?: File
-  }>({})
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
   useEffect(() => {
     if (isOpen && project && session?.user?.id) {
@@ -127,14 +117,11 @@ export function StudentApplicationModal({
       relevantExperience: '',
       projectUnderstanding: '',
       proposedApproach: '',
-      deliverableTimeline: '',
       weeklyAvailability: '',
       startDate: '',
       commitmentLevel: '',
-      coverLetter: '',
-      additionalNotes: '',
     })
-    setUploadedFiles({})
+    setUploadedFile(null)
     setApplicationError(null)
   }
 
@@ -166,7 +153,7 @@ export function StudentApplicationModal({
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleFileUpload = (type: 'resume' | 'portfolio' | 'transcript' | 'other', event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       // Check file size (max 10MB)
@@ -182,13 +169,13 @@ export function StudentApplicationModal({
         return
       }
       
-      setUploadedFiles(prev => ({ ...prev, [type]: file }))
+      setUploadedFile(file)
       setApplicationError(null)
     }
   }
 
   const nextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -206,30 +193,28 @@ export function StudentApplicationModal({
     setApplicationError(null)
 
     try {
-      const uploadedFileUrls: Record<string, string> = {}
+      let additionalDocumentUrl = ''
       
-      // Upload all files
-      for (const [type, file] of Object.entries(uploadedFiles)) {
-        if (file) {
-          const formData = new FormData()
-          formData.append('file', file)
-          formData.append('type', `application-${type}`)
-          
-          const uploadResponse = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-          })
-          
-          if (uploadResponse.ok) {
-            const uploadData = await uploadResponse.json()
-            uploadedFileUrls[type] = uploadData.url
-          } else {
-            throw new Error(`Failed to upload ${type}`)
-          }
+      // Upload file if provided
+      if (uploadedFile) {
+        const fileFormData = new FormData()
+        fileFormData.append('file', uploadedFile)
+        fileFormData.append('type', 'application-document')
+        
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: fileFormData
+        })
+        
+        if (uploadResponse.ok) {
+          const uploadData = await uploadResponse.json()
+          additionalDocumentUrl = uploadData.url
+        } else {
+          throw new Error('Failed to upload additional document')
         }
       }
 
-      // Submit comprehensive application
+      // Submit simplified application
       const response = await fetch('/api/applications/apply', {
         method: 'POST',
         headers: {
@@ -237,12 +222,9 @@ export function StudentApplicationModal({
         },
         body: JSON.stringify({
           projectId: project.id,
-          applicationData: {
-            ...formData,
-            uploadedFiles: uploadedFileUrls,
-            submittedAt: new Date().toISOString(),
-            applicationVersion: '2.0' // Enhanced application format
-          }
+          coverLetter: formData.personalStatement,
+          motivation: `${formData.whyInterested}\n\nRelevant Experience:\n${formData.relevantExperience}\n\nProject Understanding:\n${formData.projectUnderstanding}\n\nProposed Approach:\n${formData.proposedApproach}\n\nAvailability:\n${formData.weeklyAvailability}\n\nStart Date: ${formData.startDate}\n\nCommitment Level: ${formData.commitmentLevel}`,
+          additionalDocument: additionalDocumentUrl
         }),
       })
 

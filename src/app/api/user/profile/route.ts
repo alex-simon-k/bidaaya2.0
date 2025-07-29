@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { PrismaClient } from '@prisma/client'
 import { authOptions } from "@/lib/auth-config"
+import { slackAutomation } from '@/lib/slack-service'
 
 const prisma = new PrismaClient()
 
@@ -100,7 +101,7 @@ export async function PATCH(request: NextRequest) {
     if (highSchool !== undefined) updateData.highSchool = highSchool
     if (university !== undefined) updateData.university = university
     if (major !== undefined) updateData.major = major
-    if (subjects !== undefined) updateData.major = subjects  // Map subjects to major field
+    if (subjects !== undefined) updateData.subjects = subjects  // Keep subjects as subjects field, not major
     if (goal !== undefined) updateData.goal = Array.isArray(goal) ? goal : [goal]
     if (interests !== undefined) updateData.interests = Array.isArray(interests) ? interests : [interests]
     if (skills !== undefined) updateData.skills = skills
@@ -109,7 +110,7 @@ export async function PATCH(request: NextRequest) {
     if (linkedin !== undefined) updateData.linkedin = linkedin
     if (calendlyLink !== undefined) updateData.calendlyLink = calendlyLink
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
-    if (mena !== undefined) updateData.mena = mena
+    if (mena !== undefined) updateData.mena = mena === 'Yes' || mena === true  // Handle radio button value
     if (terms !== undefined) updateData.terms = terms
     
     // If this is a comprehensive profile update (has key fields), mark profile as completed
@@ -167,6 +168,17 @@ export async function PATCH(request: NextRequest) {
     console.log(`✅ User profile updated for ${session.user?.email}:`, {
       fieldsUpdated: Object.keys(updateData)
     })
+
+    // Send Slack notification for new user profile completion (real-time signup alert)
+    if (hasRequiredFields && updateData.profileCompleted) {
+      try {
+        await slackAutomation.notifyUserSignup(session.user?.id!)
+        console.log('📱 Slack notification sent for new user profile completion')
+      } catch (slackError) {
+        console.error('Failed to send Slack notification (non-blocking):', slackError)
+        // Don't block the user's flow if Slack fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
