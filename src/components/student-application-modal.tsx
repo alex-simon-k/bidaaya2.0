@@ -83,7 +83,7 @@ export function StudentApplicationModal({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<string>('')
   
-  // Simplified form state
+  // Simplified form state - removed timeline, cover letter, additional notes
   const [formData, setFormData] = useState({
     // Step 1: Personal Interest
     personalStatement: '',
@@ -175,7 +175,7 @@ export function StudentApplicationModal({
   }
 
   const nextStep = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -214,7 +214,7 @@ export function StudentApplicationModal({
         }
       }
 
-      // Submit simplified application
+      // Submit structured application data
       const response = await fetch('/api/applications/apply', {
         method: 'POST',
         headers: {
@@ -222,8 +222,15 @@ export function StudentApplicationModal({
         },
         body: JSON.stringify({
           projectId: project.id,
-          coverLetter: formData.personalStatement,
-          motivation: `${formData.whyInterested}\n\nRelevant Experience:\n${formData.relevantExperience}\n\nProject Understanding:\n${formData.projectUnderstanding}\n\nProposed Approach:\n${formData.proposedApproach}\n\nAvailability:\n${formData.weeklyAvailability}\n\nStart Date: ${formData.startDate}\n\nCommitment Level: ${formData.commitmentLevel}`,
+          // Structured data for proper company review
+          whyInterested: formData.whyInterested,
+          personalStatement: formData.personalStatement,
+          relevantExperience: formData.relevantExperience,
+          projectUnderstanding: formData.projectUnderstanding,
+          proposedApproach: formData.proposedApproach,
+          weeklyAvailability: formData.weeklyAvailability,
+          startDate: formData.startDate,
+          commitmentLevel: formData.commitmentLevel,
           additionalDocument: additionalDocumentUrl
         }),
       })
@@ -528,20 +535,6 @@ export function StudentApplicationModal({
                           />
                           <p className="text-xs text-gray-500 mt-1">{formData.proposedApproach.length} / 800 (minimum 30 characters)</p>
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Deliverable Timeline
-                          </label>
-                          <textarea
-                            value={formData.deliverableTimeline}
-                            onChange={(e) => handleInputChange('deliverableTimeline', e.target.value)}
-                            placeholder="How would you structure the deliverables over the project duration?"
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
-                            maxLength={500}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">{formData.deliverableTimeline.length} / 500</p>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -638,76 +631,50 @@ export function StudentApplicationModal({
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <Paperclip className="h-5 w-5 text-blue-600" />
-                        Additional Materials
+                        Additional File (Optional)
                       </h3>
                       
                       <div className="space-y-6">
-                        {/* File Uploads */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {['resume', 'portfolio', 'transcript', 'other'].map((type) => (
-                            <div key={type} className="space-y-2">
-                              <label className="block text-sm font-semibold text-gray-700 capitalize">
-                                {type === 'other' ? 'Other Document' : type}
-                                {!isPremium && (
-                                  <span className="text-purple-600 text-xs ml-2">(Premium)</span>
-                                )}
-                              </label>
-                              
-                              {isPremium || (limits && limits.documentsAllowed >= 2) ? (
-                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition-colors">
-                                  <input
-                                    type="file"
-                                    id={`${type}Upload`}
-                                    onChange={(e) => handleFileUpload(type as any, e)}
-                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                    className="hidden"
-                                  />
-                                  <label htmlFor={`${type}Upload`} className="cursor-pointer">
-                                    <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                                    <p className="text-sm font-medium text-gray-600">
-                                      {uploadedFiles[type as keyof typeof uploadedFiles]?.name || `Upload ${type}`}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">PDF, Word, or Image</p>
-                                  </label>
+                        {/* Single File Upload */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Add Additional File
+                          </label>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Upload one additional file such as your resume, portfolio, or other relevant document.
+                          </p>
+                          
+                          <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                            <input
+                              type="file"
+                              id="additionalFileUpload"
+                              onChange={handleFileUpload}
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                              className="hidden"
+                            />
+                            <label htmlFor="additionalFileUpload" className="cursor-pointer">
+                              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                              {uploadedFile ? (
+                                <div>
+                                  <p className="text-sm font-medium text-green-600 mb-1">
+                                    ✓ {uploadedFile.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Click to replace file
+                                  </p>
                                 </div>
                               ) : (
-                                <div className="border-2 border-dashed border-purple-200 rounded-xl p-4 text-center bg-gradient-to-br from-purple-50 to-pink-50 relative">
-                                  <Lock className="h-6 w-6 text-purple-400 mx-auto mb-2" />
-                                  <p className="text-sm text-purple-600">Premium Feature</p>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-600 mb-1">
+                                    Click to upload a file
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    PDF, Word document, or image (max 10MB)
+                                  </p>
                                 </div>
                               )}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Cover Letter */}
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Cover Letter
-                          </label>
-                          <textarea
-                            value={formData.coverLetter}
-                            onChange={(e) => handleInputChange('coverLetter', e.target.value)}
-                            placeholder="Optional: Add a traditional cover letter if you prefer this format..."
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
-                            maxLength={1000}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">{formData.coverLetter.length} / 1000</p>
-                        </div>
-
-                        {/* Additional Notes */}
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Additional Notes
-                          </label>
-                          <textarea
-                            value={formData.additionalNotes}
-                            onChange={(e) => handleInputChange('additionalNotes', e.target.value)}
-                            placeholder="Any additional information you'd like to share..."
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
-                            maxLength={500}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">{formData.additionalNotes.length} / 500</p>
+                            </label>
+                          </div>
                         </div>
                       </div>
                     </div>

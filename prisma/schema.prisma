@@ -139,20 +139,30 @@ model Project {
 }
 
 model Application {
-  id                 String            @id @default(cuid())
-  projectId          String
-  status             ApplicationStatus @default(PENDING)
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  additionalDocument String?
-  adminNotes         String?
-  compatibilityScore Float?
-  coverLetter        String?
-  feedback           String?
-  motivation         String?
-  userId             String
-  project            Project           @relation(fields: [projectId], references: [id])
-  user               User              @relation(fields: [userId], references: [id])
+  id                   String            @id @default(cuid())
+  projectId            String
+  status               ApplicationStatus @default(PENDING)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  additionalDocument   String?
+  adminNotes           String?
+  compatibilityScore   Float?
+  // Structured application data for proper company review
+  whyInterested        String?           // Why interested in this project
+  personalStatement    String?           // Personal statement about themselves
+  relevantExperience   String?           // Relevant experience description
+  projectUnderstanding String?           // How they understand the project
+  proposedApproach     String?           // Their proposed approach
+  weeklyAvailability   String?           // Weekly availability (5-10 hours, etc.)
+  startDate            String?           // Preferred start date
+  commitmentLevel      String?           // Commitment level (casual, regular, dedicated)
+  // Legacy fields - keeping for backward compatibility
+  coverLetter          String?
+  feedback             String?
+  motivation           String?
+  userId               String
+  project              Project           @relation(fields: [projectId], references: [id])
+  user                 User              @relation(fields: [userId], references: [id])
 
   @@unique([projectId, userId])
 }

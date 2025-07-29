@@ -23,7 +23,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { projectId, coverLetter, motivation, additionalDocument } = body
+    const { 
+      projectId, 
+      whyInterested,
+      personalStatement,
+      relevantExperience,
+      projectUnderstanding,
+      proposedApproach,
+      weeklyAvailability,
+      startDate,
+      commitmentLevel,
+      additionalDocument 
+    } = body
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
@@ -115,9 +126,19 @@ export async function POST(request: NextRequest) {
         projectId,
         userId: session.user?.id,
         status: 'PENDING',
-        coverLetter,
-        motivation,
+        // Structured application data
+        whyInterested,
+        personalStatement,
+        relevantExperience,
+        projectUnderstanding,
+        proposedApproach,
+        weeklyAvailability,
+        startDate,
+        commitmentLevel,
         additionalDocument,
+        // Legacy fields for backward compatibility
+        coverLetter: personalStatement,
+        motivation: whyInterested,
       },
       include: {
         project: {
