@@ -131,9 +131,23 @@ export async function PATCH(request: NextRequest) {
     const hasRequiredFields = name && (university || major || subjects || skills) && terms
     console.log('🔍 Has required fields for completion:', hasRequiredFields)
     
+    // Get current user status BEFORE update to check if this is first-time completion
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user?.id },
+      select: { profileCompleted: true }
+    })
+    
+    const wasAlreadyCompleted = currentUser?.profileCompleted === true
+    const isFirstTimeCompletion = hasRequiredFields && !wasAlreadyCompleted
+    
     if (hasRequiredFields) {
       updateData.profileCompleted = true
       console.log('✅ Marking profile as completed in database - profileCompleted will be set to TRUE')
+      if (isFirstTimeCompletion) {
+        console.log('🎉 FIRST TIME COMPLETION - will send Slack notification')
+      } else {
+        console.log('🔄 Profile already completed - NO Slack notification')
+      }
     } else {
       console.log('❌ NOT marking profile as completed - missing required fields')
     }
@@ -172,11 +186,11 @@ export async function PATCH(request: NextRequest) {
       fieldsUpdated: Object.keys(updateData)
     })
 
-    // Send Slack notification for new user profile completion (real-time signup alert)
-    if (hasRequiredFields && updateData.profileCompleted) {
+    // Send Slack notification ONLY for first-time profile completion (prevents duplicates)
+    if (isFirstTimeCompletion) {
       try {
         await slackAutomation.notifyUserSignup(session.user?.id!)
-        console.log('📱 Slack notification sent for new user profile completion')
+        console.log('📱 Slack notification sent for FIRST-TIME user profile completion')
       } catch (slackError) {
         console.error('Failed to send Slack notification (non-blocking):', slackError)
         // Don't block the user's flow if Slack fails
