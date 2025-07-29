@@ -173,8 +173,6 @@ export async function PATCH(request: NextRequest) {
     })
 
     // Send Slack notification for new user profile completion (real-time signup alert)
-    // TODO: Re-enable after database migration is applied to production
-    /*
     if (hasRequiredFields && updateData.profileCompleted) {
       try {
         await slackAutomation.notifyUserSignup(session.user?.id!)
@@ -184,7 +182,6 @@ export async function PATCH(request: NextRequest) {
         // Don't block the user's flow if Slack fails
       }
     }
-    */
 
     return NextResponse.json({
       success: true,

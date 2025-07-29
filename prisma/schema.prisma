@@ -64,7 +64,6 @@ model User {
   payments               Payment[]
   projects               Project[]
   sessions               Session[]
-  interviews             Interview[]            @relation("InterviewCandidate")
 }
 
 model Account {
@@ -134,7 +133,6 @@ model Project {
   teamSize            Int?             @default(1)
   timeCommitment      String?          @default("Part-time")
   applications        Application[]
-  interviews          Interview[]
   company             User             @relation(fields: [companyId], references: [id])
 }
 
@@ -147,20 +145,18 @@ model Application {
   additionalDocument   String?
   adminNotes           String?
   compatibilityScore   Float?
-  // Structured application data for proper company review
-  whyInterested        String?           // Why interested in this project
-  personalStatement    String?           // Personal statement about themselves
-  relevantExperience   String?           // Relevant experience description
-  projectUnderstanding String?           // How they understand the project
-  proposedApproach     String?           // Their proposed approach
-  weeklyAvailability   String?           // Weekly availability (5-10 hours, etc.)
-  startDate            String?           // Preferred start date
-  commitmentLevel      String?           // Commitment level (casual, regular, dedicated)
-  // Legacy fields - keeping for backward compatibility
   coverLetter          String?
   feedback             String?
   motivation           String?
   userId               String
+  whyInterested        String?
+  personalStatement    String?
+  relevantExperience   String?
+  projectUnderstanding String?
+  proposedApproach     String?
+  weeklyAvailability   String?
+  startDate            String?
+  commitmentLevel      String?
   project              Project           @relation(fields: [projectId], references: [id])
   user                 User              @relation(fields: [userId], references: [id])
 
@@ -207,34 +203,6 @@ model ApplicationAnalytics {
 
   @@unique([userId, date])
   @@index([userId, date])
-}
-
-model Interview {
-  id                   String   @id @default(cuid())
-  candidateId          String
-  projectId            String
-  interviewDate        DateTime
-  interviewer          String
-  status               String   @default("scheduled") // scheduled, completed, analyzed
-  notes                String?
-  score                Int      @default(0)
-  duration             Int?     // in minutes
-  transcriptFileId     String?
-  transcriptFileName   String?
-  transcriptFileUrl    String?
-  audioFileId          String?
-  audioFileName        String?
-  audioFileUrl         String?
-  keyHighlights        String[]
-  concerns             String[]
-  recommendation       String   @default("maybe") // hire, maybe, pass
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  candidate            User     @relation("InterviewCandidate", fields: [candidateId], references: [id])
-  project              Project  @relation(fields: [projectId], references: [id])
-
-  @@unique([candidateId, projectId])
 }
 
 model Payment {
