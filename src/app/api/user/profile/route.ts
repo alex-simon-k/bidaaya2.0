@@ -96,7 +96,10 @@ export async function PATCH(request: NextRequest) {
     const updateData: any = {}
 
     if (name !== undefined) updateData.name = name
-    if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth
+    if (dateOfBirth !== undefined) {
+      // Convert date string to proper DateTime format for Prisma
+      updateData.dateOfBirth = dateOfBirth ? new Date(dateOfBirth + 'T00:00:00.000Z') : null
+    }
     if (educationStatus !== undefined) updateData.education = educationStatus // Map to correct field
     if (highSchool !== undefined) updateData.highSchool = highSchool
     if (university !== undefined) updateData.university = university
@@ -170,6 +173,8 @@ export async function PATCH(request: NextRequest) {
     })
 
     // Send Slack notification for new user profile completion (real-time signup alert)
+    // TODO: Re-enable after database migration is applied to production
+    /*
     if (hasRequiredFields && updateData.profileCompleted) {
       try {
         await slackAutomation.notifyUserSignup(session.user?.id!)
@@ -179,6 +184,7 @@ export async function PATCH(request: NextRequest) {
         // Don't block the user's flow if Slack fails
       }
     }
+    */
 
     return NextResponse.json({
       success: true,

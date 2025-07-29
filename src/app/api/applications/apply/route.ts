@@ -120,13 +120,18 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create the application
+    // Create the application - temporarily using legacy format until migration is applied
     const application = await prisma.application.create({
       data: {
         projectId,
         userId: session.user?.id,
         status: 'PENDING',
-        // Structured application data
+        // Legacy format until database migration is applied
+        coverLetter: personalStatement,
+        motivation: `${whyInterested}\n\nRelevant Experience:\n${relevantExperience}\n\nProject Understanding:\n${projectUnderstanding}\n\nProposed Approach:\n${proposedApproach}\n\nAvailability:\n${weeklyAvailability}\n\nStart Date: ${startDate}\n\nCommitment Level: ${commitmentLevel}`,
+        additionalDocument,
+        // TODO: Re-enable structured fields after migration
+        /*
         whyInterested,
         personalStatement,
         relevantExperience,
@@ -135,10 +140,7 @@ export async function POST(request: NextRequest) {
         weeklyAvailability,
         startDate,
         commitmentLevel,
-        additionalDocument,
-        // Legacy fields for backward compatibility
-        coverLetter: personalStatement,
-        motivation: whyInterested,
+        */
       },
       include: {
         project: {
