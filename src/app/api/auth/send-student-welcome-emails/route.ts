@@ -48,16 +48,8 @@ export async function POST(request: NextRequest) {
     // Trigger the welcome email sequence
     await triggerNewStudentEmails(studentData)
 
-    // Send Slack notification to admin about new student signup
-    const { slackService } = await import('@/lib/slack-service')
-    await slackService.notifyNewUserSignup({
-      id: 'student-welcome', // Temporary ID for welcome emails
-      name,
-      email,
-      role: 'STUDENT',
-      university: university || undefined,
-      signupTime: new Date().toISOString()
-    })
+    // Note: Slack notification moved to profile completion to prevent duplicates
+    // The profile API already sends a comprehensive notification with complete user data
 
     console.log(`✅ Welcome emails sent successfully to ${email}`)
 
