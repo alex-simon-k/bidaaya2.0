@@ -34,14 +34,8 @@ export async function POST(request: Request) {
       },
     })
 
-    // Send real-time Slack notification for new user signup
-    try {
-      await slackAutomation.notifyUserSignup(user.id)
-      console.log(`📱 Slack notification sent for new user: ${user.email}`)
-    } catch (error) {
-      console.error('📱 Failed to send Slack notification:', error)
-      // Don't fail the registration if Slack notification fails
-    }
+    // Note: Slack notification moved to profile completion for better user data
+    // This prevents duplicate notifications and ensures we have meaningful user info
 
     return NextResponse.json(user)
   } catch (error) {
