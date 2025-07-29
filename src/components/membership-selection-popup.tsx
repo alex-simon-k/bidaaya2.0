@@ -129,6 +129,16 @@ export function MembershipSelectionPopup({
     setIsUpgrading(true)
 
     try {
+      // Handle free plan - just close the modal, don't go to Stripe
+      if (planId === 'free' || price === 0) {
+        console.log('✅ User selected free plan - closing modal')
+        setTimeout(() => {
+          onClose()
+          setIsUpgrading(false)
+          setSelectedPlan(null)
+        }, 500) // Small delay for better UX
+        return
+      }
 
       // Paid plan - redirect to Stripe
       const response = await fetch('/api/subscription/checkout', {

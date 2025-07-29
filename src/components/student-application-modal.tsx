@@ -742,7 +742,7 @@ export function StudentApplicationModal({
                                 <li>• Upload resume, portfolio, or other documents</li>
                                 <li>• Stand out with additional materials</li>
                                 <li>• Increase your chances of being shortlisted</li>
-                                <li>• Apply to unlimited projects</li>
+                                <li>• Premium: 10 apps/month • Pro: Unlimited apps</li>
                               </ul>
                             </div>
                           </div>

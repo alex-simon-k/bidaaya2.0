@@ -143,7 +143,7 @@ export function getApplicationUpgradePrompt(user: UserWithLimits): UpgradePrompt
     title: "🚀 You've Hit Your Application Limit!",
     description: `You've used all ${limits.maxApplications} of your free monthly applications.`,
     benefits: [
-      '📈 Apply to 15+ projects per month',
+      '📈 Premium: 10 apps/month • Pro: Unlimited',
       '📎 Upload additional documents',
       '📊 Track external applications',
       '🎯 AI-powered project matching',
@@ -159,7 +159,7 @@ export function getFileUpgradePrompt(): UpgradePromptConfig {
     title: "💼 Strengthen Your Application",
     description: "Premium users can upload additional documents like portfolios, transcripts, and certificates.",
     benefits: [
-      '📎 Upload up to 3-5 additional files',
+      '📎 Upload 1 additional file per application',
       '📊 Portfolio & transcript uploads',
       '🎯 Higher acceptance rates',
       '⚡ Stand out from other candidates'
