@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
+import { slackAutomation } from '@/lib/slack-service'
 
 const prisma = new PrismaClient()
 
@@ -32,6 +33,15 @@ export async function POST(request: Request) {
         role,
       },
     })
+
+    // Send real-time Slack notification for new user signup
+    try {
+      await slackAutomation.notifyUserSignup(user.id)
+      console.log(`📱 Slack notification sent for new user: ${user.email}`)
+    } catch (error) {
+      console.error('📱 Failed to send Slack notification:', error)
+      // Don't fail the registration if Slack notification fails
+    }
 
     return NextResponse.json(user)
   } catch (error) {

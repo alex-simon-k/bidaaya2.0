@@ -19,6 +19,10 @@ interface DailyStats {
   conversionsToday: number
   userGrowthTrend: number
   applicationGrowthTrend: number
+  weekOverWeekUserGrowth: number
+  weekOverWeekApplicationGrowth: number
+  totalUsers: number
+  totalApplications: number
 }
 
 interface UserSignupInfo {
@@ -282,12 +286,17 @@ export class SlackService {
     }
   }
 
-  // Data collection methods
+  // Data collection methods with enhanced week-over-week analytics
   private async getDailyStats(): Promise<DailyStats> {
     const today = new Date()
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     const yesterdayStart = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+    
+    // Week-over-week comparison dates
+    const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const oneWeekAgoStart = new Date(oneWeekAgo.getFullYear(), oneWeekAgo.getMonth(), oneWeekAgo.getDate())
+    const twoWeeksAgoStart = new Date(oneWeekAgo.getTime() - 7 * 24 * 60 * 60 * 1000)
 
     const [
       newUsersToday,
@@ -298,70 +307,63 @@ export class SlackService {
       newApplicationsYesterday,
       newProjectsToday,
       activeProjects,
-      conversionsToday
+      conversionsToday,
+      // Week-over-week data
+      usersThisWeek,
+      usersLastWeek,
+      applicationsThisWeek,
+      applicationsLastWeek,
+      totalUsers,
+      totalApplications
     ] = await Promise.all([
-      // New users today
+      // Daily metrics
       prisma.user.count({
-        where: {
-          createdAt: { gte: todayStart }
-        }
+        where: { createdAt: { gte: todayStart } }
       }),
-      // New users yesterday
       prisma.user.count({
-        where: {
-          createdAt: { 
-            gte: yesterdayStart,
-            lt: todayStart
-          }
-        }
+        where: { createdAt: { gte: yesterdayStart, lt: todayStart } }
       }),
-      // New students today
       prisma.user.count({
-        where: {
-          role: 'STUDENT',
-          createdAt: { gte: todayStart }
-        }
+        where: { role: 'STUDENT', createdAt: { gte: todayStart } }
       }),
-      // New companies today
       prisma.user.count({
-        where: {
-          role: 'COMPANY',
-          createdAt: { gte: todayStart }
-        }
+        where: { role: 'COMPANY', createdAt: { gte: todayStart } }
       }),
-      // New applications today
       prisma.application.count({
-        where: {
-          createdAt: { gte: todayStart }
-        }
+        where: { createdAt: { gte: todayStart } }
       }),
-      // New applications yesterday
       prisma.application.count({
-        where: {
-          createdAt: { 
-            gte: yesterdayStart,
-            lt: todayStart
-          }
-        }
+        where: { createdAt: { gte: yesterdayStart, lt: todayStart } }
       }),
-      // New projects today
       prisma.project.count({
-        where: {
-          createdAt: { gte: todayStart }
-        }
+        where: { createdAt: { gte: todayStart } }
       }),
-      // Active projects
       prisma.project.count({
         where: { status: 'LIVE' }
       }),
-      // Conversions today (companies that upgraded)
       prisma.user.count({
         where: {
           role: 'COMPANY',
           subscriptionPlan: { not: 'FREE' },
           updatedAt: { gte: todayStart }
         }
-      })
+      }),
+      // Week-over-week metrics
+      prisma.user.count({
+        where: { createdAt: { gte: oneWeekAgoStart } }
+      }),
+      prisma.user.count({
+        where: { createdAt: { gte: twoWeeksAgoStart, lt: oneWeekAgoStart } }
+      }),
+      prisma.application.count({
+        where: { createdAt: { gte: oneWeekAgoStart } }
+      }),
+      prisma.application.count({
+        where: { createdAt: { gte: twoWeeksAgoStart, lt: oneWeekAgoStart } }
+      }),
+      // Total counts
+      prisma.user.count(),
+      prisma.application.count()
     ])
 
     // Calculate growth trends
@@ -373,6 +375,15 @@ export class SlackService {
       ((newApplicationsToday - newApplicationsYesterday) / newApplicationsYesterday) * 100 : 
       newApplicationsToday > 0 ? 100 : 0
 
+    // Week-over-week growth
+    const weekOverWeekUserGrowth = usersLastWeek > 0 ? 
+      ((usersThisWeek - usersLastWeek) / usersLastWeek) * 100 : 
+      usersThisWeek > 0 ? 100 : 0
+
+    const weekOverWeekApplicationGrowth = applicationsLastWeek > 0 ? 
+      ((applicationsThisWeek - applicationsLastWeek) / applicationsLastWeek) * 100 : 
+      applicationsThisWeek > 0 ? 100 : 0
+
     return {
       date: today.toISOString().split('T')[0],
       newUsers: newUsersToday,
@@ -383,7 +394,11 @@ export class SlackService {
       activeProjects,
       conversionsToday,
       userGrowthTrend: Math.round(userGrowthTrend),
-      applicationGrowthTrend: Math.round(applicationGrowthTrend)
+      applicationGrowthTrend: Math.round(applicationGrowthTrend),
+      weekOverWeekUserGrowth: Math.round(weekOverWeekUserGrowth),
+      weekOverWeekApplicationGrowth: Math.round(weekOverWeekApplicationGrowth),
+      totalUsers,
+      totalApplications
     }
   }
 
@@ -400,27 +415,42 @@ export class SlackService {
 
   private buildDailySummaryMessage(stats: DailyStats): SlackMessage {
     const trendEmoji = (trend: number) => {
-      if (trend > 10) return '🚀'
-      if (trend > 0) return '📈'
+      if (trend > 20) return '🚀'
+      if (trend > 10) return '📈'
+      if (trend > 0) return '⬆️'
       if (trend === 0) return '➡️'
+      if (trend > -10) return '⬇️'
       return '📉'
     }
 
+    const formatTrend = (trend: number) => {
+      const sign = trend > 0 ? '+' : ''
+      return `${sign}${trend}%`
+    }
+
+    // Dubai time (GMT+4)
+    const dubaiTime = new Date().toLocaleString('en-AE', { 
+      timeZone: 'Asia/Dubai',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+
     return {
-      text: `📊 Daily Platform Summary - ${stats.date}`,
+      text: `📊 Daily Bidaaya Summary - ${stats.date}`,
       blocks: [
         {
           type: "header",
           text: {
             type: "plain_text",
-            text: `📊 Daily Summary - ${new Date(stats.date).toLocaleDateString()}`
+            text: `📊 Daily Platform Summary | ${new Date(stats.date).toLocaleDateString('en-AE')} | ${dubaiTime} Dubai Time`
           }
         },
         {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "*🎯 Key Metrics Today*"
+            text: "*🎯 Today's Activity*"
           }
         },
         {
@@ -428,19 +458,19 @@ export class SlackService {
           fields: [
             {
               type: "mrkdwn",
-              text: `*New Users:*\n${stats.newUsers} ${trendEmoji(stats.userGrowthTrend)} (${stats.userGrowthTrend > 0 ? '+' : ''}${stats.userGrowthTrend}%)`
+              text: `*New Users:*\n${stats.newUsers} ${trendEmoji(stats.userGrowthTrend)} (${formatTrend(stats.userGrowthTrend)} vs yesterday)`
             },
             {
               type: "mrkdwn",
-              text: `*New Applications:*\n${stats.newApplications} ${trendEmoji(stats.applicationGrowthTrend)} (${stats.applicationGrowthTrend > 0 ? '+' : ''}${stats.applicationGrowthTrend}%)`
+              text: `*New Applications:*\n${stats.newApplications} ${trendEmoji(stats.applicationGrowthTrend)} (${formatTrend(stats.applicationGrowthTrend)} vs yesterday)`
             },
             {
               type: "mrkdwn",
-              text: `*Students:*\n🎓 ${stats.newStudents}`
+              text: `*Students Joined:*\n🎓 ${stats.newStudents}`
             },
             {
               type: "mrkdwn",
-              text: `*Companies:*\n🏢 ${stats.newCompanies}`
+              text: `*Companies Joined:*\n🏢 ${stats.newCompanies}`
             },
             {
               type: "mrkdwn",
@@ -448,26 +478,49 @@ export class SlackService {
             },
             {
               type: "mrkdwn",
-              text: `*Conversions:*\n💰 ${stats.conversionsToday}`
+              text: `*Upgrades:*\n💰 ${stats.conversionsToday}`
             }
           ]
+        },
+        {
+          type: "divider"
         },
         {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*📈 Platform Health:* ${stats.activeProjects} active projects receiving applications`
+            text: "*📈 Week-over-Week Growth*"
           }
         },
         {
+          type: "section",
+          fields: [
+            {
+              type: "mrkdwn",
+              text: `*User Growth (7 days):*\n${trendEmoji(stats.weekOverWeekUserGrowth)} ${formatTrend(stats.weekOverWeekUserGrowth)}`
+            },
+            {
+              type: "mrkdwn",
+              text: `*Application Growth (7 days):*\n${trendEmoji(stats.weekOverWeekApplicationGrowth)} ${formatTrend(stats.weekOverWeekApplicationGrowth)}`
+            }
+          ]
+        },
+        {
           type: "divider"
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*🏆 Platform Totals*\n📊 ${stats.totalUsers.toLocaleString()} total users | 📝 ${stats.totalApplications.toLocaleString()} total applications | 🎯 ${stats.activeProjects} active projects`
+          }
         },
         {
           type: "context",
           elements: [
             {
               type: "mrkdwn",
-              text: `🔗 <https://bidaaya-web-app.vercel.app/admin|View detailed analytics> | Last updated: ${new Date().toLocaleTimeString()}`
+              text: `🇦🇪 Bidaaya - Connecting UAE Students & Companies | <https://bidaaya-web-app.vercel.app/admin|Admin Dashboard>`
             }
           ]
         }

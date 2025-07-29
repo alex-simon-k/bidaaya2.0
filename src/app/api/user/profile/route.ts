@@ -21,13 +21,21 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         role: true,
+        dateOfBirth: true,
+        education: true,
+        highSchool: true,
         university: true,
         major: true,
+        goal: true,
+        interests: true,
         skills: true,
         bio: true,
+        whatsapp: true,
         linkedin: true,
         calendlyLink: true,
         graduationYear: true,
+        mena: true,
+        terms: true,
         profileCompleted: true,
         emailVerified: true
       }
@@ -63,14 +71,22 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const {
       name,
+      dateOfBirth,
+      educationStatus,
+      highSchool,
       university,
       major,
       subjects,
+      goal,
+      interests,
       skills,
       bio,
+      whatsapp,
       linkedin,
       calendlyLink,
       graduationYear,
+      mena,
+      terms,
       discoveryProfile,
       discoveryCompleted
     } = body
@@ -79,14 +95,22 @@ export async function PATCH(request: NextRequest) {
     const updateData: any = {}
 
     if (name !== undefined) updateData.name = name
+    if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth
+    if (educationStatus !== undefined) updateData.education = educationStatus // Map to correct field
+    if (highSchool !== undefined) updateData.highSchool = highSchool
     if (university !== undefined) updateData.university = university
     if (major !== undefined) updateData.major = major
     if (subjects !== undefined) updateData.major = subjects  // Map subjects to major field
+    if (goal !== undefined) updateData.goal = Array.isArray(goal) ? goal : [goal]
+    if (interests !== undefined) updateData.interests = Array.isArray(interests) ? interests : [interests]
     if (skills !== undefined) updateData.skills = skills
     if (bio !== undefined) updateData.bio = bio
+    if (whatsapp !== undefined) updateData.whatsapp = whatsapp
     if (linkedin !== undefined) updateData.linkedin = linkedin
     if (calendlyLink !== undefined) updateData.calendlyLink = calendlyLink
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
+    if (mena !== undefined) updateData.mena = mena
+    if (terms !== undefined) updateData.terms = terms
     
     // If this is a comprehensive profile update (has key fields), mark profile as completed
     console.log('🔍 Profile completion check:', {
@@ -100,7 +124,7 @@ export async function PATCH(request: NextRequest) {
       subjectsValue: subjects
     })
     
-    const hasRequiredFields = name && (university || major || subjects || skills)
+    const hasRequiredFields = name && (university || major || subjects || skills) && terms
     console.log('🔍 Has required fields for completion:', hasRequiredFields)
     
     if (hasRequiredFields) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from "@/lib/auth-config"
 import { PrismaClient } from '@prisma/client'
+import { slackAutomation } from '@/lib/slack-service'
 
 const prisma = new PrismaClient()
 
@@ -121,6 +122,15 @@ export async function POST(request: NextRequest) {
        goals: userWithFields.companyGoals,
        contactPerson: userWithFields.contactPersonName
      })
+
+     // Send Slack notification for new company signup
+     try {
+       await slackAutomation.notifyUserSignup(updatedUser.id)
+       console.log(`📱 Slack notification sent for new company conversion: ${updatedUser.email}`)
+     } catch (error) {
+       console.error('📱 Failed to send Slack notification for company conversion:', error)
+       // Don't fail the conversion if Slack notification fails
+     }
 
      return NextResponse.json({ 
        success: true, 
