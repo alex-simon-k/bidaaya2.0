@@ -154,6 +154,16 @@ export function StudentApplicationModal({
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Premium feature check
+    if (!isPremium) {
+      setApplicationError('File uploads are available for Premium users only. Upgrade to unlock this feature.')
+      setTimeout(() => {
+        setShowUpgradeModal(true)
+        setUpgradeModalTrigger('file_upload')
+      }, 1000)
+      return
+    }
+
     const file = event.target.files?.[0]
     if (file) {
       // Check file size (max 10MB)
@@ -171,6 +181,7 @@ export function StudentApplicationModal({
       
       setUploadedFile(file)
       setApplicationError(null)
+      console.log('✅ File uploaded successfully:', file.name, `(${(file.size / 1024 / 1024).toFixed(2)}MB)`)
     }
   }
 
@@ -632,50 +643,110 @@ export function StudentApplicationModal({
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <Paperclip className="h-5 w-5 text-blue-600" />
                         Additional File (Optional)
+                        {!isPremium && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <Crown className="h-3 w-3 mr-1" />
+                            Premium
+                          </span>
+                        )}
                       </h3>
                       
                       <div className="space-y-6">
-                        {/* Single File Upload */}
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
-                            Add Additional File
-                          </label>
-                          <p className="text-sm text-gray-600 mb-4">
-                            Upload one additional file such as your resume, portfolio, or other relevant document.
-                          </p>
-                          
-                          <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                            <input
-                              type="file"
-                              id="additionalFileUpload"
-                              onChange={handleFileUpload}
-                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                              className="hidden"
-                            />
-                            <label htmlFor="additionalFileUpload" className="cursor-pointer">
-                              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                              {uploadedFile ? (
-                                <div>
-                                  <p className="text-sm font-medium text-green-600 mb-1">
-                                    ✓ {uploadedFile.name}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    Click to replace file
-                                  </p>
-                                </div>
-                              ) : (
-                                <div>
-                                  <p className="text-sm font-medium text-gray-600 mb-1">
-                                    Click to upload a file
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    PDF, Word document, or image (max 10MB)
-                                  </p>
-                                </div>
-                              )}
+                        {/* Premium File Upload */}
+                        {isPremium ? (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                              Add Additional File
                             </label>
+                            <p className="text-sm text-gray-600 mb-4">
+                              Upload one additional file such as your resume, portfolio, or other relevant document.
+                            </p>
+                            
+                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                              <input
+                                type="file"
+                                id="additionalFileUpload"
+                                onChange={handleFileUpload}
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                className="hidden"
+                              />
+                              <label htmlFor="additionalFileUpload" className="cursor-pointer">
+                                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                                {uploadedFile ? (
+                                  <div>
+                                    <p className="text-sm font-medium text-green-600 mb-1">
+                                      ✓ {uploadedFile.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Click to replace file
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-600 mb-1">
+                                      Click to upload a file
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      PDF, Word document, or image (max 10MB)
+                                    </p>
+                                  </div>
+                                )}
+                              </label>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          /* Locked State for Free Users */
+                          <div className="relative">
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                              Add Additional File
+                            </label>
+                            <p className="text-sm text-gray-600 mb-4">
+                              Upload additional documents to strengthen your application (resume, portfolio, etc.)
+                            </p>
+                            
+                            <div className="border-2 border-dashed border-purple-200 rounded-xl p-6 text-center bg-gradient-to-br from-purple-50 to-pink-50 relative overflow-hidden">
+                              {/* Lock Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-100/90 to-pink-100/90 flex items-center justify-center">
+                                <div className="text-center">
+                                  <Lock className="h-12 w-12 text-purple-500 mx-auto mb-3" />
+                                  <p className="text-purple-700 font-semibold mb-2">Premium Feature</p>
+                                  <p className="text-purple-600 text-sm mb-4">Upload additional files to stand out</p>
+                                  <button
+                                    onClick={handleUpgrade}
+                                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all"
+                                  >
+                                    <Crown className="h-4 w-4 mr-2" />
+                                    Upgrade to Premium
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* Background Content (Blurred) */}
+                              <div className="opacity-40 filter blur-sm">
+                                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                                <p className="text-sm font-medium text-gray-600 mb-1">
+                                  Click to upload a file
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  PDF, Word document, or image (max 10MB)
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Premium Benefits */}
+                            <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                              <h4 className="text-sm font-semibold text-purple-800 mb-2">
+                                🎯 With Premium you can:
+                              </h4>
+                              <ul className="text-xs text-purple-700 space-y-1">
+                                <li>• Upload resume, portfolio, or other documents</li>
+                                <li>• Stand out with additional materials</li>
+                                <li>• Increase your chances of being shortlisted</li>
+                                <li>• Apply to unlimited projects</li>
+                              </ul>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
