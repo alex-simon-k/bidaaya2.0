@@ -470,11 +470,11 @@ function LoginPageContent() {
             >
               <p className="text-xs text-gray-500 leading-relaxed px-4">
                 By continuing, you agree to our{" "}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium underline">
-                  Terms of Service
+                <a href="/terms" className="text-blue-600 hover:text-blue-700 font-medium underline">
+                  Terms and Conditions
                 </a>{" "}
                 and{" "}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium underline">
+                <a href="/privacy" className="text-blue-600 hover:text-blue-700 font-medium underline">
                   Privacy Policy
                 </a>
               </p>
