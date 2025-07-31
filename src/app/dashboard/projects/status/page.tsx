@@ -344,11 +344,19 @@ export default function ProjectStatusPage() {
                         
                         {(project.status === 'DRAFT' || project.status === 'REJECTED') && (
                           <button
-                            onClick={() => router.push(`/dashboard/projects/${project.id}/edit`)}
+                            onClick={() => {
+                              if (project.status === 'REJECTED') {
+                                // For rejected projects, redirect to template flow for better UX
+                                router.push(`/dashboard/projects/new?rejectedId=${project.id}`)
+                              } else {
+                                // For drafts, use the regular edit page
+                                router.push(`/dashboard/projects/${project.id}/edit`)
+                              }
+                            }}
                             className="flex items-center gap-1 px-3 py-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors text-sm"
                           >
                             <Edit3 className="h-4 w-4" />
-                            <span className="hidden sm:inline">Edit</span>
+                            <span className="hidden sm:inline">{project.status === 'REJECTED' ? 'Recreate' : 'Edit'}</span>
                           </button>
                         )}
 

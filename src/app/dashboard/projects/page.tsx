@@ -415,10 +415,16 @@ export default function ProjectsPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            router.push(`/dashboard/projects/${project.id}/edit`)
+                            if (project.status === 'REJECTED') {
+                              // For rejected projects, redirect to template flow for better UX
+                              router.push(`/dashboard/projects/new?rejectedId=${project.id}`)
+                            } else {
+                              // For drafts, use the regular edit page
+                              router.push(`/dashboard/projects/${project.id}/edit`)
+                            }
                           }}
                               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="Edit Project"
+                              title={project.status === 'REJECTED' ? 'Recreate Project' : 'Edit Project'}
                         >
                           <Edit className="h-4 w-4" />
                         </button>

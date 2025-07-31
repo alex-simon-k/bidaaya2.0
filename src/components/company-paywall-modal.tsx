@@ -19,7 +19,7 @@ import {
   Clock,
   Shield
 } from 'lucide-react'
-import { CompanyUpgradePrompt, getPaidCompanyTiers, SubscriptionTier } from '@/lib/subscription'
+import { CompanyUpgradePrompt, getPaidCompanyTiers, SubscriptionTier, getHigherTiers } from '@/lib/subscription'
 
 interface CompanyPaywallModalProps {
   isOpen: boolean
@@ -39,7 +39,8 @@ export function CompanyPaywallModal({
   const [selectedPlan, setSelectedPlan] = useState(promptConfig.recommendedPlan.id)
 
   const getSelectedTier = () => {
-    return getPaidCompanyTiers().find(tier => tier.id === selectedPlan) || promptConfig.recommendedPlan
+    const availableTiers = getHigherTiers(promptConfig.currentPlan, 'COMPANY')
+    return availableTiers.find(tier => tier.id === selectedPlan) || promptConfig.recommendedPlan
   }
 
   const handleUpgrade = async () => {
@@ -140,7 +141,7 @@ export function CompanyPaywallModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -156,10 +157,10 @@ export function CompanyPaywallModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl bg-white rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto"
           >
             {/* Header with gradient */}
-            <div className={`relative px-8 py-12 bg-gradient-to-br ${getTriggerGradient()} text-white text-center`}>
+            <div className={`relative px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 bg-gradient-to-br ${getTriggerGradient()} text-white text-center`}>
               <button
                 onClick={onClose}
                 className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
@@ -176,8 +177,8 @@ export function CompanyPaywallModal({
                 {getTriggerIcon()}
               </motion.div>
               
-              <h1 className="text-3xl font-bold mb-4">{promptConfig.title}</h1>
-              <p className="text-white/90 text-xl leading-relaxed max-w-2xl mx-auto">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4">{promptConfig.title}</h1>
+              <p className="text-white/90 text-sm sm:text-base lg:text-xl leading-relaxed max-w-2xl mx-auto">
                 {promptConfig.description}
               </p>
               
@@ -190,16 +191,16 @@ export function CompanyPaywallModal({
             </div>
 
             {/* Content */}
-            <div className="px-8 py-8">
+            <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
               {/* Two-column layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 
                 {/* Left Column - Benefits & Social Proof */}
                 <div className="space-y-6">
                   
                   {/* Benefits List */}
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
                       <Crown className="h-6 w-6 text-yellow-500" />
                       What You'll Unlock
                     </h3>
@@ -259,13 +260,13 @@ export function CompanyPaywallModal({
 
                 {/* Right Column - Plan Selection */}
                 <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
                     <Building2 className="h-6 w-6 text-blue-500" />
                     Choose Your Plan
                   </h3>
                   
                   <div className="space-y-4">
-                    {getPaidCompanyTiers().map((tier, index) => (
+                    {getHigherTiers(promptConfig.currentPlan, 'COMPANY').map((tier, index) => (
                       <motion.div
                         key={tier.id}
                         initial={{ opacity: 0, x: 20 }}

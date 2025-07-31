@@ -174,6 +174,24 @@ export function getPaidCompanyTiers(): SubscriptionTier[] {
   return COMPANY_TIERS.filter(tier => tier.id !== 'FREE')
 }
 
+// Helper function to get only tiers higher than the user's current tier
+export function getHigherTiers(currentPlan: string, role: 'STUDENT' | 'COMPANY'): SubscriptionTier[] {
+  const allTiers = role === 'STUDENT' ? STUDENT_TIERS : COMPANY_TIERS
+  const currentTier = allTiers.find(tier => tier.id === currentPlan)
+  
+  if (!currentTier) {
+    // If current plan not found, return all paid tiers
+    return allTiers.filter(tier => tier.id !== 'FREE')
+  }
+  
+  // Find current tier index and return all tiers with higher price
+  const currentPrice = currentTier.price
+  return allTiers.filter(tier => 
+    tier.price > currentPrice && 
+    tier.id !== 'FREE'
+  ).sort((a, b) => a.price - b.price) // Sort by price ascending
+}
+
 export function getSubscriptionTier(plan: string, role: 'STUDENT' | 'COMPANY'): SubscriptionTier | null {
   const tiers = role === 'STUDENT' ? STUDENT_TIERS : COMPANY_TIERS
   return tiers.find(tier => tier.id === plan) || null
@@ -340,11 +358,29 @@ export interface CompanyUpgradePrompt {
 
 export function getCompanyActivationUpgradePrompt(user: any): CompanyUpgradePrompt {
   const currentPlan = user?.subscriptionPlan || 'FREE'
-  const recommendedTier = COMPANY_TIERS[1] // Company Basic (skip FREE tier)
+  
+  // Get the next higher tier based on their current plan
+  const higherTiers = getHigherTiers(currentPlan, 'COMPANY')
+  const recommendedTier = higherTiers.length > 0 ? higherTiers[0] : COMPANY_TIERS[1] // Fallback to Company Basic
+  
+  // Customize message based on current plan
+  const getTitle = () => {
+    if (currentPlan === 'FREE') return "🚀 Ready to Publish Your Project?"
+    if (currentPlan === 'COMPANY_BASIC') return "🚀 Ready for Multiple Projects?"
+    if (currentPlan === 'COMPANY_PREMIUM') return "🚀 Ready for Unlimited Projects?"
+    return "🚀 Upgrade Your Plan"
+  }
+  
+  const getDescription = () => {
+    if (currentPlan === 'FREE') return "You've created a great project! Upgrade to activate it and start receiving applications from talented students."
+    if (currentPlan === 'COMPANY_BASIC') return "Scale your hiring with multiple active projects and enhanced features!"
+    if (currentPlan === 'COMPANY_PREMIUM') return "Unlock unlimited projects with our complete hands-off hiring solution!"
+    return "Upgrade for enhanced hiring capabilities!"
+  }
   
   return {
-    title: "🚀 Ready to Publish Your Project?",
-    description: "You've created a great project! Upgrade to activate it and start receiving applications from talented students.",
+    title: getTitle(),
+    description: getDescription(),
     benefits: [
       "📤 Publish your project immediately",
       "📧 Receive applications from qualified students", 

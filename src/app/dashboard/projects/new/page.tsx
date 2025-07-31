@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SubscriptionManager } from '@/lib/subscription-manager'
@@ -143,6 +143,8 @@ type HiringIntent = 'HIRING' | 'STANDALONE_INTERNSHIP' | 'INTERNSHIP_TO_JOB'
 
 export default function NewProjectPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const rejectedId = searchParams.get('rejectedId')
   const { data: session } = useSession()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -192,6 +194,55 @@ export default function NewProjectPage() {
     }
     loadSubscriptionData()
   }, [session])
+
+  // Load rejected project data if rejectedId is provided
+  useEffect(() => {
+    const loadRejectedProject = async () => {
+      if (rejectedId && session?.user) {
+        try {
+          const response = await fetch(`/api/projects/${rejectedId}`)
+          if (response.ok) {
+            const project = await response.json()
+            
+            // Pre-fill form with rejected project data
+            setFormData(prev => ({
+              ...prev,
+              title: project.title || '',
+              category: project.category || '',
+              subcategory: project.subcategory || '',
+              workType: project.workType || 'VIRTUAL',
+              paymentType: project.paymentType || 'UNPAID',
+              paymentAmount: project.paymentAmount || 0,
+              hoursPerWeek: project.hoursPerWeek || 8,
+              teamSize: project.teamSize || 1,
+              durationMonths: project.durationMonths || 3,
+              experienceLevel: project.experienceLevel || 'High School',
+              definitionOfDone: project.definitionOfDone || '',
+              problemStatement: project.problemStatement || '',
+              solutionDirection: project.solutionDirection || '',
+              hiringIntent: project.hiringIntent || 'STANDALONE_INTERNSHIP',
+              idealCandidateRequirements: project.idealCandidateRequirements || [],
+              applicationDeadline: project.applicationDeadline || ''
+            }))
+            
+            // Auto-select appropriate template if category matches
+            const matchingTemplate = PROJECT_TEMPLATES.find(t => t.category === project.category)
+            if (matchingTemplate) {
+              setSelectedTemplate(matchingTemplate)
+              setCurrentStep(2) // Skip template selection and go to form
+            }
+          } else {
+            setError('Failed to load project data. Please try again.')
+          }
+        } catch (error) {
+          console.error('Failed to load rejected project:', error)
+          setError('Failed to load project data. Please try again.')
+        }
+      }
+    }
+    
+    loadRejectedProject()
+  }, [rejectedId, session])
 
   const handleTemplateSelect = (template: ProjectTemplate) => {
     setSelectedTemplate(template)
@@ -350,8 +401,22 @@ export default function NewProjectPage() {
               <ArrowLeft className="h-4 w-4" />
               Back to Projects
             </button>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Project</h1>
-            <p className="text-gray-600">Choose a project category to get started with our proven templates</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {rejectedId ? 'Recreate Your Project' : 'Create New Project'}
+            </h1>
+            <p className="text-gray-600">
+              {rejectedId 
+                ? 'Your project was rejected. Let\'s recreate it using our proven templates with better structure.'
+                : 'Choose a project category to get started with our proven templates'
+              }
+            </p>
+            {rejectedId && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-amber-800 text-sm">
+                  💡 <strong>Tip:</strong> We've pre-filled your form with the previous project data. Review and improve it using our template guidelines for better approval chances.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

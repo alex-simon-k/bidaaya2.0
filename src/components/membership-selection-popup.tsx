@@ -239,7 +239,7 @@ export function MembershipSelectionPopup({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -255,7 +255,7 @@ export function MembershipSelectionPopup({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl bg-white rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 text-center">

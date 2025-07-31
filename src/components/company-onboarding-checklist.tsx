@@ -9,8 +9,9 @@ interface ChecklistItem {
   title: string
   description: string
   completed: boolean
-  type: 'link' | 'manual' | 'feature'
+  type: 'link' | 'manual' | 'feature' | 'modal'
   url?: string
+  action?: string
   phase: 'mvp' | 'phase2' | 'phase3' | 'phase4'
   category: 'setup' | 'projects' | 'recruitment' | 'advanced'
   tier?: 'basic' | 'pro' | 'premium'
@@ -61,6 +62,17 @@ export default function CompanyOnboardingChecklist({
     },
     
     // Phase 2 - Smart Recruitment
+    {
+      id: 'smart-recruitment-guide',
+      title: 'Learn smart recruitment basics',
+      description: 'Interactive walkthrough: How to use AI shortlisting, what to look for in candidates, and optimal timing',
+      completed: false,
+      type: 'modal',
+      action: 'open_recruitment_guide',
+      phase: 'phase2',
+      category: 'recruitment',
+      tier: 'basic' // Available to Company Basic+
+    },
     {
       id: 'ai-preferences',
       title: 'Configure smart candidate ranking',
@@ -120,6 +132,7 @@ export default function CompanyOnboardingChecklist({
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({})
   const [isDismissed, setIsDismissed] = useState(false)
   const [activePhase, setActivePhase] = useState<'mvp' | 'phase2' | 'phase3' | 'phase4'>('mvp')
+  const [showRecruitmentGuide, setShowRecruitmentGuide] = useState(false)
 
   // Filter items based on user tier and phase
   const filteredItems = items.filter(item => {
@@ -178,6 +191,10 @@ export default function CompanyOnboardingChecklist({
       window.open(item.url, '_blank', 'noopener,noreferrer')
     } else if (item.type === 'feature' && item.url) {
       window.location.href = item.url
+    } else if (item.type === 'modal' && item.action === 'open_recruitment_guide') {
+      setShowRecruitmentGuide(true)
+      // Mark as completed when they open the guide
+      toggleItemCompletion(item.id)
     }
   }
 
@@ -482,6 +499,85 @@ export default function CompanyOnboardingChecklist({
             </span>
           </div>
         </motion.div>
+      )}
+
+      {/* Smart Recruitment Guide Modal */}
+      {showRecruitmentGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">🤖 Smart Recruitment Guide</h3>
+                  <p className="text-gray-600">Master AI shortlisting and optimal hiring practices</p>
+                </div>
+                <button
+                  onClick={() => setShowRecruitmentGuide(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-blue-900 mb-2">📊 How AI Shortlisting Works</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• AI analyzes applications against your project requirements</li>
+                    <li>• Scores candidates on skills match, experience relevance, and motivation</li>
+                    <li>• Ranks top 10 candidates for your review</li>
+                    <li>• Saves you 80% of initial screening time</li>
+                  </ul>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-green-900 mb-2">👀 What to Look For in Candidates</h4>
+                  <ul className="text-sm text-green-800 space-y-1">
+                    <li>• <strong>Skills Match:</strong> Relevant technical and soft skills</li>
+                    <li>• <strong>Motivation:</strong> Clear understanding of your project goals</li>
+                    <li>• <strong>Availability:</strong> Time commitment aligns with project needs</li>
+                    <li>• <strong>Communication:</strong> Clear, professional application responses</li>
+                    <li>• <strong>Experience:</strong> Relevant past projects or education</li>
+                  </ul>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-amber-900 mb-2">⏰ Optimal Timing</h4>
+                  <ul className="text-sm text-amber-800 space-y-1">
+                    <li>• <strong>Wait for 10+ applications</strong> before shortlisting for best results</li>
+                    <li>• <strong>Review shortlist within 2-3 days</strong> to maintain candidate interest</li>
+                    <li>• <strong>Send interview invites</strong> to top 3-5 candidates immediately</li>
+                    <li>• <strong>Schedule interviews</strong> within 1 week of shortlisting</li>
+                  </ul>
+                </div>
+
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-purple-900 mb-2">💡 Pro Tips</h4>
+                  <ul className="text-sm text-purple-800 space-y-1">
+                    <li>• Use detailed project descriptions for better AI matching</li>
+                    <li>• Check candidate portfolios and GitHub profiles</li>
+                    <li>• Ask specific questions during interviews</li>
+                    <li>• Provide feedback to improve future shortlisting</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowRecruitmentGuide(false)}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                >
+                  Got it! Let's start hiring smart 🚀
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </motion.div>
   )
