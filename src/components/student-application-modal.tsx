@@ -83,13 +83,15 @@ export function StudentApplicationModal({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<string>('')
   
-  // Ultra-simplified form state - only 2 questions
   const [formData, setFormData] = useState({
-    // Question 1: Why are you interested in this project?
     whyInterested: '',
-    
-    // Question 2: What is your proposed approach (your solution to this project)?
     proposedApproach: '',
+    personalStatement: '',
+    relevantExperience: '',
+    projectUnderstanding: '',
+    weeklyAvailability: '',
+    startDate: '',
+    commitmentLevel: '',
   })
   
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -106,6 +108,12 @@ export function StudentApplicationModal({
     setFormData({
       whyInterested: '',
       proposedApproach: '',
+      personalStatement: '',
+      relevantExperience: '',
+      projectUnderstanding: '',
+      weeklyAvailability: '',
+      startDate: '',
+      commitmentLevel: '',
     })
     setUploadedFile(null)
     setApplicationError(null)
