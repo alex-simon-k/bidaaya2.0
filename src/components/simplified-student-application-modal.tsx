@@ -56,6 +56,7 @@ export function SimplifiedStudentApplicationModal({
   const [applicationError, setApplicationError] = useState<string | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<'application_limit' | 'file_upload' | 'external_tracking' | undefined>(undefined)
+  const [upgradePrompt, setUpgradePrompt] = useState<any>(null)
   
   // Simple form with only 2 questions
   const [formData, setFormData] = useState({
@@ -173,8 +174,9 @@ export function SimplifiedStudentApplicationModal({
         onClose()
         resetForm()
       } else if (response.status === 403 && data.code === 'LIMIT_REACHED') {
-        const upgradePrompt = getApplicationUpgradePrompt(session.user as any)
-        if (upgradePrompt) {
+        const prompt = getApplicationUpgradePrompt(session.user as any)
+        if (prompt) {
+          setUpgradePrompt(prompt)
           setUpgradeModalTrigger('application_limit' as any)
           setShowUpgradeModal(true)
         } else {
@@ -357,10 +359,11 @@ export function SimplifiedStudentApplicationModal({
       </div>
 
       {/* Upgrade Modal */}
-      {showUpgradeModal && (
+      {showUpgradeModal && upgradePrompt && (
         <StudentPaywallModal
           isOpen={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
+          promptConfig={upgradePrompt}
           trigger={upgradeModalTrigger}
         />
       )}
