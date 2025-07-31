@@ -10,9 +10,12 @@ interface SlackMessage {
 
 interface DailyStats {
   date: string
-  newUsers: number
   newStudents: number
   newCompanies: number
+  totalStudents: number
+  totalCompanies: number
+  // Legacy fields (kept for backward compatibility)
+  newUsers: number
   newApplications: number
   newProjects: number
   activeProjects: number
@@ -48,72 +51,11 @@ export class SlackService {
     }
   }
 
-  // Real-time user signup notifications
+  // Real-time user signup notifications - DISABLED per user request
   async notifyNewUserSignup(userInfo: UserSignupInfo): Promise<boolean> {
-    if (!this.isEnabled) {
-      console.log('📱 [MOCK] New user signup notification:', userInfo)
-      return true
-    }
-
-    const message: SlackMessage = {
-      text: `🎉 New user signed up!`,
-      blocks: [
-        {
-          type: "header",
-          text: {
-            type: "plain_text",
-            text: "🎉 New User Signup Alert"
-          }
-        },
-        {
-          type: "section",
-          fields: [
-            {
-              type: "mrkdwn",
-              text: `*Name:*\n${userInfo.name}`
-            },
-            {
-              type: "mrkdwn", 
-              text: `*Role:*\n${userInfo.role === 'STUDENT' ? '🎓 Student' : '🏢 Company'}`
-            },
-            {
-              type: "mrkdwn",
-              text: `*Email:*\n${userInfo.email}`
-            },
-            {
-              type: "mrkdwn",
-              text: `*Time:*\n${new Date(userInfo.signupTime).toLocaleString()}`
-            }
-          ]
-        }
-      ]
-    }
-
-    // Add role-specific information
-    if (userInfo.role === 'STUDENT' && userInfo.university) {
-      message.blocks![1].fields.push({
-        type: "mrkdwn",
-        text: `*University:*\n${userInfo.university}`
-      })
-    } else if (userInfo.role === 'COMPANY' && userInfo.companyName) {
-      message.blocks![1].fields.push({
-        type: "mrkdwn",
-        text: `*Company:*\n${userInfo.companyName}`
-      })
-    }
-
-    // Add context section
-    message.blocks!.push({
-      type: "context",
-      elements: [
-        {
-          type: "mrkdwn",
-          text: `📊 View full analytics in the <https://bidaaya-web-app.vercel.app/admin|Admin Dashboard>`
-        }
-      ]
-    })
-
-    return this.sendSlackMessage(message)
+    // User requested to disable email/signup notifications - using Looker dashboard instead
+    console.log('📱 [DISABLED] User signup notification (using Looker instead):', userInfo)
+    return true
   }
 
   // Daily summary notifications
@@ -286,119 +228,53 @@ export class SlackService {
     }
   }
 
-  // Data collection methods with enhanced week-over-week analytics
+  // Simplified data collection - only yesterday's students/companies with totals
   private async getDailyStats(): Promise<DailyStats> {
     const today = new Date()
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     const yesterdayStart = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
-    
-    // Week-over-week comparison dates
-    const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const oneWeekAgoStart = new Date(oneWeekAgo.getFullYear(), oneWeekAgo.getMonth(), oneWeekAgo.getDate())
-    const twoWeeksAgoStart = new Date(oneWeekAgo.getTime() - 7 * 24 * 60 * 60 * 1000)
 
     const [
-      newUsersToday,
-      newUsersYesterday,
-      newStudentsToday,
-      newCompaniesToday,
-      newApplicationsToday,
-      newApplicationsYesterday,
-      newProjectsToday,
-      activeProjects,
-      conversionsToday,
-      // Week-over-week data
-      usersThisWeek,
-      usersLastWeek,
-      applicationsThisWeek,
-      applicationsLastWeek,
-      totalUsers,
-      totalApplications
+      newStudentsYesterday,
+      newCompaniesYesterday,
+      totalStudents,
+      totalCompanies
     ] = await Promise.all([
-      // Daily metrics
+      // Yesterday's metrics
       prisma.user.count({
-        where: { createdAt: { gte: todayStart } }
-      }),
-      prisma.user.count({
-        where: { createdAt: { gte: yesterdayStart, lt: todayStart } }
+        where: { role: 'STUDENT', createdAt: { gte: yesterdayStart, lt: todayStart } }
       }),
       prisma.user.count({
-        where: { role: 'STUDENT', createdAt: { gte: todayStart } }
-      }),
-      prisma.user.count({
-        where: { role: 'COMPANY', createdAt: { gte: todayStart } }
-      }),
-      prisma.application.count({
-        where: { createdAt: { gte: todayStart } }
-      }),
-      prisma.application.count({
-        where: { createdAt: { gte: yesterdayStart, lt: todayStart } }
-      }),
-      prisma.project.count({
-        where: { createdAt: { gte: todayStart } }
-      }),
-      prisma.project.count({
-        where: { status: 'LIVE' }
-      }),
-      prisma.user.count({
-        where: {
-          role: 'COMPANY',
-          subscriptionPlan: { not: 'FREE' },
-          updatedAt: { gte: todayStart }
-        }
-      }),
-      // Week-over-week metrics
-      prisma.user.count({
-        where: { createdAt: { gte: oneWeekAgoStart } }
-      }),
-      prisma.user.count({
-        where: { createdAt: { gte: twoWeeksAgoStart, lt: oneWeekAgoStart } }
-      }),
-      prisma.application.count({
-        where: { createdAt: { gte: oneWeekAgoStart } }
-      }),
-      prisma.application.count({
-        where: { createdAt: { gte: twoWeeksAgoStart, lt: oneWeekAgoStart } }
+        where: { role: 'COMPANY', createdAt: { gte: yesterdayStart, lt: todayStart } }
       }),
       // Total counts
-      prisma.user.count(),
-      prisma.application.count()
+      prisma.user.count({
+        where: { role: 'STUDENT' }
+      }),
+      prisma.user.count({
+        where: { role: 'COMPANY' }
+      })
     ])
 
-    // Calculate growth trends
-    const userGrowthTrend = newUsersYesterday > 0 ? 
-      ((newUsersToday - newUsersYesterday) / newUsersYesterday) * 100 : 
-      newUsersToday > 0 ? 100 : 0
-
-    const applicationGrowthTrend = newApplicationsYesterday > 0 ? 
-      ((newApplicationsToday - newApplicationsYesterday) / newApplicationsYesterday) * 100 : 
-      newApplicationsToday > 0 ? 100 : 0
-
-    // Week-over-week growth
-    const weekOverWeekUserGrowth = usersLastWeek > 0 ? 
-      ((usersThisWeek - usersLastWeek) / usersLastWeek) * 100 : 
-      usersThisWeek > 0 ? 100 : 0
-
-    const weekOverWeekApplicationGrowth = applicationsLastWeek > 0 ? 
-      ((applicationsThisWeek - applicationsLastWeek) / applicationsLastWeek) * 100 : 
-      applicationsThisWeek > 0 ? 100 : 0
-
     return {
-      date: today.toISOString().split('T')[0],
-      newUsers: newUsersToday,
-      newStudents: newStudentsToday,
-      newCompanies: newCompaniesToday,
-      newApplications: newApplicationsToday,
-      newProjects: newProjectsToday,
-      activeProjects,
-      conversionsToday,
-      userGrowthTrend: Math.round(userGrowthTrend),
-      applicationGrowthTrend: Math.round(applicationGrowthTrend),
-      weekOverWeekUserGrowth: Math.round(weekOverWeekUserGrowth),
-      weekOverWeekApplicationGrowth: Math.round(weekOverWeekApplicationGrowth),
-      totalUsers,
-      totalApplications
+      date: yesterday.toISOString().split('T')[0],
+      newStudents: newStudentsYesterday,
+      newCompanies: newCompaniesYesterday,
+      totalStudents,
+      totalCompanies,
+      // Legacy fields (not used in simplified message)
+      newUsers: 0,
+      newApplications: 0,
+      newProjects: 0,
+      activeProjects: 0,
+      conversionsToday: 0,
+      userGrowthTrend: 0,
+      applicationGrowthTrend: 0,
+      weekOverWeekUserGrowth: 0,
+      weekOverWeekApplicationGrowth: 0,
+      totalUsers: 0,
+      totalApplications: 0
     }
   }
 
@@ -414,115 +290,18 @@ export class SlackService {
   }
 
   private buildDailySummaryMessage(stats: DailyStats): SlackMessage {
-    const trendEmoji = (trend: number) => {
-      if (trend > 20) return '🚀'
-      if (trend > 10) return '📈'
-      if (trend > 0) return '⬆️'
-      if (trend === 0) return '➡️'
-      if (trend > -10) return '⬇️'
-      return '📉'
-    }
-
-    const formatTrend = (trend: number) => {
-      const sign = trend > 0 ? '+' : ''
-      return `${sign}${trend}%`
-    }
-
-    // Dubai time (GMT+4)
-    const dubaiTime = new Date().toLocaleString('en-AE', { 
-      timeZone: 'Asia/Dubai',
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-
+    // Simple format: Yesterday's students and companies with totals in brackets
+    const yesterdayDate = new Date(stats.date).toLocaleDateString('en-AE')
+    
     return {
-      text: `📊 Daily Bidaaya Summary - ${stats.date}`,
+      text: `📊 Daily Bidaaya Summary - ${yesterdayDate}`,
       blocks: [
         {
-          type: "header",
-          text: {
-            type: "plain_text",
-            text: `📊 Daily Platform Summary | ${new Date(stats.date).toLocaleDateString('en-AE')} | ${dubaiTime} Dubai Time`
-          }
-        },
-        {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "*🎯 Today's Activity*"
+            text: `📊 *Daily Summary - ${yesterdayDate}*\n\n🎓 *${stats.newStudents} students* joined yesterday (${stats.totalStudents} total)\n🏢 *${stats.newCompanies} companies* joined yesterday (${stats.totalCompanies} total)`
           }
-        },
-        {
-          type: "section",
-          fields: [
-            {
-              type: "mrkdwn",
-              text: `*New Users:*\n${stats.newUsers} ${trendEmoji(stats.userGrowthTrend)} (${formatTrend(stats.userGrowthTrend)} vs yesterday)`
-            },
-            {
-              type: "mrkdwn",
-              text: `*New Applications:*\n${stats.newApplications} ${trendEmoji(stats.applicationGrowthTrend)} (${formatTrend(stats.applicationGrowthTrend)} vs yesterday)`
-            },
-            {
-              type: "mrkdwn",
-              text: `*Students Joined:*\n🎓 ${stats.newStudents}`
-            },
-            {
-              type: "mrkdwn",
-              text: `*Companies Joined:*\n🏢 ${stats.newCompanies}`
-            },
-            {
-              type: "mrkdwn",
-              text: `*New Projects:*\n📋 ${stats.newProjects}`
-            },
-            {
-              type: "mrkdwn",
-              text: `*Upgrades:*\n💰 ${stats.conversionsToday}`
-            }
-          ]
-        },
-        {
-          type: "divider"
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "*📈 Week-over-Week Growth*"
-          }
-        },
-        {
-          type: "section",
-          fields: [
-            {
-              type: "mrkdwn",
-              text: `*User Growth (7 days):*\n${trendEmoji(stats.weekOverWeekUserGrowth)} ${formatTrend(stats.weekOverWeekUserGrowth)}`
-            },
-            {
-              type: "mrkdwn",
-              text: `*Application Growth (7 days):*\n${trendEmoji(stats.weekOverWeekApplicationGrowth)} ${formatTrend(stats.weekOverWeekApplicationGrowth)}`
-            }
-          ]
-        },
-        {
-          type: "divider"
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*🏆 Platform Totals*\n📊 ${stats.totalUsers.toLocaleString()} total users | 📝 ${stats.totalApplications.toLocaleString()} total applications | 🎯 ${stats.activeProjects} active projects`
-          }
-        },
-        {
-          type: "context",
-          elements: [
-            {
-              type: "mrkdwn",
-              text: `🇦🇪 Bidaaya - Connecting UAE Students & Companies | <https://bidaaya-web-app.vercel.app/admin|Admin Dashboard>`
-            }
-          ]
         }
       ]
     }
@@ -568,42 +347,11 @@ export class SlackAutomation {
     return await this.slackService.sendDailySummary()
   }
 
-  // Real-time user notification
+  // Real-time user notification - DISABLED per user request  
   async notifyUserSignup(userId: string): Promise<boolean> {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          university: true,
-          companyName: true,
-          createdAt: true
-        }
-      })
-
-      if (!user) {
-        console.error('User not found for notification:', userId)
-        return false
-      }
-
-      const userInfo: UserSignupInfo = {
-        id: user.id,
-        name: user.name || 'Unknown',
-        email: user.email,
-        role: user.role,
-        university: user.university || undefined,
-        companyName: user.companyName || undefined,
-        signupTime: user.createdAt.toISOString()
-      }
-
-      return await this.slackService.notifyNewUserSignup(userInfo)
-    } catch (error) {
-      console.error('Error notifying user signup:', error)
-      return false
-    }
+    // User requested to disable signup notifications - using Looker dashboard instead
+    console.log('📱 [DISABLED] User signup notification (using Looker instead) for user:', userId)
+    return true
   }
 
   // Application milestone tracking
