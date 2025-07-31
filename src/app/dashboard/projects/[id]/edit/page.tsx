@@ -267,7 +267,7 @@ export default function EditProjectPage() {
               <button
                 onClick={() => handleSave(false)}
                 disabled={isSaving}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                className="inline-flex items-center px-6 py-3 border-2 border-gray-300 text-sm font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 transition-all"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {isSaving ? 'Saving...' : 'Save Draft'}
@@ -276,7 +276,7 @@ export default function EditProjectPage() {
               <button
                 onClick={() => handleSave(true)}
                 disabled={isSaving}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                className="inline-flex items-center px-6 py-3 border-2 border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl"
               >
                 <Send className="h-4 w-4 mr-2" />
                 {isSaving ? 'Submitting...' : 'Submit for Approval'}
@@ -336,40 +336,47 @@ export default function EditProjectPage() {
         )}
 
         {/* Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="space-y-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">Project Details</h2>
+            <p className="text-sm text-gray-600 mt-1">Update your project information below</p>
+          </div>
+          <div className="p-6 space-y-8">
             {/* Basic Information */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                Basic Information
+              </h3>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
                     Project Title *
                   </label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter project title"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all text-gray-900 placeholder-gray-500"
+                    placeholder="Enter a clear, descriptive project title"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
                     Project Description *
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Describe the project, its goals, and what the student will work on"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all text-gray-900 placeholder-gray-500 resize-none"
+                    placeholder="Provide a detailed description of your project, its goals, scope, and what the student will learn or accomplish"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
                     Team Size
                   </label>
                   <input
@@ -378,12 +385,12 @@ export default function EditProjectPage() {
                     max="10"
                     value={formData.teamSize}
                     onChange={(e) => handleInputChange('teamSize', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
                     Duration (months)
                   </label>
                   <input
@@ -392,7 +399,7 @@ export default function EditProjectPage() {
                     max="12"
                     value={formData.durationMonths}
                     onChange={(e) => handleInputChange('durationMonths', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all text-gray-900"
                   />
                 </div>
 

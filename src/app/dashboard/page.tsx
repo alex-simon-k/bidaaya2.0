@@ -20,7 +20,8 @@ import {
   Target,
   Star,
   Calendar,
-  Award
+  Award,
+  Brain
 } from 'lucide-react'
 import { UsageStatsCard } from '@/components/upgrade-prompt'
 import { DashboardStatsWidget } from '@/components/dashboard-stats-widget'
@@ -178,22 +179,37 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="text-emerald-100 text-lg leading-relaxed mb-6"
+              className="text-emerald-100 text-lg leading-relaxed mb-8"
             >
-              Find your next internship opportunity and start building your career
+              Discover AI-powered opportunities perfectly matched to your skills
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.5 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
             >
               <Link
                 href="/dashboard/projects"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-2xl shadow-lg hover:bg-white/30 transition-all duration-300 border border-white/20"
+                className="flex items-center gap-3 px-6 py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-xl shadow-lg hover:bg-white/30 transition-all duration-300 border border-white/20"
               >
                 <BookOpen className="h-5 w-5" />
-                Browse Projects
+                <div className="text-left">
+                  <div className="font-semibold">Browse All Projects</div>
+                  <div className="text-xs text-emerald-100">200+ opportunities</div>
+                </div>
+              </Link>
+              
+              <Link
+                href="/dashboard/discovery-quiz"
+                className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm text-white font-semibold rounded-xl shadow-lg hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300 border border-purple-300/20"
+              >
+                <Brain className="h-5 w-5" />
+                <div className="text-left">
+                  <div className="font-semibold">AI Discovery Quiz</div>
+                  <div className="text-xs text-purple-100">Get personalized insights</div>
+                </div>
               </Link>
             </motion.div>
           </div>
@@ -273,6 +289,178 @@ export default function DashboardPage() {
                 </motion.div>
               </Link>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Featured Projects Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="bg-white rounded-3xl shadow-xl overflow-hidden"
+        >
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">🔥 Trending Projects</h2>
+                <p className="text-gray-600">Hand-picked opportunities just for you</p>
+              </div>
+              <Link
+                href="/dashboard/projects"
+                className="text-blue-600 hover:text-blue-700 font-semibold text-sm"
+              >
+                View All →
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Featured Project 1 */}
+              <div className="group p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        AI Marketing Campaign
+                      </h3>
+                      <p className="text-sm text-gray-600">TechCorp Inc.</p>
+                    </div>
+                  </div>
+                  <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full">
+                    Popular
+                  </span>
+                </div>
+                
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  Help create an AI-powered social media marketing campaign using the latest tools and strategies...
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>💰 Paid</span>
+                    <span>📍 Remote</span>
+                    <span>⏱️ 3 months</span>
+                  </div>
+                  <Link
+                    href="/dashboard/projects"
+                    className="text-blue-600 hover:text-blue-700 font-semibold text-sm group-hover:gap-2 transition-all"
+                  >
+                    Apply Now →
+                  </Link>
+                </div>
+              </div>
+
+              {/* Featured Project 2 */}
+              <div className="group p-6 border-2 border-gray-100 rounded-2xl hover:border-green-200 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl flex items-center justify-center">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                        Mobile App Development
+                      </h3>
+                      <p className="text-sm text-gray-600">StartupHub</p>
+                    </div>
+                  </div>
+                  <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
+                    New
+                  </span>
+                </div>
+                
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  Join our team to develop a cutting-edge mobile application using React Native and modern UI/UX principles...
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>🎓 Unpaid</span>
+                    <span>📍 Hybrid</span>
+                    <span>⏱️ 4 months</span>
+                  </div>
+                  <Link
+                    href="/dashboard/projects"
+                    className="text-green-600 hover:text-green-700 font-semibold text-sm group-hover:gap-2 transition-all"
+                  >
+                    Apply Now →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Quick Actions Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          {/* Mentorship */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                <Award className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Mentorship</h3>
+                <p className="text-xs text-amber-700">Get guided support</p>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm mb-4">
+              Connect with industry experts for personalized career guidance and skill development.
+            </p>
+            <button className="text-amber-600 hover:text-amber-700 font-semibold text-sm">
+              Find Mentors →
+            </button>
+          </div>
+
+          {/* AI Career Match */}
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <Brain className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">AI Career Insights</h3>
+                <p className="text-xs text-purple-700">Powered by AI</p>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm mb-4">
+              Get personalized insights about your career path using advanced AI analysis.
+            </p>
+            <Link
+              href="/dashboard/discovery-quiz"
+              className="text-purple-600 hover:text-purple-700 font-semibold text-sm"
+            >
+              Take Quiz →
+            </Link>
+          </div>
+
+          {/* Skill Building */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                <Star className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Skill Builder</h3>
+                <p className="text-xs text-blue-700">Level up your skills</p>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm mb-4">
+              Track your progress and build portfolio-worthy projects to showcase your abilities.
+            </p>
+            <Link
+              href="/dashboard/profile"
+              className="text-blue-600 hover:text-blue-700 font-semibold text-sm"
+            >
+              Build Portfolio →
+            </Link>
           </div>
         </motion.div>
       </div>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Crown, Zap, Star, ArrowRight, Shield, Users, Target, Rocket } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { getHigherTiers } from '@/lib/subscription'
 
 interface MembershipSelectionPopupProps {
   isOpen: boolean
@@ -30,9 +31,12 @@ export function MembershipSelectionPopup({
   
   console.log(`🔍 MembershipPopup - Current plan: ${currentPlan}, Role: ${userRole}`)
   
-  // Don't show popup if user already has a paid plan
-  if (currentPlan !== 'FREE') {
-    console.log(`🎯 User has ${currentPlan}, not showing membership popup`)
+  // Get available higher tiers based on current plan
+  const availableHigherTiers = getHigherTiers(currentPlan, userRole)
+  
+  // Don't show popup if user is already on the highest tier
+  if (availableHigherTiers.length === 0) {
+    console.log(`🎯 User has highest tier ${currentPlan}, not showing membership popup`)
     return null
   }
 
@@ -120,7 +124,31 @@ export function MembershipSelectionPopup({
     }
   ]
 
-  const plans = userRole === 'STUDENT' ? getStudentPlans(billingCycle) : getCompanyPlans(billingCycle)
+  // Filter plans based on available higher tiers
+  const getFilteredPlans = () => {
+    const allPlans = userRole === 'STUDENT' ? getStudentPlans(billingCycle) : getCompanyPlans(billingCycle)
+    
+    // If user is on FREE plan, show all paid options
+    if (currentPlan === 'FREE') {
+      return allPlans.filter(plan => plan.id !== 'free') // Remove free option
+    }
+    
+    // Map tier IDs to plan IDs
+    const tierToPlanMap: Record<string, string[]> = {
+      'STUDENT_BASIC': [billingCycle === 'monthly' ? 'student_premium_monthly' : 'student_premium_yearly'],
+      'STUDENT_PRO': [billingCycle === 'monthly' ? 'student_pro_monthly' : 'student_pro_yearly'],
+      'COMPANY_BASIC': [billingCycle === 'monthly' ? 'company_basic_monthly' : 'company_basic_yearly'],
+      'COMPANY_PREMIUM': [billingCycle === 'monthly' ? 'company_hr_booster_monthly' : 'company_hr_booster_yearly'],
+      'COMPANY_PRO': [billingCycle === 'monthly' ? 'company_hr_agent_monthly' : 'company_hr_agent_yearly']
+    }
+    
+    // Get plan IDs that correspond to available higher tiers
+    const availablePlanIds = availableHigherTiers.flatMap(tier => tierToPlanMap[tier.id] || [])
+    
+    return allPlans.filter(plan => availablePlanIds.includes(plan.id))
+  }
+  
+  const plans = getFilteredPlans()
 
   const handlePlanSelect = async (planId: string, price: number) => {
     if (isUpgrading) return
@@ -258,7 +286,7 @@ export function MembershipSelectionPopup({
             className="relative w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl bg-white rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 text-center">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 sm:p-6 lg:p-8 text-center">
               <button
                 onClick={onClose}
                 className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
@@ -279,13 +307,20 @@ export function MembershipSelectionPopup({
                 )}
               </motion.div>
 
-              <h1 className="text-3xl font-bold mb-2">
-                Welcome{userName ? `, ${userName}` : ''}! 🎉
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
+                {currentPlan === 'FREE' 
+                  ? `Welcome${userName ? `, ${userName}` : ''}! 🎉`
+                  : `Ready to level up${userName ? `, ${userName}` : ''}? 🚀`
+                }
               </h1>
-              <p className="text-white/90 text-lg">
-                {userRole === 'STUDENT' 
-                  ? 'Choose your plan to start applying for amazing opportunities'
-                  : 'Select your plan to start posting projects and hiring talent'
+              <p className="text-white/90 text-sm sm:text-base lg:text-lg">
+                {currentPlan === 'FREE' 
+                  ? userRole === 'STUDENT' 
+                    ? 'Choose your plan to start applying for amazing opportunities'
+                    : 'Select your plan to start posting projects and hiring talent'
+                  : userRole === 'STUDENT'
+                    ? 'Upgrade to unlock more applications and advanced features'
+                    : 'Scale your hiring with enhanced features and capabilities'
                 }
               </p>
             </div>
@@ -322,8 +357,8 @@ export function MembershipSelectionPopup({
             </div>
 
             {/* Plans */}
-            <div className="px-8 pb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <div className="px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
                 {plans.map((plan: Plan, index: number) => {
                   const colors = getPlanColors(plan.color, plan.popular)
                   const isSelected = selectedPlan === plan.id
@@ -335,8 +370,8 @@ export function MembershipSelectionPopup({
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className={`relative p-6 rounded-2xl border-2 ${colors.border} ${colors.bg} ${colors.text} transition-all hover:shadow-lg ${
-                        plan.popular ? 'scale-105 z-10' : ''
+                      className={`relative p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${colors.border} ${colors.bg} ${colors.text} transition-all hover:shadow-lg ${
+                        plan.popular ? 'lg:scale-105 z-10' : ''
                       }`}
                     >
                       {plan.popular && (
@@ -351,14 +386,14 @@ export function MembershipSelectionPopup({
                         <div className="mb-3">
                           {getPlanIcon(plan.color)}
                         </div>
-                        <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-                        <p className={`text-sm ${plan.popular ? 'text-white/80' : 'text-gray-600'}`}>
+                        <h3 className="text-lg sm:text-xl font-bold mb-1">{plan.name}</h3>
+                        <p className={`text-xs sm:text-sm ${plan.popular ? 'text-white/80' : 'text-gray-600'}`}>
                           {plan.description}
                         </p>
                       </div>
 
-                      <div className="text-center mb-4">
-                        <div className="text-3xl font-bold">
+                      <div className="text-center mb-3 sm:mb-4">
+                        <div className="text-2xl sm:text-3xl font-bold">
                           {plan.price === 0 ? 'Free' : `$${plan.price}`}
                         </div>
                         {plan.price > 0 && (
@@ -373,9 +408,9 @@ export function MembershipSelectionPopup({
                         )}
                       </div>
 
-                      <div className="space-y-2 mb-6">
+                      <div className="space-y-1.5 sm:space-y-2 mb-4 sm:mb-6">
                         {plan.features.map((feature: string, i: number) => (
-                          <div key={i} className="flex items-center gap-2 text-sm">
+                          <div key={i} className="flex items-center gap-2 text-xs sm:text-sm">
                             <div className={`w-1.5 h-1.5 rounded-full ${plan.popular ? 'bg-white' : 'bg-green-500'}`} />
                             {feature}
                           </div>
