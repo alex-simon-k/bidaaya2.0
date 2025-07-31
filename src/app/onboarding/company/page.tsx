@@ -48,6 +48,8 @@ interface CompanyProfileFormData {
   contactWhatsapp: string;
   companyWebsite: string;
   calendlyLink: string;
+  referralSource: string;
+  referralDetails: string;
   [key: string]: string | string[];
 }
 
@@ -117,6 +119,15 @@ const steps: Step[] = [
     description: 'Select all that apply'
   },
   {
+    key: 'referralSource',
+    label: 'Who referred you to Bidaaya?',
+    type: 'select',
+    required: false,
+    options: ['Personal referral', 'LinkedIn', 'Google Search', 'Social Media', 'Industry event', 'Partner/Accelerator', 'Other'],
+    icon: <Users className="w-8 h-8 text-purple-600" />,
+    description: 'Help us understand how you found us (optional)'
+  },
+  {
     key: 'contactPerson',
     label: 'Who should we coordinate with?',
     type: 'contactPerson',
@@ -184,6 +195,8 @@ export default function CompanyOnboardingPage() {
     contactWhatsapp: '',
     companyWebsite: '',
     calendlyLink: '',
+    referralSource: '',
+    referralDetails: '',
   })
   const [error, setError] = useState<string | null>(null)
 
@@ -361,6 +374,8 @@ export default function CompanyOnboardingPage() {
           contactWhatsapp: formData.contactWhatsapp,
           companyWebsite: formData.companyWebsite,
           calendlyLink: formData.calendlyLink,
+          referralSource: formData.referralSource,
+          referralDetails: formData.referralDetails,
           email: session?.user?.email, // Add email to request body
         }),
       });
@@ -540,23 +555,44 @@ export default function CompanyOnboardingPage() {
 
                 {/* Select Options */}
                 {currentStep.type === 'select' && (
-                  <div className="grid gap-3">
-                    {currentStep.options?.map((opt: string) => (
-                      <motion.button
-                        key={opt}
-                        type="button"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setFormData(prev => ({ ...prev, [currentStep.key]: opt }))}
-                        className={`w-full py-4 px-6 rounded-xl text-lg font-semibold border-2 transition-all duration-300 ${
-                          formData[currentStep.key as keyof CompanyProfileFormData] === opt 
-                            ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-200' 
-                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-                        }`}
-                      >
-                        {opt}
-                      </motion.button>
-                    ))}
+                  <div className="space-y-4">
+                    <div className="grid gap-3">
+                      {currentStep.options?.map((opt: string) => (
+                        <motion.button
+                          key={opt}
+                          type="button"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setFormData(prev => ({ ...prev, [currentStep.key]: opt }))}
+                          className={`w-full py-4 px-6 rounded-xl text-lg font-semibold border-2 transition-all duration-300 ${
+                            formData[currentStep.key as keyof CompanyProfileFormData] === opt 
+                              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-500 shadow-lg shadow-purple-200' 
+                              : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                          }`}
+                        >
+                          {opt}
+                        </motion.button>
+                      ))}
+                    </div>
+                    
+                    {/* Referral Details Input - Show when Personal referral or Other is selected */}
+                    {(currentStep.key === 'referralSource' && 
+                      (formData.referralSource === 'Personal referral' || formData.referralSource === 'Other')) && (
+                      <div>
+                        <input
+                          type="text"
+                          name="referralDetails"
+                          value={formData.referralDetails}
+                          onChange={handleChange}
+                          placeholder={
+                            formData.referralSource === 'Personal referral' 
+                              ? "Enter the name of the person who referred you"
+                              : "Please specify..."
+                          }
+                          className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-6 py-4 text-lg text-gray-800 placeholder-gray-400 focus:border-purple-500 focus:bg-white focus:outline-none transition-all duration-300"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 

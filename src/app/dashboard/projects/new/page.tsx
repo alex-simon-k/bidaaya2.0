@@ -158,6 +158,7 @@ export default function NewProjectPage() {
     subcategory: '',
     workType: 'VIRTUAL' as WorkType,
     paymentType: 'UNPAID' as PaymentType,
+    paymentAmount: 0,
     hoursPerWeek: 8, // Max 8 for unpaid, customizable for paid
     teamSize: 1,
     durationMonths: 3,
@@ -275,6 +276,7 @@ export default function NewProjectPage() {
         deliverables: [formData.definitionOfDone],
         skillsRequired: formData.idealCandidateRequirements,
         compensation: formData.paymentType === 'PAID' ? 'Paid' : 'Unpaid',
+        paymentAmount: formData.paymentType === 'PAID' ? formData.paymentAmount : null,
         location: formData.workType === 'VIRTUAL' ? 'Remote' : 'On-site',
         remote: formData.workType === 'VIRTUAL',
         applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline) : null
@@ -640,6 +642,26 @@ export default function NewProjectPage() {
                   <option value="PAID">Paid</option>
                 </select>
               </div>
+
+              {/* Payment Amount - Only show when PAID is selected */}
+              {formData.paymentType === 'PAID' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Amount (AED) *
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.paymentAmount}
+                    onChange={(e) => handleInputChange('paymentAmount', parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="100"
+                    placeholder="e.g. 3000"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Total payment amount for the entire project duration in AED</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

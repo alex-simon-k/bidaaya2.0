@@ -493,13 +493,23 @@ export default function ProjectsPage() {
                       )}
                     </div>
 
-                    {/* Application count */}
-                    <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full w-fit">
-                      <Eye className="h-4 w-4 sm:h-3 sm:w-3 text-blue-600" />
-                      <span className="font-medium text-blue-700 text-xs">
-                        {project.currentApplications}/{project.maxApplications} applied
-                      </span>
-                    </div>
+                    {/* Popularity tag - only show for popular projects */}
+                    {project.currentApplications >= 15 && (
+                      <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-full w-fit">
+                        <Crown className="h-4 w-4 sm:h-3 sm:w-3 text-orange-600" />
+                        <span className="font-medium text-orange-700 text-xs">
+                          Popular
+                        </span>
+                      </div>
+                    )}
+                    {project.currentApplications >= 10 && project.currentApplications < 15 && (
+                      <div className="flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-full w-fit">
+                        <Star className="h-4 w-4 sm:h-3 sm:w-3 text-purple-600" />
+                        <span className="font-medium text-purple-700 text-xs">
+                          Trending
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>

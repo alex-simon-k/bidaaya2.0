@@ -51,6 +51,38 @@ model User {
   lastMonthlyReset       DateTime               @default(now())
   linkedin               String?
   profileCompleted       Boolean                @default(false)
+  referralSource         String?
+  referralDetails        String?
+  
+  // Onboarding & Journey Analytics
+  emailVerifiedAt        DateTime?              // When email was verified
+  profileCompletedAt     DateTime?              // When profile was completed
+  roleSelectedAt         DateTime?              // When user selected their role
+  firstLoginAt           DateTime?              // First successful login
+  lastActiveAt           DateTime?              // Last platform activity
+  
+  // User Behavior Analytics
+  firstProjectViewAt     DateTime?              // First time viewed a project
+  firstApplicationAt     DateTime?              // First application submitted (students)
+  firstProjectCreatedAt  DateTime?              // First project created (companies)
+  firstProjectActivatedAt DateTime?             // First project activated (companies)
+  subscriptionUpgradedAt DateTime?              // When they first upgraded from FREE
+  
+  // Traffic & Engagement Analytics
+  signupSource           String?                // utm_source or referrer
+  signupMedium           String?                // utm_medium
+  signupCampaign         String?                // utm_campaign
+  deviceType             String?                // mobile, desktop, tablet
+  browserInfo            String?                // browser and version
+  ipCountry              String?                // country from IP
+  timezone               String?                // user timezone
+  
+  // Engagement Metrics
+  sessionCount           Int                    @default(0)
+  totalTimeSpent         Int                    @default(0)  // in minutes
+  onboardingStepsCompleted String[]             @default([]) // track which steps completed
+  featuresUsed           String[]               @default([]) // track feature adoption
+  
   stripeCurrentPeriodEnd DateTime?
   stripeCustomerId       String?                @unique
   stripePriceId          String?
@@ -64,6 +96,41 @@ model User {
   payments               Payment[]
   projects               Project[]
   sessions               Session[]
+  userSessions           UserSession[]
+  pageViews              PageView[]
+}
+
+// New Analytics Tables
+model UserSession {
+  id          String   @id @default(cuid())
+  userId      String
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  duration    Int?     // in minutes
+  pageViews   Int      @default(0)
+  deviceType  String?
+  browserInfo String?
+  ipAddress   String?
+  userAgent   String?
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([startTime])
+}
+
+model PageView {
+  id          String   @id @default(cuid())
+  userId      String?
+  sessionId   String?
+  page        String   // route/page name
+  timestamp   DateTime @default(now())
+  timeSpent   Int?     // seconds on page
+  referrer    String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([page])
+  @@index([timestamp])
 }
 
 model Account {
@@ -115,6 +182,7 @@ model Project {
   approvedBy          String?
   category            ProjectCategory?
   compensation        String?
+  paymentAmount       Float?
   currentApplications Int?             @default(0)
   deliverables        String[]         @default([])
   department          String?
@@ -146,15 +214,16 @@ model Application {
   additionalDocument   String?
   adminNotes           String?
   compatibilityScore   Float?
-  coverLetter          String?
   feedback             String?
-  motivation           String?
   userId               String
   whyInterested        String?
+  proposedApproach     String?
+  // Legacy fields - kept for backward compatibility but not used in new applications
+  coverLetter          String?
+  motivation           String?
   personalStatement    String?
   relevantExperience   String?
   projectUnderstanding String?
-  proposedApproach     String?
   weeklyAvailability   String?
   startDate            String?
   commitmentLevel      String?

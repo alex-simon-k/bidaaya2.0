@@ -174,7 +174,7 @@ export default function CompanyOnboardingChecklist({
   }
 
   const handleActionClick = (item: ChecklistItem) => {
-    if (item.type === 'link' && item.url) {
+    if ((item.type === 'link' || item.type === 'manual') && item.url) {
       window.open(item.url, '_blank', 'noopener,noreferrer')
     } else if (item.type === 'feature' && item.url) {
       window.location.href = item.url

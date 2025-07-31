@@ -83,21 +83,13 @@ export function StudentApplicationModal({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<string>('')
   
-  // Simplified form state - removed timeline, cover letter, additional notes
+  // Ultra-simplified form state - only 2 questions
   const [formData, setFormData] = useState({
-    // Step 1: Personal Interest
-    personalStatement: '',
+    // Question 1: Why are you interested in this project?
     whyInterested: '',
-    relevantExperience: '',
     
-    // Step 2: Project Understanding
-    projectUnderstanding: '',
+    // Question 2: What is your proposed approach (your solution to this project)?
     proposedApproach: '',
-    
-    // Step 3: Availability & Commitment
-    weeklyAvailability: '',
-    startDate: '',
-    commitmentLevel: '',
   })
   
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -112,14 +104,8 @@ export function StudentApplicationModal({
   const resetForm = () => {
     setCurrentStep(1)
     setFormData({
-      personalStatement: '',
       whyInterested: '',
-      relevantExperience: '',
-      projectUnderstanding: '',
       proposedApproach: '',
-      weeklyAvailability: '',
-      startDate: '',
-      commitmentLevel: '',
     })
     setUploadedFile(null)
     setApplicationError(null)
@@ -233,15 +219,9 @@ export function StudentApplicationModal({
         },
         body: JSON.stringify({
           projectId: project.id,
-          // Structured data for proper company review
+          // Simplified application with just 2 questions
           whyInterested: formData.whyInterested,
-          personalStatement: formData.personalStatement,
-          relevantExperience: formData.relevantExperience,
-          projectUnderstanding: formData.projectUnderstanding,
           proposedApproach: formData.proposedApproach,
-          weeklyAvailability: formData.weeklyAvailability,
-          startDate: formData.startDate,
-          commitmentLevel: formData.commitmentLevel,
           additionalDocument: additionalDocumentUrl
         }),
       })

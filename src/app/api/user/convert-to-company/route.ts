@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
       contactWhatsapp,
       companyWebsite,
       calendlyLink,
+      referralSource,
+      referralDetails,
       email // Add email to the request body
     } = body
 
@@ -105,6 +107,8 @@ export async function POST(request: NextRequest) {
          contactWhatsapp,
          companyWebsite,
          calendlyLink,
+         referralSource,
+         referralDetails,
          // Set subscription to free by default for companies - require payment for approval
          subscriptionStatus: 'FREE',
          subscriptionPlan: 'FREE'

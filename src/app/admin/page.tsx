@@ -19,6 +19,8 @@ import {
   BarChart3,
   Settings
 } from 'lucide-react'
+import EnhancedAdminProjectManagement from '@/components/enhanced-admin-project-management'
+import OnboardingAnalyticsDashboard from '@/components/onboarding-analytics-dashboard'
 
 interface Project {
   id: string
@@ -369,9 +371,25 @@ export default function AdminDashboard() {
                 <Settings className="inline-block w-4 h-4 mr-2" />
                 Admin Tools
               </button>
+              <button
+                onClick={() => setActiveTab('onboarding')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'onboarding'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <BarChart3 className="inline-block w-4 h-4 mr-2" />
+                Onboarding Analytics
+              </button>
             </nav>
           </div>
         </div>
+
+        {/* Onboarding Analytics Tab Content */}
+        {activeTab === 'onboarding' && (
+          <OnboardingAnalyticsDashboard />
+        )}
 
         {/* Admin Tools Tab Content */}
         {activeTab === 'tools' && (
@@ -563,92 +581,7 @@ export default function AdminDashboard() {
 
           <div className="p-6">
             {activeTab === 'projects' && (
-              <div className="space-y-6">
-                {/* Filters */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <input
-                        type="text"
-                        placeholder="Search projects..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="PENDING_APPROVAL">Pending Approval</option>
-                    <option value="LIVE">Live</option>
-                    <option value="REJECTED">Rejected</option>
-                    <option value="DRAFT">Draft</option>
-                  </select>
-                </div>
-
-                {/* Projects List */}
-                {isLoading ? (
-                  <div className="flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredProjects.map((project) => (
-                      <motion.div
-                        key={project.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[project.status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'}`}>
-                                {project.status.replace('_', ' ')}
-                              </span>
-                            </div>
-                            <p className="text-gray-600 mb-3 line-clamp-2">{project.description}</p>
-                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                              <span>Company: {project.company.companyName || project.company.name}</span>
-                              <span>Created: {new Date(project.createdAt).toLocaleDateString()}</span>
-                              {project.teamSize && <span>Team: {project.teamSize} students</span>}
-                              {project.durationMonths && <span>Duration: {project.durationMonths} months</span>}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <button
-                              onClick={() => router.push(`/dashboard/projects/${project.id}`)}
-                              className="flex items-center gap-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            >
-                              <Eye className="h-4 w-4" />
-                              View Project
-                            </button>
-                            <button
-                              onClick={() => setSelectedProject(project)}
-                              className="flex items-center gap-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                              Quick Approve
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-
-                    {filteredProjects.length === 0 && (
-                      <div className="text-center py-12">
-                        <p className="text-gray-500">No projects found matching your criteria.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <EnhancedAdminProjectManagement />
             )}
 
             {activeTab === 'users' && (

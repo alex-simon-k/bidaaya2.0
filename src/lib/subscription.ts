@@ -236,11 +236,14 @@ export function canCompanyActivateProject(user: any, activeProjectCount: number)
   if (tier.projectsAllowed === -1) return { canActivate: true } // Unlimited
   
   if (activeProjectCount >= (tier.projectsAllowed || 0)) {
-    const nextTier = getNextTier(subscriptionPlan, 'COMPANY')
+    // Smart tier recommendation based on project count needed
+    const nextProjectCount = activeProjectCount + 1
+    const recommendedTier = getRecommendedTierForProjectCount(nextProjectCount, subscriptionPlan)
+    
     return { 
       canActivate: false, 
-      reason: `🔒 You've reached your limit of ${tier.projectsAllowed} active projects on the ${tier.name} plan. Upgrade to ${nextTier?.name || 'a higher tier'} (${nextTier ? '$' + nextTier.price + '/month' : ''}) for more active projects.`,
-      upgradeRequired: nextTier?.id
+      reason: `🔒 You've reached your limit of ${tier.projectsAllowed} active projects on the ${tier.name} plan. Upgrade to ${recommendedTier?.name || 'a higher tier'} (${recommendedTier ? '$' + recommendedTier.price + '/month' : ''}) for ${recommendedTier?.projectsAllowed === -1 ? 'unlimited' : recommendedTier?.projectsAllowed} active projects.`,
+      upgradeRequired: recommendedTier?.id
     }
   }
   
@@ -251,6 +254,26 @@ function getNextTier(currentPlan: string, role: 'STUDENT' | 'COMPANY'): Subscrip
   const tiers = role === 'STUDENT' ? STUDENT_TIERS : COMPANY_TIERS
   const currentIndex = tiers.findIndex(tier => tier.id === currentPlan)
   return tiers[currentIndex + 1] || null
+}
+
+// Smart tier recommendation based on project count needed
+function getRecommendedTierForProjectCount(projectsNeeded: number, currentPlan: string): SubscriptionTier | null {
+  const paidTiers = getPaidCompanyTiers() // Exclude FREE tier
+  
+  // If they need more than 5 projects, recommend unlimited (COMPANY_PRO)
+  if (projectsNeeded > 5) {
+    return paidTiers.find(tier => tier.projectsAllowed === -1) || null
+  }
+  
+  // Find the minimum tier that supports the needed project count
+  // Skip their current plan to avoid recommending the same tier
+  const suitableTiers = paidTiers.filter(tier => 
+    tier.id !== currentPlan && 
+    (tier.projectsAllowed === -1 || (tier.projectsAllowed || 0) >= projectsNeeded)
+  )
+  
+  // Return the cheapest suitable tier
+  return suitableTiers.length > 0 ? suitableTiers[0] : null
 }
 
 export function getUpgradePrompt(currentPlan: string, role: 'STUDENT' | 'COMPANY'): string {

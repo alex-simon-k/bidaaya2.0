@@ -71,6 +71,7 @@ export async function POST(request: Request) {
       deliverables,
       skillsRequired,
       compensation,
+      paymentAmount,
       location,
       remote,
       applicationDeadline
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
         companyId: session.user?.id,
         status: 'DRAFT', // Always start as draft
         compensation: compensation || null,
+        paymentAmount: paymentAmount || null,
         location: location || null,
         remote: remote !== undefined ? remote : true,
         skillsRequired: skillsRequired || [],
