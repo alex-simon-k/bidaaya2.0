@@ -221,9 +221,12 @@ export function StudentApplicationModal({
         },
         body: JSON.stringify({
           projectId: project.id,
-          // Simplified application with just 2 questions
+          // Simplified application with just 2 written questions + availability info
           whyInterested: formData.whyInterested,
           proposedApproach: formData.proposedApproach,
+          weeklyAvailability: formData.weeklyAvailability,
+          startDate: formData.startDate,
+          commitmentLevel: formData.commitmentLevel,
           additionalDocument: additionalDocumentUrl
         }),
       })
