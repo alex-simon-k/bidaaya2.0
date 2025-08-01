@@ -467,15 +467,18 @@ export default function ProjectDetailPage() {
                   </div>
                 )}
 
-                <div className="flex items-center">
-                  <Eye className="h-4 w-4 text-gray-400 mr-3" />
-                  <div>
-                    <span className="text-sm font-medium text-gray-900">Applications</span>
-                    <p className="text-sm text-gray-600">
-                      {project.currentApplications} of {project.maxApplications} received
-                    </p>
+                {/* Only show application count to companies, not students */}
+                {session?.user?.role === 'COMPANY' && (
+                  <div className="flex items-center">
+                    <Eye className="h-4 w-4 text-gray-400 mr-3" />
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">Applications</span>
+                      <p className="text-sm text-gray-600">
+                        {project.currentApplications} of {project.maxApplications} received
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </motion.div>
 
