@@ -421,8 +421,8 @@ export class SlackAutomation {
         name: user.name || 'Unknown',
         email: user.email,
         role: user.role as 'STUDENT' | 'COMPANY',
-        university: user.university,
-        companyName: user.companyName,
+        university: user.university || undefined,
+        companyName: user.companyName || undefined,
         signupTime: user.createdAt.toISOString()
       })
     } catch (error) {
