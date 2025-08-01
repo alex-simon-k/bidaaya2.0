@@ -277,8 +277,8 @@ export function StudentApplicationModal({
 
   const isStepValid = (step: number) => {
     switch (step) {
-      case 1: return formData.personalStatement.length > 50 && formData.whyInterested.length > 30
-      case 2: return formData.projectUnderstanding.length > 50 && formData.proposedApproach.length > 30
+      case 1: return formData.whyInterested.length > 50 // Only check why interested
+      case 2: return formData.proposedApproach.length > 100 // Only check proposed approach  
       case 3: return formData.weeklyAvailability && formData.startDate && formData.commitmentLevel
       case 4: return true // Optional step
       default: return false
@@ -427,52 +427,23 @@ export function StudentApplicationModal({
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <User className="h-5 w-5 text-blue-600" />
-                        Personal Interest & Experience
+                        Why This Project?
                       </h3>
                       
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-900 mb-2">
                             Why are you interested in this project? *
                           </label>
                           <textarea
                             value={formData.whyInterested}
                             onChange={(e) => handleInputChange('whyInterested', e.target.value)}
                             placeholder="What excites you about this opportunity? How does it align with your goals?"
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
                             required
                             maxLength={500}
                           />
-                          <p className="text-xs text-gray-500 mt-1">{formData.whyInterested.length} / 500 (minimum 30 characters)</p>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Personal Statement *
-                          </label>
-                          <textarea
-                            value={formData.personalStatement}
-                            onChange={(e) => handleInputChange('personalStatement', e.target.value)}
-                            placeholder="Tell us about yourself, your background, and what makes you a great fit for this project..."
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
-                            required
-                            maxLength={1000}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">{formData.personalStatement.length} / 1000 (minimum 50 characters)</p>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Relevant Experience
-                          </label>
-                          <textarea
-                            value={formData.relevantExperience}
-                            onChange={(e) => handleInputChange('relevantExperience', e.target.value)}
-                            placeholder="Describe any relevant experience, projects, or skills that relate to this project..."
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-24"
-                            maxLength={800}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">{formData.relevantExperience.length} / 800</p>
+                          <p className="text-xs text-gray-500 mt-1">{formData.whyInterested.length} / 500 (minimum 50 characters)</p>
                         </div>
                       </div>
                     </div>
@@ -484,7 +455,7 @@ export function StudentApplicationModal({
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <Target className="h-5 w-5 text-blue-600" />
-                        Project Understanding & Approach
+                        Your Solution Approach
                       </h3>
                       
                       {/* Project Context */}
@@ -506,33 +477,18 @@ export function StudentApplicationModal({
 
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            How do you understand this project? *
-                          </label>
-                          <textarea
-                            value={formData.projectUnderstanding}
-                            onChange={(e) => handleInputChange('projectUnderstanding', e.target.value)}
-                            placeholder="In your own words, explain what you think this project is about and what needs to be accomplished..."
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
-                            required
-                            maxLength={800}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">{formData.projectUnderstanding.length} / 800 (minimum 50 characters)</p>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Your Proposed Approach *
+                          <label className="block text-sm font-semibold text-gray-900 mb-2">
+                            What is your proposed approach (your solution to this project)? *
                           </label>
                           <textarea
                             value={formData.proposedApproach}
                             onChange={(e) => handleInputChange('proposedApproach', e.target.value)}
                             placeholder="How would you approach this project? What steps would you take to achieve the goals?"
-                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
+                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-40"
                             required
                             maxLength={800}
                           />
-                          <p className="text-xs text-gray-500 mt-1">{formData.proposedApproach.length} / 800 (minimum 30 characters)</p>
+                          <p className="text-xs text-gray-500 mt-1">{formData.proposedApproach.length} / 800 (minimum 100 characters)</p>
                         </div>
                       </div>
                     </div>

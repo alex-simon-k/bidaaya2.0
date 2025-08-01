@@ -24,7 +24,7 @@ import {
   Eye,
   UserCheck
 } from 'lucide-react'
-import { SimplifiedStudentApplicationModal } from '@/components/simplified-student-application-modal'
+import { StudentApplicationModal } from '@/components/student-application-modal'
 
 interface Project {
   id: string
@@ -525,7 +525,7 @@ export default function ProjectDetailPage() {
 
       {/* Application Modal */}
       {showApplicationModal && (
-        <SimplifiedStudentApplicationModal
+        <StudentApplicationModal
           project={project}
           isOpen={showApplicationModal}
           onClose={() => setShowApplicationModal(false)}
