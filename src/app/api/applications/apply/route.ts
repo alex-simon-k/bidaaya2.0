@@ -10,6 +10,7 @@ import {
   getApplicationUpgradePrompt 
 } from '@/lib/application-limits'
 import { calculateCompatibilityScore, updateApplicationScore } from '@/lib/ai-scoring'
+import { AnalyticsTracker } from '@/lib/analytics-tracker'
 import { slackService } from '@/lib/slack-service'
 
 const prisma = new PrismaClient()
@@ -165,6 +166,15 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    // Track analytics for first application (if applicable)
+    try {
+      await AnalyticsTracker.trackFirstApplication(session.user?.id)
+      console.log('📊 Analytics tracked: First application timestamp (if first time)')
+    } catch (analyticsError) {
+      console.error('Failed to track first application analytics (non-blocking):', analyticsError)
+      // Don't block the user's flow if analytics fails
+    }
 
     // Increment application count
     await incrementApplicationCount(session.user?.id, prisma)

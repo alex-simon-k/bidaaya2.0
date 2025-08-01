@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { PrismaClient } from '@prisma/client'
 import { authOptions } from "@/lib/auth-config"
 import { slackAutomation } from '@/lib/slack-service'
+import { AnalyticsTracker } from '@/lib/analytics-tracker'
 
 const prisma = new PrismaClient()
 
@@ -185,6 +186,17 @@ export async function PATCH(request: NextRequest) {
     console.log(`✅ User profile updated for ${session.user?.email}:`, {
       fieldsUpdated: Object.keys(updateData)
     })
+
+    // Track analytics for first-time profile completion
+    if (isFirstTimeCompletion) {
+      try {
+        await AnalyticsTracker.trackProfileCompleted(session.user?.id!)
+        console.log('📊 Analytics tracked: Profile completion timestamp saved')
+      } catch (analyticsError) {
+        console.error('Failed to track profile completion analytics (non-blocking):', analyticsError)
+        // Don't block the user's flow if analytics fails
+      }
+    }
 
     // Send Slack notification ONLY for first-time profile completion (prevents duplicates)
     if (isFirstTimeCompletion) {

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { PrismaClient } from '@prisma/client'
 import { authOptions } from "@/lib/auth-config"
 import { canUserApply } from '@/lib/subscription'
+import { AnalyticsTracker } from '@/lib/analytics-tracker'
 
 const prisma = new PrismaClient()
 
@@ -222,6 +223,15 @@ export async function POST(request: Request) {
         },
       },
     })
+
+    // Track analytics for first application (if applicable)
+    try {
+      await AnalyticsTracker.trackFirstApplication(session.user?.id)
+      console.log('📊 Analytics tracked: First application timestamp (if first time)')
+    } catch (analyticsError) {
+      console.error('Failed to track first application analytics (non-blocking):', analyticsError)
+      // Don't block the user's flow if analytics fails
+    }
 
     // Update project application count and user application count
     await Promise.all([
