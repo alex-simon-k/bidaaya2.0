@@ -86,9 +86,6 @@ export function StudentApplicationModal({
   const [formData, setFormData] = useState({
     whyInterested: '',
     proposedApproach: '',
-    personalStatement: '',
-    relevantExperience: '',
-    projectUnderstanding: '',
     weeklyAvailability: '',
     startDate: '',
     commitmentLevel: '',
@@ -108,9 +105,6 @@ export function StudentApplicationModal({
     setFormData({
       whyInterested: '',
       proposedApproach: '',
-      personalStatement: '',
-      relevantExperience: '',
-      projectUnderstanding: '',
       weeklyAvailability: '',
       startDate: '',
       commitmentLevel: '',
