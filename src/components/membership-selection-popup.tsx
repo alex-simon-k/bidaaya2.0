@@ -34,6 +34,13 @@ export function MembershipSelectionPopup({
   // Get available higher tiers based on current plan
   const availableHigherTiers = getHigherTiers(currentPlan, userRole)
   
+  console.log(`🔍 MembershipPopup Debug:`, {
+    currentPlan,
+    userRole,
+    availableHigherTiers: availableHigherTiers.map(t => t.id),
+    availableHigherTiersCount: availableHigherTiers.length
+  })
+  
   // Don't show popup if user is already on the highest tier
   if (availableHigherTiers.length === 0) {
     console.log(`🎯 User has highest tier ${currentPlan}, not showing membership popup`)
@@ -133,7 +140,7 @@ export function MembershipSelectionPopup({
       return allPlans.filter(plan => plan.id !== 'free') // Remove free option
     }
     
-    // Map tier IDs to plan IDs
+    // Map tier IDs to their corresponding plan IDs (for higher tiers mapping)
     const tierToPlanMap: Record<string, string[]> = {
       'STUDENT_BASIC': [billingCycle === 'monthly' ? 'student_premium_monthly' : 'student_premium_yearly'],
       'STUDENT_PRO': [billingCycle === 'monthly' ? 'student_pro_monthly' : 'student_pro_yearly'],
@@ -145,7 +152,18 @@ export function MembershipSelectionPopup({
     // Get plan IDs that correspond to available higher tiers
     const availablePlanIds = availableHigherTiers.flatMap(tier => tierToPlanMap[tier.id] || [])
     
-    return allPlans.filter(plan => availablePlanIds.includes(plan.id))
+    const filteredPlans = allPlans.filter(plan => availablePlanIds.includes(plan.id))
+    
+    console.log(`🔍 Plan Filtering Debug:`, {
+      currentPlan,
+      availableHigherTierIds: availableHigherTiers.map(t => t.id),
+      availablePlanIds,
+      allPlanIds: allPlans.map(p => p.id),
+      filteredPlanIds: filteredPlans.map(p => p.id),
+      filteredPlanNames: filteredPlans.map(p => p.name)
+    })
+    
+    return filteredPlans
   }
   
   const plans = getFilteredPlans()

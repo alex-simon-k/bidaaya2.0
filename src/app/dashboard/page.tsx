@@ -197,7 +197,7 @@ export default function DashboardPage() {
                 <BookOpen className="h-5 w-5" />
                 <div className="text-left">
                   <div className="font-semibold">Browse All Projects</div>
-                  <div className="text-xs text-emerald-100">200+ opportunities</div>
+                  <div className="text-xs text-emerald-100">15+ opportunities</div>
                 </div>
               </Link>
               
@@ -414,9 +414,12 @@ export default function DashboardPage() {
             <p className="text-gray-600 text-sm mb-4">
               Connect with industry experts for personalized career guidance and skill development.
             </p>
-            <button className="text-amber-600 hover:text-amber-700 font-semibold text-sm">
+            <Link
+              href="/dashboard/mentorship"
+              className="text-amber-600 hover:text-amber-700 font-semibold text-sm"
+            >
               Find Mentors →
-            </button>
+            </Link>
           </div>
 
           {/* AI Career Match */}
