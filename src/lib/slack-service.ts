@@ -51,11 +51,57 @@ export class SlackService {
     }
   }
 
-  // Real-time user signup notifications - DISABLED per user request
+  // Real-time user signup notifications
   async notifyNewUserSignup(userInfo: UserSignupInfo): Promise<boolean> {
-    // User requested to disable email/signup notifications - using Looker dashboard instead
-    console.log('📱 [DISABLED] User signup notification (using Looker instead):', userInfo)
-    return true
+    if (!this.isEnabled) {
+      console.log('📱 [MOCK] User signup notification:', userInfo)
+      return true
+    }
+
+    const message: SlackMessage = {
+      text: `🎉 New ${userInfo.role.toLowerCase()} signup: ${userInfo.name}`,
+      blocks: [
+        {
+          type: "header",
+          text: {
+            type: "plain_text",
+            text: `🎉 New ${userInfo.role === 'STUDENT' ? 'Student' : 'Company'} Signup!`
+          }
+        },
+        {
+          type: "section",
+          fields: [
+            {
+              type: "mrkdwn",
+              text: `*Name:*\n${userInfo.name}`
+            },
+            {
+              type: "mrkdwn",
+              text: `*Email:*\n${userInfo.email}`
+            },
+            {
+              type: "mrkdwn",
+              text: `*Role:*\n${userInfo.role}`
+            },
+            {
+              type: "mrkdwn",
+              text: `*University:*\n${userInfo.university || 'Not specified'}`
+            }
+          ]
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: `📅 ${new Date().toLocaleString('en-AE')}`
+            }
+          ]
+        }
+      ]
+    }
+
+    return this.sendSlackMessage(message)
   }
 
   // Daily summary notifications
@@ -347,11 +393,42 @@ export class SlackAutomation {
     return await this.slackService.sendDailySummary()
   }
 
-  // Real-time user notification - DISABLED per user request  
+  // Real-time user notification when profile is completed
   async notifyUserSignup(userId: string): Promise<boolean> {
-    // User requested to disable signup notifications - using Looker dashboard instead
-    console.log('📱 [DISABLED] User signup notification (using Looker instead) for user:', userId)
-    return true
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          university: true,
+          major: true,
+          companyName: true,
+          createdAt: true
+        }
+      })
+
+      if (!user) {
+        console.log('📱 User not found for Slack notification:', userId)
+        return false
+      }
+
+      // Call the main Slack service with user info
+      return await this.slackService.notifyNewUserSignup({
+        id: user.id,
+        name: user.name || 'Unknown',
+        email: user.email,
+        role: user.role as 'STUDENT' | 'COMPANY',
+        university: user.university,
+        companyName: user.companyName,
+        signupTime: user.createdAt.toISOString()
+      })
+    } catch (error) {
+      console.error('Error sending Slack notification:', error)
+      return false
+    }
   }
 
   // Application milestone tracking
