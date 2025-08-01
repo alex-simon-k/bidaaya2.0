@@ -396,9 +396,6 @@ export class SlackAutomation {
   // Real-time user notification when profile is completed
   async notifyUserSignup(userId: string): Promise<boolean> {
     try {
-      const { PrismaClient } = await import('@prisma/client')
-      const prisma = new PrismaClient()
-      
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
