@@ -27,18 +27,29 @@ export async function POST(request: NextRequest) {
     const { 
       projectId, 
       whyInterested,
+      proposedApproach,
+      additionalDocument,
+      // Legacy fields (for backward compatibility)
       personalStatement,
       relevantExperience,
       projectUnderstanding,
-      proposedApproach,
       weeklyAvailability,
       startDate,
-      commitmentLevel,
-      additionalDocument 
+      commitmentLevel
     } = body
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
+    }
+
+    // Validate required fields for simplified application
+    if (!whyInterested || !proposedApproach) {
+      if (!personalStatement && !whyInterested) {
+        return NextResponse.json({ error: 'Why interested is required' }, { status: 400 })
+      }
+      if (!proposedApproach) {
+        return NextResponse.json({ error: 'Proposed approach is required' }, { status: 400 })
+      }
     }
 
     // Get user with application limits data
@@ -121,27 +132,25 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create the application - using legacy format temporarily until TypeScript sync resolves
+    // Create the application - supports both simplified and legacy formats
     const application = await prisma.application.create({
       data: {
         projectId,
         userId: session.user?.id,
         status: 'PENDING',
-        // Legacy format (working) 
-        coverLetter: personalStatement,
-        motivation: `${whyInterested}\n\nRelevant Experience:\n${relevantExperience}\n\nProject Understanding:\n${projectUnderstanding}\n\nProposed Approach:\n${proposedApproach}\n\nAvailability:\n${weeklyAvailability}\n\nStart Date: ${startDate}\n\nCommitment Level: ${commitmentLevel}`,
+        // Store in legacy format for backward compatibility
+        coverLetter: personalStatement || proposedApproach || '', // Use proposedApproach if personalStatement not provided
+        motivation: whyInterested || `${whyInterested || ''}\n\nRelevant Experience:\n${relevantExperience || ''}\n\nProject Understanding:\n${projectUnderstanding || ''}\n\nProposed Approach:\n${proposedApproach || ''}\n\nAvailability:\n${weeklyAvailability || ''}\n\nStart Date: ${startDate || ''}\n\nCommitment Level: ${commitmentLevel || ''}`,
         additionalDocument,
-        // TODO: Enable structured fields once TypeScript recognizes them
-        /*
+        // Structured fields (if available in schema)
         whyInterested,
+        proposedApproach,
         personalStatement,
         relevantExperience,
         projectUnderstanding,
-        proposedApproach,
         weeklyAvailability,
         startDate,
         commitmentLevel,
-        */
       },
       include: {
         project: {
