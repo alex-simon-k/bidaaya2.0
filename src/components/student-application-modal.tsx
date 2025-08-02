@@ -24,7 +24,6 @@ import {
   BookOpen,
   Send
 } from 'lucide-react'
-import { ApplicationSessionTracker } from '@/lib/application-session-tracker'
 import { StudentPaywallModal } from '@/components/student-paywall-modal'
 import { 
   checkApplicationLimits, 
@@ -117,15 +116,30 @@ export function StudentApplicationModal({
     if (!project?.id || !session?.user?.id) return
     
     try {
-      const sessionId = await ApplicationSessionTracker.startSession({
-        userId: session.user.id,
-        projectId: project.id,
-        stepReached: 1,
-        deviceType: getDeviceType(),
-        browserInfo: getBrowserInfo(),
-        userAgent: navigator.userAgent
+      const response = await fetch('/api/applications/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'start',
+          data: {
+            projectId: project.id,
+            stepReached: 1,
+            deviceType: getDeviceType(),
+            browserInfo: getBrowserInfo(),
+            userAgent: navigator.userAgent
+          }
+        })
       })
-      setCurrentSessionId(sessionId)
+
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentSessionId(data.sessionId)
+        console.log('📊 Application session started:', data.sessionId)
+      } else {
+        console.error('Failed to start application session:', await response.text())
+      }
     } catch (error) {
       console.error('Failed to start application session tracking:', error)
     }
@@ -169,7 +183,17 @@ export function StudentApplicationModal({
         stepUpdates.step4Completed = true
       }
       
-      await ApplicationSessionTracker.updateProgress(currentSessionId, stepUpdates)
+      await fetch('/api/applications/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          sessionId: currentSessionId,
+          data: stepUpdates
+        })
+      })
     } catch (error) {
       console.error('Failed to track step progress:', error)
     }
@@ -205,10 +229,20 @@ export function StudentApplicationModal({
             
             // Update session tracking for restored data
             if (currentSessionId) {
-              ApplicationSessionTracker.updateProgress(currentSessionId, {
-                wasRestored: true,
-                stepReached: parsed.currentStep || 1
-              })
+              fetch('/api/applications/session', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  action: 'update',
+                  sessionId: currentSessionId,
+                  data: {
+                    wasRestored: true,
+                    stepReached: parsed.currentStep || 1
+                  }
+                })
+              }).catch(error => console.error('Failed to update session with restored data:', error))
             }
             return // Don't reset if we have saved data
           }
@@ -245,10 +279,20 @@ export function StudentApplicationModal({
         
         // Track auto-save in session analytics
         if (currentSessionId) {
-          ApplicationSessionTracker.updateProgress(currentSessionId, { 
-            wasSaved: true,
-            saveCount: (dataToSave as any).saveCount || 0 + 1
-          })
+          fetch('/api/applications/session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'update',
+              sessionId: currentSessionId,
+              data: {
+                wasSaved: true,
+                saveCount: (dataToSave as any).saveCount || 0 + 1
+              }
+            })
+          }).catch(error => console.error('Failed to track auto-save:', error))
         }
       } catch (error) {
         console.error('Error saving application data:', error)
@@ -399,7 +443,21 @@ export function StudentApplicationModal({
       if (response.ok) {
         // Mark session as completed
         if (currentSessionId) {
-          await ApplicationSessionTracker.completeSession(currentSessionId)
+          try {
+            await fetch('/api/applications/session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'complete',
+                sessionId: currentSessionId
+              })
+            })
+            console.log('📊 Application session completed:', currentSessionId)
+          } catch (error) {
+            console.error('Failed to mark session as completed:', error)
+          }
         }
         
         // Clear saved data since application was submitted successfully
@@ -430,7 +488,16 @@ export function StudentApplicationModal({
   // Handle modal close (track abandonment)
   const handleClose = () => {
     if (currentSessionId) {
-      ApplicationSessionTracker.abandonSession(currentSessionId)
+      fetch('/api/applications/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'abandon',
+          sessionId: currentSessionId
+        })
+      }).catch(error => console.error('Failed to track session abandonment:', error))
     }
     onClose()
   }
