@@ -98,6 +98,7 @@ model User {
   sessions               Session[]
   userSessions           UserSession[]
   pageViews              PageView[]
+  applicationSessions    ApplicationSession[]
 }
 
 // New Analytics Tables
@@ -202,6 +203,7 @@ model Project {
   teamSize            Int?             @default(1)
   timeCommitment      String?          @default("Part-time")
   applications        Application[]
+  applicationSessions ApplicationSession[]
   company             User             @relation(fields: [companyId], references: [id])
 }
 
@@ -255,6 +257,46 @@ model ExternalApplication {
   user          User                      @relation(fields: [userId], references: [id])
 
   @@index([userId, appliedDate])
+}
+
+model ApplicationSession {
+  id             String              @id @default(cuid())
+  userId         String
+  projectId      String
+  sessionId      String              @unique // Unique session identifier
+  startedAt      DateTime            @default(now())
+  completedAt    DateTime?           // When they submitted successfully
+  abandonedAt    DateTime?           // When they closed without completing
+  timeSpentMinutes Int?              // Total time spent in minutes
+  stepReached    Int                 @default(1) // Furthest step they reached (1-4)
+  status         ApplicationSessionStatus @default(IN_PROGRESS)
+  
+  // Form completion tracking
+  step1Completed Boolean             @default(false) // Why interested filled
+  step2Completed Boolean             @default(false) // Proposed approach filled  
+  step3Completed Boolean             @default(false) // Availability filled
+  step4Completed Boolean             @default(false) // File upload (if attempted)
+  
+  // Save/restore tracking
+  wasSaved       Boolean             @default(false) // Did they have saved data
+  wasRestored    Boolean             @default(false) // Did they restore from saved data
+  saveCount      Int                 @default(0) // How many times data was auto-saved
+  
+  // Device/Browser info
+  deviceType     String?
+  browserInfo    String?
+  userAgent      String?
+  
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  
+  user           User                @relation(fields: [userId], references: [id])
+  project        Project             @relation(fields: [projectId], references: [id])
+  
+  @@index([userId])
+  @@index([projectId])
+  @@index([startedAt])
+  @@index([status])
 }
 
 model ApplicationAnalytics {
@@ -353,4 +395,11 @@ enum ExternalApplicationStatus {
   REJECTED
   WITHDRAWN
   NO_RESPONSE
+}
+
+enum ApplicationSessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  TIMED_OUT
 }

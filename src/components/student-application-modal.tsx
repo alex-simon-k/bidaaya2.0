@@ -94,6 +94,7 @@ export function StudentApplicationModal({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isAutoSaving, setIsAutoSaving] = useState(false)
   const [hasRestoredData, setHasRestoredData] = useState(false)
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
   // Generate storage key for this specific user + project combination
   const getStorageKey = () => {
@@ -110,32 +111,106 @@ export function StudentApplicationModal({
     }
   }
 
-  // Load saved form data when modal opens
+  // Start application session tracking
+  const startApplicationSession = async () => {
+    if (!project?.id || !session?.user?.id) return
+    
+    try {
+      const sessionId = await ApplicationSessionTracker.startSession({
+        userId: session.user.id,
+        projectId: project.id,
+        stepReached: 1,
+        deviceType: getDeviceType(),
+        browserInfo: getBrowserInfo(),
+        userAgent: navigator.userAgent
+      })
+      setCurrentSessionId(sessionId)
+    } catch (error) {
+      console.error('Failed to start application session tracking:', error)
+    }
+  }
+
+  // Helper functions for device detection
+  const getDeviceType = () => {
+    const width = window.innerWidth
+    if (width < 768) return 'mobile'
+    if (width < 1024) return 'tablet'
+    return 'desktop'
+  }
+
+  const getBrowserInfo = () => {
+    const userAgent = navigator.userAgent
+    if (userAgent.includes('Chrome')) return 'Chrome'
+    if (userAgent.includes('Firefox')) return 'Firefox'
+    if (userAgent.includes('Safari')) return 'Safari'
+    if (userAgent.includes('Edge')) return 'Edge'
+    return 'Other'
+  }
+
+  // Track step progression
+  const trackStepProgress = async (step: number) => {
+    if (!currentSessionId) return
+    
+    try {
+      const stepUpdates: any = { stepReached: step }
+      
+      // Track individual step completion based on form data
+      if (step >= 1 && formData.whyInterested.length >= 50) {
+        stepUpdates.step1Completed = true
+      }
+      if (step >= 2 && formData.proposedApproach.length >= 100) {
+        stepUpdates.step2Completed = true
+      }
+      if (step >= 3 && formData.weeklyAvailability && formData.startDate && formData.commitmentLevel) {
+        stepUpdates.step3Completed = true
+      }
+      if (step >= 4) {
+        stepUpdates.step4Completed = true
+      }
+      
+      await ApplicationSessionTracker.updateProgress(currentSessionId, stepUpdates)
+    } catch (error) {
+      console.error('Failed to track step progress:', error)
+    }
+  }
+
+    // Load saved form data when modal opens and start session tracking
   useEffect(() => {
     if (isOpen && project && session?.user?.id) {
       checkApplicationLimits()
+      
+      // Start application session tracking
+      startApplicationSession()
       
       // Try to load saved data from localStorage
       const storageKey = getStorageKey()
       if (storageKey) {
         try {
           const savedData = localStorage.getItem(storageKey)
-                     if (savedData) {
-             const parsed = JSON.parse(savedData)
-             console.log('📝 Restored saved application data for project:', project.title)
-             setFormData({
-               whyInterested: parsed.whyInterested || '',
-               proposedApproach: parsed.proposedApproach || '',
-               weeklyAvailability: parsed.weeklyAvailability || '',
-               startDate: parsed.startDate || '',
-               commitmentLevel: parsed.commitmentLevel || '',
-             })
-             setCurrentStep(parsed.currentStep || 1)
-             setHasRestoredData(true)
-             // Hide the restored message after 5 seconds
-             setTimeout(() => setHasRestoredData(false), 5000)
-             return // Don't reset if we have saved data
-           }
+          if (savedData) {
+            const parsed = JSON.parse(savedData)
+            console.log('📝 Restored saved application data for project:', project.title)
+            setFormData({
+              whyInterested: parsed.whyInterested || '',
+              proposedApproach: parsed.proposedApproach || '',
+              weeklyAvailability: parsed.weeklyAvailability || '',
+              startDate: parsed.startDate || '',
+              commitmentLevel: parsed.commitmentLevel || '',
+            })
+            setCurrentStep(parsed.currentStep || 1)
+            setHasRestoredData(true)
+            // Hide the restored message after 5 seconds
+            setTimeout(() => setHasRestoredData(false), 5000)
+            
+            // Update session tracking for restored data
+            if (currentSessionId) {
+              ApplicationSessionTracker.updateProgress(currentSessionId, {
+                wasRestored: true,
+                stepReached: parsed.currentStep || 1
+              })
+            }
+            return // Don't reset if we have saved data
+          }
         } catch (error) {
           console.log('Error loading saved application data:', error)
         }
@@ -166,6 +241,14 @@ export function StudentApplicationModal({
         localStorage.setItem(storageKey, JSON.stringify(dataToSave))
         console.log('💾 Auto-saved application progress')
         setTimeout(() => setIsAutoSaving(false), 500) // Show saving indicator briefly
+        
+        // Track auto-save in session analytics
+        if (currentSessionId) {
+          ApplicationSessionTracker.updateProgress(currentSessionId, { 
+            wasSaved: true,
+            saveCount: (dataToSave as any).saveCount || 0 + 1
+          })
+        }
       } catch (error) {
         console.error('Error saving application data:', error)
         setIsAutoSaving(false)
@@ -252,7 +335,9 @@ export function StudentApplicationModal({
 
   const nextStep = () => {
     if (currentStep < 4) {
-      setCurrentStep(currentStep + 1)
+      const newStep = currentStep + 1
+      setCurrentStep(newStep)
+      trackStepProgress(newStep)
     }
   }
 
@@ -311,6 +396,11 @@ export function StudentApplicationModal({
       const data = await response.json()
 
       if (response.ok) {
+        // Mark session as completed
+        if (currentSessionId) {
+          await ApplicationSessionTracker.completeSession(currentSessionId)
+        }
+        
         // Clear saved data since application was submitted successfully
         clearSavedData()
         onSuccess()
@@ -334,6 +424,14 @@ export function StudentApplicationModal({
 
   const handleUpgrade = () => {
     window.location.href = '/pricing'
+  }
+
+  // Handle modal close (track abandonment)
+  const handleClose = () => {
+    if (currentSessionId) {
+      ApplicationSessionTracker.abandonSession(currentSessionId)
+    }
+    onClose()
   }
 
   if (!isOpen || !project) return null
@@ -372,7 +470,7 @@ export function StudentApplicationModal({
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-6 text-white relative">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
           >
             <X className="h-5 w-5" />
