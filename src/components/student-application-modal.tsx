@@ -199,7 +199,7 @@ export function StudentApplicationModal({
     }
   }
 
-    // Load saved form data when modal opens and start session tracking
+  // Load saved form data when modal opens and start session tracking
   useEffect(() => {
     if (isOpen && project && session?.user?.id) {
       checkApplicationLimits()
@@ -379,10 +379,14 @@ export function StudentApplicationModal({
   }
 
   const nextStep = () => {
-    if (currentStep < 4) {
+    // Check if current step is valid before allowing navigation
+    if (currentStep < 4 && isStepValid(currentStep)) {
       const newStep = currentStep + 1
       setCurrentStep(newStep)
       trackStepProgress(newStep)
+    } else if (!isStepValid(currentStep)) {
+      // Optional: Show error message that step must be completed
+      console.warn(`Step ${currentStep} must be completed before proceeding`)
     }
   }
 
