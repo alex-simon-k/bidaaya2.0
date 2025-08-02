@@ -1,0 +1,10 @@
+# Ignore all backup files for security
+*.csv
+*.sql
+*.json
+*.backup
+*.dump
+
+# Keep the folder structure
+!README.md
+!.gitignore 
