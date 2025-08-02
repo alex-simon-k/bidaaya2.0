@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import EnhancedAdminProjectManagement from '@/components/enhanced-admin-project-management'
 import OnboardingAnalyticsDashboard from '@/components/onboarding-analytics-dashboard'
+import ApplicationSessionDashboard from '@/components/application-session-dashboard'
 
 interface Project {
   id: string
