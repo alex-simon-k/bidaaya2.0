@@ -92,13 +92,88 @@ export function StudentApplicationModal({
   })
   
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+  const [hasRestoredData, setHasRestoredData] = useState(false)
 
+  // Generate storage key for this specific user + project combination
+  const getStorageKey = () => {
+    if (!project?.id || !session?.user?.id) return null
+    return `bidaaya_application_${session.user.id}_${project.id}`
+  }
+
+  // Clear saved application data
+  const clearSavedData = () => {
+    const storageKey = getStorageKey()
+    if (storageKey) {
+      localStorage.removeItem(storageKey)
+      console.log('🗑️ Cleared saved application data')
+    }
+  }
+
+  // Load saved form data when modal opens
   useEffect(() => {
     if (isOpen && project && session?.user?.id) {
       checkApplicationLimits()
+      
+      // Try to load saved data from localStorage
+      const storageKey = getStorageKey()
+      if (storageKey) {
+        try {
+          const savedData = localStorage.getItem(storageKey)
+                     if (savedData) {
+             const parsed = JSON.parse(savedData)
+             console.log('📝 Restored saved application data for project:', project.title)
+             setFormData({
+               whyInterested: parsed.whyInterested || '',
+               proposedApproach: parsed.proposedApproach || '',
+               weeklyAvailability: parsed.weeklyAvailability || '',
+               startDate: parsed.startDate || '',
+               commitmentLevel: parsed.commitmentLevel || '',
+             })
+             setCurrentStep(parsed.currentStep || 1)
+             setHasRestoredData(true)
+             // Hide the restored message after 5 seconds
+             setTimeout(() => setHasRestoredData(false), 5000)
+             return // Don't reset if we have saved data
+           }
+        } catch (error) {
+          console.log('Error loading saved application data:', error)
+        }
+      }
+      
+      // Only reset if no saved data found
       resetForm()
     }
   }, [isOpen, project, session])
+
+  // Auto-save form data to localStorage (debounced)
+  useEffect(() => {
+    if (!isOpen || !project?.id || !session?.user?.id) return
+
+    const storageKey = getStorageKey()
+    if (!storageKey) return
+
+    // Debounced save function
+    const timeoutId = setTimeout(() => {
+      try {
+        setIsAutoSaving(true)
+        const dataToSave = {
+          ...formData,
+          currentStep,
+          timestamp: new Date().toISOString(),
+          projectTitle: project.title
+        }
+        localStorage.setItem(storageKey, JSON.stringify(dataToSave))
+        console.log('💾 Auto-saved application progress')
+        setTimeout(() => setIsAutoSaving(false), 500) // Show saving indicator briefly
+      } catch (error) {
+        console.error('Error saving application data:', error)
+        setIsAutoSaving(false)
+      }
+    }, 1000) // Save after 1 second of inactivity
+
+    return () => clearTimeout(timeoutId)
+  }, [formData, currentStep, isOpen, project, session])
 
   const resetForm = () => {
     setCurrentStep(1)
@@ -111,6 +186,8 @@ export function StudentApplicationModal({
     })
     setUploadedFile(null)
     setApplicationError(null)
+    // Clear any saved data when manually resetting
+    clearSavedData()
   }
 
   const checkApplicationLimits = async () => {
@@ -234,6 +311,8 @@ export function StudentApplicationModal({
       const data = await response.json()
 
       if (response.ok) {
+        // Clear saved data since application was submitted successfully
+        clearSavedData()
         onSuccess()
         onClose()
         // Show success notification
@@ -298,6 +377,14 @@ export function StudentApplicationModal({
           >
             <X className="h-5 w-5" />
           </button>
+          
+          {/* Auto-save indicator */}
+          {isAutoSaving && (
+            <div className="absolute top-4 right-16 flex items-center gap-2 text-sm text-blue-100">
+              <div className="w-2 h-2 bg-blue-200 rounded-full animate-pulse"></div>
+              <span>Saving...</span>
+            </div>
+          )}
           
           <div className="flex items-start gap-4">
             <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -413,6 +500,23 @@ export function StudentApplicationModal({
                     <p className="text-xs text-gray-500 mt-2">
                       Resets {new Date(limits.nextResetDate).toLocaleDateString()}
                     </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Restored data notification */}
+              {hasRestoredData && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <h4 className="text-sm font-medium text-green-800">
+                        Welcome back! Your progress has been restored.
+                      </h4>
+                      <p className="text-sm text-green-700 mt-1">
+                        You can continue where you left off. Your work is automatically saved as you type.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
