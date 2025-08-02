@@ -697,6 +697,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {activeTab === 'application-sessions' && (
+              <ApplicationSessionDashboard />
+            )}
           </div>
         </div>
       </div>
