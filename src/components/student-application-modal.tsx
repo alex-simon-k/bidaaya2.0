@@ -24,6 +24,7 @@ import {
   BookOpen,
   Send
 } from 'lucide-react'
+import { ApplicationSessionTracker } from '@/lib/application-session-tracker'
 import { StudentPaywallModal } from '@/components/student-paywall-modal'
 import { 
   checkApplicationLimits, 
