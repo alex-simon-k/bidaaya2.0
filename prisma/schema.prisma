@@ -99,6 +99,10 @@ model User {
   userSessions           UserSession[]
   pageViews              PageView[]
   applicationSessions    ApplicationSession[]
+  chatQueries            ChatQuery[]
+  behavioralInsights    BehavioralInsight[]
+  companySearches       CompanySearch[]
+  aiMatches              AIMatch[]
 }
 
 // New Analytics Tables
@@ -402,4 +406,182 @@ enum ApplicationSessionStatus {
   COMPLETED
   ABANDONED
   TIMED_OUT
+}
+
+// AI Matching System Models
+
+model ChatQuery {
+  id              String            @id @default(cuid())
+  userId          String
+  sessionId       String?           // Groups related queries in one session
+  query           String            // The actual search/question
+  queryType       ChatQueryType     @default(GENERAL)
+  intent          String?           // Extracted intent (e.g., "looking for tech roles")
+  extractedSkills String[]          // Skills mentioned in query
+  extractedRoles  String[]          // Job roles mentioned
+  extractedCompanies String[]       // Companies mentioned
+  
+  // Context & Metadata
+  timestamp       DateTime          @default(now())
+  userAgent       String?
+  ipAddress       String?
+  sessionDuration Int?              // Time spent on this query (seconds)
+  followUpQueries Int              @default(0) // Number of follow-up questions
+  
+  // Engagement Metrics
+  clickedResults  Int              @default(0) // How many results they clicked
+  savedResults    Int              @default(0) // How many they saved/bookmarked
+  responseGiven   Boolean          @default(false) // Did they get AI response
+  satisfaction    Int?             // 1-5 rating if they provided feedback
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  user            User             @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([timestamp])
+  @@index([queryType])
+}
+
+model BehavioralInsight {
+  id              String           @id @default(cuid())
+  userId          String
+  insightType     InsightType
+  
+  // Core Metrics (0-100 scores)
+  learningVelocity     Float        @default(0) // How quickly they research new tech
+  interestDepth        Float        @default(0) // Complexity of follow-up questions
+  marketAwareness      Float        @default(0) // Industry trend searches
+  careerAmbition       Float        @default(0) // Senior role research frequency
+  geographicFlexibility Float       @default(0) // Location-based search patterns
+  salaryAwareness      Float        @default(0) // Compensation-related queries
+  
+  // Behavioral Patterns
+  peakActivityHours    String[]     // When they're most active
+  preferredTopics      String[]     // Most searched topics
+  searchFrequency      Float        @default(0) // Queries per week
+  sessionDuration      Float        @default(0) // Average session length
+  
+  // Calculated Fields
+  overallEngagement    Float        @default(0) // Composite engagement score
+  predictionConfidence Float        @default(0) // How confident our predictions are
+  lastCalculated       DateTime     @default(now())
+  
+  // Trend Data (JSON for flexibility)
+  trendData            Json?        // Historical data for trends
+  
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  
+  user                 User         @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, insightType])
+  @@index([userId])
+  @@index([lastCalculated])
+}
+
+model CompanySearch {
+  id              String           @id @default(cuid())
+  companyId       String           // User ID of the company
+  searchPrompt    String           // Natural language search prompt
+  parsedIntent    Json?            // AI-extracted intent and requirements
+  
+  // Search Parameters
+  requiredSkills  String[]         // Extracted skill requirements
+  experienceLevel String?          // Junior/Mid/Senior
+  educationReq    String[]         // Education requirements
+  locationPref    String[]         // Location preferences
+  industryFit     String[]         // Industry alignment
+  
+  // Search Metadata
+  searchTimestamp DateTime         @default(now())
+  resultsCount    Int              @default(0) // Number of matches found
+  tier            String           @default("FREE") // FREE/PROFESSIONAL/ENTERPRISE
+  maxResults      Int              @default(3) // Based on their tier
+  
+  // Performance Tracking
+  viewedResults   Int              @default(0) // How many results they viewed
+  contactedCandidates Int          @default(0) // How many they reached out to
+  successfulHires Int              @default(0) // Track hiring success
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  company         User             @relation(fields: [companyId], references: [id])
+  matches         AIMatch[]
+  
+  @@index([companyId])
+  @@index([searchTimestamp])
+  @@index([tier])
+}
+
+model AIMatch {
+  id                    String         @id @default(cuid())
+  searchId              String         // Links to CompanySearch
+  studentId             String         // Matched student
+  
+  // Core Matching Scores (0-100)
+  overallScore          Float          // Final composite score
+  profileMatchScore     Float          // 40% weight - skills, education, experience
+  engagementScore       Float          // 35% weight - recent activity, relevance
+  behavioralScore       Float          // 25% weight - learning patterns, insights
+  
+  // Detailed Breakdown
+  skillsAlignment       Float          @default(0)
+  experienceMatch       Float          @default(0)
+  educationMatch        Float          @default(0)
+  locationMatch         Float          @default(0)
+  interestAlignment     Float          @default(0)
+  responselikelihood    Float          @default(0) // Predicted response probability
+  
+  // AI Insights
+  aiExplanation         String?        // Why this is a good match
+  strengthsHighlight    String[]       // Key strengths of the candidate
+  potentialConcerns     String[]       // Areas to consider
+  recommendedApproach   String?        // How to reach out
+  
+  // Engagement Data
+  wasViewed             Boolean        @default(false)
+  viewedAt              DateTime?
+  wasContacted          Boolean        @default(false)
+  contactedAt           DateTime?
+  candidateResponded    Boolean        @default(false)
+  respondedAt           DateTime?
+  
+  // Meta
+  generatedAt           DateTime       @default(now())
+  aiModel               String         @default("deepseek") // Track which AI generated this
+  processingTime        Float?         // How long AI took to generate match
+  
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  
+  search                CompanySearch  @relation(fields: [searchId], references: [id])
+  student               User           @relation(fields: [studentId], references: [id])
+  
+  @@index([searchId])
+  @@index([studentId])
+  @@index([overallScore])
+  @@index([generatedAt])
+}
+
+// New Enums for AI Matching
+
+enum ChatQueryType {
+  GENERAL           // General questions
+  SKILL_SEARCH      // Looking for specific skills/tech
+  ROLE_SEARCH       // Job role exploration
+  COMPANY_RESEARCH  // Company-specific questions
+  SALARY_INQUIRY    // Compensation questions
+  CAREER_GUIDANCE   // Career advice
+  INTERVIEW_PREP    // Interview preparation
+  INDUSTRY_TRENDS   // Market/industry insights
+}
+
+enum InsightType {
+  WEEKLY            // Weekly behavioral summary
+  MONTHLY           // Monthly deep insights
+  REAL_TIME         // Live behavioral tracking
+  PREDICTION        // Future behavior predictions
 }

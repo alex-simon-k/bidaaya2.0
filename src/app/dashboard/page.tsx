@@ -539,8 +539,40 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
+          {/* AI Talent Search Card */}
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+            <div className="p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Brain className="text-white h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">AI Talent Search</h3>
+                  <p className="text-gray-600 text-sm">Find perfect matches</p>
+                </div>
+              </div>
+              
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Use natural language to find the perfect candidates based on skills, behavior, and engagement.
+              </p>
+              
+              <Link
+                href="/dashboard/ai-search"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold group-hover:gap-3 transition-all duration-300"
+              >
+                Search with AI
+                <motion.div
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                  →
+                </motion.div>
+              </Link>
+            </div>
+          </div>
+
           {/* Active Projects Card */}
           <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
             <div className="p-8">
