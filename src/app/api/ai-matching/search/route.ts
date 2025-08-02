@@ -29,8 +29,10 @@ export async function POST(request: NextRequest) {
     const user = session.user as any
     let tier = 'FREE'
     
-    if (user.subscription?.planId) {
-      const subscription = user.subscription.planId
+    console.log(`🔍 User subscription data:`, user.subscriptionPlan)
+    
+    if (user.subscriptionPlan) {
+      const subscription = user.subscriptionPlan
       if (subscription.includes('PROFESSIONAL') || subscription.includes('PRO')) {
         tier = 'PROFESSIONAL'
       } else if (subscription.includes('ENTERPRISE') || subscription.includes('AGENT')) {

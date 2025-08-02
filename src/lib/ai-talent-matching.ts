@@ -153,6 +153,12 @@ export class AITalentMatcher {
    */
   private static async parseSearchIntent(prompt: string): Promise<ParsedSearchIntent> {
     try {
+      // Check if API key is configured
+      if (!DEEPSEEK_API_KEY) {
+        console.warn('⚠️ DeepSeek API key not configured. Falling back to basic parsing.')
+        return this.fallbackParseIntent(prompt)
+      }
+
       const systemPrompt = `You are an expert recruitment AI. Parse the following company search prompt and extract structured hiring requirements.
 
 Return ONLY valid JSON with this exact structure:
