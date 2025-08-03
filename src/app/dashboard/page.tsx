@@ -489,7 +489,7 @@ export default function DashboardPage() {
         </div>
       }
     >
-      <AIDashboardChat user={session?.user} />
+      <AIDashboardChat />
     </Suspense>
   )
 
