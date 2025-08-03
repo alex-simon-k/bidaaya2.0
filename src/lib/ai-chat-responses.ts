@@ -54,10 +54,15 @@ export class AIChatResponseService {
   private detectIntent(query: string): string {
     const queryLower = query.toLowerCase()
     
-    // Find talent intent
+    // Find talent intent - EXPANDED detection
     if (queryLower.includes('find') || queryLower.includes('search') || 
         queryLower.includes('talent') || queryLower.includes('candidate') ||
-        queryLower.includes('student') || queryLower.includes('hire')) {
+        queryLower.includes('student') || queryLower.includes('hire') ||
+        queryLower.includes('aud') || queryLower.includes('aus') ||
+        queryLower.includes('university') || queryLower.includes('computer science') ||
+        queryLower.includes('business') || queryLower.includes('marketing') ||
+        queryLower.includes('engineering') || queryLower.includes('major') ||
+        queryLower.includes('looking for') || queryLower.includes('need')) {
       return 'find-talent'
     }
     

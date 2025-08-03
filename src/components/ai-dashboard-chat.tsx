@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, Sparkles, Send, User, Bot, Zap, Crown, Brain, Target, Activity } from 'lucide-react'
+import { Search, Plus, Sparkles, Send, User, Bot, Zap, Crown, Brain, Target, Activity, X, ArrowLeft } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -58,6 +58,7 @@ export default function AIDashboardChat() {
   const [credits, setCredits] = useState(15)
   const [isAnimatingInput, setIsAnimatingInput] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -78,7 +79,9 @@ export default function AIDashboardChat() {
   }, [input]);
 
   const handleSendMessage = async (message: string, autoMode?: 'create-project' | 'find-talent', withAnimation = false) => {
-    if (!message.trim()) return
+    if (!message.trim() || isProcessing) return
+
+    setIsProcessing(true)
 
     // Start transition animation if this is the first message
     const isFirstMessage = messages.length === 0
@@ -136,6 +139,7 @@ export default function AIDashboardChat() {
       setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
+      setIsProcessing(false)
     }
   }
 
@@ -455,6 +459,18 @@ The candidate will receive a professional email with your calendar link and can 
   const hasContent = input.trim() !== ""
   const hasMessages = messages.length > 0
 
+  // Function to reset chat and return to main view
+  const resetChat = () => {
+    setMessages([])
+    setSearchResults([])
+    setShowResults(false)
+    setInput('')
+    setIsLoading(false)
+    setIsProcessing(false)
+    setIsAnimatingInput(false)
+    setIsTransitioning(false)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Header */}
@@ -462,6 +478,17 @@ The candidate will receive a professional email with your calendar link and can 
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {hasMessages && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetChat}
+                  className="mr-2 hover:bg-gray-100"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              )}
               <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
                 <Brain className="h-6 w-6 text-white" />
               </div>
@@ -491,6 +518,17 @@ The candidate will receive a professional email with your calendar link and can 
                 <Crown className="h-4 w-4" />
                 Upgrade
               </motion.button>
+              
+              {hasMessages && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetChat}
+                  className="ml-2 hover:bg-gray-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -682,8 +720,8 @@ The candidate will receive a professional email with your calendar link and can 
                               }
                             }}
                             placeholder="Continue the conversation..."
-                            disabled={isLoading || isAnimatingInput}
-                            className="w-full bg-transparent text-gray-900 placeholder-gray-400 border-none outline-none resize-none text-base leading-relaxed"
+                                                    disabled={isLoading || isAnimatingInput || isProcessing}
+                        className="w-full bg-transparent text-gray-900 placeholder-gray-400 border-none outline-none resize-none text-base leading-relaxed"
                             rows={1}
                           />
                         </div>
@@ -691,16 +729,16 @@ The candidate will receive a professional email with your calendar link and can 
                         <Button
                           size="icon"
                           className={`rounded-xl transition-all duration-200 flex-shrink-0 ${
-                            hasContent
+                            hasContent && !isProcessing
                               ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg scale-100"
                               : "bg-gray-200 text-gray-400 cursor-not-allowed scale-95"
                           }`}
                           onClick={() => {
-                            if (hasContent) handleSendMessage(input);
+                            if (hasContent && !isProcessing) handleSendMessage(input);
                           }}
-                          disabled={!hasContent || isLoading || isAnimatingInput}
+                          disabled={!hasContent || isLoading || isAnimatingInput || isProcessing}
                         >
-                          {isLoading || isAnimatingInput ? (
+                          {isLoading || isAnimatingInput || isProcessing ? (
                             <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
                           ) : (
                             <Send className="h-5 w-5" />
