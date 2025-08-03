@@ -71,8 +71,9 @@ export class AIChatResponseService {
         queryLower.includes('business') || queryLower.includes('marketing') ||
         queryLower.includes('engineering') || queryLower.includes('major') ||
         queryLower.includes('looking for') || queryLower.includes('need') ||
-        queryLower.includes('interested in') || queryLower.includes('studying') ||
-        queryLower.includes('dubai') || queryLower.includes('sharjah')) {
+        queryLower.includes('want') || queryLower.includes('interested in') || 
+        queryLower.includes('studying') || queryLower.includes('dubai') || 
+        queryLower.includes('sharjah')) {
       console.log('✅ Intent Detection - FOUND: find-talent')
       return 'find-talent'
     }
