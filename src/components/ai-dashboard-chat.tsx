@@ -273,17 +273,17 @@ ${data.matches?.length > 0 ?
   const firstName = session?.user?.name?.split(' ')[0] || 'there'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500">
+    <div className="min-h-screen bg-white">
       {/* Credits Badge - Top Right */}
       <div className="absolute top-6 right-6 z-10">
-        <Badge variant="outline" className="flex items-center gap-1 bg-white/90 backdrop-blur-sm border-white/20">
+        <Badge variant="outline" className="flex items-center gap-1 bg-gray-900 text-white border-gray-700">
           <Sparkles className="h-3 w-3" />
           {credits} credits
         </Badge>
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12">
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 max-w-4xl mx-auto">
         
         {/* Welcome Header */}
         <motion.div
@@ -292,10 +292,10 @@ ${data.matches?.length > 0 ?
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Hey, welcome back {firstName}! 👋
           </h1>
-          <p className="text-xl text-white/80 max-w-2xl">
+          <p className="text-lg text-gray-600 max-w-2xl">
             Ready to find amazing talent or create your next project? Just describe what you need below.
           </p>
         </motion.div>
@@ -305,7 +305,7 @@ ${data.matches?.length > 0 ?
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-full max-w-4xl space-y-8"
+          className="w-full space-y-8"
         >
           
           {/* Chat Messages - Only show if there are any */}
@@ -323,8 +323,8 @@ ${data.matches?.length > 0 ?
                     <div className={`max-w-3xl ${message.type === 'user' ? 'ml-12' : 'mr-12'}`}>
                       <div className={`rounded-2xl px-6 py-4 ${
                         message.type === 'user' 
-                          ? 'bg-white text-gray-900' 
-                          : 'bg-white/90 backdrop-blur-sm text-gray-900'
+                          ? 'bg-gray-900 text-white' 
+                          : 'bg-gray-50 border border-gray-200 text-gray-900'
                       }`}>
                         <div className="prose prose-sm max-w-none">
                           {message.content.split('\n').map((line, i) => (
@@ -347,12 +347,12 @@ ${data.matches?.length > 0 ?
                   className="flex justify-start"
                 >
                   <div className="max-w-3xl mr-12">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
                         <span className="text-sm text-gray-500">Thinking...</span>
                       </div>
@@ -372,9 +372,9 @@ ${data.matches?.length > 0 ?
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
-                  <Search className="h-5 w-5 text-blue-600" />
+                  <Search className="h-5 w-5 text-gray-600" />
                   Talent Search Results
                 </h3>
                 <div className="grid gap-4">
@@ -415,7 +415,7 @@ ${data.matches?.length > 0 ?
                           <Button
                             size="sm"
                             onClick={() => revealContact(result.candidate.id, result.contactCredits)}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-gray-900 hover:bg-gray-800 text-white"
                           >
                             Reveal Contact ({result.contactCredits} credits)
                           </Button>
@@ -435,7 +435,7 @@ ${data.matches?.length > 0 ?
               isLoading={isLoading}
               mode={currentMode}
               onModeChange={setCurrentMode}
-              className="w-full bg-white border-white shadow-2xl"
+              className="w-full"
             />
           </div>
         </motion.div>

@@ -117,7 +117,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
   const hasContent = input.trim() !== "";
 
   return (
-    <div className={cn("w-full space-y-4", className)} ref={ref}>
+    <div className={cn("w-full space-y-6", className)} ref={ref}>
       {/* Mode Toggle Buttons */}
       <div className="flex gap-3">
         <Button
@@ -125,8 +125,8 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
           className={cn(
             "flex-1 h-14 rounded-xl transition-all duration-300 text-base font-medium",
             mode === 'create-project' 
-              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg" 
-              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              ? "bg-gray-900 hover:bg-gray-800 text-white shadow-lg" 
+              : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
           )}
           onClick={() => onModeChange?.('create-project')}
           disabled={isLoading}
@@ -139,8 +139,8 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
           className={cn(
             "flex-1 h-14 rounded-xl transition-all duration-300 text-base font-medium",
             mode === 'find-talent' 
-              ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg" 
-              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              ? "bg-gray-900 hover:bg-gray-800 text-white shadow-lg" 
+              : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
           )}
           onClick={() => onModeChange?.('find-talent')}
           disabled={isLoading}
@@ -151,8 +151,8 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
       </div>
 
       {/* Input Box */}
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="flex items-end gap-3 p-4">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="flex items-end gap-3 p-6">
           <div className="flex-1">
             <Textarea
               ref={textareaRef}
@@ -170,7 +170,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
             className={cn(
               "rounded-full transition-all duration-200 flex-shrink-0",
               hasContent
-                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg scale-100"
+                ? "bg-gray-900 hover:bg-gray-800 text-white shadow-lg scale-100"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed scale-95"
             )}
             onClick={handleSubmit}
