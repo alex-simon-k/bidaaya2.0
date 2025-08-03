@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { StudentPaywallModal } from '@/components/student-paywall-modal'
 import { CompanyPaywallModal } from '@/components/company-paywall-modal'
@@ -470,217 +470,27 @@ export default function DashboardPage() {
     </div>
   )
 
+  // AI-First Company Dashboard - Load the chat interface dynamically
+  const AIDashboardChat = lazy(() => import('@/components/ai-dashboard-chat'))
+  
   const companyContent = (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Welcome Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white rounded-3xl shadow-2xl overflow-hidden"
-        >
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-12 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="mb-6"
-            >
-              <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto shadow-lg">
-                <Briefcase className="text-white h-8 w-8" />
-              </div>
-            </motion.div>
-            
-            <motion.h1
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="text-3xl font-bold text-white mb-3"
-            >
-              Welcome back, {session?.user?.name?.split(' ')[0]}!
-            </motion.h1>
-            
-            <motion.p
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="text-blue-100 text-lg leading-relaxed mb-6"
-            >
-              Post new projects and manage your existing opportunities
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-            >
-              <Link
-                href="/dashboard/projects/new"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-2xl shadow-lg hover:bg-white/30 transition-all duration-300 border border-white/20"
-              >
-                <Plus className="h-5 w-5" />
-                Post New Project
-              </Link>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Onboarding Checklist */}
-        {showOnboardingChecklist && (
-          <CompanyOnboardingChecklist
-            companyName={session?.user?.name || "Your Company"}
-            onDismiss={() => setShowOnboardingChecklist(false)}
-          />
-        )}
-
-        {/* Dashboard Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-                            {/* Next-Gen AI Talent Discovery */}
-                  <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 border border-blue-200/50">
-                    <div className="p-8">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                          <Brain className="text-white h-7 w-7" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-bold text-gray-800">Next-Gen AI Discovery</h3>
-                            <span className="px-2 py-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
-                          </div>
-                          <p className="text-gray-600 text-sm">Effortless talent matching</p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-gray-700 mb-6 leading-relaxed">
-                        Revolutionary AI that understands natural language, analyzes activity patterns, and finds perfect matches with a smart credit system.
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <Link
-                          href="/dashboard/ai-search-v2"
-                          className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                        >
-                          Try Next-Gen Search
-                          <motion.div
-                            animate={{ x: [0, 4, 0] }}
-                            transition={{ repeat: Infinity, duration: 1.5 }}
-                          >
-                            →
-                          </motion.div>
-                        </Link>
-                        
-                        <div className="text-right">
-                          <p className="text-xs text-gray-500">15 credits/month</p>
-                          <p className="text-xs text-emerald-600">10 contact reveals</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Legacy AI Talent Search Card */}
-                  <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
-                    <div className="p-8">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-r from-gray-400 to-gray-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Brain className="text-white h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-800">Legacy AI Search</h3>
-                          <p className="text-gray-600 text-sm">Basic matching</p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-gray-600 mb-6 leading-relaxed">
-                        Basic AI search functionality. Consider upgrading to Next-Gen for better results.
-                      </p>
-                      
-                      <Link
-                        href="/dashboard/ai-search"
-                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-700 font-medium group-hover:gap-3 transition-all duration-300"
-                      >
-                        Use Legacy Search
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{ repeat: Infinity, duration: 1.5 }}
-                        >
-                          →
-                        </motion.div>
-                      </Link>
-                    </div>
-                  </div>
-
-          {/* Active Projects Card */}
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
-            <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="text-white h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Active Projects</h3>
-                  <p className="text-gray-600 text-sm">Manage opportunities</p>
-                </div>
-              </div>
-              
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                Manage your current projects and review applications from talented students.
-              </p>
-              
-              <Link
-                href="/dashboard/projects"
-                className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold group-hover:gap-3 transition-all duration-300"
-              >
-                View Projects
-                <motion.div
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  →
-                </motion.div>
-              </Link>
-            </div>
-          </div>
-
-          {/* Company Profile Card */}
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
-            <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <User className="text-white h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Company Profile</h3>
-                  <p className="text-gray-600 text-sm">Attract top talent</p>
-                </div>
-              </div>
-              
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                Update your company information and preferences to attract the best candidates.
-              </p>
-              
-              <Link
-                href="/dashboard/profile"
-                className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-semibold group-hover:gap-3 transition-all duration-300"
-              >
-                Update Profile
-                <motion.div
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  →
-                </motion.div>
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+    <Suspense 
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-6"></div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Loading your AI assistant...</h3>
+            <p className="text-gray-600">Preparing your intelligent recruitment dashboard</p>
+          </motion.div>
+        </div>
+      }
+    >
+      <AIDashboardChat user={session?.user} />
+    </Suspense>
   )
 
   const adminContent = (
