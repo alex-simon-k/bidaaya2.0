@@ -541,37 +541,79 @@ export default function DashboardPage() {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {/* AI Talent Search Card */}
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
-            <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Brain className="text-white h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">AI Talent Search</h3>
-                  <p className="text-gray-600 text-sm">Find perfect matches</p>
-                </div>
-              </div>
-              
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                Use natural language to find the perfect candidates based on skills, behavior, and engagement.
-              </p>
-              
-              <Link
-                href="/dashboard/ai-search"
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold group-hover:gap-3 transition-all duration-300"
-              >
-                Search with AI
-                <motion.div
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  →
-                </motion.div>
-              </Link>
-            </div>
-          </div>
+                            {/* Next-Gen AI Talent Discovery */}
+                  <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 border border-blue-200/50">
+                    <div className="p-8">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                          <Brain className="text-white h-7 w-7" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-xl font-bold text-gray-800">Next-Gen AI Discovery</h3>
+                            <span className="px-2 py-1 bg-gradient-to-r from-emerald-500 to-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
+                          </div>
+                          <p className="text-gray-600 text-sm">Effortless talent matching</p>
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-700 mb-6 leading-relaxed">
+                        Revolutionary AI that understands natural language, analyzes activity patterns, and finds perfect matches with a smart credit system.
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href="/dashboard/ai-search-v2"
+                          className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                        >
+                          Try Next-Gen Search
+                          <motion.div
+                            animate={{ x: [0, 4, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.5 }}
+                          >
+                            →
+                          </motion.div>
+                        </Link>
+                        
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">15 credits/month</p>
+                          <p className="text-xs text-emerald-600">10 contact reveals</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Legacy AI Talent Search Card */}
+                  <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                    <div className="p-8">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-r from-gray-400 to-gray-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Brain className="text-white h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-800">Legacy AI Search</h3>
+                          <p className="text-gray-600 text-sm">Basic matching</p>
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        Basic AI search functionality. Consider upgrading to Next-Gen for better results.
+                      </p>
+                      
+                      <Link
+                        href="/dashboard/ai-search"
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-700 font-medium group-hover:gap-3 transition-all duration-300"
+                      >
+                        Use Legacy Search
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{ repeat: Infinity, duration: 1.5 }}
+                        >
+                          →
+                        </motion.div>
+                      </Link>
+                    </div>
+                  </div>
 
           {/* Active Projects Card */}
           <div className="bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
