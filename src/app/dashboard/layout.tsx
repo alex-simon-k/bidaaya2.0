@@ -201,7 +201,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className={`min-h-screen ${session?.user?.role === 'COMPANY' ? 'bg-gradient-to-br from-slate-50 via-white to-blue-50' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${session?.user?.role === 'COMPANY' ? '' : 'bg-gray-50'}`}>
       {/* Header - Mobile Optimized - Hidden for companies */}
       {session?.user?.role !== 'COMPANY' && (
         <header className="bg-white shadow-sm border-b sticky top-0 z-40">

@@ -713,16 +713,19 @@ export default function DashboardPage() {
 
   return (
     <>
-
-
-      {/* Original Dashboard Content */}
-      <div className={`min-h-screen py-8 ${userRole === 'COMPANY' ? 'bg-white' : 'bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {userRole === 'STUDENT' && studentContent}
-          {userRole === 'COMPANY' && companyContent}
-          {userRole === 'ADMIN' && adminContent}
+      {/* Dashboard Content */}
+      {userRole === 'COMPANY' ? (
+        // Company gets full-screen AI dashboard with no containers
+        companyContent
+      ) : (
+        // Students and admins get the container layout
+        <div className="min-h-screen py-8 bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {userRole === 'STUDENT' && studentContent}
+            {userRole === 'ADMIN' && adminContent}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Membership Selection Popup */}
       <MembershipSelectionPopup
