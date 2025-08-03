@@ -37,18 +37,24 @@ export class AIChatResponseService {
       const contextData = await this.gatherContextData(context, intent)
       
       // Generate response using DeepSeek
-      const prompt = this.buildPrompt(context, intent, contextData)
-      const aiResponse = await this.callDeepSeekAPI(prompt)
-      console.log('🤖 DeepSeek Response:', aiResponse)
-      
-      // Parse and structure the response
-      const finalResponse = this.parseAIResponse(aiResponse, intent, context)
-      console.log('📤 Final AI Response:', finalResponse.actionType)
-      return finalResponse
+      try {
+        const prompt = this.buildPrompt(context, intent, contextData)
+        const aiResponse = await this.callDeepSeekAPI(prompt)
+        console.log('🤖 DeepSeek Response:', aiResponse)
+        
+        // Parse and structure the response
+        const finalResponse = this.parseAIResponse(aiResponse, intent, context)
+        console.log('📤 Final AI Response:', finalResponse.actionType)
+        return finalResponse
+        
+      } catch (deepSeekError) {
+        console.log('⚠️ DeepSeek failed, using smart fallback based on intent:', intent)
+        return this.getSmartFallbackResponse(context, intent)
+      }
       
     } catch (error) {
       console.error('❌ Error generating AI response:', error)
-      console.log('🔄 Using fallback response')
+      console.log('🔄 Using basic fallback response')
       return this.getFallbackResponse(context)
     }
   }
@@ -213,41 +219,67 @@ Response should be in JSON format:
    * Call DeepSeek API
    */
   private async callDeepSeekAPI(prompt: string): Promise<any> {
+    console.log('🌐 DeepSeek API - Starting call')
+    
     if (!AIChatResponseService.DEEPSEEK_API_KEY) {
+      console.error('❌ DeepSeek API key not configured')
       throw new Error('DeepSeek API key not configured')
     }
 
-    const response = await fetch(AIChatResponseService.DEEPSEEK_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${AIChatResponseService.DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are Bidaaya\'s AI Recruitment Assistant. Always respond in the specified JSON format.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-        response_format: { type: 'json_object' }
-      }),
-      signal: AbortSignal.timeout(10000)
-    })
+    console.log('🔑 DeepSeek API key found, making request...')
 
-    if (!response.ok) {
-      throw new Error(`DeepSeek API error: ${response.status}`)
+    try {
+      const response = await fetch(AIChatResponseService.DEEPSEEK_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${AIChatResponseService.DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are Bidaaya\'s AI Recruitment Assistant. Always respond in the specified JSON format.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+          response_format: { type: 'json_object' }
+        }),
+        signal: AbortSignal.timeout(30000) // Increased to 30 seconds
+      })
+
+      console.log('📡 DeepSeek API response status:', response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ DeepSeek API error response:', errorText)
+        throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`)
+      }
+
+      const data = await response.json()
+      console.log('✅ DeepSeek API response received')
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('❌ Invalid DeepSeek response structure:', data)
+        throw new Error('Invalid response structure from DeepSeek')
+      }
+
+      return JSON.parse(data.choices[0].message.content)
+      
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TimeoutError') {
+        console.error('⏰ DeepSeek API timeout after 30 seconds')
+      } else {
+        console.error('❌ DeepSeek API call failed:', error)
+      }
+      throw error
     }
-
-    const data = await response.json()
-    return JSON.parse(data.choices[0].message.content)
   }
 
   /**
@@ -291,6 +323,52 @@ Response should be in JSON format:
         console.log('❌ Mapped to: guidance (default)')
         return 'guidance'
     }
+  }
+
+  /**
+   * Get smart fallback response based on detected intent
+   */
+  private getSmartFallbackResponse(context: ChatContext, intent: string): AIResponse {
+    const actionType = this.mapIntentToActionType(intent)
+    console.log('🧠 Smart fallback - Intent:', intent, 'Action:', actionType)
+    
+    if (intent === 'find-talent') {
+      return {
+        content: `I'll help you find students based on your criteria! Let me search our database for students matching: "${context.userQuery}"`,
+        actionType: 'search',
+        data: {
+          searchQuery: context.userQuery,
+          smartFallback: true
+        },
+        suggestedActions: [
+          {
+            label: 'View All Results',
+            action: 'search',
+            description: 'See all matching students'
+          }
+        ]
+      }
+    }
+    
+    if (intent === 'create-project') {
+      return {
+        content: 'I can help you create a new project! Let me redirect you to the project creation page.',
+        actionType: 'project-creation',
+        data: {
+          projectData: context.userQuery,
+          smartFallback: true
+        },
+        suggestedActions: [
+          {
+            label: 'Create Project',
+            action: 'create-project',
+            description: 'Go to project creation page'
+          }
+        ]
+      }
+    }
+    
+    return this.getFallbackResponse(context)
   }
 
   /**
