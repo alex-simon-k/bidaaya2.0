@@ -476,13 +476,13 @@ export default function DashboardPage() {
   const companyContent = (
     <Suspense 
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-6"></div>
+            <div className="animate-spin h-12 w-12 border-4 border-gray-600 border-t-transparent rounded-full mx-auto mb-6"></div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Loading your AI assistant...</h3>
             <p className="text-gray-600">Preparing your intelligent recruitment dashboard</p>
           </motion.div>
@@ -716,7 +716,7 @@ export default function DashboardPage() {
 
 
       {/* Original Dashboard Content */}
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 py-8">
+      <div className={`min-h-screen py-8 ${userRole === 'COMPANY' ? 'bg-white' : 'bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {userRole === 'STUDENT' && studentContent}
           {userRole === 'COMPANY' && companyContent}
