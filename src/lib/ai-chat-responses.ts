@@ -31,6 +31,7 @@ export class AIChatResponseService {
     try {
       // Detect intent if not provided
       const intent = context.detectedIntent || this.detectIntent(context.userQuery)
+      console.log('🚀 AI Service - Detected Intent:', intent)
       
       // Get relevant context data
       const contextData = await this.gatherContextData(context, intent)
@@ -38,12 +39,16 @@ export class AIChatResponseService {
       // Generate response using DeepSeek
       const prompt = this.buildPrompt(context, intent, contextData)
       const aiResponse = await this.callDeepSeekAPI(prompt)
+      console.log('🤖 DeepSeek Response:', aiResponse)
       
       // Parse and structure the response
-      return this.parseAIResponse(aiResponse, intent, context)
+      const finalResponse = this.parseAIResponse(aiResponse, intent, context)
+      console.log('📤 Final AI Response:', finalResponse.actionType)
+      return finalResponse
       
     } catch (error) {
-      console.error('Error generating AI response:', error)
+      console.error('❌ Error generating AI response:', error)
+      console.log('🔄 Using fallback response')
       return this.getFallbackResponse(context)
     }
   }
@@ -54,6 +59,9 @@ export class AIChatResponseService {
   private detectIntent(query: string): string {
     const queryLower = query.toLowerCase()
     
+    console.log('🎯 Intent Detection - Query:', query)
+    console.log('🎯 Intent Detection - Lowercase:', queryLower)
+    
     // Find talent intent - EXPANDED detection
     if (queryLower.includes('find') || queryLower.includes('search') || 
         queryLower.includes('talent') || queryLower.includes('candidate') ||
@@ -62,7 +70,10 @@ export class AIChatResponseService {
         queryLower.includes('university') || queryLower.includes('computer science') ||
         queryLower.includes('business') || queryLower.includes('marketing') ||
         queryLower.includes('engineering') || queryLower.includes('major') ||
-        queryLower.includes('looking for') || queryLower.includes('need')) {
+        queryLower.includes('looking for') || queryLower.includes('need') ||
+        queryLower.includes('interested in') || queryLower.includes('studying') ||
+        queryLower.includes('dubai') || queryLower.includes('sharjah')) {
+      console.log('✅ Intent Detection - FOUND: find-talent')
       return 'find-talent'
     }
     
@@ -70,6 +81,7 @@ export class AIChatResponseService {
     if (queryLower.includes('create') || queryLower.includes('post') || 
         queryLower.includes('project') || queryLower.includes('job') ||
         queryLower.includes('internship') || queryLower.includes('position')) {
+      console.log('✅ Intent Detection - FOUND: create-project')
       return 'create-project'
     }
     
@@ -77,9 +89,11 @@ export class AIChatResponseService {
     if (queryLower.includes('contact') || queryLower.includes('reach out') ||
         queryLower.includes('email') || queryLower.includes('invite') ||
         queryLower.includes('calendar') || queryLower.includes('interview')) {
+      console.log('✅ Intent Detection - FOUND: contact-students')
       return 'contact-students'
     }
     
+    console.log('❌ Intent Detection - FALLBACK: guidance')
     return 'guidance'
   }
 
@@ -240,13 +254,18 @@ Response should be in JSON format:
    */
   private parseAIResponse(aiResponse: any, intent: string, context: ChatContext): AIResponse {
     try {
+      console.log('📝 Parsing AI response - Intent:', intent)
+      const actionType = this.mapIntentToActionType(intent)
+      console.log('📝 Parsing AI response - Action Type:', actionType)
+      
       return {
         content: aiResponse.content || 'I\'m here to help with your recruitment needs!',
-        actionType: this.mapIntentToActionType(intent),
+        actionType: actionType,
         data: aiResponse.data || {},
         suggestedActions: aiResponse.suggestedActions || []
       }
     } catch (error) {
+      console.error('❌ Error parsing AI response:', error)
       return this.getFallbackResponse(context)
     }
   }
@@ -255,11 +274,21 @@ Response should be in JSON format:
    * Map intent to action type
    */
   private mapIntentToActionType(intent: string): 'search' | 'project-creation' | 'guidance' | 'contact' | 'navigate' {
+    console.log('🗂️ Mapping intent to action type:', intent)
+    
     switch (intent) {
-      case 'find-talent': return 'search'
-      case 'create-project': return 'project-creation'
-      case 'contact-students': return 'contact'
-      default: return 'guidance'
+      case 'find-talent': 
+        console.log('✅ Mapped to: search')
+        return 'search'
+      case 'create-project': 
+        console.log('✅ Mapped to: project-creation')
+        return 'project-creation'
+      case 'contact-students': 
+        console.log('✅ Mapped to: contact')
+        return 'contact'
+      default: 
+        console.log('❌ Mapped to: guidance (default)')
+        return 'guidance'
     }
   }
 
