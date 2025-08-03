@@ -65,9 +65,9 @@ export class NextGenAITalentMatcher {
     BASIC_QUALITY: 1    // Bottom 20% candidates
   }
   
-  // Tier limits and benefits
+  // Tier limits and benefits - INCREASED RESULTS
   private static TIER_LIMITS = {
-    FREE: { credits: 15, contacts: 10, maxResults: 5 },
+    FREE: { credits: 15, contacts: 10, maxResults: 9 },        // Increased from 5 to 9
     PROFESSIONAL: { credits: 30, contacts: 25, maxResults: 15 },
     ENTERPRISE: { credits: 100, contacts: 75, maxResults: 50 }
   }
@@ -89,15 +89,16 @@ export class NextGenAITalentMatcher {
       // 1. Get company credit status
       const creditInfo = await this.getCreditStatus(params.companyId, params.tier)
       
-      // 2. Parse search intent using AI (enhanced)
+      // 2. Parse search intent using AI (enhanced with strict filtering)
       const searchIntent = await this.parseModernSearchIntent(params.prompt)
+      console.log('🎯 Parsed search intent with filters:', searchIntent)
       
-      // 3. Get enriched candidate pool (using available data)
-      const candidates = await this.getEnrichedCandidatePool(searchIntent)
-      console.log(`👥 Found ${candidates.length} active candidates`)
+      // 3. Get STRICTLY FILTERED candidate pool (hard filtering first!)
+      const candidates = await this.getStrictlyFilteredCandidatePool(searchIntent)
+      console.log(`👥 Found ${candidates.length} FILTERED candidates (after hard filtering)`)
       
-      // 4. AI-powered scoring and matching
-      const matches = await this.performAIMatching(candidates, searchIntent, params)
+      // 4. AI-powered scoring and matching (now relevance-first)
+      const matches = await this.performRelevanceFirstMatching(candidates, searchIntent, params)
       
       // 5. Generate search suggestions
       const suggestions = await this.generateSearchSuggestions(params.prompt, matches.length)
@@ -105,10 +106,11 @@ export class NextGenAITalentMatcher {
       const processingTime = Date.now() - startTime
       
       return {
-        matches: matches.slice(0, this.TIER_LIMITS[params.tier].maxResults),
+        matches: matches.slice(0, this.TIER_LIMITS[params.tier].maxResults), // Now shows 9 for FREE
         searchMetadata: {
           searchIntent,
           candidatesEvaluated: candidates.length,
+          strictFiltersApplied: searchIntent.strictFilters || [],
           processingTime,
           timestamp: new Date()
         },
@@ -123,48 +125,90 @@ export class NextGenAITalentMatcher {
   }
 
   /**
-   * Enhanced candidate pool using available data
+   * STRICT FILTERING - Hard filters BEFORE any scoring
    */
-  private static async getEnrichedCandidatePool(intent: any): Promise<TalentProfile[]> {
-    // Use flexible filters based on available data
-    const candidates = await prisma.user.findMany({
-      where: {
-        role: 'STUDENT',
-        // Remove strict requirements - use available data
-        OR: [
-          { profileCompleted: true },
-          { bio: { not: null } },
-          { university: { not: null } },
-          { major: { not: null } }
-        ]
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        university: true,
-        major: true,
-        graduationYear: true,
-        bio: true,
-        location: true,
-        goal: true,
-        interests: true,
-        image: true,
-        lastActiveAt: true,
-        applicationsThisMonth: true,
-        profileCompletedAt: true,
-        firstApplicationAt: true,
-        applications: {
-          select: { id: true },
-          take: 100
+  private static async getStrictlyFilteredCandidatePool(intent: any): Promise<TalentProfile[]> {
+    console.log('🔍 Applying STRICT filters:', intent.strictFilters)
+    
+    // Build strict WHERE conditions
+    const whereConditions: any = {
+      role: 'STUDENT',
+      // Require profile completion for better data quality
+      profileCompleted: true,
+      // Require basic profile data
+      AND: [
+        {
+          OR: [
+            { university: { not: null } },
+            { major: { not: null } },
+            { bio: { not: null } }
+          ]
         }
-      },
-      orderBy: [
-        { lastActiveAt: 'desc' },
-        { applicationsThisMonth: 'desc' },
-        { profileCompletedAt: 'desc' }
       ]
+    }
+
+    // 🎯 STRICT UNIVERSITY FILTERING
+    if (intent.strictFilters?.universities?.length > 0) {
+      console.log('🏛️ Applying university filter:', intent.strictFilters.universities)
+      whereConditions.university = {
+        in: intent.strictFilters.universities,
+        mode: 'insensitive'
+      }
+    }
+
+    // 🎯 STRICT MAJOR/FIELD FILTERING  
+    if (intent.strictFilters?.majors?.length > 0) {
+      console.log('📚 Applying major filter:', intent.strictFilters.majors)
+      whereConditions.major = {
+        in: intent.strictFilters.majors,
+        mode: 'insensitive'
+      }
+    }
+
+    // 🎯 STRICT SKILLS/INTERESTS FILTERING
+    if (intent.strictFilters?.skills?.length > 0) {
+      console.log('🛠️ Applying skills filter:', intent.strictFilters.skills)
+      whereConditions.OR = intent.strictFilters.skills.map((skill: string) => ({
+        OR: [
+          { interests: { hasSome: [skill] } },
+          { goal: { hasSome: [skill] } },
+          { bio: { contains: skill, mode: 'insensitive' } }
+        ]
+      }))
+    }
+
+    // Get strictly filtered candidates
+    const candidates = await prisma.user.findMany({
+      where: whereConditions,
+             select: {
+         id: true,
+         name: true,
+         email: true,
+         university: true,
+         major: true,
+         graduationYear: true,
+         bio: true,
+         location: true,
+         goal: true,
+         interests: true,
+         image: true,
+         applicationsThisMonth: true,
+         profileCompleted: true,
+         createdAt: true,
+         applications: {
+           select: { id: true },
+           take: 100
+         }
+       },
+             // Order by RELEVANCE first, then activity
+       orderBy: [
+         { profileCompleted: 'desc' },    // Complete profiles first
+         { createdAt: 'desc' },           // Then by recent signups
+         { applicationsThisMonth: 'desc' } // Then by engagement
+       ]
     })
+
+    console.log(`✅ Strict filtering returned ${candidates.length} candidates`)
 
     // Enrich with activity metrics
     return candidates.map(candidate => {
@@ -181,10 +225,10 @@ export class NextGenAITalentMatcher {
         goal: candidate.goal,
         interests: candidate.interests,
         image: candidate.image,
-        lastActiveAt: candidate.lastActiveAt,
+        lastActiveAt: candidate.createdAt, // Use createdAt as proxy for activity
         applicationsThisMonth: candidate.applicationsThisMonth,
-        profileCompletedAt: candidate.profileCompletedAt,
-        firstApplicationAt: candidate.firstApplicationAt,
+        profileCompletedAt: candidate.profileCompleted ? candidate.createdAt : null,
+        firstApplicationAt: totalApplications > 0 ? candidate.createdAt : null,
         totalApplications,
         activityScore: 0, // Will be calculated below
         responseRate: 0, // Will be calculated below
@@ -200,9 +244,9 @@ export class NextGenAITalentMatcher {
   }
 
   /**
-   * Modern AI-powered matching and scoring
+   * RELEVANCE-FIRST matching (prioritizes accuracy over activity)
    */
-  private static async performAIMatching(
+  private static async performRelevanceFirstMatching(
     candidates: TalentProfile[], 
     intent: any, 
     params: TalentSearchParams
@@ -211,15 +255,16 @@ export class NextGenAITalentMatcher {
     
     for (const candidate of candidates) {
       try {
-        // Calculate comprehensive score
+        // NEW SCORING: Relevance-first approach
+        const relevanceScore = await this.calculateStrictRelevanceScore(candidate, intent)
         const activityScore = this.calculateActivityScore(candidate)
-        const relevanceScore = await this.calculateRelevanceScore(candidate, intent)
         const aiScore = await this.getAIScore(candidate, params.prompt)
         
-        const overallScore = (activityScore * 0.3) + (relevanceScore * 0.4) + (aiScore * 0.3)
+        // 🎯 NEW WEIGHTING: Relevance dominates (60%), then AI (25%), then activity (15%)
+        const overallScore = (relevanceScore * 0.60) + (aiScore * 0.25) + (activityScore * 0.15)
         
-        // Only include candidates with decent scores
-        if (overallScore >= 30) {
+        // Higher threshold for matches (must be truly relevant)
+        if (overallScore >= 40) {
           const aiInsights = await this.generateAIInsights(candidate, params.prompt)
           
           matches.push({
@@ -240,36 +285,211 @@ export class NextGenAITalentMatcher {
       }
     }
     
-    return matches.sort((a, b) => b.overallScore - a.overallScore)
+    // Sort by RELEVANCE first, then overall score
+    return matches.sort((a, b) => {
+      // First priority: relevance score
+      if (Math.abs(a.relevanceScore - b.relevanceScore) > 10) {
+        return b.relevanceScore - a.relevanceScore
+      }
+      // Second priority: overall score
+      return b.overallScore - a.overallScore
+    })
   }
 
   /**
-   * Calculate activity score based on engagement
+   * STRICT relevance scoring - exact matches get high scores
+   */
+  private static async calculateStrictRelevanceScore(candidate: TalentProfile, intent: any): Promise<number> {
+    let score = 0
+    
+         // 🎯 EXACT UNIVERSITY MATCH (30 points)
+     if (intent.strictFilters?.universities?.length > 0 && candidate.university) {
+       const universityMatch = intent.strictFilters.universities.some((uni: string) => 
+         candidate.university!.toLowerCase().includes(uni.toLowerCase()) ||
+         uni.toLowerCase().includes(candidate.university!.toLowerCase())
+       )
+       if (universityMatch) {
+         score += 30
+         console.log(`✅ University match: ${candidate.university}`)
+       }
+     }
+     
+     // 🎯 EXACT MAJOR MATCH (35 points)
+     if (intent.strictFilters?.majors?.length > 0 && candidate.major) {
+       const majorMatch = intent.strictFilters.majors.some((major: string) => 
+         candidate.major!.toLowerCase().includes(major.toLowerCase()) ||
+         major.toLowerCase().includes(candidate.major!.toLowerCase())
+       )
+       if (majorMatch) {
+         score += 35
+         console.log(`✅ Major match: ${candidate.major}`)
+       }
+     }
+    
+    // 🎯 SKILLS/INTERESTS MATCH (25 points)
+    if (intent.strictFilters?.skills?.length > 0) {
+      const skillsText = [...(candidate.goal || []), ...(candidate.interests || []), candidate.bio || ''].join(' ').toLowerCase()
+      let skillMatches = 0
+      
+      for (const skill of intent.strictFilters.skills) {
+        if (skillsText.includes(skill.toLowerCase())) {
+          skillMatches++
+        }
+      }
+      
+      if (skillMatches > 0) {
+        score += (skillMatches / intent.strictFilters.skills.length) * 25
+        console.log(`✅ Skills match: ${skillMatches}/${intent.strictFilters.skills.length}`)
+      }
+    }
+    
+    // 🎯 GENERAL KEYWORD MATCH (10 points) 
+    if (intent.keywords?.length > 0) {
+      const profileText = [candidate.university, candidate.major, candidate.bio, ...(candidate.goal || []), ...(candidate.interests || [])].join(' ').toLowerCase()
+      let keywordMatches = 0
+      
+      for (const keyword of intent.keywords) {
+        if (profileText.includes(keyword.toLowerCase())) {
+          keywordMatches++
+        }
+      }
+      
+      if (keywordMatches > 0) {
+        score += (keywordMatches / intent.keywords.length) * 10
+      }
+    }
+    
+    console.log(`📊 Candidate ${candidate.name} relevance score: ${score}/100`)
+    return Math.min(score, 100)
+  }
+
+  /**
+   * Enhanced search intent parsing with STRICT filtering
+   */
+  private static async parseModernSearchIntent(prompt: string): Promise<any> {
+    const keywords = this.extractKeywords(prompt)
+    const role = this.extractRole(prompt)
+    const experience = this.extractExperience(prompt)
+    
+    // 🎯 EXTRACT STRICT FILTERS
+    const strictFilters = this.extractStrictFilters(prompt)
+    
+    return {
+      originalPrompt: prompt,
+      keywords,
+      role,
+      experience,
+      strictFilters, // NEW: Hard filtering criteria
+      urgency: 'MEDIUM'
+    }
+  }
+
+  /**
+   * NEW: Extract strict filtering criteria from search prompt
+   */
+  private static extractStrictFilters(prompt: string): any {
+    const promptLower = prompt.toLowerCase()
+    const filters: any = {}
+
+    // 🏛️ UNIVERSITY EXTRACTION
+    const universities = []
+    const universityPatterns = [
+      'american university of dubai', 'aud',
+      'american university of sharjah', 'aus', 
+      'canadian university dubai', 'cud',
+      'heriot watt', 'heriot-watt',
+      'university of dubai', 'ud',
+      'zayed university',
+      'khalifa university',
+      'uae university',
+      'ajman university',
+      'university of sharjah'
+    ]
+    
+    for (const pattern of universityPatterns) {
+      if (promptLower.includes(pattern)) {
+        // Map abbreviations to full names
+        if (pattern === 'aud') universities.push('American University of Dubai')
+        else if (pattern === 'aus') universities.push('American University of Sharjah')
+        else if (pattern === 'cud') universities.push('Canadian University Dubai')
+        else universities.push(pattern)
+      }
+    }
+
+    // 📚 MAJOR/FIELD EXTRACTION
+    const majors = []
+    const majorPatterns = [
+      'computer science', 'cs', 'software engineering',
+      'business', 'business administration', 'mba',
+      'marketing', 'digital marketing',
+      'engineering', 'mechanical engineering', 'civil engineering',
+      'design', 'graphic design', 'ui/ux',
+      'finance', 'accounting',
+      'international business',
+      'psychology',
+      'communications'
+    ]
+    
+    for (const pattern of majorPatterns) {
+      if (promptLower.includes(pattern)) {
+        if (pattern === 'cs') majors.push('Computer Science')
+        else majors.push(pattern)
+      }
+    }
+
+    // 🛠️ SKILLS EXTRACTION  
+    const skills = []
+    const skillPatterns = [
+      'javascript', 'python', 'react', 'node.js',
+      'marketing', 'social media', 'content creation',
+      'design', 'photoshop', 'figma',
+      'data analysis', 'excel', 'sql',
+      'project management',
+      'communication skills'
+    ]
+    
+    for (const pattern of skillPatterns) {
+      if (promptLower.includes(pattern)) {
+        skills.push(pattern)
+      }
+    }
+
+    // Only add filters if we found specific criteria
+    if (universities.length > 0) filters.universities = universities
+    if (majors.length > 0) filters.majors = majors  
+    if (skills.length > 0) filters.skills = skills
+
+    console.log('🎯 Extracted strict filters:', filters)
+    return filters
+  }
+
+  /**
+   * Calculate activity score based on engagement (REDUCED weight)
    */
   private static calculateActivityScore(candidate: TalentProfile): number {
     let score = 0
     
-    // Recent activity (40 points)
+    // Recent activity (30 points - reduced from 40)
     if (candidate.lastActiveAt) {
       const daysSinceActive = Math.floor(
         (Date.now() - candidate.lastActiveAt.getTime()) / (1000 * 60 * 60 * 24)
       )
-      if (daysSinceActive <= 7) score += 40
-      else if (daysSinceActive <= 30) score += 25
+      if (daysSinceActive <= 7) score += 30
+      else if (daysSinceActive <= 30) score += 20
       else if (daysSinceActive <= 90) score += 10
     }
     
-    // Application activity (30 points)
-    score += Math.min(candidate.applicationsThisMonth * 5, 30)
+    // Application activity (25 points - reduced from 30)
+    score += Math.min(candidate.applicationsThisMonth * 4, 25)
     
-    // Profile completion (20 points)
-    if (candidate.profileCompletedAt) score += 20
-    if (candidate.bio) score += 5
-    if (candidate.university) score += 3
-    if (candidate.major) score += 2
+    // Profile completion (25 points)
+    if (candidate.profileCompletedAt) score += 25
+    if (candidate.bio) score += 10
+    if (candidate.university) score += 5
+    if (candidate.major) score += 5
     
-    // Total applications (10 points)
-    score += Math.min(candidate.totalApplications * 2, 10)
+    // Total applications (20 points)
+    score += Math.min(candidate.totalApplications * 2, 20)
     
     return Math.min(score, 100)
   }
@@ -278,36 +498,8 @@ export class NextGenAITalentMatcher {
    * Calculate relevance score using available profile data
    */
   private static async calculateRelevanceScore(candidate: TalentProfile, intent: any): Promise<number> {
-    let score = 0
-    
-    // University/Education match (25 points)
-    if (candidate.university && intent.keywords) {
-      const universityRelevance = this.calculateTextMatch(candidate.university, intent.keywords)
-      score += universityRelevance * 25
-    }
-    
-    // Major/Field match (25 points)
-    if (candidate.major && intent.keywords) {
-      const majorRelevance = this.calculateTextMatch(candidate.major, intent.keywords)
-      score += majorRelevance * 25
-    }
-    
-    // Bio/Description match (30 points)
-    if (candidate.bio && intent.keywords) {
-      const bioRelevance = this.calculateTextMatch(candidate.bio, intent.keywords)
-      score += bioRelevance * 30
-    }
-    
-    // Goals/Interests match (20 points)
-    if (candidate.goal || candidate.interests) {
-      const goalsText = [...(candidate.goal || []), ...(candidate.interests || [])].join(' ')
-      if (goalsText && intent.keywords) {
-        const goalsRelevance = this.calculateTextMatch(goalsText, intent.keywords)
-        score += goalsRelevance * 20
-      }
-    }
-    
-    return Math.min(score, 100)
+    // This is the old method - now using calculateStrictRelevanceScore
+    return this.calculateStrictRelevanceScore(candidate, intent)
   }
 
   /**
@@ -326,24 +518,6 @@ export class NextGenAITalentMatcher {
     }
     
     return Math.min(matches / keywords.length, 1)
-  }
-
-  /**
-   * Enhanced search intent parsing
-   */
-  private static async parseModernSearchIntent(prompt: string): Promise<any> {
-    // Extract keywords and intent from prompt
-    const keywords = this.extractKeywords(prompt)
-    const role = this.extractRole(prompt)
-    const experience = this.extractExperience(prompt)
-    
-    return {
-      originalPrompt: prompt,
-      keywords,
-      role,
-      experience,
-      urgency: 'MEDIUM'
-    }
   }
 
   private static extractKeywords(prompt: string): string[] {
@@ -423,7 +597,7 @@ export class NextGenAITalentMatcher {
       reasons.push('Well-articulated professional interests')
     }
     
-    const explanation = `${candidate.name} is a ${candidate.engagementLevel.toLowerCase()}-engagement candidate with ${candidate.activityScore}/100 activity score. They have been active on the platform and show genuine interest in opportunities.`
+    const explanation = `${candidate.name} is a strong match with ${candidate.university || 'their university'} background in ${candidate.major || 'their field'}. They show ${candidate.engagementLevel.toLowerCase()} engagement and have a ${candidate.activityScore}/100 activity score.`
     
     return {
       explanation,
@@ -485,13 +659,13 @@ export class NextGenAITalentMatcher {
     
     if (resultsCount < 5) {
       suggestions.push("Try broader terms like 'motivated students' or 'recent graduates'")
-      suggestions.push("Search by university or field of study")
+      suggestions.push("Search by university: 'Computer Science students at AUD'")
       suggestions.push("Look for 'active users' or 'highly engaged candidates'")
     }
     
-    suggestions.push("Try: 'Computer Science students at AUD'")
-    suggestions.push("Try: 'Marketing interns with high activity'")
-    suggestions.push("Try: 'Business students ready for internships'")
+    suggestions.push("Try: 'Business students at American University of Dubai'")
+    suggestions.push("Try: 'Computer Science students with high activity'")
+    suggestions.push("Try: 'Marketing students ready for internships'")
     
     return suggestions.slice(0, 3)
   }

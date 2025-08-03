@@ -685,6 +685,22 @@ What's your recruitment challenge today?`,
           {/* Chat Interface */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 h-[calc(100vh-12rem)] flex flex-col">
+              {/* Strategic Guidance Banner */}
+              <div className="border-b border-gray-200 p-4 bg-gradient-to-r from-blue-50 to-purple-50">
+                <div className="flex items-center gap-3 text-sm">
+                  <Lightbulb className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-gray-700">
+                      <strong>Quick hire?</strong> Use this chatbot for immediate talent search • 
+                      <strong> Long-term internship programs?</strong> 
+                      <Link href="/dashboard/projects/new" className="text-blue-600 hover:text-blue-700 underline ml-1">
+                        Post a project instead
+                      </Link>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map(renderMessage)}
