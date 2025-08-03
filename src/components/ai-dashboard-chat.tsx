@@ -1,361 +1,179 @@
-'use client'
-
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Brain, 
-  Search, 
-  Sparkles, 
-  Users, 
-  FileText, 
-  Settings,
-  Send,
-  Briefcase,
-  Eye,
-  MessageSquare,
-  Plus,
-  TrendingUp,
-  Activity,
-  Zap,
-  Crown,
-  ChevronRight,
-  Clock,
-  Star,
-  Target,
-  DollarSign,
-  ThumbsUp,
-  ThumbsDown,
-  CheckCircle,
-  AlertCircle,
-  Lightbulb
-} from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Send, Lightbulb, Users, Briefcase, Search, Plus, Eye, ArrowRight, Sparkles, Bot, Building2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+
+// AI Talent Search Integration
+interface TalentProfile {
+  id: string
+  name: string
+  email: string
+  university?: string | null
+  major?: string | null
+  graduationYear?: number | null
+  bio?: string | null
+  location?: string | null
+  goal?: string[]
+  interests?: string[]
+  image?: string | null
+  activityScore: number
+  responseRate: number
+  engagementLevel: 'HIGH' | 'MEDIUM' | 'LOW'
+  applicationsThisMonth: number
+  totalApplications: number
+}
+
+interface AIMatchResult {
+  candidate: TalentProfile
+  aiScore: number
+  activityScore: number
+  relevanceScore: number
+  overallScore: number
+  aiExplanation: string
+  strengths: string[]
+  matchReasons: string[]
+  contactCredits: number
+}
 
 interface ChatMessage {
   id: string
-  type: 'user' | 'ai' | 'action' | 'system'
+  type: 'user' | 'ai'
   content: string
   timestamp: Date
-  actionType?: 'search' | 'navigate' | 'info' | 'guidance' | 'credit-action'
+  actionType?: 'search' | 'navigate' | 'guidance'
   data?: any
 }
 
-interface QuickAction {
-  id: string
-  title: string
-  description: string
-  icon: any
-  href: string
-  prompt: string
-}
-
-interface CreditTransaction {
-  candidateId: string
-  candidateName: string
-  cost: number
-  type: 'contact_reveal' | 'detailed_profile'
-}
-
-export default function AIDashboardChat({ user }: { user: any }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      type: 'ai',
-      content: `👋 Hey ${user?.name?.split(' ')[0] || 'there'}! I'm your AI recruitment strategist. I can help you find the perfect candidates, guide your hiring strategy, and manage everything efficiently. What's your recruitment goal today?`,
-      timestamp: new Date()
-    }
-  ])
-  const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
-  const [credits, setCredits] = useState({ available: 15, used: 0, tier: 'FREE' })
-  const [pendingCreditAction, setPendingCreditAction] = useState<CreditTransaction | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+export default function AIDashboardChat() {
+  const { data: session } = useSession()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [searchResults, setSearchResults] = useState<AIMatchResult[]>([])
+  const [showResults, setShowResults] = useState(false)
+  const [credits, setCredits] = useState(15)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const quickActions: QuickAction[] = [
-    {
-      id: 'hiring-strategy',
-      title: 'Hiring Strategy',
-      description: 'Get recruitment advice',
-      icon: Target,
-      href: '',
-      prompt: 'Help me decide the best way to find talent for my needs'
-    },
-    {
-      id: 'find-talent',
-      title: 'Find Talent',
-      description: 'Search candidates now',
-      icon: Users,
-      href: '',
-      prompt: 'I want to find specific candidates with particular skills'
-    },
-    {
-      id: 'post-project',
-      title: 'Post Project',
-      description: 'Create job posting',
-      icon: Plus,
-      href: '/dashboard/projects/new',
-      prompt: 'I want to post a project and wait for applications'
-    }
-  ]
-
-  const strategicQuestions = [
-    "Should I post a project or search for specific talent?",
-    "I need someone for a short-term project urgently",
-    "I want to set up a long-term internship program", 
-    "What's the most cost-effective approach for my needs?",
-    "I need multiple hires - what's the best strategy?"
-  ]
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBottom()
   }, [messages])
 
+  // Welcome message
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    if (session?.user && messages.length === 0) {
+      const welcomeMessage: ChatMessage = {
+        id: 'welcome',
+        type: 'ai',
+        content: `Hey there! 👋 I'm your AI recruitment assistant, ready to help ${session.user.name || 'your company'} find amazing talent.
 
-  const handleSend = async () => {
-    if (!inputValue.trim()) return
+I can help you:
+🎯 **Find specific talent instantly** using our AI search
+📋 **Plan recruitment strategies** for different hiring needs  
+⚡ **Quick hires** for urgent projects
+🎓 **Internship programs** for long-term talent building
+📊 **Optimize your hiring** with data-driven insights
+
+**What can I help you with today?**`,
+        timestamp: new Date(),
+        actionType: 'guidance'
+      }
+      setMessages([welcomeMessage])
+    }
+  }, [session, messages.length])
+
+  const handleSendMessage = async () => {
+    if (!input.trim()) return
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
-      content: inputValue,
+      content: input,
       timestamp: new Date()
     }
 
     setMessages(prev => [...prev, userMessage])
-    setInputValue('')
-    setIsTyping(true)
+    setInput('')
+    setIsLoading(true)
 
-    // Simulate AI processing
-    setTimeout(async () => {
-      const aiResponse = await generateStrategicAIResponse(inputValue)
+    try {
+      // Generate AI response
+      const aiResponse = await generateAIResponse(input)
       setMessages(prev => [...prev, aiResponse])
-      setIsTyping(false)
-    }, 1500)
+
+      // If it's a search, perform the search
+      if (aiResponse.actionType === 'search') {
+        await performTalentSearch(input)
+      }
+    } catch (error) {
+      console.error('Error generating response:', error)
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: 'I apologize, but I encountered an error. Please try again or contact support if the issue persists.',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const generateStrategicAIResponse = async (userInput: string): Promise<ChatMessage> => {
-    const input = userInput.toLowerCase()
+  const generateAIResponse = async (input: string): Promise<ChatMessage> => {
+    const inputLower = input.toLowerCase()
 
-    // Strategic guidance for hiring decisions
-    if (input.includes('should i') || input.includes('what approach') || input.includes('strategy') || input.includes('recommend') || input.includes('advice')) {
+    // Handle talent search requests
+    if (inputLower.includes('find') || inputLower.includes('search') || inputLower.includes('looking for') || 
+        inputLower.includes('need') || inputLower.includes('developer') || inputLower.includes('designer') || 
+        inputLower.includes('student') || inputLower.includes('marketing') || inputLower.includes('business')) {
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: `🎯 **Strategic Recruitment Advice**
+        content: `🔍 **Perfect! Let me search for talent matching your criteria.**
 
-Let me help you choose the best approach! Here are your options:
+I'll analyze your request and find the best candidates based on:
+• **Exact skill matching** for relevant experience
+• **University/education background** for quality candidates  
+• **Activity levels** for responsive talent
+• **Engagement scores** for reliable hires
 
-**🚀 Active Search (Direct Talent Hunt):**
-• Best for: Specific skills, urgent roles, competitive candidates
-• Timeline: Immediate results (same day)
-• Cost: 1-2 credits per contact reveal
-• Success Rate: Higher for specialized roles
-
-**📋 Project Posting (Passive Recruitment):**
-• Best for: General roles, building talent pipeline, multiple positions  
-• Timeline: 1-2 weeks for good applications
-• Cost: No credits, just posting fee
-• Success Rate: Higher volume, broader reach
-
-**💡 My Recommendation:**
-Tell me more about your role (urgency, skills needed, budget) and I'll give you a personalized strategy!`,
+**Searching now...** This will cost 1-2 credits per contact reveal.`,
         timestamp: new Date(),
-        actionType: 'guidance',
-        data: {
-          options: [
-            { text: "I need someone urgently (< 1 week)", type: "urgent" },
-            { text: "I have time to review applications (1-4 weeks)", type: "patient" },
-            { text: "I need very specific/rare skills", type: "specialized" },
-            { text: "It's a common role with many candidates", type: "general" }
-          ]
-        }
-      }
-    }
-
-    // Handle urgency/timeline responses
-    if (input.includes('urgent') || input.includes('asap') || input.includes('immediately') || input.includes('rush')) {
-      return {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: `⚡ **Urgent Hiring Strategy**
-
-For urgent needs, I recommend **Active Talent Search**:
-
-✅ **Immediate Benefits:**
-• Search 648+ active candidates right now
-• AI-powered matching in seconds
-• Direct contact with pre-screened talent
-• Skip the waiting period
-
-💰 **Cost Analysis:**
-• 1-2 credits per contact reveal
-• Average 3-5 contacts needed for success
-• Total cost: ~5-10 credits vs weeks of waiting
-
-🎯 **Next Steps:**
-1. Tell me the specific role/skills needed
-2. I'll find perfect matches instantly
-3. You can contact them today
-
-**Ready to start your urgent search?**`,
-        timestamp: new Date(),
-        actionType: 'guidance',
-        data: {
-          recommended: 'active_search',
-          urgency: 'high'
-        }
-      }
-    }
-
-    // Handle specific skill/role requests
-    if (input.includes('developer') || input.includes('engineer') || input.includes('designer') || input.includes('marketer') || input.includes('analyst')) {
-      const role = input.includes('developer') ? 'developer' : 
-                   input.includes('engineer') ? 'engineer' :
-                   input.includes('designer') ? 'designer' :
-                   input.includes('marketer') ? 'marketer' : 'analyst'
-      
-      return {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: `🔍 **${role.charAt(0).toUpperCase() + role.slice(1)} Recruitment Strategy**
-
-Great choice! Here's my tailored approach for finding a ${role}:
-
-**📊 Market Analysis:**
-• High demand role - active search recommended
-• Competition is fierce - speed matters
-• Quality candidates are usually employed
-
-**🎯 Recommended Strategy: ACTIVE SEARCH**
-• Search our 648+ student database
-• Filter by relevant skills/education
-• Direct outreach to top matches
-• Bypass the application wait time
-
-**💡 Smart Approach:**
-1. Start with AI search (costs 1-2 credits per contact)
-2. Contact top 3-5 candidates immediately  
-3. If needed, post project as backup plan
-
-**Ready to find your perfect ${role}?**`,
-        timestamp: new Date(),
-        actionType: 'guidance',
-        data: {
-          role: role,
-          strategy: 'active_search_recommended'
-        }
-      }
-    }
-
-    // Handle talent search with credit awareness
-    if (input.includes('find') || input.includes('search') || input.includes('student') || input.includes('talent') || input.includes('candidate')) {
-      try {
-        // Show credit awareness first
-        const creditWarning = credits.available < 5 ? 
-          `⚠️ **Credit Alert:** You have ${credits.available} credits remaining. Each contact reveal costs 1-2 credits. Consider upgrading for unlimited access!
-
-` : ''
-
-        // Perform actual AI search
-        const response = await fetch('/api/ai-matching/search-v2', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: userInput })
-        })
-
-        const data = await response.json()
-
-        if (data.success && data.data.matches?.length > 0) {
-          return {
-            id: Date.now().toString(),
-            type: 'ai',
-            content: `${creditWarning}🎯 **Perfect! I found ${data.data.matches.length} candidates matching "${userInput}"**
-
-Here are your top matches with **credit-based contact reveals**:`,
-            timestamp: new Date(),
-            actionType: 'search',
-            data: { 
-              matches: data.data.matches.slice(0, 3), 
-              searchQuery: userInput,
-              creditWarning: credits.available < 5
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Search failed:', error)
-      }
-    }
-
-    // Handle project posting guidance
-    if (input.includes('post') && (input.includes('project') || input.includes('job'))) {
-      return {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: `📋 **Project Posting Strategy**
-
-Excellent choice for building a talent pipeline! Here's why posting works great:
-
-**✅ Benefits of Project Posting:**
-• No credit costs - just one-time posting
-• Attracts motivated, interested candidates
-• Builds your employer brand
-• Great for multiple similar roles
-
-**🎯 When Project Posting Works Best:**
-• You have 1-4 weeks timeline
-• Role has broad appeal
-• You want multiple options to choose from
-• Building long-term talent relationships
-
-**🚀 Optimization Tips:**
-• Use clear, specific job descriptions
-• Highlight learning opportunities
-• Set competitive compensation
-• Respond quickly to applications
-
-**Ready to create an attractive project posting?**`,
-        timestamp: new Date(),
-        actionType: 'navigate',
-        data: { 
-          href: '/dashboard/projects/new', 
-          label: 'Create Project Posting',
-          strategy: 'project_posting'
-        }
+        actionType: 'search',
+        data: { query: input }
       }
     }
 
     // Handle internship program requests
-    if (input.includes('internship') && (input.includes('program') || input.includes('long-term') || input.includes('multiple'))) {
+    if (inputLower.includes('internship') && (inputLower.includes('program') || inputLower.includes('long-term') || inputLower.includes('multiple'))) {
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: `🎓 **Long-term Internship Program Strategy**
+        content: `🎓 **Excellent choice for building a structured talent pipeline!**
 
-Perfect choice for building a structured talent pipeline! Here's my recommendation:
+For **internship programs**, I recommend **posting a project** rather than active search:
 
-**📋 Post a Project - Best for Internship Programs:**
-• Attract students specifically interested in your program
+**✅ Why Project Posting Works Best:**
+• Attract students specifically interested in your program  
 • Build your employer brand in universities
 • Get detailed applications showing genuine interest
 • No credit costs - cost-effective for multiple hires
-
-**🎯 Why Project Posting Works for Internships:**
 • Students prefer applying to structured programs
-• You can detail learning opportunities and growth path
-• Build relationships with educational institutions
-• Multiple candidates can apply and you choose the best fit
 
-**💡 Internship Program Tips:**
+**💡 Internship Program Success Tips:**
 • Highlight learning and mentorship opportunities
-• Specify program duration and structure
+• Specify program duration and structure  
 • Mention potential for full-time conversion
 • Include details about projects they'll work on
 
-**Ready to create your internship program posting?**`,
+**Ready to create your internship program?**`,
         timestamp: new Date(),
         actionType: 'navigate',
         data: { 
@@ -367,553 +185,477 @@ Perfect choice for building a structured talent pipeline! Here's my recommendati
     }
 
     // Handle short-term hiring requests
-    if (input.includes('short-term') || input.includes('temporary') || input.includes('quick') || input.includes('immediate')) {
+    if (inputLower.includes('short-term') || inputLower.includes('temporary') || inputLower.includes('quick') || inputLower.includes('immediate') || inputLower.includes('urgent')) {
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: `⚡ **Short-term/Quick Hire Strategy**
-
-For immediate or short-term needs, I recommend using this **chatbot for active search**:
+        content: `⚡ **Perfect! For urgent/short-term needs, active search is your best bet.**
 
 **🚀 Why Active Search for Quick Hires:**
 • Find candidates immediately (same day)
-• Direct contact with active talent
+• Direct contact with active talent  
 • Skip the application waiting period
 • Perfect for urgent project needs
 
-**💰 Credit-Efficient Approach:**
-• Search specific skills: "React developer with 2+ years experience"
-• Contact top 3-5 matches (cost: 3-10 credits)
-• Much faster than waiting for project applications
+**💰 Credit-Efficient Quick Hire Process:**
+1. **Tell me exactly what you need** (skills, experience, timeline)
+2. **I'll find 9 top matches instantly** using AI
+3. **Reveal contacts for 3-5 promising candidates** (3-10 credits total)
+4. **Reach out same day** for quick turnaround
 
-**🎯 Quick Hire Process:**
-1. Tell me exactly what skills/experience you need
-2. I'll find the best matches instantly
-3. Reveal contacts for promising candidates
-4. Reach out same day for quick turnaround
-
-**What specific skills are you looking for in your quick hire?**`,
+**What specific skills/experience are you looking for?**`,
         timestamp: new Date(),
         actionType: 'guidance',
-        data: {
-          strategy: 'quick_hire_active_search'
+        data: { strategy: 'quick_hire_active_search' }
+      }
+    }
+
+    // Handle project posting requests
+    if (inputLower.includes('post') && (inputLower.includes('project') || inputLower.includes('job') || inputLower.includes('opportunity'))) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `📋 **Smart choice! Project posting builds a strong talent pipeline.**
+
+**✅ Benefits of Project Posting:**
+• No credit costs - just one-time posting
+• Attracts motivated, interested candidates
+• Builds your employer brand naturally
+• Great for roles with broad appeal
+• Multiple candidates apply - you choose the best
+
+**🎯 When Project Posting Works Best:**
+• Timeline of 1-4 weeks  
+• Role has learning opportunities
+• Building long-term relationships
+• Want to showcase company culture
+
+**🚀 Optimization Tips:**
+• Use clear, compelling job descriptions
+• Highlight growth and learning opportunities  
+• Set competitive compensation
+• Respond quickly to applications
+
+**Ready to create an attractive posting?**`,
+        timestamp: new Date(),
+        actionType: 'navigate',
+        data: { 
+          href: '/dashboard/projects/new', 
+          label: 'Create Project Posting',
+          strategy: 'project_posting'
         }
+      }
+    }
+
+    // Handle strategy/guidance requests
+    if (inputLower.includes('strategy') || inputLower.includes('approach') || inputLower.includes('best') || 
+        inputLower.includes('recommend') || inputLower.includes('should i') || inputLower.includes('help')) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `🎯 **Let me help you choose the perfect recruitment strategy!**
+
+**Quick Questions to Optimize Your Approach:**
+
+**⏰ Timeline:**
+• **Immediate (1-3 days):** Active search with credits
+• **Short-term (1-2 weeks):** Active search or quick posting
+• **Long-term (3+ weeks):** Project posting for best results
+
+**🎯 Hiring Type:**
+• **Single specific role:** Active search for exact match
+• **Multiple similar roles:** Project posting for pipeline  
+• **Internship program:** Always post a project
+• **Exploration/networking:** Active search for discovery
+
+**💰 Budget Considerations:**
+• **Credit-based:** 1-2 credits per contact reveal
+• **Free posting:** No costs, just time investment
+
+**Tell me about your specific situation and I'll give you a personalized recommendation!**`,
+        timestamp: new Date(),
+        actionType: 'guidance',
+        data: { strategy: 'consultation' }
       }
     }
 
     // Handle navigation requests
-    if (input.includes('project') && !input.includes('find') && !input.includes('search')) {
+    if (inputLower.includes('view') || inputLower.includes('see') || inputLower.includes('browse') || inputLower.includes('projects')) {
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: "📊 **Project Management Hub**\n\nI'll take you to your projects dashboard where you can view, edit, and manage all your job postings. You can track applications, review candidates, and optimize your listings for better results.",
+        content: `📊 **Let me help you navigate your recruitment dashboard!**
+
+**Quick Navigation:**
+• **View Active Projects:** See all your current postings and applications
+• **Create New Project:** Post a new opportunity or internship
+• **Browse Applications:** Review candidates who've applied  
+• **Manage Team:** Handle your company settings and team
+
+**What would you like to explore?**`,
         timestamp: new Date(),
         actionType: 'navigate',
-        data: { href: '/dashboard/projects', label: 'Go to Projects Dashboard' }
+        data: { strategy: 'navigation' }
       }
     }
 
-    if (input.includes('applicant') || input.includes('application')) {
-      return {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: "👥 **Application Management**\n\nLet me show you all recent applications across your projects. I can help you review candidates, compare profiles, and make informed hiring decisions efficiently.",
-        timestamp: new Date(),
-        actionType: 'navigate', 
-        data: { href: '/dashboard/projects', label: 'View All Applications' }
-      }
-    }
-
-    // Default strategic response
+    // Default helpful response
     return {
       id: Date.now().toString(),
       type: 'ai',
-      content: `🤖 **I'm your strategic recruitment advisor!** Here's how I can help:
-      
-**🎯 Strategic Guidance:**
-• Should you post a project or search directly?
-• What's the best approach for your timeline/budget?
-• How to optimize your hiring success rate?
+      content: `I'm here to help with your recruitment needs! Here are some things I can assist with:
 
-**🔍 Active Talent Search:** *(Uses Credits)*
-• Find specific candidates instantly
-• AI-powered matching and scoring
-• Direct contact reveals (1-2 credits each)
+🎯 **Active Talent Search:** "Find me a React developer with 2+ years experience"
+📋 **Project Strategy:** "Should I post a project or search actively?"  
+⚡ **Quick Hires:** "I need someone urgently for a short-term project"
+🎓 **Internship Programs:** "Help me set up a structured internship program"
+📊 **Navigation:** "Show me my active projects" or "Create a new posting"
 
-**📋 Project Management:**
-• Create optimized job postings
-• Track and manage applications
-• Review candidate profiles
-
-**💡 Smart Tips:**
-• Ask me "Should I post or search?" for personalized advice
-• Tell me your role requirements for targeted recommendations
-• I'll help you make data-driven hiring decisions!
-
-What's your recruitment challenge today?`,
-      timestamp: new Date()
+**What recruitment challenge can I help you solve today?**`,
+      timestamp: new Date(),
+      actionType: 'guidance'
     }
   }
 
-  const handleQuickAction = (action: QuickAction) => {
-    if (action.href) {
-      window.location.href = action.href
-      return
-    }
+  const performTalentSearch = async (query: string) => {
+    try {
+      setIsLoading(true)
+      setShowResults(false)
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'user', 
-      content: action.prompt,
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setIsTyping(true)
-
-    setTimeout(async () => {
-      const aiResponse = await generateStrategicAIResponse(action.prompt)
-      setMessages(prev => [...prev, aiResponse])
-      setIsTyping(false)
-    }, 1000)
-  }
-
-  const handleCreditAction = async (action: 'reveal' | 'cancel', candidateId?: string, cost?: number) => {
-    if (action === 'cancel') {
-      setPendingCreditAction(null)
-      return
-    }
-
-    if (action === 'reveal' && candidateId && cost) {
-      if (credits.available < cost) {
-        // Not enough credits
-        const upgradeMessage: ChatMessage = {
-          id: Date.now().toString(),
-          type: 'system',
-          content: `❌ **Insufficient Credits**\n\nYou need ${cost} credits but only have ${credits.available} remaining.\n\nUpgrade your plan to continue accessing candidate contacts!`,
-          timestamp: new Date(),
-          actionType: 'credit-action',
-          data: { type: 'upgrade_required' }
-        }
-        setMessages(prev => [...prev, upgradeMessage])
-        return
-      }
-
-      try {
-        const response = await fetch('/api/ai-matching/search-v2', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'reveal_contact', 
-            candidateId 
-          })
+      const response = await fetch('/api/ai-matching/search-v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: query,
+          tier: 'FREE'
         })
-        
-        const data = await response.json()
-        
-        if (data.success) {
-          setCredits(prev => ({ 
-            ...prev, 
-            available: prev.available - cost,
-            used: prev.used + cost 
-          }))
+      })
 
-          const successMessage: ChatMessage = {
-            id: Date.now().toString(),
-            type: 'system',
-            content: `✅ **Contact Revealed!**\n\n📧 **Email:** ${data.data.email}\n${data.data.whatsapp ? `📱 **WhatsApp:** ${data.data.whatsapp}\n` : ''}\n💰 **Credits Used:** ${cost}\n💳 **Remaining:** ${credits.available - cost} credits\n\n*Pro tip: Reach out quickly! Active candidates respond better to fast outreach.*`,
-            timestamp: new Date(),
-            actionType: 'credit-action',
-            data: { 
-              type: 'contact_revealed',
-              contact: data.data,
-              cost: cost
-            }
-          }
-          setMessages(prev => [...prev, successMessage])
-          setPendingCreditAction(null)
-        }
-      } catch (error) {
-        console.error('Credit action failed:', error)
+      if (!response.ok) throw new Error('Search failed')
+
+      const data = await response.json()
+      setSearchResults(data.matches || [])
+      setShowResults(true)
+      setCredits(data.creditInfo?.availableCredits || credits - 1)
+
+      // Add results summary message
+      const resultsMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `🎉 **Found ${data.matches?.length || 0} excellent matches!**
+
+${data.matches?.length > 0 ? 
+  `I've analyzed **${data.searchMetadata?.candidatesEvaluated || 'multiple'}** candidates and selected the **top ${data.matches.length}** based on relevance and quality.
+
+**💳 Credits:** ${credits} remaining | **📞 Contact reveals:** 1-2 credits each
+
+**👆 Review the candidates above and click "Reveal Contact" for promising matches!**` : 
+  `No exact matches found for this search. Try:
+• Broader terms like "motivated students" or "active candidates"
+• Specific universities: "Computer Science students at AUD"  
+• Skills-based search: "Students with marketing experience"`}`,
+        timestamp: new Date(),
+        actionType: 'guidance'
       }
+      setMessages(prev => [...prev, resultsMessage])
+
+    } catch (error) {
+      console.error('Search error:', error)
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: '❌ **Search encountered an error.** Please try again with different terms or contact support if the issue persists.',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const renderMessage = (message: ChatMessage) => {
-    if (message.type === 'user') {
-      return (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex justify-end mb-4"
-        >
-          <div className="max-w-xs lg:max-w-md px-4 py-2 bg-blue-600 text-white rounded-2xl rounded-br-sm">
-            {message.content}
-          </div>
-        </motion.div>
-      )
+  const revealContact = async (candidateId: string, cost: number) => {
+    if (credits < cost) {
+      alert('Insufficient credits. Please upgrade your plan.')
+      return
     }
 
-    const isSystemMessage = message.type === 'system'
+    try {
+      const response = await fetch('/api/ai-matching/reveal-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId })
+      })
 
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex items-start gap-3 mb-4"
-      >
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-          isSystemMessage 
-            ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
-            : 'bg-gradient-to-r from-blue-500 to-purple-600'
-        }`}>
-          {isSystemMessage ? <CheckCircle className="w-4 h-4 text-white" /> : <Brain className="w-4 h-4 text-white" />}
-        </div>
-        <div className="flex-1 max-w-xs lg:max-w-2xl">
-          <div className={`border rounded-2xl rounded-tl-sm p-4 shadow-sm ${
-            isSystemMessage ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
-          }`}>
-            <div className="whitespace-pre-wrap text-gray-800">{message.content}</div>
-            
-            {/* Strategic Guidance Options */}
-            {message.actionType === 'guidance' && message.data?.options && (
-              <div className="mt-4 space-y-2">
-                {message.data.options.map((option: any, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setInputValue(option.text)}
-                    className="block w-full text-left p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 text-blue-800 transition-colors"
-                  >
-                    💡 {option.text}
-                  </button>
-                ))}
-              </div>
-            )}
+      if (!response.ok) throw new Error('Failed to reveal contact')
 
-            {/* Navigation Buttons */}
-            {message.actionType === 'navigate' && message.data && (
-              <Link
-                href={message.data.href}
-                className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-              >
-                {message.data.label}
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            )}
-
-            {/* Search Results with Credit Integration */}
-            {message.actionType === 'search' && message.data?.matches && (
-              <div className="mt-4 space-y-3">
-                {message.data.matches.map((match: any, index: number) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{match.candidate.name}</h4>
-                        {match.candidate.university && (
-                          <p className="text-sm text-gray-600">{match.candidate.university}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg font-bold text-blue-600">{Math.round(match.overallScore)}/100</span>
-                        <p className="text-xs text-gray-500">AI Match</p>
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-gray-700 mb-3">{match.aiExplanation}</p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-sm text-gray-500">
-                        <Zap className="h-4 w-4" />
-                        {match.contactCredits} credits to reveal contact
-                      </div>
-                      
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setPendingCreditAction({
-                          candidateId: match.candidate.id,
-                          candidateName: match.candidate.name,
-                          cost: match.contactCredits,
-                          type: 'contact_reveal'
-                        })}
-                        disabled={credits.available < match.contactCredits}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        {credits.available >= match.contactCredits ? 'Reveal Contact' : 'Need More Credits'}
-                      </motion.button>
-                    </div>
-                  </div>
-                ))}
-                
-                <Link
-                  href="/dashboard/ai-search-v2"
-                  className="inline-flex items-center gap-2 mt-2 text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  View all results & advanced search
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
-            )}
-
-            {/* Credit Action Results */}
-            {message.actionType === 'credit-action' && message.data?.type === 'upgrade_required' && (
-              <Link
-                href="/subscription"
-                className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all"
-              >
-                <Crown className="w-4 h-4" />
-                Upgrade Plan
-              </Link>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    )
+      const data = await response.json()
+      setCredits(prev => prev - cost)
+      
+      alert(`Contact revealed!\nEmail: ${data.contact.email}${data.contact.whatsapp ? `\nWhatsApp: ${data.contact.whatsapp}` : ''}`)
+    } catch (error) {
+      console.error('Error revealing contact:', error)
+      alert('Error revealing contact. Please try again.')
+    }
   }
+
+  const suggestedPrompts = [
+    "Find me Computer Science students at AUD",
+    "I need a marketing intern urgently",
+    "Help me set up an internship program", 
+    "Should I post a project or search actively?",
+    "Find business students with high activity"
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Credit Confirmation Modal */}
-      {pendingCreditAction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-6 max-w-md mx-4 shadow-2xl"
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Eye className="w-8 h-8 text-white" />
-              </div>
-              
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Reveal Contact Information?</h3>
-              <p className="text-gray-600 mb-1">
-                <strong>{pendingCreditAction.candidateName}</strong>
-              </p>
-              <p className="text-sm text-gray-500 mb-6">
-                This will cost <strong>{pendingCreditAction.cost} credits</strong>
-              </p>
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleCreditAction('cancel')}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleCreditAction('reveal', pendingCreditAction.candidateId, pendingCreditAction.cost)}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-lg"
-                >
-                  Use {pendingCreditAction.cost} Credits
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      {/* ChatGPT-style Header */}
+      <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-                <Brain className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                <Bot className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">AI Recruitment Strategist</h1>
-                <p className="text-sm text-gray-600">Your intelligent hiring advisor</p>
+                <h1 className="text-xl font-semibold text-gray-900">AI Recruitment Assistant</h1>
+                                 <p className="text-sm text-gray-600 flex items-center gap-1">
+                   <Building2 className="h-4 w-4" />
+                   {session?.user?.name || 'Your Company'}
+                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="px-4 py-2 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl border border-emerald-200/50">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-emerald-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    {credits.available} credits
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    ({credits.tier})
-                  </span>
-                </div>
-              </div>
-              
-              <Link
-                href="/subscription"
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-sm font-medium flex items-center gap-2"
-              >
-                <Crown className="h-4 w-4" />
-                Upgrade
-              </Link>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                {credits} credits
+              </Badge>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Chat Interface */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 h-[calc(100vh-12rem)] flex flex-col">
-              {/* Strategic Guidance Banner */}
-              <div className="border-b border-gray-200 p-4 bg-gradient-to-r from-blue-50 to-purple-50">
-                <div className="flex items-center gap-3 text-sm">
-                  <Lightbulb className="h-5 w-5 text-blue-600 flex-shrink-0" />
+      {/* Main Chat Container */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        
+        {/* Quick Action Buttons */}
+        <div className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Link href="/dashboard/projects/new">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <Plus className="h-6 w-6 text-blue-600" />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-gray-700">
-                      <strong>Quick hire?</strong> Use this chatbot for immediate talent search • 
-                      <strong> Long-term internship programs?</strong> 
-                      <Link href="/dashboard/projects/new" className="text-blue-600 hover:text-blue-700 underline ml-1">
-                        Post a project instead
-                      </Link>
-                    </p>
+                    <h3 className="font-semibold text-gray-900 mb-1">Create Project</h3>
+                    <p className="text-sm text-gray-600">Post internships & job opportunities</p>
                   </div>
+                  <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
                 </div>
-              </div>
+              </motion.div>
+            </Link>
 
-              {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {messages.map(renderMessage)}
-                
-                {/* Typing indicator */}
-                {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-start gap-3"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Brain className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm p-4">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input Area */}
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex gap-3">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Ask me about hiring strategy, search for talent, or get recruitment advice..."
-                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 outline-none"
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleSend}
-                    disabled={!inputValue.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                  </motion.button>
-                </div>
-
-                {/* Strategic Suggestions */}
-                <div className="mt-3">
-                  <p className="text-xs text-gray-500 mb-2">💡 Strategic questions to ask:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {strategicQuestions.slice(0, 2).map((question, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setInputValue(question)}
-                        className="text-xs px-3 py-1 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 rounded-lg text-blue-700 transition-colors border border-blue-200"
-                      >
-                        {question}
-                      </button>
-                    ))}
+            <Link href="/dashboard/projects">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-purple-300 hover:shadow-lg transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                    <Eye className="h-6 w-6 text-purple-600" />
                   </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-1">View Projects</h3>
+                    <p className="text-sm text-gray-600">Manage active postings & applications</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </Link>
           </div>
+        </div>
 
-          {/* Strategic Actions Sidebar */}
-          <div className="space-y-6">
-            {/* Strategic Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Target className="w-5 h-5 text-blue-600" />
-                Strategic Actions
-              </h3>
-              <div className="space-y-3">
-                {quickActions.map((action) => (
-                  <motion.button
-                    key={action.id}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => handleQuickAction(action)}
-                    className="w-full p-3 text-left border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                        <action.icon className="w-4 h-4 text-blue-600" />
+        {/* Chat Messages */}
+        <div className="space-y-6 mb-8">
+          <AnimatePresence>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`max-w-3xl ${message.type === 'user' ? 'ml-12' : 'mr-12'}`}>
+                  <div className={`rounded-2xl px-6 py-4 ${
+                    message.type === 'user' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-white border border-gray-200 text-gray-900'
+                  }`}>
+                    {message.type === 'ai' && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-600">AI Assistant</span>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">{action.title}</p>
-                        <p className="text-xs text-gray-500">{action.description}</p>
+                    )}
+                    <div className="prose prose-sm max-w-none">
+                      {message.content.split('\n').map((line, i) => (
+                        <p key={i} className={`${i === 0 ? 'mt-0' : ''} ${message.type === 'user' ? 'text-white' : ''}`}>
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                    
+                    {/* Action Button */}
+                    {message.actionType === 'navigate' && message.data?.href && (
+                      <div className="mt-4">
+                        <Link href={message.data.href}>
+                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                            {message.data.label || 'Take Action'}
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Loading indicator */}
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start"
+            >
+              <div className="max-w-3xl mr-12">
+                <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-sm text-gray-500">Thinking...</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Search Results */}
+        {showResults && searchResults.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                Talent Search Results
+              </h3>
+              <div className="grid gap-4">
+                {searchResults.map((result) => (
+                  <div key={result.candidate.id} className="border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            {result.candidate.image ? (
+                              <img src={result.candidate.image} alt={result.candidate.name} className="w-12 h-12 rounded-full object-cover" />
+                            ) : (
+                              <span className="text-lg font-semibold text-gray-600">
+                                {result.candidate.name.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{result.candidate.name}</h4>
+                            <p className="text-sm text-gray-600">
+                              {result.candidate.university} • {result.candidate.major}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-gray-700 mb-3">{result.candidate.bio}</p>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <Badge variant="outline">Match: {result.overallScore.toFixed(0)}%</Badge>
+                          <Badge variant="outline">Activity: {result.candidate.engagementLevel}</Badge>
+                          <Badge variant="outline">{result.candidate.applicationsThisMonth} apps this month</Badge>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600">{result.aiExplanation}</p>
+                      </div>
+                      
+                      <div className="ml-4">
+                        <Button
+                          size="sm"
+                          onClick={() => revealContact(result.candidate.id, result.contactCredits)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Reveal Contact ({result.contactCredits} credits)
+                        </Button>
                       </div>
                     </div>
-                  </motion.button>
+                  </div>
                 ))}
               </div>
             </div>
+          </motion.div>
+        )}
 
-            {/* Credit Status */}
-            <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200/50 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-emerald-600" />
-                Credit Management
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Available Credits</span>
-                  <span className="font-bold text-emerald-600">{credits.available}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Credits Used</span>
-                  <span className="font-semibold text-gray-900">{credits.used}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Current Plan</span>
-                  <span className="font-semibold text-blue-600">{credits.tier}</span>
-                </div>
-                <div className="mt-4 p-3 bg-white rounded-lg">
-                  <p className="text-xs text-gray-600">
-                    💡 Contact reveals cost 1-2 credits each. Upgrade for unlimited access!
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Features */}
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border border-purple-200/50 p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-purple-600" />
-                <h3 className="font-semibold text-gray-900">AI Capabilities</h3>
-              </div>
-              <div className="space-y-2 text-sm text-gray-700">
-                <p>🎯 Strategic hiring advice</p>
-                <p>💰 Cost-effective recommendations</p>
-                <p>⚡ Instant talent matching</p>
-                <p>💳 Smart credit management</p>
-                <p>📊 Activity-based scoring</p>
-                <p>🤖 Conversational guidance</p>
-              </div>
+        {/* Input Area */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-4">
+          <div className="flex gap-3">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask me anything about recruitment, talent search, or hiring strategy..."
+              className="flex-1 border-none bg-gray-50 focus:bg-white transition-colors"
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isLoading}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 px-4"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* Suggested Prompts */}
+          <div className="mt-4">
+            <p className="text-sm text-gray-500 mb-2">Try asking:</p>
+            <div className="flex flex-wrap gap-2">
+              {suggestedPrompts.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => setInput(prompt)}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition-colors"
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
           </div>
         </div>
