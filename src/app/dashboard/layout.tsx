@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { OnboardingSessionManager } from '@/lib/onboarding-session-manager'
+import { ChevronDown } from 'lucide-react'
 
 export default function DashboardLayout({
   children,
@@ -200,52 +201,53 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - Mobile Optimized */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                <Link href="/dashboard" className="flex items-center gap-2">
-                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm sm:text-base">B</span>
-                  </div>
-                  <span className="hidden sm:inline">Bidaaya</span>
-                </Link>
-              </h1>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="hidden sm:block">
-              <span className="text-sm text-gray-700">
-                {session.user.name} ({session.user.role})
-              </span>
+    <div className={`min-h-screen ${session?.user?.role === 'COMPANY' ? 'bg-gradient-to-br from-slate-50 via-white to-blue-50' : 'bg-gray-50'}`}>
+      {/* Header - Mobile Optimized - Hidden for companies */}
+      {session?.user?.role !== 'COMPANY' && (
+        <header className="bg-white shadow-sm border-b sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  <Link href="/dashboard" className="flex items-center gap-2">
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm sm:text-base">B</span>
+                    </div>
+                    <span className="hidden sm:inline">Bidaaya</span>
+                  </Link>
+                </h1>
               </div>
-              
-              {/* Desktop Sign Out */}
-              <button
-                onClick={() => signOut({ callbackUrl: '/auth/login' })}
-                className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                🚪 Sign Out
-              </button>
-              
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <span className="sr-only">Menu</span>
-              </button>
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                {/* User Profile Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center">
+                      <span className="text-white font-semibold text-xs sm:text-sm">
+                        {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <p className="text-sm font-medium text-gray-900 truncate max-w-32">
+                        {session?.user?.name || 'User'}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate max-w-32">
+                        {session?.user?.email}
+                      </p>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
+      {/* Mobile Menu - Hidden for companies */}
+      {session?.user?.role !== 'COMPANY' && isMenuOpen && (
         <>
           {/* Backdrop */}
           <div 
@@ -352,7 +354,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main content - Mobile Optimized */}
-      <main className="max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
+      <main className={`${session?.user?.role === 'COMPANY' ? '' : 'max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8'}`}>
         {children}
       </main>
     </div>

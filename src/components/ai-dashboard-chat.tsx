@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, Sparkles, Send, User, Bot } from 'lucide-react'
+import { Search, Plus, Sparkles, Send, User, Bot, Zap, Crown, Brain, Target, Activity } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -56,6 +56,7 @@ export default function AIDashboardChat() {
   const [searchResults, setSearchResults] = useState<AIMatchResult[]>([])
   const [showResults, setShowResults] = useState(false)
   const [credits, setCredits] = useState(15)
+  const [isAnimatingInput, setIsAnimatingInput] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -75,8 +76,18 @@ export default function AIDashboardChat() {
     }
   }, [input]);
 
-  const handleSendMessage = async (message: string, autoMode?: 'create-project' | 'find-talent') => {
+  const handleSendMessage = async (message: string, autoMode?: 'create-project' | 'find-talent', withAnimation = false) => {
     if (!message.trim()) return
+
+    if (withAnimation) {
+      setIsAnimatingInput(true)
+      setInput(message)
+      
+      // Wait for animation to complete
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      setIsAnimatingInput(false)
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -286,14 +297,23 @@ ${data.matches?.length > 0 ?
       icon: Plus,
       label: "Create Project",
       description: "Post internships & job opportunities",
-      action: () => handleSendMessage("I want to create a new project", 'create-project')
+      action: () => handleSendMessage("I want to create a new project", 'create-project', true)
     },
     {
       icon: Search,
       label: "Find Talent", 
       description: "Search our database of 500+ candidates",
-      action: () => handleSendMessage("I want to find talent", 'find-talent')
+      action: () => handleSendMessage("I want to find talent", 'find-talent', true)
     }
+  ]
+
+  // Quick search examples
+  const quickSearches = [
+    "Computer Science students at AUD",
+    "Marketing interns with high activity", 
+    "Business students ready for internships",
+    "Active users in Dubai",
+    "Recent graduates interested in startups"
   ]
 
   const firstName = session?.user?.name?.split(' ')[0] || 'there'
@@ -301,17 +321,48 @@ ${data.matches?.length > 0 ?
   const hasMessages = messages.length > 0
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Credits Badge - Top Right */}
-      <div className="absolute top-6 right-6 z-10">
-        <Badge variant="outline" className="flex items-center gap-1 bg-gray-900 text-white border-gray-700">
-          <Sparkles className="h-3 w-3" />
-          {credits} credits
-        </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Header */}
+      <div className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">AI Recruitment Assistant</h1>
+                <p className="text-sm text-gray-600">Find perfect candidates & create projects effortlessly</p>
+              </div>
+            </div>
+            
+            {/* Credit Display */}
+            <div className="flex items-center gap-4">
+              <div className="px-4 py-2 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl border border-emerald-200/50">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-emerald-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {credits} credits
+                  </span>
+                  <span className="text-xs text-gray-500">(FREE)</span>
+                </div>
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-sm font-medium flex items-center gap-2"
+              >
+                <Crown className="h-4 w-4" />
+                Upgrade
+              </motion.button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-4xl mx-auto w-full">
+      <div className="max-w-4xl mx-auto px-6 py-8">
         
         {/* Welcome Header - Only show when no messages */}
         {!hasMessages && (
@@ -319,20 +370,25 @@ ${data.matches?.length > 0 ?
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-8"
           >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full border border-blue-200/50 mb-6">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700">Next-Generation AI Powered</span>
+            </div>
+            
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              How can I help today?
+              Hey {firstName}, ready to recruit?
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl">
-              Type a command or ask a question
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Describe what you need and I'll help you find perfect talent or create amazing projects.
             </p>
           </motion.div>
         )}
 
         {/* Chat Messages Area */}
         {hasMessages && (
-          <div className="flex-1 w-full max-h-[60vh] overflow-y-auto mb-8 space-y-6">
+          <div className="mb-8 space-y-6 max-h-[50vh] overflow-y-auto">
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div
@@ -345,12 +401,12 @@ ${data.matches?.length > 0 ?
                   <div className={`max-w-3xl ${message.type === 'user' ? 'ml-12' : 'mr-12'} flex items-start gap-3`}>
                     {/* Avatar */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.type === 'user' ? 'bg-gray-900 order-2' : 'bg-gray-100'
+                      message.type === 'user' ? 'bg-gray-900 order-2' : 'bg-blue-100'
                     }`}>
                       {message.type === 'user' ? (
                         <User className="h-4 w-4 text-white" />
                       ) : (
-                        <Bot className="h-4 w-4 text-gray-600" />
+                        <Brain className="h-4 w-4 text-blue-600" />
                       )}
                     </div>
                     
@@ -358,7 +414,7 @@ ${data.matches?.length > 0 ?
                     <div className={`rounded-2xl px-6 py-4 ${
                       message.type === 'user' 
                         ? 'bg-gray-900 text-white order-1' 
-                        : 'bg-gray-50 border border-gray-200 text-gray-900'
+                        : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
                     }`}>
                       <div className="prose prose-sm max-w-none">
                         {message.content.split('\n').map((line, i) => (
@@ -381,15 +437,15 @@ ${data.matches?.length > 0 ?
                 className="flex justify-start"
               >
                 <div className="max-w-3xl mr-12 flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-gray-600" />
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Brain className="h-4 w-4 text-blue-600" />
                   </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4">
+                  <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
                       <span className="text-sm text-gray-500">Thinking...</span>
                     </div>
@@ -407,24 +463,24 @@ ${data.matches?.length > 0 ?
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full mb-8"
+            className="mb-8"
           >
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
-                <Search className="h-5 w-5 text-gray-600" />
+                <Search className="h-5 w-5 text-blue-600" />
                 Talent Search Results
               </h3>
               <div className="grid gap-4">
                 {searchResults.map((result) => (
-                  <div key={result.candidate.id} className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div key={result.candidate.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                             {result.candidate.image ? (
                               <img src={result.candidate.image} alt={result.candidate.name} className="w-12 h-12 rounded-full object-cover" />
                             ) : (
-                              <span className="text-lg font-semibold text-gray-600">
+                              <span className="text-lg font-semibold text-blue-600">
                                 {result.candidate.name.charAt(0)}
                               </span>
                             )}
@@ -452,7 +508,7 @@ ${data.matches?.length > 0 ?
                         <Button
                           size="sm"
                           onClick={() => revealContact(result.candidate.id, result.contactCredits)}
-                          className="bg-gray-900 hover:bg-gray-800 text-white"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           Reveal Contact ({result.contactCredits} credits)
                         </Button>
@@ -470,73 +526,132 @@ ${data.matches?.length > 0 ?
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: hasMessages ? 0 : 0.2 }}
-          className="w-full space-y-6"
+          className="space-y-6"
         >
           {/* Chat Input */}
-          <div className="bg-gray-900 rounded-2xl shadow-xl border border-gray-800 overflow-hidden">
-            <div className="flex items-end gap-3 p-6">
-              <div className="flex-1">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      if (hasContent) handleSendMessage(input);
-                    }
+          <div className="relative">
+            <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-lg focus-within:border-blue-500 transition-colors overflow-hidden">
+              <div className="flex items-end gap-3 p-6">
+                <div className="flex-1">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (hasContent) handleSendMessage(input);
+                      }
+                    }}
+                    placeholder="Ready to find amazing talent? Describe what you're looking for..."
+                    disabled={isLoading || isAnimatingInput}
+                    className="w-full bg-transparent text-gray-900 placeholder-gray-400 border-none outline-none resize-none text-lg leading-relaxed"
+                    rows={1}
+                  />
+                </div>
+                
+                <Button
+                  size="icon"
+                  className={`rounded-xl transition-all duration-200 flex-shrink-0 ${
+                    hasContent
+                      ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg scale-100"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed scale-95"
+                  }`}
+                  onClick={() => {
+                    if (hasContent) handleSendMessage(input);
                   }}
-                  placeholder="Ask Zap a question..."
-                  disabled={isLoading}
-                  className="w-full bg-transparent text-white placeholder-gray-400 border-none outline-none resize-none text-base leading-relaxed"
-                  rows={1}
-                />
+                  disabled={!hasContent || isLoading || isAnimatingInput}
+                >
+                  {isLoading || isAnimatingInput ? (
+                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                </Button>
               </div>
-              
-              <Button
-                size="icon"
-                className={`rounded-full transition-all duration-200 flex-shrink-0 ${
-                  hasContent
-                    ? "bg-white hover:bg-gray-100 text-gray-900 shadow-lg scale-100"
-                    : "bg-gray-700 text-gray-400 cursor-not-allowed scale-95"
-                }`}
-                onClick={() => {
-                  if (hasContent) handleSendMessage(input);
-                }}
-                disabled={!hasContent || isLoading}
-              >
-                {isLoading ? (
-                  <div className="animate-spin h-5 w-5 border-2 border-gray-900 border-t-transparent rounded-full" />
-                ) : (
-                  <Send className="h-5 w-5" />
-                )}
-              </Button>
             </div>
           </div>
 
-          {/* Suggestion Buttons - Only show when no messages */}
+          {/* Action Buttons - Always visible */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: hasMessages ? 0.1 : 0.3 }}
+            className="flex flex-wrap gap-3 justify-center"
+          >
+            {suggestionButtons.map((suggestion, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="h-auto p-4 border-gray-300 hover:bg-gray-50 flex items-center gap-3 text-left bg-white shadow-sm"
+                onClick={suggestion.action}
+                disabled={isLoading || isAnimatingInput}
+              >
+                <suggestion.icon className="h-5 w-5 text-gray-600 flex-shrink-0" />
+                <div>
+                  <div className="font-medium text-gray-900">{suggestion.label}</div>
+                  <div className="text-sm text-gray-600">{suggestion.description}</div>
+                </div>
+              </Button>
+            ))}
+          </motion.div>
+
+          {/* Try These Examples - Only show when no messages */}
           {!hasMessages && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-wrap gap-3 justify-center"
+              className="text-center"
             >
-              {suggestionButtons.map((suggestion, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  className="h-auto p-4 border-gray-300 hover:bg-gray-50 flex items-center gap-3 text-left"
-                  onClick={suggestion.action}
-                  disabled={isLoading}
-                >
-                  <suggestion.icon className="h-5 w-5 text-gray-600 flex-shrink-0" />
-                  <div>
-                    <div className="font-medium text-gray-900">{suggestion.label}</div>
-                    <div className="text-sm text-gray-600">{suggestion.description}</div>
-                  </div>
-                </Button>
-              ))}
+              <p className="text-sm text-gray-600 mb-4">💡 Try these examples:</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                {quickSearches.map((example, index) => (
+                  <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setInput(example)}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-colors shadow-sm"
+                    disabled={isLoading || isAnimatingInput}
+                  >
+                    {example}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Features Showcase - Only show when no messages */}
+          {!hasMessages && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="grid md:grid-cols-3 gap-6 mt-12"
+            >
+              <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <div className="p-3 bg-blue-100 rounded-xl w-fit mb-4">
+                  <Activity className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Activity Intelligence</h3>
+                <p className="text-gray-600 text-sm">Real-time engagement scoring based on platform activity and application patterns.</p>
+              </div>
+              
+              <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <div className="p-3 bg-emerald-100 rounded-xl w-fit mb-4">
+                  <Target className="h-6 w-6 text-emerald-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Smart Matching</h3>
+                <p className="text-gray-600 text-sm">AI analyzes profiles, education, and goals to find the most relevant candidates.</p>
+              </div>
+              
+              <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <div className="p-3 bg-purple-100 rounded-xl w-fit mb-4">
+                  <Zap className="h-6 w-6 text-purple-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Credit System</h3>
+                <p className="text-gray-600 text-sm">Fair usage with credits. Reveal contacts only when you find the perfect match.</p>
+              </div>
             </motion.div>
           )}
         </motion.div>
