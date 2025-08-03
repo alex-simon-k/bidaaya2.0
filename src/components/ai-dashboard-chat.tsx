@@ -101,10 +101,10 @@ export default function AIDashboardChat({ user }: { user: any }) {
 
   const strategicQuestions = [
     "Should I post a project or search for specific talent?",
-    "I need a developer - what's the best approach?",
-    "Help me plan my recruitment strategy",
-    "I'm on a tight timeline - what do you recommend?",
-    "What's more cost-effective for my hiring needs?"
+    "I need someone for a short-term project urgently",
+    "I want to set up a long-term internship program", 
+    "What's the most cost-effective approach for my needs?",
+    "I need multiple hires - what's the best strategy?"
   ]
 
   useEffect(() => {
@@ -324,6 +324,79 @@ Excellent choice for building a talent pipeline! Here's why posting works great:
           href: '/dashboard/projects/new', 
           label: 'Create Project Posting',
           strategy: 'project_posting'
+        }
+      }
+    }
+
+    // Handle internship program requests
+    if (input.includes('internship') && (input.includes('program') || input.includes('long-term') || input.includes('multiple'))) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `🎓 **Long-term Internship Program Strategy**
+
+Perfect choice for building a structured talent pipeline! Here's my recommendation:
+
+**📋 Post a Project - Best for Internship Programs:**
+• Attract students specifically interested in your program
+• Build your employer brand in universities
+• Get detailed applications showing genuine interest
+• No credit costs - cost-effective for multiple hires
+
+**🎯 Why Project Posting Works for Internships:**
+• Students prefer applying to structured programs
+• You can detail learning opportunities and growth path
+• Build relationships with educational institutions
+• Multiple candidates can apply and you choose the best fit
+
+**💡 Internship Program Tips:**
+• Highlight learning and mentorship opportunities
+• Specify program duration and structure
+• Mention potential for full-time conversion
+• Include details about projects they'll work on
+
+**Ready to create your internship program posting?**`,
+        timestamp: new Date(),
+        actionType: 'navigate',
+        data: { 
+          href: '/dashboard/projects/new', 
+          label: 'Create Internship Program',
+          strategy: 'internship_program'
+        }
+      }
+    }
+
+    // Handle short-term hiring requests
+    if (input.includes('short-term') || input.includes('temporary') || input.includes('quick') || input.includes('immediate')) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `⚡ **Short-term/Quick Hire Strategy**
+
+For immediate or short-term needs, I recommend using this **chatbot for active search**:
+
+**🚀 Why Active Search for Quick Hires:**
+• Find candidates immediately (same day)
+• Direct contact with active talent
+• Skip the application waiting period
+• Perfect for urgent project needs
+
+**💰 Credit-Efficient Approach:**
+• Search specific skills: "React developer with 2+ years experience"
+• Contact top 3-5 matches (cost: 3-10 credits)
+• Much faster than waiting for project applications
+
+**🎯 Quick Hire Process:**
+1. Tell me exactly what skills/experience you need
+2. I'll find the best matches instantly
+3. Reveal contacts for promising candidates
+4. Reach out same day for quick turnaround
+
+**What specific skills are you looking for in your quick hire?**`,
+        timestamp: new Date(),
+        actionType: 'guidance',
+        data: {
+          strategy: 'quick_hire_active_search'
         }
       }
     }
