@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-config'
 import { aiChatService } from '@/lib/ai-chat-responses'
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 AI Chat API Route - Request received')
   try {
     const session = await getServerSession(authOptions)
 
