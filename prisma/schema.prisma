@@ -9,130 +9,120 @@ datasource db {
 }
 
 model User {
-  id                     String                 @id @default(cuid())
-  name                   String?
-  email                  String                 @unique
-  emailVerified          DateTime?
-  image                  String?
-  role                   UserRole               @default(STUDENT)
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
-  university             String?
-  major                  String?
-  graduationYear         Int?
-  skills                 String[]
-  companyName            String?
-  companySize            String?
-  industry               String?
-  bio                    String?
-  goal                   String[]
-  location               String?
-  mena                   Boolean?
-  subjects               String?
-  terms                  Boolean?
-  whatsapp               String?
-  applicationsThisMonth  Int                    @default(0)
-  applicationsThisWeek   Int                    @default(0)
-  calendlyLink           String?
-  companyGoals           String[]
-  companyOneLiner        String?
-  companyRole            String?
-  companyWebsite         String?
-  contactEmail           String?
-  contactPersonName      String?
-  contactPersonType      String?
-  contactWhatsapp        String?
-  dateOfBirth            DateTime?
-  documentsAllowed       Int                    @default(1)
-  education              String?
-  highSchool             String?
-  interests              String[]
-  lastApplicationReset   DateTime               @default(now())
-  lastMonthlyReset       DateTime               @default(now())
-  linkedin               String?
-  profileCompleted       Boolean                @default(false)
-  referralSource         String?
-  referralDetails        String?
-  
-  // Onboarding & Journey Analytics
-  emailVerifiedAt        DateTime?              // When email was verified
-  profileCompletedAt     DateTime?              // When profile was completed
-  roleSelectedAt         DateTime?              // When user selected their role
-  firstLoginAt           DateTime?              // First successful login
-  lastActiveAt           DateTime?              // Last platform activity
-  
-  // User Behavior Analytics
-  firstProjectViewAt     DateTime?              // First time viewed a project
-  firstApplicationAt     DateTime?              // First application submitted (students)
-  firstProjectCreatedAt  DateTime?              // First project created (companies)
-  firstProjectActivatedAt DateTime?             // First project activated (companies)
-  subscriptionUpgradedAt DateTime?              // When they first upgraded from FREE
-  
-  // Traffic & Engagement Analytics
-  signupSource           String?                // utm_source or referrer
-  signupMedium           String?                // utm_medium
-  signupCampaign         String?                // utm_campaign
-  deviceType             String?                // mobile, desktop, tablet
-  browserInfo            String?                // browser and version
-  ipCountry              String?                // country from IP
-  timezone               String?                // user timezone
-  
-  // Engagement Metrics
-  sessionCount           Int                    @default(0)
-  totalTimeSpent         Int                    @default(0)  // in minutes
-  onboardingStepsCompleted String[]             @default([]) // track which steps completed
-  featuresUsed           String[]               @default([]) // track feature adoption
-  
-  stripeCurrentPeriodEnd DateTime?
-  stripeCustomerId       String?                @unique
-  stripePriceId          String?
-  stripeSubscriptionId   String?                @unique
-  subscriptionPlan       SubscriptionPlan       @default(FREE)
-  subscriptionStatus     SubscriptionStatus     @default(ACTIVE)
-  accounts               Account[]
-  applications           Application[]
-  applicationAnalytics   ApplicationAnalytics[]
-  externalApplications   ExternalApplication[]
-  payments               Payment[]
-  projects               Project[]
-  sessions               Session[]
-  userSessions           UserSession[]
-  pageViews              PageView[]
-  applicationSessions    ApplicationSession[]
-  chatQueries            ChatQuery[]
-  behavioralInsights    BehavioralInsight[]
-  companySearches       CompanySearch[]
-  aiMatches              AIMatch[]
+  id                       String                 @id @default(cuid())
+  name                     String?
+  email                    String                 @unique
+  emailVerified            DateTime?
+  image                    String?
+  role                     UserRole               @default(STUDENT)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  university               String?
+  major                    String?
+  graduationYear           Int?
+  skills                   String[]
+  companyName              String?
+  companySize              String?
+  industry                 String?
+  bio                      String?
+  goal                     String[]
+  location                 String?
+  mena                     Boolean?
+  subjects                 String?
+  terms                    Boolean?
+  whatsapp                 String?
+  applicationsThisMonth    Int                    @default(0)
+  applicationsThisWeek     Int                    @default(0)
+  calendlyLink             String?
+  companyGoals             String[]
+  companyOneLiner          String?
+  companyRole              String?
+  companyWebsite           String?
+  contactEmail             String?
+  contactPersonName        String?
+  contactPersonType        String?
+  contactWhatsapp          String?
+  dateOfBirth              DateTime?
+  documentsAllowed         Int                    @default(1)
+  education                String?
+  highSchool               String?
+  interests                String[]
+  lastApplicationReset     DateTime               @default(now())
+  lastMonthlyReset         DateTime               @default(now())
+  linkedin                 String?
+  profileCompleted         Boolean                @default(false)
+  referralSource           String?
+  referralDetails          String?
+  emailVerifiedAt          DateTime?
+  profileCompletedAt       DateTime?
+  roleSelectedAt           DateTime?
+  firstLoginAt             DateTime?
+  lastActiveAt             DateTime?
+  firstProjectViewAt       DateTime?
+  firstApplicationAt       DateTime?
+  firstProjectCreatedAt    DateTime?
+  firstProjectActivatedAt  DateTime?
+  subscriptionUpgradedAt   DateTime?
+  signupSource             String?
+  signupMedium             String?
+  signupCampaign           String?
+  deviceType               String?
+  browserInfo              String?
+  ipCountry                String?
+  timezone                 String?
+  sessionCount             Int                    @default(0)
+  totalTimeSpent           Int                    @default(0)
+  onboardingStepsCompleted String[]               @default([])
+  featuresUsed             String[]               @default([])
+  stripeCurrentPeriodEnd   DateTime?
+  stripeCustomerId         String?                @unique
+  stripePriceId            String?
+  stripeSubscriptionId     String?                @unique
+  subscriptionPlan         SubscriptionPlan       @default(FREE)
+  subscriptionStatus       SubscriptionStatus     @default(ACTIVE)
+  aiMatches                AIMatch[]
+  accounts                 Account[]
+  applications             Application[]
+  applicationAnalytics     ApplicationAnalytics[]
+  applicationSessions      ApplicationSession[]
+  behavioralInsights       BehavioralInsight[]
+  chatQueries              ChatQuery[]
+  companySearches          CompanySearch[]
+  externalApplications     ExternalApplication[]
+  pageViews                PageView[]
+  payments                 Payment[]
+  projects                 Project[]
+  sessions                 Session[]
+  userSessions             UserSession[]
 }
 
-// New Analytics Tables
 model UserSession {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
-  startTime   DateTime @default(now())
+  startTime   DateTime  @default(now())
   endTime     DateTime?
-  duration    Int?     // in minutes
-  pageViews   Int      @default(0)
+  duration    Int?
+  pageViews   Int       @default(0)
   deviceType  String?
   browserInfo String?
   ipAddress   String?
   userAgent   String?
-  user        User     @relation(fields: [userId], references: [id])
-  
+  user        User      @relation(fields: [userId], references: [id])
+
   @@index([userId])
   @@index([startTime])
 }
 
 model PageView {
-  id          String   @id @default(cuid())
-  userId      String?
-  sessionId   String?
-  page        String   // route/page name
-  timestamp   DateTime @default(now())
-  timeSpent   Int?     // seconds on page
-  referrer    String?
-  user        User?    @relation(fields: [userId], references: [id])
-  
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String?
+  page      String
+  timestamp DateTime @default(now())
+  timeSpent Int?
+  referrer  String?
+  user      User?    @relation(fields: [userId], references: [id])
+
   @@index([userId])
   @@index([page])
   @@index([timestamp])
@@ -174,13 +164,13 @@ model VerificationToken {
 }
 
 model Project {
-  id                  String           @id @default(cuid())
+  id                  String               @id @default(cuid())
   title               String
   description         String
   companyId           String
-  status              ProjectStatus    @default(PENDING_APPROVAL)
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  status              ProjectStatus        @default(PENDING_APPROVAL)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   adminFeedback       String?
   applicationDeadline DateTime?
   approvedAt          DateTime?
@@ -188,27 +178,27 @@ model Project {
   category            ProjectCategory?
   compensation        String?
   paymentAmount       Float?
-  currentApplications Int?             @default(0)
-  deliverables        String[]         @default([])
+  currentApplications Int?                 @default(0)
+  deliverables        String[]             @default([])
   department          String?
   duration            String?
-  durationMonths      Int?             @default(3)
-  experienceLevel     String?          @default("High School")
-  featured            Boolean          @default(false)
-  isPremium           Boolean          @default(false)
-  learningOutcomes    String[]         @default([])
+  durationMonths      Int?                 @default(3)
+  experienceLevel     String?              @default("High School")
+  featured            Boolean              @default(false)
+  isPremium           Boolean              @default(false)
+  learningOutcomes    String[]             @default([])
   location            String?
-  maxApplications     Int?             @default(100)
+  maxApplications     Int?                 @default(100)
   projectType         String?
-  remote              Boolean          @default(false)
-  requirements        String[]         @default([])
-  skillsRequired      String[]         @default([])
+  remote              Boolean              @default(false)
+  requirements        String[]             @default([])
+  skillsRequired      String[]             @default([])
   subcategory         String?
-  teamSize            Int?             @default(1)
-  timeCommitment      String?          @default("Part-time")
+  teamSize            Int?                 @default(1)
+  timeCommitment      String?              @default("Part-time")
   applications        Application[]
   applicationSessions ApplicationSession[]
-  company             User             @relation(fields: [companyId], references: [id])
+  company             User                 @relation(fields: [companyId], references: [id])
 }
 
 model Application {
@@ -224,7 +214,6 @@ model Application {
   userId               String
   whyInterested        String?
   proposedApproach     String?
-  // Legacy fields - kept for backward compatibility but not used in new applications
   coverLetter          String?
   motivation           String?
   personalStatement    String?
@@ -264,39 +253,31 @@ model ExternalApplication {
 }
 
 model ApplicationSession {
-  id             String              @id @default(cuid())
-  userId         String
-  projectId      String
-  sessionId      String              @unique // Unique session identifier
-  startedAt      DateTime            @default(now())
-  completedAt    DateTime?           // When they submitted successfully
-  abandonedAt    DateTime?           // When they closed without completing
-  timeSpentMinutes Int?              // Total time spent in minutes
-  stepReached    Int                 @default(1) // Furthest step they reached (1-4)
-  status         ApplicationSessionStatus @default(IN_PROGRESS)
-  
-  // Form completion tracking
-  step1Completed Boolean             @default(false) // Why interested filled
-  step2Completed Boolean             @default(false) // Proposed approach filled  
-  step3Completed Boolean             @default(false) // Availability filled
-  step4Completed Boolean             @default(false) // File upload (if attempted)
-  
-  // Save/restore tracking
-  wasSaved       Boolean             @default(false) // Did they have saved data
-  wasRestored    Boolean             @default(false) // Did they restore from saved data
-  saveCount      Int                 @default(0) // How many times data was auto-saved
-  
-  // Device/Browser info
-  deviceType     String?
-  browserInfo    String?
-  userAgent      String?
-  
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  
-  user           User                @relation(fields: [userId], references: [id])
-  project        Project             @relation(fields: [projectId], references: [id])
-  
+  id               String                   @id @default(cuid())
+  userId           String
+  projectId        String
+  sessionId        String                   @unique
+  startedAt        DateTime                 @default(now())
+  completedAt      DateTime?
+  abandonedAt      DateTime?
+  timeSpentMinutes Int?
+  stepReached      Int                      @default(1)
+  status           ApplicationSessionStatus @default(IN_PROGRESS)
+  step1Completed   Boolean                  @default(false)
+  step2Completed   Boolean                  @default(false)
+  step3Completed   Boolean                  @default(false)
+  step4Completed   Boolean                  @default(false)
+  wasSaved         Boolean                  @default(false)
+  wasRestored      Boolean                  @default(false)
+  saveCount        Int                      @default(0)
+  deviceType       String?
+  browserInfo      String?
+  userAgent        String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  project          Project                  @relation(fields: [projectId], references: [id])
+  user             User                     @relation(fields: [userId], references: [id])
+
   @@index([userId])
   @@index([projectId])
   @@index([startedAt])
@@ -331,6 +312,126 @@ model Payment {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   user            User          @relation(fields: [userId], references: [id])
+}
+
+model ChatQuery {
+  id                 String        @id @default(cuid())
+  userId             String
+  sessionId          String?
+  query              String
+  queryType          ChatQueryType @default(GENERAL)
+  intent             String?
+  extractedSkills    String[]
+  extractedRoles     String[]
+  extractedCompanies String[]
+  timestamp          DateTime      @default(now())
+  userAgent          String?
+  ipAddress          String?
+  sessionDuration    Int?
+  followUpQueries    Int           @default(0)
+  clickedResults     Int           @default(0)
+  savedResults       Int           @default(0)
+  responseGiven      Boolean       @default(false)
+  satisfaction       Int?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  user               User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([queryType])
+}
+
+model BehavioralInsight {
+  id                    String      @id @default(cuid())
+  userId                String
+  insightType           InsightType
+  learningVelocity      Float       @default(0)
+  interestDepth         Float       @default(0)
+  marketAwareness       Float       @default(0)
+  careerAmbition        Float       @default(0)
+  geographicFlexibility Float       @default(0)
+  salaryAwareness       Float       @default(0)
+  peakActivityHours     String[]
+  preferredTopics       String[]
+  searchFrequency       Float       @default(0)
+  sessionDuration       Float       @default(0)
+  overallEngagement     Float       @default(0)
+  predictionConfidence  Float       @default(0)
+  lastCalculated        DateTime    @default(now())
+  trendData             Json?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  user                  User        @relation(fields: [userId], references: [id])
+
+  @@unique([userId, insightType])
+  @@index([userId])
+  @@index([lastCalculated])
+}
+
+model CompanySearch {
+  id                  String    @id @default(cuid())
+  companyId           String
+  searchPrompt        String
+  parsedIntent        Json?
+  requiredSkills      String[]
+  experienceLevel     String?
+  educationReq        String[]
+  locationPref        String[]
+  industryFit         String[]
+  searchTimestamp     DateTime  @default(now())
+  resultsCount        Int       @default(0)
+  tier                String    @default("FREE")
+  maxResults          Int       @default(3)
+  viewedResults       Int       @default(0)
+  contactedCandidates Int       @default(0)
+  successfulHires     Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  matches             AIMatch[]
+  company             User      @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([searchTimestamp])
+  @@index([tier])
+}
+
+model AIMatch {
+  id                  String        @id @default(cuid())
+  searchId            String
+  studentId           String
+  overallScore        Float
+  profileMatchScore   Float
+  engagementScore     Float
+  behavioralScore     Float
+  skillsAlignment     Float         @default(0)
+  experienceMatch     Float         @default(0)
+  educationMatch      Float         @default(0)
+  locationMatch       Float         @default(0)
+  interestAlignment   Float         @default(0)
+  responselikelihood  Float         @default(0)
+  aiExplanation       String?
+  strengthsHighlight  String[]
+  potentialConcerns   String[]
+  recommendedApproach String?
+  wasViewed           Boolean       @default(false)
+  viewedAt            DateTime?
+  wasContacted        Boolean       @default(false)
+  contactedAt         DateTime?
+  candidateResponded  Boolean       @default(false)
+  respondedAt         DateTime?
+  generatedAt         DateTime      @default(now())
+  aiModel             String        @default("deepseek")
+  processingTime      Float?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  search              CompanySearch @relation(fields: [searchId], references: [id])
+  student             User          @relation(fields: [studentId], references: [id])
+
+  @@index([searchId])
+  @@index([studentId])
+  @@index([overallScore])
+  @@index([generatedAt])
 }
 
 enum ProjectCategory {
@@ -408,180 +509,20 @@ enum ApplicationSessionStatus {
   TIMED_OUT
 }
 
-// AI Matching System Models
-
-model ChatQuery {
-  id              String            @id @default(cuid())
-  userId          String
-  sessionId       String?           // Groups related queries in one session
-  query           String            // The actual search/question
-  queryType       ChatQueryType     @default(GENERAL)
-  intent          String?           // Extracted intent (e.g., "looking for tech roles")
-  extractedSkills String[]          // Skills mentioned in query
-  extractedRoles  String[]          // Job roles mentioned
-  extractedCompanies String[]       // Companies mentioned
-  
-  // Context & Metadata
-  timestamp       DateTime          @default(now())
-  userAgent       String?
-  ipAddress       String?
-  sessionDuration Int?              // Time spent on this query (seconds)
-  followUpQueries Int              @default(0) // Number of follow-up questions
-  
-  // Engagement Metrics
-  clickedResults  Int              @default(0) // How many results they clicked
-  savedResults    Int              @default(0) // How many they saved/bookmarked
-  responseGiven   Boolean          @default(false) // Did they get AI response
-  satisfaction    Int?             // 1-5 rating if they provided feedback
-  
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  
-  user            User             @relation(fields: [userId], references: [id])
-  
-  @@index([userId])
-  @@index([timestamp])
-  @@index([queryType])
-}
-
-model BehavioralInsight {
-  id              String           @id @default(cuid())
-  userId          String
-  insightType     InsightType
-  
-  // Core Metrics (0-100 scores)
-  learningVelocity     Float        @default(0) // How quickly they research new tech
-  interestDepth        Float        @default(0) // Complexity of follow-up questions
-  marketAwareness      Float        @default(0) // Industry trend searches
-  careerAmbition       Float        @default(0) // Senior role research frequency
-  geographicFlexibility Float       @default(0) // Location-based search patterns
-  salaryAwareness      Float        @default(0) // Compensation-related queries
-  
-  // Behavioral Patterns
-  peakActivityHours    String[]     // When they're most active
-  preferredTopics      String[]     // Most searched topics
-  searchFrequency      Float        @default(0) // Queries per week
-  sessionDuration      Float        @default(0) // Average session length
-  
-  // Calculated Fields
-  overallEngagement    Float        @default(0) // Composite engagement score
-  predictionConfidence Float        @default(0) // How confident our predictions are
-  lastCalculated       DateTime     @default(now())
-  
-  // Trend Data (JSON for flexibility)
-  trendData            Json?        // Historical data for trends
-  
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
-  
-  user                 User         @relation(fields: [userId], references: [id])
-  
-  @@unique([userId, insightType])
-  @@index([userId])
-  @@index([lastCalculated])
-}
-
-model CompanySearch {
-  id              String           @id @default(cuid())
-  companyId       String           // User ID of the company
-  searchPrompt    String           // Natural language search prompt
-  parsedIntent    Json?            // AI-extracted intent and requirements
-  
-  // Search Parameters
-  requiredSkills  String[]         // Extracted skill requirements
-  experienceLevel String?          // Junior/Mid/Senior
-  educationReq    String[]         // Education requirements
-  locationPref    String[]         // Location preferences
-  industryFit     String[]         // Industry alignment
-  
-  // Search Metadata
-  searchTimestamp DateTime         @default(now())
-  resultsCount    Int              @default(0) // Number of matches found
-  tier            String           @default("FREE") // FREE/PROFESSIONAL/ENTERPRISE
-  maxResults      Int              @default(3) // Based on their tier
-  
-  // Performance Tracking
-  viewedResults   Int              @default(0) // How many results they viewed
-  contactedCandidates Int          @default(0) // How many they reached out to
-  successfulHires Int              @default(0) // Track hiring success
-  
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  
-  company         User             @relation(fields: [companyId], references: [id])
-  matches         AIMatch[]
-  
-  @@index([companyId])
-  @@index([searchTimestamp])
-  @@index([tier])
-}
-
-model AIMatch {
-  id                    String         @id @default(cuid())
-  searchId              String         // Links to CompanySearch
-  studentId             String         // Matched student
-  
-  // Core Matching Scores (0-100)
-  overallScore          Float          // Final composite score
-  profileMatchScore     Float          // 40% weight - skills, education, experience
-  engagementScore       Float          // 35% weight - recent activity, relevance
-  behavioralScore       Float          // 25% weight - learning patterns, insights
-  
-  // Detailed Breakdown
-  skillsAlignment       Float          @default(0)
-  experienceMatch       Float          @default(0)
-  educationMatch        Float          @default(0)
-  locationMatch         Float          @default(0)
-  interestAlignment     Float          @default(0)
-  responselikelihood    Float          @default(0) // Predicted response probability
-  
-  // AI Insights
-  aiExplanation         String?        // Why this is a good match
-  strengthsHighlight    String[]       // Key strengths of the candidate
-  potentialConcerns     String[]       // Areas to consider
-  recommendedApproach   String?        // How to reach out
-  
-  // Engagement Data
-  wasViewed             Boolean        @default(false)
-  viewedAt              DateTime?
-  wasContacted          Boolean        @default(false)
-  contactedAt           DateTime?
-  candidateResponded    Boolean        @default(false)
-  respondedAt           DateTime?
-  
-  // Meta
-  generatedAt           DateTime       @default(now())
-  aiModel               String         @default("deepseek") // Track which AI generated this
-  processingTime        Float?         // How long AI took to generate match
-  
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-  
-  search                CompanySearch  @relation(fields: [searchId], references: [id])
-  student               User           @relation(fields: [studentId], references: [id])
-  
-  @@index([searchId])
-  @@index([studentId])
-  @@index([overallScore])
-  @@index([generatedAt])
-}
-
-// New Enums for AI Matching
-
 enum ChatQueryType {
-  GENERAL           // General questions
-  SKILL_SEARCH      // Looking for specific skills/tech
-  ROLE_SEARCH       // Job role exploration
-  COMPANY_RESEARCH  // Company-specific questions
-  SALARY_INQUIRY    // Compensation questions
-  CAREER_GUIDANCE   // Career advice
-  INTERVIEW_PREP    // Interview preparation
-  INDUSTRY_TRENDS   // Market/industry insights
+  GENERAL
+  SKILL_SEARCH
+  ROLE_SEARCH
+  COMPANY_RESEARCH
+  SALARY_INQUIRY
+  CAREER_GUIDANCE
+  INTERVIEW_PREP
+  INDUSTRY_TRENDS
 }
 
 enum InsightType {
-  WEEKLY            // Weekly behavioral summary
-  MONTHLY           // Monthly deep insights
-  REAL_TIME         // Live behavioral tracking
-  PREDICTION        // Future behavior predictions
+  WEEKLY
+  MONTHLY
+  REAL_TIME
+  PREDICTION
 }
