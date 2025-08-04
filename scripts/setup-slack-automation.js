@@ -33,7 +33,7 @@ async function setupSlackAutomation() {
     missingVars.forEach(varName => {
       switch(varName) {
         case 'SLACK_WEBHOOK_URL':
-          console.log(`${varName}=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK`)
+          console.log(`${varName}=https://hooks.slack.com/services/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`)
           console.log('  ℹ️  Get this from: https://api.slack.com/apps → Your App → Incoming Webhooks\n')
           break
         case 'CRON_SECRET':

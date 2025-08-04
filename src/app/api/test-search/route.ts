@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
               { major: { contains: term, mode: 'insensitive' } },
               { location: { contains: term, mode: 'insensitive' } },
               { skills: { has: term } },
-              { interests: { has: term } }
+              { interests: { has: term } },
+              { subjects: { contains: term, mode: 'insensitive' } },
+              { education: { contains: term, mode: 'insensitive' } },
+              { goal: { has: term } },
+              { bio: { contains: term, mode: 'insensitive' } }
             ]
           }))
         },
@@ -54,7 +58,14 @@ export async function POST(request: NextRequest) {
           interests: true,
           goal: true,
           bio: true,
-          updatedAt: true
+          updatedAt: true,
+          // Key database fields for better matching
+          education: true,
+          subjects: true,
+          dateOfBirth: true,
+          mena: true,
+          lastActiveAt: true,
+          applicationsThisMonth: true
         },
         take: limit
       })
@@ -75,7 +86,13 @@ export async function POST(request: NextRequest) {
           interests: student.interests || [],
           goal: student.goal || [],
           bio: student.bio || `${student.major || 'Student'} at ${student.university || 'University'}`,
-          activityScore: 75 // Fixed score for testing
+          activityScore: 75, // Fixed score for testing
+          // Key database fields
+          education: student.education,
+          subjects: student.subjects,
+          dateOfBirth: student.dateOfBirth,
+          mena: student.mena,
+          lastActiveAt: student.lastActiveAt
         },
         matching: {
           score: 75,

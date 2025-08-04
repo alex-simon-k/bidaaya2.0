@@ -24,6 +24,12 @@ interface TalentProfile {
   engagementLevel: 'HIGH' | 'MEDIUM' | 'LOW'
   applicationsThisMonth: number
   totalApplications: number
+  // Key database fields for better matching
+  education?: string | null
+  subjects?: string | null
+  dateOfBirth?: Date | string | null
+  mena?: boolean | null
+  lastActiveAt?: Date | string | null
 }
 
 interface AIMatchResult {
@@ -316,6 +322,11 @@ What would you like to do today?`,
           interests: result.student.interests || [],
           goal: result.student.goal || [],
           bio: result.student.bio || `${result.student.major || 'Student'} at ${result.student.university || 'University'}`,
+          education: result.student.education,
+          subjects: result.student.subjects,
+          dateOfBirth: result.student.dateOfBirth,
+          mena: result.student.mena,
+          lastActiveAt: result.student.lastActiveAt,
           image: null,
           engagementLevel: result.student.activityScore > 70 ? 'High' : 
                           result.student.activityScore > 40 ? 'Medium' : 'Low',
@@ -676,14 +687,72 @@ The candidate will receive a professional email with your calendar link and can 
                                     </div>
                                   </div>
                                   
-                                  {/* Updated bio display - show major + goals */}
-                                  <div className="text-sm text-gray-700 mb-3 bg-white rounded-lg p-3 border">
-                                    <p className="font-medium text-gray-900">Studies: {result.candidate.major || 'Not specified'}</p>
-                                    {result.candidate.goal && result.candidate.goal.length > 0 && (
-                                      <p className="text-gray-600 mt-1">
-                                        <span className="font-medium">Goals:</span> {result.candidate.goal.join(', ')}
-                                      </p>
+                                  {/* Key Student Information */}
+                                  <div className="text-sm text-gray-700 mb-3 bg-white rounded-lg p-3 border space-y-2">
+                                    {/* Education & Institution */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="font-medium text-gray-900">Education: {result.candidate.education || 'Not specified'}</p>
+                                        {result.candidate.university && (
+                                          <p className="text-gray-600 text-xs">Institution: {result.candidate.university}</p>
+                                        )}
+                                      </div>
+                                      <div>
+                                        {result.candidate.dateOfBirth && (
+                                          <p className="font-medium text-gray-900">
+                                            Age: {new Date().getFullYear() - new Date(result.candidate.dateOfBirth).getFullYear()}
+                                          </p>
+                                        )}
+                                        {result.candidate.mena && (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                                            🌍 MENA Based
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Studies & Subjects */}
+                                    {(result.candidate.major || result.candidate.subjects) && (
+                                      <div>
+                                        <p className="font-medium text-gray-900">Studies:</p>
+                                        {result.candidate.major && <p className="text-gray-600 text-sm">Major: {result.candidate.major}</p>}
+                                        {result.candidate.subjects && <p className="text-gray-600 text-sm">Subjects: {result.candidate.subjects}</p>}
+                                      </div>
                                     )}
+
+                                    {/* Goals & Interests */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                      {result.candidate.goal && result.candidate.goal.length > 0 && (
+                                        <div>
+                                          <p className="font-medium text-gray-900">Goals:</p>
+                                          <p className="text-gray-600 text-sm">{result.candidate.goal.join(', ')}</p>
+                                        </div>
+                                      )}
+                                      {result.candidate.interests && result.candidate.interests.length > 0 && (
+                                        <div>
+                                          <p className="font-medium text-gray-900">Interests:</p>
+                                          <p className="text-gray-600 text-sm">{result.candidate.interests.join(', ')}</p>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Bio */}
+                                    {result.candidate.bio && (
+                                      <div>
+                                        <p className="font-medium text-gray-900">About:</p>
+                                        <p className="text-gray-600 text-sm italic">{result.candidate.bio}</p>
+                                      </div>
+                                    )}
+
+                                    {/* Activity & Last Seen */}
+                                    <div className="pt-2 border-t border-gray-100">
+                                      <div className="flex justify-between text-xs text-gray-500">
+                                        <span>Apps this month: {result.candidate.applicationsThisMonth || 0}</span>
+                                        {result.candidate.lastActiveAt && (
+                                          <span>Last seen: {new Date(result.candidate.lastActiveAt).toLocaleDateString()}</span>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
                                   
                                   <div className="flex flex-wrap gap-2 mb-3">
