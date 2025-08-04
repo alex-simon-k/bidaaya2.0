@@ -79,29 +79,29 @@ export async function POST(request: NextRequest) {
       from: `"Bidaaya Team" <${process.env.EMAIL_USER}>`,
       to: candidateEmail,
       cc: contactEmail, // CC the company
-      subject: `🎯 Interview Invitation from ${companyDisplayName}`,
+      subject: `🎯 You've been selected by ${companyDisplayName}!`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9;">
           <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             
             <!-- Header -->
             <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #2563eb; margin: 0; font-size: 24px;">🎯 Interview Invitation</h1>
-              <p style="color: #64748b; margin: 10px 0 0 0;">You've been selected for an interview opportunity!</p>
+              <h1 style="color: #2563eb; margin: 0; font-size: 24px;">🎉 Congratulations!</h1>
+              <p style="color: #64748b; margin: 10px 0 0 0;">You've been selected for an interview!</p>
             </div>
 
             <!-- Main Content -->
             <div style="margin-bottom: 30px;">
               <p style="font-size: 16px; color: #334155; line-height: 1.6;">
-                Hi <strong>${candidateName}</strong>,
+                Hey <strong>${candidateName}</strong>,
               </p>
               
               <p style="font-size: 16px; color: #334155; line-height: 1.6;">
-                Great news! ${companyDisplayName} is interested in speaking with you and would like to schedule an interview.
+                You've been luckily selected by <strong>${companyDisplayName}</strong> who's seen your profile and would love to get to know you more in an interview.
               </p>
 
               <p style="font-size: 16px; color: #334155; line-height: 1.6;">
-                Based on your profile and experience${candidate.university ? ` at ${candidate.university}` : ''}${candidate.major ? ` studying ${candidate.major}` : ''}, they believe you could be a great fit for their team.
+                Please use the following link to schedule an interview at your convenience.
               </p>
             </div>
 
@@ -148,13 +148,13 @@ export async function POST(request: NextRequest) {
         </div>
       `,
       text: `
-Interview Invitation from ${companyDisplayName}
+You've been selected by ${companyDisplayName}!
 
-Hi ${candidateName},
+Hey ${candidateName},
 
-Great news! ${companyDisplayName} is interested in speaking with you and would like to schedule an interview.
+You've been luckily selected by ${companyDisplayName} who's seen your profile and would love to get to know you more in an interview.
 
-Based on your profile and experience${candidate.university ? ` at ${candidate.university}` : ''}${candidate.major ? ` studying ${candidate.major}` : ''}, they believe you could be a great fit for their team.
+Please use the following link to schedule an interview at your convenience.
 
 📅 Schedule Your Interview:
 Please visit the following link to choose a time that works best for you:

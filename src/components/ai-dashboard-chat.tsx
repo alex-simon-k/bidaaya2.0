@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, Sparkles, Send, User, Bot, Zap, Crown, Brain, Target, Activity, X, ArrowLeft, Lock, Unlock } from 'lucide-react'
+import { Search, Plus, Sparkles, Send, User, Bot, Zap, Crown, Brain, Target, Activity, X, ArrowLeft, Lock, Unlock, Calendar } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getContactRevealContent, hasContactFeatureAccess, getLockedFeatures, getCreditAllowance, getContactFeatures } from '@/lib/pricing'
 
@@ -66,6 +67,7 @@ export default function AIDashboardChat() {
   const [isAnimatingInput, setIsAnimatingInput] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [hasCalendlyLink, setHasCalendlyLink] = useState<boolean | null>(null) // null = loading, true/false = has/doesn't have
   const [projectCreationState, setProjectCreationState] = useState<{
     isActive: boolean
     step: string
@@ -431,6 +433,30 @@ I'll now take you to the project creation page with everything pre-filled. You j
         console.error('Failed to load credit usage:', error)
         setCredits(allowance)
       }
+    }
+  }, [session?.user])
+
+  // Check if company has Calendly link set up
+  useEffect(() => {
+    const checkCalendlyLink = async () => {
+      if (session?.user?.role === 'COMPANY') {
+        try {
+          const response = await fetch('/api/user/profile')
+          if (response.ok) {
+            const userData = await response.json()
+            setHasCalendlyLink(!!userData.calendlyLink)
+          }
+        } catch (error) {
+          console.error('Failed to check Calendly link:', error)
+          setHasCalendlyLink(false)
+        }
+      } else {
+        setHasCalendlyLink(true) // Non-companies don't need Calendly
+      }
+    }
+
+    if (session?.user) {
+      checkCalendlyLink()
     }
   }, [session?.user])
 
@@ -880,7 +906,10 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
         })
       })
 
-      if (!response.ok) throw new Error('Failed to send calendar invite')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send calendar invite')
+      }
 
       const data = await response.json()
       
@@ -902,7 +931,45 @@ The candidate will receive a professional email with your calendar link and can 
       
     } catch (error) {
       console.error('Error sending calendar invite:', error)
-      alert('Error sending calendar invite. Please try again.')
+      
+      // Handle specific error for missing Calendly link
+      const errorMessage = (error as Error).message
+      if (errorMessage.includes('Calendly link')) {
+        const calendlyErrorMessage: ChatMessage = {
+          id: Date.now().toString(),
+          type: 'ai',
+          content: `❌ **Cannot send calendar invite**
+
+🔗 **Missing Calendly Link:** You need to add your Calendly link to your profile before sending interview invitations.
+
+**To fix this:**
+1. Go to your [Profile Settings](/dashboard/profile)
+2. Add your Calendly link in the "Interview Scheduling" section
+3. Save your profile
+4. Return here and try sending the invite again
+
+**Example Calendly link:** https://calendly.com/your-company/30min-interview
+
+Once you've added your Calendly link, you'll be able to send professional interview invitations to candidates! 📅`,
+          timestamp: new Date(),
+          actionType: 'guidance'
+        }
+        setMessages(prev => [...prev, calendlyErrorMessage])
+      } else {
+        // Generic error message
+        const genericErrorMessage: ChatMessage = {
+          id: Date.now().toString(),
+          type: 'ai',
+          content: `❌ **Failed to send calendar invite**
+
+Something went wrong while sending the invitation. Please try again or contact support if the problem persists.
+
+**Error:** ${errorMessage}`,
+          timestamp: new Date(),
+          actionType: 'guidance'
+        }
+        setMessages(prev => [...prev, genericErrorMessage])
+      }
     }
   }
 
@@ -1014,8 +1081,47 @@ The candidate will receive a professional email with your calendar link and can 
         </div>
       </div>
 
+      {/* Calendly Setup Banner */}
+      {hasCalendlyLink === false && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-yellow-200/50"
+        >
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between bg-white/60 rounded-xl p-4 border border-yellow-200/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-100">
+                  <Calendar className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-800">📅 Complete Your Setup</h3>
+                  <p className="text-sm text-yellow-700">
+                    Add your Calendly link to send interview invitations to candidates
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/profile"
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Add Calendly Link
+                </Link>
+                <button
+                  onClick={() => setHasCalendlyLink(null)}
+                  className="p-2 hover:bg-yellow-100 rounded-lg transition-colors"
+                >
+                  <X className="h-4 w-4 text-yellow-600" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Main Container with ChatGPT-like Layout */}
-      <motion.div 
+          <motion.div
         className={`${hasMessages ? 'h-[calc(100vh-88px)]' : 'min-h-screen'} flex flex-col`}
         layout
         transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -1026,76 +1132,76 @@ The candidate will receive a professional email with your calendar link and can 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
               <div className="max-w-4xl mx-auto space-y-6">
-                <AnimatePresence>
-                  {messages.map((message) => (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`max-w-3xl ${message.type === 'user' ? 'ml-12' : 'mr-12'} flex items-start gap-3`}>
-                        {/* Avatar */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          message.type === 'user' ? 'bg-gray-900 order-2' : 'bg-blue-100'
-                        }`}>
-                          {message.type === 'user' ? (
-                            <User className="h-4 w-4 text-white" />
-                          ) : (
-                            <Brain className="h-4 w-4 text-blue-600" />
-                          )}
-                        </div>
-                        
-                        {/* Message Content */}
-                        <div className={`rounded-2xl px-6 py-4 ${
-                          message.type === 'user' 
-                            ? 'bg-gray-900 text-white order-1' 
-                            : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
-                        }`}>
-                          <div className="prose prose-sm max-w-none">
-                            {message.content.split('\n').map((line, i) => (
-                              <p key={i} className={`${i === 0 ? 'mt-0' : ''}`}>
-                                {line}
-                              </p>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-
-                {/* Loading indicator */}
-                {isLoading && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex justify-start"
-                  >
-                    <div className="max-w-3xl mr-12 flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-3xl ${message.type === 'user' ? 'ml-12' : 'mr-12'} flex items-start gap-3`}>
+                    {/* Avatar */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      message.type === 'user' ? 'bg-gray-900 order-2' : 'bg-blue-100'
+                    }`}>
+                      {message.type === 'user' ? (
+                        <User className="h-4 w-4 text-white" />
+                      ) : (
                         <Brain className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
-                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          </div>
-                          <span className="text-sm text-gray-500">Thinking...</span>
-                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Message Content */}
+                    <div className={`rounded-2xl px-6 py-4 ${
+                      message.type === 'user' 
+                        ? 'bg-gray-900 text-white order-1' 
+                        : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
+                    }`}>
+                      <div className="prose prose-sm max-w-none">
+                        {message.content.split('\n').map((line, i) => (
+                          <p key={i} className={`${i === 0 ? 'mt-0' : ''}`}>
+                            {line}
+                          </p>
+                        ))}
                       </div>
                     </div>
-                  </motion.div>
-                )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
+            {/* Loading indicator */}
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-start"
+              >
+                <div className="max-w-3xl mr-12 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Brain className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                      <span className="text-sm text-gray-500">Thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            
                 {/* Search Results in Chat Mode - NOW INSIDE SCROLLABLE AREA */}
-                {showResults && searchResults.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+        {showResults && searchResults.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
                     className="flex justify-start"
                   >
                     <div className="w-full max-w-4xl mr-12 flex items-start gap-3">
@@ -1103,29 +1209,29 @@ The candidate will receive a professional email with your calendar link and can 
                         <Search className="h-4 w-4 text-blue-600" />
                       </div>
                       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex-1">
-                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
-                          <Search className="h-5 w-5 text-blue-600" />
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+                <Search className="h-5 w-5 text-blue-600" />
                           Found {searchResults.length} Students
-                        </h3>
-                        <div className="grid gap-4">
-                          {searchResults.map((result) => (
+              </h3>
+              <div className="grid gap-4">
+                {searchResults.map((result) => (
                             <div key={result.candidate.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
                                   <div className="flex items-center gap-3 mb-3">
                                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                                       <span className="text-lg font-semibold text-white">
-                                        {result.candidate.name.charAt(0)}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-semibold text-gray-900">{result.candidate.name}</h4>
-                                      <p className="text-sm text-gray-600">
-                                        {result.candidate.university} • {result.candidate.major}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  
+                                {result.candidate.name.charAt(0)}
+                              </span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{result.candidate.name}</h4>
+                            <p className="text-sm text-gray-600">
+                              {result.candidate.university} • {result.candidate.major}
+                            </p>
+                          </div>
+                        </div>
+                        
                                   {/* Key Student Information */}
                                   <div className="text-sm text-gray-700 mb-3 bg-white rounded-lg p-3 border space-y-2">
                                     {/* Education & Institution */}
@@ -1251,8 +1357,8 @@ The candidate will receive a professional email with your calendar link and can 
                                       </div>
                                     </div>
                                   </div>
-                                  
-                                  <div className="flex flex-wrap gap-2 mb-3">
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                                       Match: {result.overallScore.toFixed(0)}%
                                     </span>
@@ -1262,11 +1368,11 @@ The candidate will receive a professional email with your calendar link and can 
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
                                       {result.candidate.applicationsThisMonth} apps this month
                                     </span>
-                                  </div>
-                                  
+                        </div>
+                        
                                   <p className="text-sm text-gray-600 italic">{result.aiExplanation}</p>
-                                </div>
-                                
+                      </div>
+                      
                                 <div className="ml-4 space-y-2">
                                   {/* Contact Features Preview */}
                                   {(() => {
@@ -1332,18 +1438,18 @@ The candidate will receive a professional email with your calendar link and can 
                                   })()}
 
                                   {!(result as any).contactRevealed ? (
-                                    <Button
-                                      size="sm"
+                        <Button
+                          size="sm"
                                       onClick={() => revealContact(result.candidate.id, 1)}
                                       className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                                    >
+                        >
                                       Reveal Contact (1 credit)
-                                    </Button>
+                        </Button>
                                   ) : (
                                     <div className="space-y-2">
                                       <div className="text-sm text-green-600 font-medium">
                                         ✅ Contact Revealed
-                                      </div>
+                      </div>
                                       <Button
                                         size="sm"
                                         onClick={() => sendCalendarInvite(
@@ -1358,14 +1464,14 @@ The candidate will receive a professional email with your calendar link and can 
                                     </div>
                                   )}
                                 </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
                     </div>
-                  </motion.div>
-                )}
+                  </div>
+                ))}
+                        </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
                 
                 <div ref={messagesEndRef} />
               </div>
@@ -1448,137 +1554,137 @@ The candidate will receive a professional email with your calendar link and can 
                 </p>
               </motion.div>
 
-              {/* Input Area */}
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
+        {/* Input Area */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="space-y-6"
-              >
-                {/* Chat Input */}
-                <div className="relative">
-                  <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-lg focus-within:border-blue-500 transition-colors overflow-hidden">
-                    <div className="flex items-end gap-3 p-6">
-                      <div className="flex-1">
-                        <textarea
-                          ref={inputRef}
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              if (hasContent) handleSendMessage(input);
-                            }
-                          }}
-                          placeholder="Ready to find amazing talent? Describe what you're looking for..."
-                          disabled={isLoading || isAnimatingInput}
-                          className="w-full bg-transparent text-gray-900 placeholder-gray-400 border-none outline-none resize-none text-lg leading-relaxed"
-                          rows={1}
-                        />
-                      </div>
-                      
-                      <Button
-                        size="icon"
-                        className={`rounded-xl transition-all duration-200 flex-shrink-0 ${
-                          hasContent
-                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg scale-100"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed scale-95"
-                        }`}
-                        onClick={() => {
-                          if (hasContent) handleSendMessage(input);
-                        }}
-                        disabled={!hasContent || isLoading || isAnimatingInput}
-                      >
-                        {isLoading || isAnimatingInput ? (
-                          <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
-                        ) : (
-                          <Send className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+          className="space-y-6"
+        >
+          {/* Chat Input */}
+          <div className="relative">
+            <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-lg focus-within:border-blue-500 transition-colors overflow-hidden">
+              <div className="flex items-end gap-3 p-6">
+                <div className="flex-1">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (hasContent) handleSendMessage(input);
+                      }
+                    }}
+                    placeholder="Ready to find amazing talent? Describe what you're looking for..."
+                    disabled={isLoading || isAnimatingInput}
+                    className="w-full bg-transparent text-gray-900 placeholder-gray-400 border-none outline-none resize-none text-lg leading-relaxed"
+                    rows={1}
+                  />
                 </div>
+                
+                <Button
+                  size="icon"
+                  className={`rounded-xl transition-all duration-200 flex-shrink-0 ${
+                    hasContent
+                      ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg scale-100"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed scale-95"
+                  }`}
+                  onClick={() => {
+                    if (hasContent) handleSendMessage(input);
+                  }}
+                  disabled={!hasContent || isLoading || isAnimatingInput}
+                >
+                  {isLoading || isAnimatingInput ? (
+                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
 
                 {/* Action Buttons */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="flex flex-wrap gap-3 justify-center"
-                >
-                  {suggestionButtons.map((suggestion, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className="h-auto p-4 border-gray-300 hover:bg-gray-50 flex items-center gap-3 text-left bg-white shadow-sm"
-                      onClick={suggestion.action}
-                      disabled={isLoading || isAnimatingInput}
-                    >
-                      <suggestion.icon className="h-5 w-5 text-gray-600 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium text-gray-900">{suggestion.label}</div>
-                        <div className="text-sm text-gray-600">{suggestion.description}</div>
-                      </div>
-                    </Button>
-                  ))}
-                </motion.div>
+            className="flex flex-wrap gap-3 justify-center"
+          >
+            {suggestionButtons.map((suggestion, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="h-auto p-4 border-gray-300 hover:bg-gray-50 flex items-center gap-3 text-left bg-white shadow-sm"
+                onClick={suggestion.action}
+                disabled={isLoading || isAnimatingInput}
+              >
+                <suggestion.icon className="h-5 w-5 text-gray-600 flex-shrink-0" />
+                <div>
+                  <div className="font-medium text-gray-900">{suggestion.label}</div>
+                  <div className="text-sm text-gray-600">{suggestion.description}</div>
+                </div>
+              </Button>
+            ))}
+          </motion.div>
 
                 {/* Try These Examples */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="text-center"
-                >
-                  <p className="text-sm text-gray-600 mb-4">💡 Try these examples:</p>
-                  <div className="flex flex-wrap gap-3 justify-center">
-                    {quickSearches.map((example, index) => (
-                      <motion.button
-                        key={index}
-                        whileHover={{ scale: 1.02 }}
-                        onClick={() => setInput(example)}
-                        className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-colors shadow-sm"
-                        disabled={isLoading || isAnimatingInput}
-                      >
-                        {example}
-                      </motion.button>
-                    ))}
-                  </div>
-                </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-center"
+            >
+              <p className="text-sm text-gray-600 mb-4">💡 Try these examples:</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                {quickSearches.map((example, index) => (
+                  <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setInput(example)}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-colors shadow-sm"
+                    disabled={isLoading || isAnimatingInput}
+                  >
+                    {example}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
 
                 {/* Features Showcase */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="grid md:grid-cols-3 gap-6 mt-12"
-                >
-                  <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="p-3 bg-blue-100 rounded-xl w-fit mb-4">
-                      <Activity className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Activity Intelligence</h3>
-                    <p className="text-gray-600 text-sm">Real-time engagement scoring based on platform activity and application patterns.</p>
-                  </div>
-                  
-                  <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="p-3 bg-emerald-100 rounded-xl w-fit mb-4">
-                      <Target className="h-6 w-6 text-emerald-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Smart Matching</h3>
-                    <p className="text-gray-600 text-sm">AI analyzes profiles, education, and goals to find the most relevant candidates.</p>
-                  </div>
-                  
-                  <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="p-3 bg-purple-100 rounded-xl w-fit mb-4">
-                      <Zap className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Credit System</h3>
-                    <p className="text-gray-600 text-sm">Fair usage with credits. Reveal contacts only when you find the perfect match.</p>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="grid md:grid-cols-3 gap-6 mt-12"
+            >
+              <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <div className="p-3 bg-blue-100 rounded-xl w-fit mb-4">
+                  <Activity className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Activity Intelligence</h3>
+                <p className="text-gray-600 text-sm">Real-time engagement scoring based on platform activity and application patterns.</p>
+              </div>
+              
+              <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <div className="p-3 bg-emerald-100 rounded-xl w-fit mb-4">
+                  <Target className="h-6 w-6 text-emerald-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Smart Matching</h3>
+                <p className="text-gray-600 text-sm">AI analyzes profiles, education, and goals to find the most relevant candidates.</p>
+              </div>
+              
+              <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <div className="p-3 bg-purple-100 rounded-xl w-fit mb-4">
+                  <Zap className="h-6 w-6 text-purple-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Credit System</h3>
+                <p className="text-gray-600 text-sm">Fair usage with credits. Reveal contacts only when you find the perfect match.</p>
+              </div>
+            </motion.div>
+        </motion.div>
+      </div>
           </div>
         )}
       </motion.div>
