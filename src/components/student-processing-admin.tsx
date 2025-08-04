@@ -88,6 +88,108 @@ export function StudentProcessingAdmin() {
     }
   }
 
+  const testEnhancedCategorization = async () => {
+    setIsProcessing(true)
+    setError('')
+    setMessage('')
+
+    try {
+      const sampleData = {
+        university: 'GMU',
+        major: 'CS',
+        skills: ['javascript', 'photoshop', 'leadership'],
+        location: 'DXB',
+        interests: ['technology', 'startups'],
+        goal: ['software engineer'],
+        bio: 'Passionate computer science student interested in web development and startups'
+      }
+
+      const response = await fetch('/api/admin/enhanced-categorization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'test_single', studentData: sampleData })
+      })
+
+      if (!response.ok) throw new Error('Test failed')
+
+      const data = await response.json()
+      setMessage(`🧪 Test Results:
+University: ${data.categorization.university.standard} (${Math.round(data.categorization.university.confidence * 100)}% confidence)
+Major: ${data.categorization.major.standard} (${Math.round(data.categorization.major.confidence * 100)}% confidence)
+Tags Generated: ${data.categorization.semanticTags.length}
+Improvements: ${data.categorization.suggestedImprovements.length} suggestions`)
+      
+    } catch (err) {
+      console.error('Test error:', err)
+      setError(err instanceof Error ? err.message : 'Test failed')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const runEnhancedBulkProcessing = async () => {
+    setIsProcessing(true)
+    setError('')
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/admin/enhanced-categorization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'enhanced_bulk_process' })
+      })
+
+      if (!response.ok) throw new Error('Enhanced processing failed')
+
+      const data = await response.json()
+      setMessage(`🚀 Enhanced Processing Complete:
+- Processed: ${data.results.studentsProcessed} students
+- Improved: ${data.results.studentsImproved} students (${data.results.improvementRate}%)
+- Needs Review: ${data.results.studentsNeedingReview} students
+- New Semantic Tags: ${data.results.newSemanticTags}`)
+      
+      // Reload stats after processing
+      setTimeout(loadStats, 2000)
+      
+    } catch (err) {
+      console.error('Enhanced processing error:', err)
+      setError(err instanceof Error ? err.message : 'Enhanced processing failed')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const analyzeDataQuality = async () => {
+    setIsProcessing(true)
+    setError('')
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/admin/enhanced-categorization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'analyze_data_quality' })
+      })
+
+      if (!response.ok) throw new Error('Quality analysis failed')
+
+      const data = await response.json()
+      const analysis = data.analysis
+      setMessage(`📊 Data Quality Analysis:
+- Sample Size: ${analysis.sampleSize} students
+- Incomplete Profiles: ${analysis.dataQualityIssues.incompleteProfiles} (${analysis.dataQualityIssues.incompletePercentage}%)
+- University Variations: ${analysis.variationAnalysis.universities.uniqueCount}
+- Major Variations: ${analysis.variationAnalysis.majors.uniqueCount}
+- Potential Merges: ${analysis.variationAnalysis.universities.potentialMerges.length} universities, ${analysis.variationAnalysis.majors.potentialMerges.length} majors`)
+      
+    } catch (err) {
+      console.error('Quality analysis error:', err)
+      setError(err instanceof Error ? err.message : 'Quality analysis failed')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
@@ -233,15 +335,44 @@ export function StudentProcessingAdmin() {
             </div>
           </div>
 
+          {/* Test Enhanced Categorization */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 className="font-semibold text-green-900 mb-3">🧪 Test Enhanced AI Categorization</h3>
+            <div className="space-y-3">
+              <Button
+                onClick={() => testEnhancedCategorization()}
+                variant="outline"
+                className="text-green-700 border-green-300 hover:bg-green-100"
+              >
+                🧠 Test with Sample Data
+              </Button>
+              <Button
+                onClick={() => runEnhancedBulkProcessing()}
+                variant="outline"
+                className="text-green-700 border-green-300 hover:bg-green-100"
+              >
+                🚀 Run Enhanced Processing
+              </Button>
+              <Button
+                onClick={() => analyzeDataQuality()}
+                variant="outline"
+                className="text-green-700 border-green-300 hover:bg-green-100"
+              >
+                📊 Analyze Data Quality
+              </Button>
+            </div>
+          </div>
+
           {/* System Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">🚀 How It Works</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">🚀 Enhanced AI System</h3>
             <ul className="text-blue-800 space-y-1 text-sm">
-              <li>• **Automatic Processing:** New students are processed when they register</li>
-              <li>• **Smart Categorization:** AI creates tags for universities, majors, skills, and locations</li>
-              <li>• **Activity Scoring:** Students get ranked by platform engagement and profile completeness</li>
-              <li>• **Instant Matching:** Companies get immediate, intelligent search results</li>
-              <li>• **No Manual Work:** Everything runs automatically in the background</li>
+              <li>• **Smart Recognition:** "GMU" → "Gulf Medical University" automatically</li>
+              <li>• **Confidence Scoring:** Know which categorizations need manual review</li>
+              <li>• **Semantic Understanding:** Groups similar majors, skills, and universities</li>
+              <li>• **DeepSeek AI Enhancement:** Industry alignment and career trajectory prediction</li>
+              <li>• **Quality Analysis:** Identifies data inconsistencies and suggests improvements</li>
+              <li>• **Hybrid Approach:** Knowledge base + AI + manual verification where needed</li>
             </ul>
           </div>
         </motion.div>
