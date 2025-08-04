@@ -17,8 +17,8 @@ export default function AIAnalysisPage() {
       return
     }
 
-    // Only allow COMPANY and ADMIN users
-    if (session.user.role !== 'COMPANY' && session.user.role !== 'ADMIN') {
+    // Only allow ADMIN users
+    if (session.user.role !== 'ADMIN') {
       router.push('/dashboard')
       return
     }

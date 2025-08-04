@@ -288,13 +288,6 @@ export default function DashboardLayout({
                   🔍 Browse Students
                 </Link>
                 <Link 
-                  href="/dashboard/ai-analysis" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-                >
-  🔧 Student Processing
-                </Link>
-                <Link 
                   href="/dashboard/projects/new" 
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-3 text-base font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
