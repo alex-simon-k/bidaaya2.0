@@ -236,12 +236,48 @@ export const getPlansForUserType = (userType: 'STUDENT' | 'COMPANY') => {
 
 // Credit system utilities
 export const getCreditAllowance = (planId: string): number => {
-  const plan = getPlanById(planId)
+  // Handle different plan ID formats (COMPANY_BASIC vs company_basic)
+  let normalizedPlanId = planId
+  
+  // Convert database format to pricing format
+  const planMapping: Record<string, string> = {
+    'COMPANY_FREE': 'company_free',
+    'COMPANY_BASIC': 'company_basic',
+    'COMPANY_PREMIUM': 'company_premium', 
+    'COMPANY_PRO': 'company_pro',
+    'STUDENT_FREE': 'student_free',
+    'STUDENT_PREMIUM': 'student_premium',
+    'STUDENT_PRO': 'student_pro'
+  }
+  
+  if (planMapping[planId]) {
+    normalizedPlanId = planMapping[planId]
+  }
+  
+  const plan = getPlanById(normalizedPlanId)
   return (plan as any)?.credits || 0
 }
 
 export const getContactFeatures = (planId: string): string[] => {
-  const plan = getPlanById(planId)
+  // Handle different plan ID formats (COMPANY_BASIC vs company_basic)
+  let normalizedPlanId = planId
+  
+  // Convert database format to pricing format
+  const planMapping: Record<string, string> = {
+    'COMPANY_FREE': 'company_free',
+    'COMPANY_BASIC': 'company_basic',
+    'COMPANY_PREMIUM': 'company_premium', 
+    'COMPANY_PRO': 'company_pro',
+    'STUDENT_FREE': 'student_free',
+    'STUDENT_PREMIUM': 'student_premium',
+    'STUDENT_PRO': 'student_pro'
+  }
+  
+  if (planMapping[planId]) {
+    normalizedPlanId = planMapping[planId]
+  }
+  
+  const plan = getPlanById(normalizedPlanId)
   return (plan as any)?.contactFeatures || []
 }
 

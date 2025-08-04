@@ -96,39 +96,41 @@ export function MembershipSelectionPopup({
     }
   ]
 
-  const getCompanyPlans = (cycle: 'monthly' | 'yearly'): Plan[] => {
-    const companyPlans = getPricingPlans('COMPANY')
-    
-    return companyPlans.map(plan => {
-      const credits = getCreditAllowance(plan.id)
-      const contactFeatures = getContactFeatures(plan.id)
-      
-      // Create feature list with credits and contact features
-      const features = [
-        `${credits} contact credits/month`,
-        ...plan.features.filter(f => !f.includes('credit')), // Remove old credit features
-      ]
-      
-      // Add contact feature summary
-      if (contactFeatures.includes('calendly')) features.push('📅 Calendly integration')
-      if (contactFeatures.includes('linkedin')) features.push('💼 LinkedIn access')
-      if (contactFeatures.includes('email')) features.push('📧 Email addresses')
-      if (contactFeatures.includes('whatsapp')) features.push('📱 WhatsApp numbers')
-      if (contactFeatures.includes('full_details')) features.push('🔓 Full contact details')
-
-      return {
-        id: cycle === 'monthly' ? `${plan.id}_monthly` : `${plan.id}_yearly`,
-        name: plan.name,
-        price: cycle === 'monthly' ? plan.price : Math.round(plan.price * 12 * 0.83), // 17% yearly discount
-        description: plan.description,
-        features,
-        buttonText: plan.price === 0 ? 'Start Free' : (plan as any).popular ? 'Start Hiring' : 'Upgrade',
-        color: plan.price === 0 ? 'gray' : (plan as any).popular ? 'blue' : plan.name.includes('Agent') ? 'gold' : 'purple',
-        popular: (plan as any).popular || false,
-        yearlyDiscount: cycle === 'yearly' ? '17% off' : undefined
-      }
-    })
-  }
+  const getCompanyPlans = (cycle: 'monthly' | 'yearly'): Plan[] => [
+    {
+      id: cycle === 'monthly' ? 'company_basic_monthly' : 'company_basic_yearly',
+      name: 'Company Basic',
+      price: cycle === 'monthly' ? 20 : 199.99,
+      description: 'Perfect for small teams',
+      features: ['50 contact credits/month', '📅 Calendly + 💼 LinkedIn access', '1 active project', 'AI shortlisting', 'Interview tools', 'Basic analytics'],
+      buttonText: 'Start Hiring',
+      color: 'blue',
+      popular: true,
+      yearlyDiscount: cycle === 'yearly' ? '17% off' : undefined
+    },
+    {
+      id: cycle === 'monthly' ? 'company_hr_booster_monthly' : 'company_hr_booster_yearly',
+      name: 'HR Booster',
+      price: cycle === 'monthly' ? 75 : 747,
+      description: 'For growing companies',
+      features: ['100 contact credits/month', '📅 Calendly + 💼 LinkedIn + 📧 Email access', '5 active projects', 'Full applicant visibility', 'Advanced analytics', 'Priority support'],
+      buttonText: 'Boost Hiring',
+      color: 'purple',
+      popular: false,
+      yearlyDiscount: cycle === 'yearly' ? '17% off' : undefined
+    },
+    {
+      id: cycle === 'monthly' ? 'company_hr_agent_monthly' : 'company_hr_agent_yearly',
+      name: 'HR Agent',
+      price: cycle === 'monthly' ? 175 : 1745,
+      description: 'Complete hiring solution',
+      features: ['200 contact credits/month', '🔓 Full contact access (LinkedIn + Email + WhatsApp)', 'Unlimited projects', 'White-glove service', 'Custom integrations', 'Dedicated support'],
+      buttonText: 'Go Full Agent',
+      color: 'gold',
+      popular: false,
+      yearlyDiscount: cycle === 'yearly' ? '17% off' : undefined
+    }
+  ]
 
   // Filter plans based on available higher tiers
   const getFilteredPlans = () => {

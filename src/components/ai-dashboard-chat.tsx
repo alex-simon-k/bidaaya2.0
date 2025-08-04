@@ -416,6 +416,13 @@ I'll now take you to the project creation page with everything pre-filled. You j
       const userPlan = (session.user as any).subscriptionPlan || 'company_free'
       const allowance = getCreditAllowance(userPlan)
       
+      console.log('🔍 Credit Detection Debug:', {
+        userId: session.user.id,
+        userPlan,
+        allowance,
+        sessionUser: session.user
+      })
+      
       // Check if we have stored credit usage for this month
       const currentDate = new Date()
       const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
@@ -425,6 +432,15 @@ I'll now take you to the project creation page with everything pre-filled. You j
         const storedUsage = localStorage.getItem(storageKey)
         const usedCredits = storedUsage ? parseInt(storedUsage) : 0
         const remainingCredits = Math.max(0, allowance - usedCredits)
+        
+        console.log('🔍 Credit Calculation:', {
+          allowance,
+          usedCredits,
+          remainingCredits,
+          storageKey,
+          storedUsage
+        })
+        
         setCredits(remainingCredits)
       } catch (error) {
         console.error('Failed to load credit usage:', error)
@@ -983,7 +999,9 @@ The candidate will receive a professional email with your calendar link and can 
                   <span className="text-sm font-medium text-gray-700">
                     {credits} credits
                   </span>
-                  <span className="text-xs text-gray-500">(FREE)</span>
+                  <span className="text-xs text-gray-500">
+                    ({((session?.user as any)?.subscriptionPlan || 'COMPANY_FREE').replace('COMPANY_', '').replace('_', ' ')})
+                  </span>
                 </div>
               </div>
               
