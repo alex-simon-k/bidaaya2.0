@@ -94,6 +94,7 @@ model User {
   projects                 Project[]
   sessions                 Session[]
   userSessions             UserSession[]
+  studentTags              StudentTag[]
 }
 
 model UserSession {
@@ -525,4 +526,78 @@ enum InsightType {
   MONTHLY
   REAL_TIME
   PREDICTION
+}
+
+// AI Database Analysis Models
+model SmartTag {
+  id           String   @id @default(cuid())
+  category     String   // university, major, skills, etc.
+  value        String   // the normalized tag value
+  aliases      String[] // variations and synonyms
+  frequency    Int      @default(0)
+  relatedTags  String[] // related tag IDs
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  analysisRunId String?  
+  analysisRun  AnalysisRun? @relation(fields: [analysisRunId], references: [id], onDelete: SetNull)
+  
+  // Junction table for students with this tag
+  studentTags  StudentTag[]
+  
+  @@unique([category, value])
+  @@index([category])
+  @@index([frequency])
+}
+
+model StudentTag {
+  id        String   @id @default(cuid())
+  userId    String   
+  tagId     String   
+  confidence Float   @default(1.0) // how confident we are in this tag match
+  source    String   @default("ai_analysis") // how this tag was assigned
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag       SmartTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, tagId])
+  @@index([userId])
+  @@index([tagId])
+}
+
+model DatabaseInsight {
+  id               String   @id @default(cuid())
+  field            String   // field name analyzed
+  uniqueValuesCount Int     // number of unique values
+  patterns         String[] // extracted patterns
+  recommendations  String[] // field-specific recommendations
+  topValues        Json     // most frequent values with counts
+  createdAt        DateTime @default(now())
+  analysisRunId    String   
+  analysisRun      AnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  
+  @@index([field])
+  @@index([analysisRunId])
+}
+
+model AnalysisRun {
+  id               String   @id @default(cuid())
+  runBy            String   // user who triggered the analysis
+  status           String   @default("running") // running, completed, failed
+  studentsAnalyzed Int      @default(0)
+  tagsGenerated    Int      @default(0)
+  fieldsAnalyzed   String[] // which fields were analyzed
+  recommendations  String[] // overall recommendations
+  summary          Json?    // analysis summary data
+  startedAt        DateTime @default(now())
+  completedAt      DateTime?
+  errorMessage     String?
+  
+  // Relations
+  smartTags        SmartTag[]
+  insights         DatabaseInsight[]
+  
+  @@index([runBy])
+  @@index([status])
+  @@index([startedAt])
 }

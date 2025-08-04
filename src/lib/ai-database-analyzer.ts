@@ -38,11 +38,17 @@ export class AIDatabaseAnalyzer {
 
   /**
    * Analyze entire student database and create intelligent tags
+   * Results are cached in memory and optionally saved to file system
    */
   static async analyzeDatabase(): Promise<{
     insights: DatabaseInsight[]
     smartTags: SmartTag[]
     recommendations: string[]
+    metadata: {
+      timestamp: string
+      studentsAnalyzed: number
+      fieldsAnalyzed: string[]
+    }
   }> {
     console.log('🔍 Starting comprehensive database analysis...')
 
@@ -83,7 +89,60 @@ export class AIDatabaseAnalyzer {
     // Get AI recommendations
     const recommendations = await this.getAIRecommendations(insights, smartTags)
 
-    return { insights, smartTags, recommendations }
+    const analysisResult = {
+      insights,
+      smartTags,
+      recommendations,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        studentsAnalyzed: students.length,
+        fieldsAnalyzed: fieldsToAnalyze
+      }
+    }
+
+    // Cache the results globally (in-memory cache)
+    this.cacheAnalysisResults(analysisResult)
+
+    console.log(`✅ Analysis completed: ${smartTags.length} tags created, ${insights.length} insights generated`)
+
+    return analysisResult
+  }
+
+  /**
+   * Cache analysis results in memory for fast access
+   */
+  private static analysisCache: {
+    data: any
+    timestamp: Date
+    ttl: number // Time to live in milliseconds
+  } | null = null
+
+  private static cacheAnalysisResults(data: any): void {
+    this.analysisCache = {
+      data,
+      timestamp: new Date(),
+      ttl: 24 * 60 * 60 * 1000 // 24 hours
+    }
+    console.log('💾 Analysis results cached for 24 hours')
+  }
+
+  /**
+   * Get cached analysis results if available and not expired
+   */
+  static getCachedAnalysis(): any | null {
+    if (!this.analysisCache) return null
+    
+    const now = new Date()
+    const elapsed = now.getTime() - this.analysisCache.timestamp.getTime()
+    
+    if (elapsed > this.analysisCache.ttl) {
+      console.log('🕒 Cached analysis expired, clearing cache')
+      this.analysisCache = null
+      return null
+    }
+    
+    console.log('⚡ Using cached analysis results')
+    return this.analysisCache.data
   }
 
   /**
