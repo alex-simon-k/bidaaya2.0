@@ -66,6 +66,15 @@ export default function AIDashboardChat() {
   const [isAnimatingInput, setIsAnimatingInput] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [projectCreationState, setProjectCreationState] = useState<{
+    isActive: boolean
+    step: string
+    collectedData: Record<string, any>
+  }>({
+    isActive: false,
+    step: '',
+    collectedData: {}
+  })
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -105,6 +114,257 @@ export default function AIDashboardChat() {
       localStorage.removeItem(CHAT_STORAGE_KEY)
     } catch (error) {
       console.error('Failed to clear chat messages:', error)
+    }
+  }
+
+  // Handle project creation conversation steps
+  const handleProjectCreationStep = async (message: string) => {
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: message,
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
+
+    try {
+      const { step, collectedData } = projectCreationState
+      let nextStep = ''
+      let nextResponse = ''
+      const updatedData = { ...collectedData }
+
+      switch (step) {
+        case 'title':
+          updatedData.title = message.trim()
+          nextStep = 'category'
+          nextResponse = `✅ **Great! Project title:** "${message.trim()}"
+
+Now, let's choose the category that best fits your project:
+
+🎯 **Marketing** - Social media, content creation, brand strategy
+💼 **Business Development** - Lead generation, partnerships, sales
+💻 **Computer Science** - Web/app development, data analysis, AI
+💰 **Finance** - Financial modeling, investment research, budgeting
+🧠 **Psychology** - User research, behavioral analysis, HR support
+
+**Which category best describes your project?**
+_Just type the category name (e.g., "Marketing" or "Computer Science")_`
+          break
+
+        case 'category':
+          const categoryMap: Record<string, string> = {
+            'marketing': 'MARKETING',
+            'business': 'BUSINESS_DEVELOPMENT',
+            'business development': 'BUSINESS_DEVELOPMENT',
+            'computer science': 'COMPUTER_SCIENCE',
+            'tech': 'COMPUTER_SCIENCE',
+            'development': 'COMPUTER_SCIENCE',
+            'finance': 'FINANCE',
+            'psychology': 'PSYCHOLOGY'
+          }
+          
+          const normalizedCategory = message.toLowerCase().trim()
+          updatedData.category = categoryMap[normalizedCategory] || 'CUSTOM'
+          nextStep = 'problem'
+          nextResponse = `✅ **Category selected:** ${message.trim()}
+
+Now let's understand the challenge you're facing:
+
+**What's the current problem or challenge you need help with?**
+
+_For example:_
+- "Our social media engagement is declining and we need fresh content"
+- "We need to build a mobile app but lack the technical expertise"
+- "Our lead generation process is manual and inefficient"
+
+Please describe your situation in 1-2 sentences. 📝`
+          break
+
+        case 'problem':
+          updatedData.problemStatement = message.trim()
+          nextStep = 'solution'
+          nextResponse = `✅ **Problem understood:** ${message.trim()}
+
+Now let's define what you're looking for:
+
+**What solutions or direction do you want to pursue?**
+
+_For example:_
+- "Develop a content strategy with 3 months of social media posts"
+- "Build a mobile app prototype with user authentication and core features"  
+- "Create an automated lead generation system using CRM integration"
+
+What specific solutions are you hoping to achieve? 🎯`
+          break
+
+        case 'solution':
+          updatedData.solutionDirection = message.trim()
+          nextStep = 'goal'
+          nextResponse = `✅ **Solution direction:** ${message.trim()}
+
+Let's set a clear success metric:
+
+**What would define this project as successful? What's your key goal or KPI?**
+
+_For example:_
+- "Increase social media engagement by 25% within 3 months"
+- "Launch a working app prototype with 100 beta users"
+- "Generate 50 qualified leads per month"
+
+What's your definition of success? 📊`
+          break
+
+        case 'goal':
+          updatedData.definitionOfDone = message.trim()
+          nextStep = 'worktype'
+          nextResponse = `✅ **Success goal:** ${message.trim()}
+
+Perfect! Now for the work arrangement:
+
+**How would you like students to work on this project?**
+
+🌐 **Virtual (Remote)** - Students work from anywhere
+🏢 **Part-time In-person** - Students come to your office part-time
+📍 **In-person** - Students work on-site
+
+Which work arrangement do you prefer? Type "Virtual", "Part-time", or "In-person"`
+          break
+
+        case 'worktype':
+          const worktypeMap: Record<string, string> = {
+            'virtual': 'VIRTUAL',
+            'remote': 'VIRTUAL',
+            'part-time': 'PART_TIME_IN_PERSON',
+            'part time': 'PART_TIME_IN_PERSON',
+            'hybrid': 'PART_TIME_IN_PERSON',
+            'in-person': 'IN_PERSON',
+            'onsite': 'IN_PERSON',
+            'office': 'IN_PERSON'
+          }
+          
+          const normalizedWorktype = message.toLowerCase().trim()
+          updatedData.workType = worktypeMap[normalizedWorktype] || 'VIRTUAL'
+          nextStep = 'payment'
+          nextResponse = `✅ **Work arrangement:** ${message.trim()}
+
+Now let's discuss compensation:
+
+💸 **Unpaid** - Internship experience (max 8 hours/week)
+💰 **Paid** - Compensated position (flexible hours)
+
+Would you like this to be a **paid** or **unpaid** opportunity?`
+          break
+
+        case 'payment':
+          const isPaid = message.toLowerCase().includes('paid')
+          updatedData.paymentType = isPaid ? 'PAID' : 'UNPAID'
+          updatedData.hoursPerWeek = isPaid ? 20 : 8
+          
+          if (isPaid) {
+            nextStep = 'amount'
+            nextResponse = `✅ **Compensation:** Paid position
+
+**What's the total payment amount for the entire project? (in AED)**
+
+_For example:_
+- 3000 AED for a 3-month project
+- 5000 AED for a comprehensive development project
+- 2000 AED for a marketing campaign
+
+Please enter the total amount: 💰`
+          } else {
+            nextStep = 'complete'
+            nextResponse = `✅ **Compensation:** Unpaid internship (8 hours/week max)
+
+🎉 **Perfect! I have all the information needed.**
+
+Here's your project summary:
+📝 **Title:** ${updatedData.title}
+🎯 **Category:** ${updatedData.category}
+💼 **Work Type:** ${updatedData.workType}
+💰 **Payment:** Unpaid internship
+⏰ **Hours:** 8 hours/week maximum
+
+I'll now take you to the project creation page with everything pre-filled. You just need to review and click "Create Project"!
+
+**Redirecting in 3 seconds...** ✨`
+          }
+          break
+
+        case 'amount':
+          const amount = parseFloat(message.replace(/[^\d.]/g, '')) || 0
+          updatedData.paymentAmount = amount
+          nextStep = 'complete'
+          nextResponse = `✅ **Payment amount:** ${amount} AED
+
+🎉 **Excellent! I have everything needed to create your project.**
+
+Here's your project summary:
+📝 **Title:** ${updatedData.title}
+🎯 **Category:** ${updatedData.category}
+💼 **Work Type:** ${updatedData.workType}
+💰 **Payment:** ${amount} AED (total)
+⏰ **Duration:** 3 months
+
+I'll now take you to the project creation page with everything pre-filled. You just need to review and click "Create Project"!
+
+**Redirecting in 3 seconds...** ✨`
+          break
+
+        default:
+          nextResponse = `I'd be happy to help you create a project! Let's start with the basics:
+
+**What's the title of your project?**`
+          nextStep = 'title'
+      }
+
+      // Update project creation state
+      setProjectCreationState({
+        isActive: nextStep !== 'complete',
+        step: nextStep,
+        collectedData: updatedData
+      })
+
+      // Create AI response
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: nextResponse,
+        timestamp: new Date(),
+        actionType: nextStep === 'complete' ? 'navigate' : 'project-creation'
+      }
+
+      setMessages(prev => [...prev, aiMessage])
+
+      // If complete, redirect to project creation page with pre-filled data
+      if (nextStep === 'complete') {
+        setTimeout(() => {
+          const params = new URLSearchParams()
+          Object.entries(updatedData).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              params.set(key, String(value))
+            }
+          })
+          router.push(`/dashboard/projects/new?${params.toString()}`)
+        }, 3000)
+      }
+
+    } catch (error) {
+      console.error('Project creation step error:', error)
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: 'Something went wrong. Let me help you create your project. What\'s the title of your project?',
+        timestamp: new Date(),
+        actionType: 'project-creation'
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+      setIsProcessing(false)
     }
   }
 
@@ -174,6 +434,12 @@ export default function AIDashboardChat() {
 
     setIsProcessing(true)
 
+    // Check if we're in project creation flow
+    if (projectCreationState.isActive) {
+      await handleProjectCreationStep(message)
+      return
+    }
+
     // Start transition animation if this is the first message
     const isFirstMessage = messages.length === 0
     if (isFirstMessage) {
@@ -215,9 +481,15 @@ export default function AIDashboardChat() {
       if (aiResponse.actionType === 'search') {
         await performTalentSearch(message)
       } else if (aiResponse.actionType === 'project-creation') {
-        setTimeout(() => {
-          router.push('/dashboard/projects/new')
-        }, 2000)
+        // Start the project creation conversation flow
+        const responseData = (aiResponse as any).data
+        if (responseData?.step) {
+          setProjectCreationState({
+            isActive: true,
+            step: responseData.step,
+            collectedData: responseData.collectedData || {}
+          })
+        }
       }
     } catch (error) {
       console.error('Error generating response:', error)

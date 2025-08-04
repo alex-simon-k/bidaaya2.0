@@ -145,6 +145,17 @@ export default function NewProjectPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const rejectedId = searchParams.get('rejectedId')
+  
+  // Get pre-filled data from chat flow
+  const chatTitle = searchParams.get('title')
+  const chatCategory = searchParams.get('category')
+  const chatWorkType = searchParams.get('workType')
+  const chatPaymentType = searchParams.get('paymentType')
+  const chatPaymentAmount = searchParams.get('paymentAmount')
+  const chatProblemStatement = searchParams.get('problemStatement')
+  const chatSolutionDirection = searchParams.get('solutionDirection')
+  const chatDefinitionOfDone = searchParams.get('definitionOfDone')
+  const chatHoursPerWeek = searchParams.get('hoursPerWeek')
   const { data: session } = useSession()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -154,22 +165,22 @@ export default function NewProjectPage() {
   // Form state
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null)
   const [formData, setFormData] = useState({
-    title: '',
+    title: chatTitle || '',
     companyName: session?.user?.name || '',
-    category: '',
+    category: chatCategory || '',
     subcategory: '',
-    workType: 'VIRTUAL' as WorkType,
-    paymentType: 'UNPAID' as PaymentType,
-    paymentAmount: 0,
-    hoursPerWeek: 8, // Max 8 for unpaid, customizable for paid
+    workType: (chatWorkType as WorkType) || 'VIRTUAL',
+    paymentType: (chatPaymentType as PaymentType) || 'UNPAID',
+    paymentAmount: chatPaymentAmount ? parseFloat(chatPaymentAmount) : 0,
+    hoursPerWeek: chatHoursPerWeek ? parseInt(chatHoursPerWeek) : 8,
     teamSize: 1,
     durationMonths: 3,
     experienceLevel: 'High School',
     
     // New required fields
-    definitionOfDone: '', // Clear goal/KPI
-    problemStatement: '', // Current problem they're facing
-    solutionDirection: '', // Solutions they're looking for
+    definitionOfDone: chatDefinitionOfDone || '',
+    problemStatement: chatProblemStatement || '',
+    solutionDirection: chatSolutionDirection || '',
     hiringIntent: 'STANDALONE_INTERNSHIP' as HiringIntent,
     idealCandidateRequirements: [] as string[], // Key requirements
     
@@ -243,6 +254,20 @@ export default function NewProjectPage() {
     
     loadRejectedProject()
   }, [rejectedId, session])
+
+  // Handle pre-filled data from chat flow
+  useEffect(() => {
+    if (chatTitle && chatCategory && !rejectedId) {
+      // If we have chat data, skip template selection and go directly to form
+      setCurrentStep(2)
+      
+      // Try to match category to a template for better UX
+      const matchingTemplate = PROJECT_TEMPLATES.find(t => t.category === chatCategory)
+      if (matchingTemplate) {
+        setSelectedTemplate(matchingTemplate)
+      }
+    }
+  }, [chatTitle, chatCategory, rejectedId])
 
   const handleTemplateSelect = (template: ProjectTemplate) => {
     setSelectedTemplate(template)
@@ -590,7 +615,26 @@ export default function NewProjectPage() {
                 </h1>
               </>
             )}
+            {!selectedTemplate && chatTitle && (
+              <h1 className="text-2xl font-bold text-gray-900">Create Project</h1>
+            )}
           </div>
+          
+          {/* Chat Pre-fill Banner */}
+          {chatTitle && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                <div>
+                  <h3 className="text-green-800 font-medium">✨ Project details imported from chat!</h3>
+                  <p className="text-green-700 text-sm mt-1">
+                    I've pre-filled your project information based on our conversation. Please review and adjust as needed, then click "Create Project" to complete.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <p className="text-gray-600">Fill in the details for your project</p>
         </div>
 
