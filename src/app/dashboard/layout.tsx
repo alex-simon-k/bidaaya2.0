@@ -202,9 +202,8 @@ export default function DashboardLayout({
 
   return (
     <div className={`min-h-screen ${session?.user?.role === 'COMPANY' ? '' : 'bg-gray-50'}`}>
-      {/* Header - Mobile Optimized - Hidden for companies */}
-      {session?.user?.role !== 'COMPANY' && (
-        <header className="bg-white shadow-sm border-b sticky top-0 z-40">
+      {/* Header - Mobile Optimized - Now available for all users */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
@@ -244,10 +243,9 @@ export default function DashboardLayout({
             </div>
           </div>
         </header>
-      )}
 
-      {/* Mobile Menu - Hidden for companies */}
-      {session?.user?.role !== 'COMPANY' && isMenuOpen && (
+      {/* Mobile Menu - Now available for all users */}
+      {isMenuOpen && (
         <>
           {/* Backdrop */}
           <div 
@@ -278,20 +276,54 @@ export default function DashboardLayout({
             >
               🏠 Dashboard
             </Link>
-            <Link 
-              href="/dashboard/projects" 
-              onClick={() => setIsMenuOpen(false)}
-              className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              💼 Projects
-            </Link>
-            <Link 
-              href="/dashboard/applications" 
-              onClick={() => setIsMenuOpen(false)}
-              className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              📝 Applications
-            </Link>
+            
+            {/* Company-specific navigation */}
+            {session.user.role === 'COMPANY' && (
+              <>
+                <Link 
+                  href="/dashboard/ai-search" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  🔍 Browse Students
+                </Link>
+                <Link 
+                  href="/dashboard/projects/new" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  ➕ Create Project
+                </Link>
+                <Link 
+                  href="/dashboard/projects" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  💼 My Projects
+                </Link>
+              </>
+            )}
+            
+            {/* Student-specific navigation */}
+            {session.user.role === 'STUDENT' && (
+              <>
+                <Link 
+                  href="/dashboard/projects" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  💼 Browse Projects
+                </Link>
+                <Link 
+                  href="/dashboard/applications" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  📝 My Applications
+                </Link>
+              </>
+            )}
+            
             <Link 
               href="/dashboard/profile" 
               onClick={() => setIsMenuOpen(false)}
@@ -354,7 +386,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main content - Mobile Optimized */}
-      <main className={`${session?.user?.role === 'COMPANY' ? '' : 'max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8'}`}>
+      <main className={`${session?.user?.role === 'COMPANY' ? 'py-0' : 'max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8'}`}>
         {children}
       </main>
     </div>
