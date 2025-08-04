@@ -314,7 +314,7 @@ What would you like to do today?`,
           location: result.student.location,
           graduationYear: result.student.graduationYear,
           interests: result.student.interests || [],
-          goals: result.student.goals || [],
+          goal: result.student.goal || [],
           bio: result.student.bio || `${result.student.major || 'Student'} at ${result.student.university || 'University'}`,
           image: null,
           engagementLevel: result.student.activityScore > 70 ? 'High' : 
@@ -326,7 +326,7 @@ What would you like to do today?`,
         matchReasons: result.matching.reasons,
         activityScore: result.student.activityScore,
         overallRating: result.matching.overallRating,
-        contactCredits: 2,
+        contactCredits: 1,
         aiExplanation: result.matching.reasons.join(', ')
       })) || []
 
@@ -513,7 +513,7 @@ The candidate will receive a professional email with your calendar link and can 
                   variant="ghost"
                   size="sm"
                   onClick={resetChat}
-                  className="mr-2 hover:bg-gray-100"
+                  className="mr-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Dashboard
@@ -640,95 +640,109 @@ The candidate will receive a professional email with your calendar link and can 
                     </div>
                   </motion.div>
                 )}
+
+                {/* Search Results in Chat Mode - NOW INSIDE SCROLLABLE AREA */}
+                {showResults && searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className="w-full max-w-4xl mr-12 flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Search className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex-1">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+                          <Search className="h-5 w-5 text-blue-600" />
+                          Found {searchResults.length} Students
+                        </h3>
+                        <div className="grid gap-4">
+                          {searchResults.map((result) => (
+                            <div key={result.candidate.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                      <span className="text-lg font-semibold text-white">
+                                        {result.candidate.name.charAt(0)}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-semibold text-gray-900">{result.candidate.name}</h4>
+                                      <p className="text-sm text-gray-600">
+                                        {result.candidate.university} • {result.candidate.major}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Updated bio display - show major + goals */}
+                                  <div className="text-sm text-gray-700 mb-3 bg-white rounded-lg p-3 border">
+                                    <p className="font-medium text-gray-900">Studies: {result.candidate.major || 'Not specified'}</p>
+                                    {result.candidate.goal && result.candidate.goal.length > 0 && (
+                                      <p className="text-gray-600 mt-1">
+                                        <span className="font-medium">Goals:</span> {result.candidate.goal.join(', ')}
+                                      </p>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap gap-2 mb-3">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                      Match: {result.overallScore.toFixed(0)}%
+                                    </span>
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                      Activity: {result.candidate.engagementLevel}
+                                    </span>
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                      {result.candidate.applicationsThisMonth} apps this month
+                                    </span>
+                                  </div>
+                                  
+                                  <p className="text-sm text-gray-600 italic">{result.aiExplanation}</p>
+                                </div>
+                                
+                                <div className="ml-4 space-y-2">
+                                  {!(result as any).contactRevealed ? (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => revealContact(result.candidate.id, 1)}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                                    >
+                                      Reveal Contact (1 credit)
+                                    </Button>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      <div className="text-sm text-green-600 font-medium">
+                                        ✅ Contact Revealed
+                                      </div>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => sendCalendarInvite(
+                                          result.candidate.id, 
+                                          (result as any).contact?.email || result.candidate.email,
+                                          result.candidate.name
+                                        )}
+                                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                                      >
+                                        📅 Send Calendar Invite
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
                 
                 <div ref={messagesEndRef} />
               </div>
             </div>
 
-            {/* Search Results in Chat Mode */}
-            {showResults && searchResults.length > 0 && (
-              <div className="px-6 py-4 border-t border-gray-200">
-                <div className="max-w-4xl mx-auto">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
-                        <Search className="h-5 w-5 text-blue-600" />
-                        Talent Search Results
-                      </h3>
-                      <div className="grid gap-4">
-                        {searchResults.map((result) => (
-                          <div key={result.candidate.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    {result.candidate.image ? (
-                                      <img src={result.candidate.image} alt={result.candidate.name} className="w-12 h-12 rounded-full object-cover" />
-                                    ) : (
-                                      <span className="text-lg font-semibold text-blue-600">
-                                        {result.candidate.name.charAt(0)}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold text-gray-900">{result.candidate.name}</h4>
-                                    <p className="text-sm text-gray-600">
-                                      {result.candidate.university} • {result.candidate.major}
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                <p className="text-sm text-gray-700 mb-3">{result.candidate.bio}</p>
-                                
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                  <Badge variant="outline">Match: {result.overallScore.toFixed(0)}%</Badge>
-                                  <Badge variant="outline">Activity: {result.candidate.engagementLevel}</Badge>
-                                  <Badge variant="outline">{result.candidate.applicationsThisMonth} apps this month</Badge>
-                                </div>
-                                
-                                <p className="text-sm text-gray-600">{result.aiExplanation}</p>
-                              </div>
-                              
-                              <div className="ml-4 space-y-2">
-                                {!(result as any).contactRevealed ? (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => revealContact(result.candidate.id, result.contactCredits)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                  >
-                                    Reveal Contact ({result.contactCredits} credits)
-                                  </Button>
-                                ) : (
-                                  <div className="space-y-2">
-                                    <div className="text-sm text-green-600 font-medium">
-                                      ✅ Contact Revealed
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => sendCalendarInvite(
-                                        result.candidate.id, 
-                                        (result as any).contact?.email || result.candidate.email,
-                                        result.candidate.name
-                                      )}
-                                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                                    >
-                                      📅 Send Calendar Invite
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-            )}
+
 
             {/* Bottom Input Area - Fixed Position */}
             <div className="border-t border-gray-200 bg-white/80 backdrop-blur-sm px-6 py-4">

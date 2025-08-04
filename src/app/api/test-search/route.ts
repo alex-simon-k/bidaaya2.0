@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { query, limit = 10 } = body
+    const { query, limit = 20 } = body
 
     console.log(`🧪 Test search for: "${query}"`)
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
           location: student.location,
           graduationYear: student.graduationYear,
           interests: student.interests || [],
-          goals: student.goal || [],
+          goal: student.goal || [],
           bio: student.bio || `${student.major || 'Student'} at ${student.university || 'University'}`,
           activityScore: 75 // Fixed score for testing
         },
