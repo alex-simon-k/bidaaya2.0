@@ -107,12 +107,27 @@ export default function AIDashboardChat() {
     }
   }
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = (force = false) => {
+    if (!messagesEndRef.current) return
+    
+    // Only auto-scroll if user is near the bottom or force is true
+    const container = messagesEndRef.current.closest('.overflow-y-auto')
+    if (container) {
+      const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100
+      
+      if (force || isNearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+      }
+    } else {
+      // Fallback if container not found
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
   }
 
   useEffect(() => {
-    scrollToBottom()
+    // Only force scroll for the first message or if we have very few messages
+    const shouldForceScroll = messages.length <= 2
+    scrollToBottom(shouldForceScroll)
   }, [messages])
 
   // Load chat history on component mount
@@ -407,12 +422,12 @@ What would you like to do today?`,
       const resultsMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'ai',
-        content: `🎉 **Found ${data.matches?.length || 0} excellent matches!**
+        content: `🎉 **Found ${transformedResults.length} excellent matches!**
 
-${data.matches?.length > 0 ? 
-  `I've analyzed **${data.searchMetadata?.candidatesEvaluated || 'multiple'}** candidates and selected the **top ${data.matches.length}** based on relevance and quality.
+${transformedResults.length > 0 ? 
+  `I've analyzed **${data.searchMetadata?.candidatesEvaluated || 'multiple'}** candidates and selected the **top ${transformedResults.length}** based on relevance and quality.
 
-**💳 Credits:** ${credits} remaining | **📞 Contact reveals:** 1-2 credits each
+**💳 Credits:** ${credits} remaining | **📞 Contact reveals:** 1 credit each
 
 **👆 Review the candidates above and click "Reveal Contact" for promising matches!**` : 
   `No exact matches found for this search. Try:
@@ -467,22 +482,22 @@ ${data.matches?.length > 0 ?
           : result
       ))
 
-      // Add a success message
-      const contactMessage: ChatMessage = {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: `✅ **Contact revealed for ${data.data?.name || 'candidate'}!**
-        
+      // Add a concise success message with delay to prevent immediate scroll
+      setTimeout(() => {
+        const contactMessage: ChatMessage = {
+          id: Date.now().toString(),
+          type: 'ai',
+          content: `✅ **Contact revealed for ${data.data?.name || 'candidate'}!**
+          
 📧 **Email:** ${data.data?.email}
 ${data.data?.whatsapp ? `📱 **WhatsApp:** ${data.data.whatsapp}` : ''}
 
-🎯 **Ready to schedule an interview?** Click "Send Calendar Invite" below to send them your Calendly link automatically.
-
-💡 **Tip:** Make sure you have a Calendly link set up in your profile for this feature to work.`,
-        timestamp: new Date(),
-        actionType: 'guidance'
-      }
-      setMessages(prev => [...prev, contactMessage])
+Use "Send Calendar Invite" to schedule an interview automatically.`,
+          timestamp: new Date(),
+          actionType: 'guidance'
+        }
+        setMessages(prev => [...prev, contactMessage])
+      }, 300)
       
     } catch (error) {
       console.error('Error revealing contact:', error)
@@ -800,18 +815,27 @@ The candidate will receive a professional email with your calendar link and can 
                                       <div>
                                         <p className="font-medium text-gray-900">About:</p>
                                         {(() => {
-                                          // Check if bio contains discovery quiz JSON data
-                                          if (result.candidate.bio.startsWith('{"discoveryProfile"') || result.candidate.bio.includes('discoveryProfile')) {
+                                          // Enhanced detection for discovery quiz JSON data
+                                          const bio = result.candidate.bio
+                                          const isJsonData = bio.startsWith('{') && 
+                                            (bio.includes('discoveryProfile') || 
+                                             bio.includes('skills') || 
+                                             bio.includes('careerGoals') || 
+                                             bio.includes('workPreferences') ||
+                                             bio.includes('industries') ||
+                                             bio.includes('experienceLevel'))
+                                          
+                                          if (isJsonData) {
                                             try {
-                                              const discoveryData = JSON.parse(result.candidate.bio)
+                                              const discoveryData = JSON.parse(bio)
                                               const profile = discoveryData.discoveryProfile || discoveryData
                                               
                                               return (
                                                 <div className="text-sm text-gray-600 space-y-1">
-                                                  {profile.skills && profile.skills.length > 0 && (
+                                                  {profile.skills && Array.isArray(profile.skills) && profile.skills.length > 0 && (
                                                     <p><span className="font-medium">Skills:</span> {profile.skills.join(', ')}</p>
                                                   )}
-                                                  {profile.careerGoals && profile.careerGoals.length > 0 && (
+                                                  {profile.careerGoals && Array.isArray(profile.careerGoals) && profile.careerGoals.length > 0 && (
                                                     <p><span className="font-medium">Career Goals:</span> {profile.careerGoals.join(', ')}</p>
                                                   )}
                                                   {profile.workPreferences && (
@@ -822,20 +846,31 @@ The candidate will receive a professional email with your calendar link and can 
                                                       {profile.workPreferences.teamSize && (
                                                         <p><span className="font-medium">Team Preference:</span> {profile.workPreferences.teamSize}</p>
                                                       )}
+                                                      {profile.workPreferences.workStyle && (
+                                                        <p><span className="font-medium">Work Style:</span> {profile.workPreferences.workStyle}</p>
+                                                      )}
                                                     </div>
                                                   )}
-                                                  {profile.industries && profile.industries.length > 0 && (
+                                                  {profile.industries && Array.isArray(profile.industries) && profile.industries.length > 0 && (
                                                     <p><span className="font-medium">Industry Interests:</span> {profile.industries.join(', ')}</p>
+                                                  )}
+                                                  {profile.experienceLevel && (
+                                                    <p><span className="font-medium">Experience Level:</span> {profile.experienceLevel}</p>
+                                                  )}
+                                                  {profile.learningGoals && Array.isArray(profile.learningGoals) && profile.learningGoals.length > 0 && (
+                                                    <p><span className="font-medium">Learning Goals:</span> {profile.learningGoals.join(', ')}</p>
                                                   )}
                                                 </div>
                                               )
                                             } catch (e) {
-                                              // If JSON parsing fails, show as regular text
-                                              return <p className="text-gray-600 text-sm italic">{result.candidate.bio}</p>
+                                              console.error('Failed to parse discovery profile JSON:', e)
+                                              // If JSON parsing fails, try to extract basic info or show truncated
+                                              const truncatedBio = bio.length > 150 ? bio.substring(0, 150) + '...' : bio
+                                              return <p className="text-gray-600 text-sm italic">{truncatedBio}</p>
                                             }
                                           } else {
                                             // Regular bio text
-                                            return <p className="text-gray-600 text-sm italic">{result.candidate.bio}</p>
+                                            return <p className="text-gray-600 text-sm italic">{bio}</p>
                                           }
                                         })()}
                                       </div>
