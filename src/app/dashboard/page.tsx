@@ -27,6 +27,7 @@ import { UsageStatsCard } from '@/components/upgrade-prompt'
 import { DashboardStatsWidget } from '@/components/dashboard-stats-widget'
 import { useSessionRefresh } from '@/lib/session-utils'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { AIAnalysisAdminPanel } from '@/components/ai-analysis-admin-panel'
 
 
 export default function DashboardPage() {

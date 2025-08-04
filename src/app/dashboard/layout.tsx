@@ -288,6 +288,13 @@ export default function DashboardLayout({
                   🔍 Browse Students
                 </Link>
                 <Link 
+                  href="/dashboard/ai-analysis" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  🧠 Run AI Analysis
+                </Link>
+                <Link 
                   href="/dashboard/projects/new" 
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-3 text-base font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
@@ -359,13 +366,22 @@ export default function DashboardLayout({
               💎 Subscription
             </Link>
             {session.user.role === 'ADMIN' && (
-              <Link 
-                href="/admin" 
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-3 py-3 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                ⚙️ Admin Panel
-              </Link>
+              <>
+                <Link 
+                  href="/dashboard/ai-analysis" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  🧠 AI Analysis
+                </Link>
+                <Link 
+                  href="/admin" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  ⚙️ Admin Panel
+                </Link>
+              </>
             )}
             
             {/* Sign out button */}
