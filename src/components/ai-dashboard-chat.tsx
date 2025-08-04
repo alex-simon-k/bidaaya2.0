@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, Sparkles, Send, User, Bot, Zap, Crown, Brain, Target, Activity, X, ArrowLeft } from 'lucide-react'
+import { Search, Plus, Sparkles, Send, User, Bot, Zap, Crown, Brain, Target, Activity, X, ArrowLeft, Lock, Unlock } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getContactRevealContent, hasContactFeatureAccess, getLockedFeatures, getCreditAllowance, getContactFeatures } from '@/lib/pricing'
 
 // AI Talent Search Integration
 interface TalentProfile {
@@ -61,7 +62,7 @@ export default function AIDashboardChat() {
   const [input, setInput] = useState('')
   const [searchResults, setSearchResults] = useState<AIMatchResult[]>([])
   const [showResults, setShowResults] = useState(false)
-  const [credits, setCredits] = useState(15)
+  const [credits, setCredits] = useState(15) // Will be updated from user's plan
   const [isAnimatingInput, setIsAnimatingInput] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -147,6 +148,18 @@ export default function AIDashboardChat() {
       saveMessagesToStorage(messages)
     }
   }, [messages, session?.user?.id])
+
+  // Load user's credit allowance based on their subscription plan
+  useEffect(() => {
+    if (session?.user) {
+      // Get the user's current subscription plan
+      const userPlan = (session.user as any).subscriptionPlan || 'company_free'
+      const allowance = getCreditAllowance(userPlan)
+      if (allowance > 0) {
+        setCredits(allowance)
+      }
+    }
+  }, [session?.user])
 
   // Auto-resize textarea
   useEffect(() => {
@@ -484,17 +497,58 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
           : result
       ))
 
-      // Add a concise success message with delay to prevent immediate scroll
+      // Add a tier-based success message with delay to prevent immediate scroll
       setTimeout(() => {
+        const userPlan = (session?.user as any)?.subscriptionPlan || 'company_free'
+        const revealedContent = getContactRevealContent(userPlan, data.data)
+        
+        let contentMessage = `✅ **Contact revealed for ${data.data?.name || 'candidate'}!**\n\n`
+        
+        if (revealedContent.calendlyAccess) {
+          contentMessage += `📅 **Calendly Integration:** Available - Use "Send Calendar Invite" below\n`
+        }
+        
+        if (revealedContent.linkedin) {
+          contentMessage += `💼 **LinkedIn:** ${revealedContent.linkedin}\n`
+        }
+        
+        if (revealedContent.email) {
+          contentMessage += `📧 **Email:** ${revealedContent.email}\n`
+        }
+        
+        if (revealedContent.whatsapp) {
+          contentMessage += `📱 **WhatsApp:** ${revealedContent.whatsapp}\n`
+        }
+        
+        if (revealedContent.phone) {
+          contentMessage += `📞 **Phone:** ${revealedContent.phone}\n`
+        }
+        
+        // Show locked features if any
+        const lockedFeatures = getLockedFeatures(userPlan)
+        if (lockedFeatures.length > 0) {
+          const lockedNames = {
+            linkedin: 'LinkedIn Profile',
+            email: 'Email Address', 
+            whatsapp: 'WhatsApp Number',
+            phone: 'Phone Number',
+            full_details: 'Additional Contact Details'
+          }
+          
+          const lockedList = lockedFeatures
+            .filter(f => f !== 'calendly') // Don't show calendly as locked
+            .map(f => lockedNames[f as keyof typeof lockedNames])
+            .filter(Boolean)
+            
+          if (lockedList.length > 0) {
+            contentMessage += `\n🔒 **Upgrade to unlock:** ${lockedList.join(', ')}`
+          }
+        }
+
         const contactMessage: ChatMessage = {
           id: Date.now().toString(),
           type: 'ai',
-          content: `✅ **Contact revealed for ${data.data?.name || 'candidate'}!**
-          
-📧 **Email:** ${data.data?.email}
-${data.data?.whatsapp ? `📱 **WhatsApp:** ${data.data.whatsapp}` : ''}
-
-Use "Send Calendar Invite" to schedule an interview automatically.`,
+          content: contentMessage,
           timestamp: new Date(),
           actionType: 'guidance'
         }
@@ -905,6 +959,69 @@ The candidate will receive a professional email with your calendar link and can 
                                 </div>
                                 
                                 <div className="ml-4 space-y-2">
+                                  {/* Contact Features Preview */}
+                                  {(() => {
+                                    const userPlan = (session?.user as any)?.subscriptionPlan || 'company_free'
+                                    const availableFeatures = getContactFeatures(userPlan)
+                                    const lockedFeatures = getLockedFeatures(userPlan)
+                                    
+                                    return (
+                                      <div className="text-xs space-y-1 mb-3 p-2 bg-gray-50 rounded-lg">
+                                        <div className="font-medium text-gray-700">Contact Access:</div>
+                                        
+                                        {availableFeatures.includes('calendly') && (
+                                          <div className="flex items-center gap-1 text-green-600">
+                                            <Unlock className="h-3 w-3" />
+                                            <span>Calendly Integration</span>
+                                          </div>
+                                        )}
+                                        
+                                        {availableFeatures.includes('linkedin') && (
+                                          <div className="flex items-center gap-1 text-green-600">
+                                            <Unlock className="h-3 w-3" />
+                                            <span>LinkedIn Profile</span>
+                                          </div>
+                                        )}
+                                        
+                                        {availableFeatures.includes('email') && (
+                                          <div className="flex items-center gap-1 text-green-600">
+                                            <Unlock className="h-3 w-3" />
+                                            <span>Email Address</span>
+                                          </div>
+                                        )}
+                                        
+                                        {availableFeatures.includes('whatsapp') && (
+                                          <div className="flex items-center gap-1 text-green-600">
+                                            <Unlock className="h-3 w-3" />
+                                            <span>WhatsApp Number</span>
+                                          </div>
+                                        )}
+                                        
+                                        {/* Show locked features */}
+                                        {lockedFeatures.includes('linkedin') && (
+                                          <div className="flex items-center gap-1 text-gray-400">
+                                            <Lock className="h-3 w-3" />
+                                            <span>LinkedIn Profile (Basic+)</span>
+                                          </div>
+                                        )}
+                                        
+                                        {lockedFeatures.includes('email') && (
+                                          <div className="flex items-center gap-1 text-gray-400">
+                                            <Lock className="h-3 w-3" />
+                                            <span>Email Address (HR Booster+)</span>
+                                          </div>
+                                        )}
+                                        
+                                        {lockedFeatures.includes('whatsapp') && (
+                                          <div className="flex items-center gap-1 text-gray-400">
+                                            <Lock className="h-3 w-3" />
+                                            <span>WhatsApp (HR Agent)</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )
+                                  })()}
+
                                   {!(result as any).contactRevealed ? (
                                     <Button
                                       size="sm"

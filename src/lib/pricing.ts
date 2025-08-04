@@ -8,6 +8,8 @@ export interface PricingPlan {
   popular?: boolean
   badge?: string
   limitations?: readonly string[]
+  credits?: number
+  contactFeatures?: readonly string[]
 }
 
 export const PRICING_PLANS = {
@@ -69,15 +71,42 @@ export const PRICING_PLANS = {
   },
 
   // Company Plans
+  COMPANY_FREE: {
+    id: 'company_free',
+    name: 'Free Starter',
+    price: 0,
+    interval: 'month' as const,
+    description: 'Try our platform with basic features',
+    credits: 10,
+    contactFeatures: ['calendly'],
+    features: [
+      '10 contact credits per month',
+      '1 active project at a time',
+      'Basic candidate search',
+      'Calendly integration only',
+      'Email notifications',
+      'Basic analytics',
+    ],
+    limitations: [
+      'Only Calendly integration',
+      'Single project limit',
+      'Basic search only',
+      'No LinkedIn or contact details'
+    ]
+  },
   COMPANY_BASIC: {
     id: 'company_basic',
     name: 'Company Basic',
     price: 20,
     interval: 'month' as const, 
     description: 'Perfect for small teams getting started',
+    credits: 50,
+    contactFeatures: ['calendly', 'linkedin'],
     features: [
+      '50 contact credits per month',
       '1 active project at a time',
       'AI shortlisting (top 10 candidates)',
+      'Calendly + LinkedIn access',
       'Template-based projects only',
       'Interview scheduling tools',
       'Email notifications',
@@ -87,6 +116,7 @@ export const PRICING_PLANS = {
       'Only see shortlisted candidates',
       'Single project limit',
       'Template projects only',
+      'No email or WhatsApp access'
     ],
     popular: true
   },
@@ -96,10 +126,14 @@ export const PRICING_PLANS = {
     price: 75, 
     interval: 'month' as const,
     description: 'Enhanced hiring with multiple projects',
+    credits: 100,
+    contactFeatures: ['calendly', 'linkedin', 'email'],
     features: [
+      '100 contact credits per month',
       'Up to 5 simultaneous projects',
       'AI shortlisting (top 10 candidates)',
       'Full applicant pool visibility',
+      'Calendly + LinkedIn + Email access',
       'Custom project creation',
       'Interview scheduling & management',
       'Candidate communication tools',
@@ -113,10 +147,14 @@ export const PRICING_PLANS = {
     price: 175,
     interval: 'month' as const,
     description: 'Complete hands-off hiring solution',
+    credits: 200,
+    contactFeatures: ['calendly', 'linkedin', 'email', 'whatsapp', 'phone', 'full_details'],
     features: [
+      '200 contact credits per month',
       'Unlimited simultaneous projects',
       'AI shortlisting & ranking',
       'Complete applicant transparency',
+      'Full contact access (Email, WhatsApp, Phone, etc.)',
       'We conduct interviews for you',
       'Interview transcript analysis',
       'Team recommendations delivered',
@@ -138,6 +176,7 @@ export const getPricingPlans = (userType: 'STUDENT' | 'COMPANY') => {
     ]
   } else {
     return [
+      PRICING_PLANS.COMPANY_FREE,
       PRICING_PLANS.COMPANY_BASIC,
       PRICING_PLANS.COMPANY_PREMIUM,
       PRICING_PLANS.COMPANY_PRO
@@ -193,4 +232,60 @@ export const STRIPE_PRICE_IDS = {
 
 export const getPlansForUserType = (userType: 'STUDENT' | 'COMPANY') => {
   return getPricingPlans(userType)
+}
+
+// Credit system utilities
+export const getCreditAllowance = (planId: string): number => {
+  const plan = getPlanById(planId)
+  return (plan as any)?.credits || 0
+}
+
+export const getContactFeatures = (planId: string): string[] => {
+  const plan = getPlanById(planId)
+  return (plan as any)?.contactFeatures || []
+}
+
+export const hasContactFeatureAccess = (planId: string, feature: string): boolean => {
+  const features = getContactFeatures(planId)
+  return features.includes(feature)
+}
+
+export const getContactRevealContent = (planId: string, studentData: any) => {
+  const features = getContactFeatures(planId)
+  const revealedContent: any = {}
+
+  if (features.includes('calendly')) {
+    revealedContent.calendlyAccess = true
+  }
+
+  if (features.includes('linkedin')) {
+    revealedContent.linkedin = studentData.linkedin
+  }
+
+  if (features.includes('email')) {
+    revealedContent.email = studentData.email
+  }
+
+  if (features.includes('whatsapp')) {
+    revealedContent.whatsapp = studentData.whatsapp
+  }
+
+  if (features.includes('phone')) {
+    revealedContent.phone = studentData.phone
+  }
+
+  if (features.includes('full_details')) {
+    revealedContent.fullAccess = true
+    revealedContent.contactEmail = studentData.contactEmail
+    revealedContent.contactWhatsapp = studentData.contactWhatsapp
+  }
+
+  return revealedContent
+}
+
+export const getLockedFeatures = (planId: string): string[] => {
+  const currentFeatures = getContactFeatures(planId)
+  const allFeatures = ['calendly', 'linkedin', 'email', 'whatsapp', 'phone', 'full_details']
+  
+  return allFeatures.filter(feature => !currentFeatures.includes(feature))
 } 
