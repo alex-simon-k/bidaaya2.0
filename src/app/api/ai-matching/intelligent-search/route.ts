@@ -27,16 +27,27 @@ export async function POST(request: NextRequest) {
 
     console.log(`🎯 Intelligent search by ${session.user.id}: "${query}"`)
 
-    // Build matching criteria
-    const matchingCriteria = {
-      query: query.trim(),
-      ...filters
+    let matchResults = []
+    let searchType = 'intelligent_matching'
+
+    try {
+      // Try the advanced processing engine first
+      const matchingCriteria = {
+        query: query.trim(),
+        ...filters
+      }
+      
+      matchResults = await StudentProcessingEngine.matchStudents(matchingCriteria, limit)
+      
+    } catch (processingError) {
+      console.log('⚠️ Advanced processing failed, using fallback search:', processingError)
+      
+      // Fallback to simple search if processing engine fails
+      matchResults = await performFallbackSearch(query.trim(), limit)
+      searchType = 'fallback_search'
     }
 
-    // Execute intelligent matching
-    const matchResults = await StudentProcessingEngine.matchStudents(matchingCriteria, limit)
-
-    console.log(`✅ Search completed: ${matchResults.length} students matched`)
+    console.log(`✅ Search completed: ${matchResults.length} students matched (${searchType})`)
 
     // Format results for frontend
     const formattedResults = matchResults.map(result => ({
@@ -51,16 +62,16 @@ export async function POST(request: NextRequest) {
         graduationYear: result.student.graduationYear,
         interests: result.student.interests,
         goals: result.student.goals,
-        activityScore: result.student.activityScore,
-        lastActiveDate: result.student.lastActiveDate,
-        applicationCount: result.student.applicationCount,
-        profileCompleteness: result.student.profileCompleteness
+        activityScore: result.student.activityScore || 50,
+        lastActiveDate: result.student.lastActiveDate || result.student.updatedAt,
+        applicationCount: result.student.applicationCount || 0,
+        profileCompleteness: result.student.profileCompleteness || 50
       },
       matching: {
         score: result.matchScore,
         reasons: result.matchReasons,
-        activityBonus: result.activityBonus,
-        keywordMatches: result.keywordMatches,
+        activityBonus: result.activityBonus || 0,
+        keywordMatches: result.keywordMatches || [],
         overallRating: result.matchScore >= 70 ? 'excellent' : 
                       result.matchScore >= 50 ? 'good' : 
                       result.matchScore >= 30 ? 'fair' : 'poor'
@@ -74,7 +85,7 @@ export async function POST(request: NextRequest) {
       meta: {
         totalResults: matchResults.length,
         maxResults: limit,
-        searchType: 'intelligent_matching',
+        searchType,
         processingTime: 'instant',
         searchTimestamp: new Date().toISOString(),
         averageMatchScore: formattedResults.length > 0 
@@ -91,6 +102,146 @@ export async function POST(request: NextRequest) {
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
+}
+
+async function performFallbackSearch(query: string, limit: number): Promise<any[]> {
+  const { PrismaClient } = await import('@prisma/client')
+  const prisma = new PrismaClient()
+
+  try {
+    const queryLower = query.toLowerCase()
+    const searchTerms = queryLower.split(' ').filter(term => term.length > 2)
+
+    console.log(`🔄 Fallback search for terms: ${searchTerms.join(', ')}`)
+
+    // Simple text search across multiple fields
+    const students = await prisma.user.findMany({
+      where: {
+        role: 'STUDENT',
+        OR: searchTerms.map(term => ({
+          OR: [
+            { university: { contains: term, mode: 'insensitive' } },
+            { major: { contains: term, mode: 'insensitive' } },
+            { location: { contains: term, mode: 'insensitive' } },
+            { bio: { contains: term, mode: 'insensitive' } },
+            { skills: { has: term } },
+            { interests: { has: term } },
+            { goal: { has: term } }
+          ]
+        }))
+      },
+      include: {
+        applications: {
+          select: { createdAt: true }
+        }
+      },
+      take: limit
+    })
+
+    // Score results based on keyword matches
+    return students.map(student => {
+      let score = 0
+      let reasons: string[] = []
+      let keywordMatches: string[] = []
+
+      // University matching
+      if (student.university && searchTerms.some(term => 
+        student.university!.toLowerCase().includes(term))) {
+        score += 30
+        reasons.push(`Studies at ${student.university}`)
+        keywordMatches.push('university')
+      }
+
+      // Major matching  
+      if (student.major && searchTerms.some(term =>
+        student.major!.toLowerCase().includes(term))) {
+        score += 25
+        reasons.push(`Major: ${student.major}`)
+        keywordMatches.push('major')
+      }
+
+      // Location matching
+      if (student.location && searchTerms.some(term =>
+        student.location!.toLowerCase().includes(term))) {
+        score += 20
+        reasons.push(`Located in ${student.location}`)
+        keywordMatches.push('location')
+      }
+
+      // Skills matching
+      const skillMatches = (student.skills || []).filter(skill =>
+        searchTerms.some(term => skill.toLowerCase().includes(term))
+      )
+      if (skillMatches.length > 0) {
+        score += 15 * skillMatches.length
+        reasons.push(`Skills: ${skillMatches.join(', ')}`)
+        keywordMatches.push(...skillMatches)
+      }
+
+      // Interests matching
+      const interestMatches = (student.interests || []).filter(interest =>
+        searchTerms.some(term => interest.toLowerCase().includes(term))
+      )
+      if (interestMatches.length > 0) {
+        score += 10 * interestMatches.length
+        reasons.push(`Interests: ${interestMatches.join(', ')}`)
+      }
+
+      // Bio matching
+      if (student.bio && searchTerms.some(term =>
+        student.bio!.toLowerCase().includes(term))) {
+        score += 5
+        reasons.push('Relevant bio content')
+      }
+
+      // Activity scoring
+      const applicationCount = student.applications?.length || 0
+      const daysSinceUpdate = Math.floor((Date.now() - new Date(student.updatedAt).getTime()) / (1000 * 60 * 60 * 24))
+      
+      let activityScore = 50
+      if (daysSinceUpdate <= 7) activityScore += 20
+      else if (daysSinceUpdate <= 30) activityScore += 10
+      
+      if (applicationCount > 0) activityScore += 10
+      if (applicationCount >= 3) activityScore += 10
+
+      return {
+        student: {
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          university: student.university,
+          major: student.major,
+          skills: student.skills || [],
+          location: student.location,
+          graduationYear: student.graduationYear,
+          interests: student.interests || [],
+          goals: student.goal || [],
+          activityScore,
+          lastActiveDate: student.updatedAt,
+          applicationCount,
+          profileCompleteness: calculateProfileCompleteness(student)
+        },
+        matchScore: Math.min(100, score),
+        matchReasons: reasons,
+        activityBonus: activityScore - 50,
+        keywordMatches
+      }
+    }).sort((a, b) => b.matchScore - a.matchScore)
+
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+function calculateProfileCompleteness(student: any): number {
+  let completeness = 0
+  if (student.university) completeness += 20
+  if (student.major) completeness += 20
+  if (student.skills?.length > 0) completeness += 20
+  if (student.bio) completeness += 20
+  if (student.location) completeness += 20
+  return completeness
 }
 
 function generateSearchInsights(query: string, results: any[]): string[] {
