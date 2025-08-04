@@ -289,7 +289,7 @@ What would you like to do today?`,
       setIsLoading(true)
       setShowResults(false)
 
-      const response = await fetch('/api/ai-matching/intelligent-search', {
+      const response = await fetch('/api/test-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
