@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { getPlansForUserType, type PricingPlan } from '@/lib/pricing'
+import { getPlansForUserType, type PricingPlan, getCreditAllowance } from '@/lib/pricing'
 import { FaCheck, FaUserGraduate, FaBuilding } from 'react-icons/fa'
 
 export default function PricingPage() {
@@ -136,6 +136,15 @@ export default function PricingPage() {
               <div className="p-6">
                 <h3 className="text-2xl font-semibold text-gray-900">{plan.name}</h3>
                 <p className="mt-2 text-gray-600">{plan.description}</p>
+                
+                {/* Credits Badge for Company Plans */}
+                {selectedUserType === 'COMPANY' && (
+                  <div className="mt-3">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                      💳 {getCreditAllowance(plan.id)} credits/month
+                    </span>
+                  </div>
+                )}
                 
                 <div className="mt-6">
                   <div className="flex items-baseline">

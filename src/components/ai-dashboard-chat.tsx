@@ -415,11 +415,41 @@ I'll now take you to the project creation page with everything pre-filled. You j
       // Get the user's current subscription plan
       const userPlan = (session.user as any).subscriptionPlan || 'company_free'
       const allowance = getCreditAllowance(userPlan)
-      if (allowance > 0) {
+      
+      // Check if we have stored credit usage for this month
+      const currentDate = new Date()
+      const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
+      const storageKey = `bidaaya_credits_${session.user.id}_${monthKey}`
+      
+      try {
+        const storedUsage = localStorage.getItem(storageKey)
+        const usedCredits = storedUsage ? parseInt(storedUsage) : 0
+        const remainingCredits = Math.max(0, allowance - usedCredits)
+        setCredits(remainingCredits)
+      } catch (error) {
+        console.error('Failed to load credit usage:', error)
         setCredits(allowance)
       }
     }
   }, [session?.user])
+
+  // Function to track credit usage
+  const trackCreditUsage = (amount: number) => {
+    if (!session?.user) return
+
+    const currentDate = new Date()
+    const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
+    const storageKey = `bidaaya_credits_${session.user.id}_${monthKey}`
+    
+    try {
+      const storedUsage = localStorage.getItem(storageKey)
+      const currentUsage = storedUsage ? parseInt(storedUsage) : 0
+      const newUsage = currentUsage + amount
+      localStorage.setItem(storageKey, newUsage.toString())
+    } catch (error) {
+      console.error('Failed to track credit usage:', error)
+    }
+  }
 
   // Auto-resize textarea
   useEffect(() => {
@@ -747,11 +777,10 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
     }
 
     try {
-      const response = await fetch('/api/ai-matching/search-v2', {
-        method: 'PATCH',
+      const response = await fetch('/api/contact/reveal', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          action: 'reveal_contact',
           candidateId,
           creditsToSpend: cost 
         })
@@ -760,7 +789,12 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
       if (!response.ok) throw new Error('Failed to reveal contact')
 
       const data = await response.json()
-      setCredits(data.creditsRemaining || credits - cost)
+      
+      // Track the credit usage
+      trackCreditUsage(cost)
+      
+      // Update local credits display
+      setCredits(prev => Math.max(0, prev - cost))
       
       // Update the search results to show revealed contact
       setSearchResults(prev => prev.map(result => 
