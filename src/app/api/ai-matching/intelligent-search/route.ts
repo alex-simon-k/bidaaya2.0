@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { query, limit = 20, filters = {} } = body
+    const { query, limit = 9, filters = {} } = body
 
     if (!query || typeof query !== 'string' || query.trim().length < 2) {
       return NextResponse.json({ 

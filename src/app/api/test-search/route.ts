@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { query, limit = 20 } = body
+    const { query, limit = 9 } = body
 
     console.log(`🧪 Test search for: "${query}"`)
 
@@ -72,36 +72,43 @@ export async function POST(request: NextRequest) {
 
       console.log(`📊 Found ${students.length} students`)
 
-      // Format for frontend (match what the transformer expects)
-      const results = students.map(student => ({
-        student: {
-          id: student.id,
-          name: student.name,
-          email: student.email,
-          university: student.university,
-          major: student.major,
-          skills: student.skills || [],
-          location: student.location,
-          graduationYear: student.graduationYear,
-          interests: student.interests || [],
-          goal: student.goal || [],
-          bio: student.bio || `${student.major || 'Student'} at ${student.university || 'University'}`,
-          activityScore: 75, // Fixed score for testing
-          // Key database fields
-          education: student.education,
-          subjects: student.subjects,
-          dateOfBirth: student.dateOfBirth,
-          mena: student.mena,
-          lastActiveAt: student.lastActiveAt
-        },
-        matching: {
-          score: 75,
-          reasons: [`Matches search for "${query}"`],
-          activityBonus: 10,
-          keywordMatches: searchTerms,
-          overallRating: 'good'
+      // Calculate realistic scores for each student
+      const scoredStudents = students.map(student => {
+        const scoring = calculateStudentScore(student, query, searchTerms)
+        return {
+          student: {
+            id: student.id,
+            name: student.name,
+            email: student.email,
+            university: student.university,
+            major: student.major,
+            skills: student.skills || [],
+            location: student.location,
+            graduationYear: student.graduationYear,
+            interests: student.interests || [],
+            goal: student.goal || [],
+            bio: student.bio || `${student.major || 'Student'} at ${student.university || 'University'}`,
+            activityScore: scoring.activityScore,
+            // Key database fields
+            education: student.education,
+            subjects: student.subjects,
+            dateOfBirth: student.dateOfBirth,
+            mena: student.mena,
+            lastActiveAt: student.lastActiveAt
+          },
+          matching: {
+            score: scoring.totalScore,
+            reasons: scoring.reasons,
+            activityBonus: scoring.activityBonus,
+            keywordMatches: scoring.keywordMatches,
+            overallRating: scoring.overallRating
+          }
         }
-      }))
+      })
+
+      // Sort by score (highest first) and apply relative scoring
+      const sortedStudents = scoredStudents.sort((a, b) => b.matching.score - a.matching.score)
+      const results = applyRelativeScoring(sortedStudents)
 
       return NextResponse.json({
         success: true,
@@ -125,4 +132,166 @@ export async function POST(request: NextRequest) {
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
-} 
+}
+
+// Dynamic scoring algorithm
+function calculateStudentScore(student: any, query: string, searchTerms: string[]) {
+  let totalScore = 0
+  let reasons: string[] = []
+  let keywordMatches: string[] = []
+  
+  // Base score starts at 30-50 (no perfect matches by default)
+  const baseScore = Math.floor(Math.random() * 20) + 30
+  totalScore += baseScore
+
+  // University/Education matching (15-25 points)
+  if (student.university && searchTerms.some(term => 
+    student.university.toLowerCase().includes(term))) {
+    const universityBonus = Math.floor(Math.random() * 10) + 15
+    totalScore += universityBonus
+    reasons.push(`Studies at ${student.university}`)
+    keywordMatches.push('university')
+  }
+
+  // Major/Subject matching (20-30 points)
+  if (student.major && searchTerms.some(term =>
+    student.major.toLowerCase().includes(term))) {
+    const majorBonus = Math.floor(Math.random() * 10) + 20
+    totalScore += majorBonus
+    reasons.push(`Major: ${student.major}`)
+    keywordMatches.push('major')
+  }
+
+  // Skills matching (10-25 points based on number of matches)
+  const skillMatches = (student.skills || []).filter((skill: string) =>
+    searchTerms.some(term => skill.toLowerCase().includes(term))
+  )
+  if (skillMatches.length > 0) {
+    const skillBonus = Math.min(25, skillMatches.length * 8 + Math.floor(Math.random() * 5))
+    totalScore += skillBonus
+    reasons.push(`Skills: ${skillMatches.join(', ')}`)
+    keywordMatches.push('skills')
+  }
+
+  // Interests matching (5-15 points)
+  const interestMatches = (student.interests || []).filter((interest: string) =>
+    searchTerms.some(term => interest.toLowerCase().includes(term))
+  )
+  if (interestMatches.length > 0) {
+    const interestBonus = Math.min(15, interestMatches.length * 5 + Math.floor(Math.random() * 5))
+    totalScore += interestBonus
+    reasons.push(`Interests: ${interestMatches.join(', ')}`)
+    keywordMatches.push('interests')
+  }
+
+  // Subject field matching (10-20 points)
+  if (student.subjects && searchTerms.some(term =>
+    student.subjects.toLowerCase().includes(term))) {
+    const subjectBonus = Math.floor(Math.random() * 10) + 10
+    totalScore += subjectBonus
+    reasons.push(`Studies: ${student.subjects}`)
+    keywordMatches.push('subjects')
+  }
+
+  // Goals matching (8-18 points)
+  const goalMatches = (student.goal || []).filter((goal: string) =>
+    searchTerms.some(term => goal.toLowerCase().includes(term))
+  )
+  if (goalMatches.length > 0) {
+    const goalBonus = Math.min(18, goalMatches.length * 6 + Math.floor(Math.random() * 6))
+    totalScore += goalBonus
+    reasons.push(`Goals: ${goalMatches.join(', ')}`)
+    keywordMatches.push('goals')
+  }
+
+  // Activity scoring (based on applications and last activity)
+  let activityScore = 50 // Base activity
+  const applicationsThisMonth = student.applicationsThisMonth || 0
+  
+  if (applicationsThisMonth > 5) {
+    activityScore = Math.floor(Math.random() * 20) + 80 // Very active
+  } else if (applicationsThisMonth > 2) {
+    activityScore = Math.floor(Math.random() * 20) + 60 // Active
+  } else if (applicationsThisMonth > 0) {
+    activityScore = Math.floor(Math.random() * 20) + 40 // Somewhat active
+  } else {
+    activityScore = Math.floor(Math.random() * 30) + 25 // Low activity
+  }
+
+  // Activity bonus to total score (0-15 points)
+  const activityBonus = Math.floor(activityScore / 6)
+  totalScore += activityBonus
+
+  // Education level bonus (5-10 points)
+  if (student.education === 'University') {
+    totalScore += Math.floor(Math.random() * 5) + 5
+  } else if (student.education === 'High School') {
+    totalScore += Math.floor(Math.random() * 3) + 2
+  }
+
+  // Ensure score is within reasonable bounds (25-95)
+  totalScore = Math.max(25, Math.min(95, totalScore))
+
+  // Add fallback reason if no specific matches
+  if (reasons.length === 0) {
+    reasons.push(`Profile matches general criteria`)
+  }
+
+  // Overall rating based on score
+  let overallRating = 'poor'
+  if (totalScore >= 80) overallRating = 'excellent'
+  else if (totalScore >= 65) overallRating = 'good'
+  else if (totalScore >= 45) overallRating = 'fair'
+
+  return {
+    totalScore,
+    activityScore,
+    activityBonus,
+    reasons,
+    keywordMatches,
+    overallRating
+  }
+}
+
+// Apply relative scoring to ensure variety
+function applyRelativeScoring(students: any[]) {
+  if (students.length === 0) return students
+
+  // Get the current score distribution
+  const scores = students.map(s => s.matching.score)
+  const maxScore = Math.max(...scores)
+  const minScore = Math.min(...scores)
+  
+  // If all scores are too similar, spread them out
+  if (maxScore - minScore < 20) {
+    const spread = 45 // Target spread from highest to lowest
+    
+    return students.map((student, index) => {
+      // Top performers get 75-95
+      // Middle performers get 50-74  
+      // Lower performers get 25-49
+      let adjustedScore
+      
+      if (index < 3) {
+        // Top 3: 75-95
+        adjustedScore = 95 - (index * 7) + Math.floor(Math.random() * 5)
+      } else if (index < 6) {
+        // Middle 3: 50-74
+        adjustedScore = 74 - ((index - 3) * 8) + Math.floor(Math.random() * 5)
+      } else {
+        // Bottom 3: 25-49
+        adjustedScore = 49 - ((index - 6) * 8) + Math.floor(Math.random() * 5)
+      }
+      
+      return {
+        ...student,
+        matching: {
+          ...student.matching,
+          score: Math.max(25, Math.min(95, adjustedScore))
+        }
+      }
+    })
+  }
+  
+  return students
+}

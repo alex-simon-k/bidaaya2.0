@@ -427,6 +427,8 @@ What would you like to do today?`,
 ${transformedResults.length > 0 ? 
   `I've analyzed **${data.searchMetadata?.candidatesEvaluated || 'multiple'}** candidates and selected the **top ${transformedResults.length}** based on relevance and quality.
 
+${transformedResults.length >= 9 ? '**📈 More candidates available** - Try refining your search for different results!' : ''}
+
 **💳 Credits:** ${credits} remaining | **📞 Contact reveals:** 1 credit each
 
 **👆 Review the candidates above and click "Reveal Contact" for promising matches!**` : 
