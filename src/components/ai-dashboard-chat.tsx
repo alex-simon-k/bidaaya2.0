@@ -289,21 +289,41 @@ What would you like to do today?`,
       setIsLoading(true)
       setShowResults(false)
 
-      const response = await fetch('/api/ai-matching/search-v2', {
+      const response = await fetch('/api/ai-matching/intelligent-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: query,
-          tier: 'FREE'
+          query: query,
+          limit: 20
         })
       })
 
       if (!response.ok) throw new Error('Search failed')
 
       const data = await response.json()
-      setSearchResults(data.matches || [])
+      
+      // Transform results to match existing UI structure
+      const transformedResults = data.results?.map((result: any) => ({
+        id: result.student.id,
+        name: result.student.name,
+        email: result.student.email,
+        university: result.student.university,
+        major: result.student.major,
+        skills: Array.isArray(result.student.skills) ? result.student.skills : [result.student.skills].filter(Boolean),
+        location: result.student.location,
+        graduationYear: result.student.graduationYear,
+        interests: result.student.interests || [],
+        goals: result.student.goals || [],
+        matchScore: result.matching.score,
+        matchReasons: result.matching.reasons,
+        activityScore: result.student.activityScore,
+        overallRating: result.matching.overallRating
+      })) || []
+
+      setSearchResults(transformedResults)
       setShowResults(true)
-      setCredits(data.creditInfo?.availableCredits || credits - 1)
+      // Don't decrease credits for intelligent search since it's automated processing
+      // setCredits(credits - 1)
 
       // Add results summary message
       const resultsMessage: ChatMessage = {

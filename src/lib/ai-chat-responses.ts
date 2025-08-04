@@ -334,31 +334,35 @@ Response should be in JSON format:
     
     if (intent === 'find-talent') {
       return {
-        content: `I'll help you find students using our intelligent search! Analyzing your query: "${context.userQuery}"
+        content: `🎯 **Perfect! I'll find students matching your criteria.**
 
-🔍 **Intelligent Search Features:**
-• Natural language understanding
-• Flexible matching across multiple fields  
-• Location, skills, and goal-based filtering
-• University and major recognition
+Searching for: *"${context.userQuery}"*
 
-Let me search our database now...`,
+**Our AI matching system considers:**
+• 📍 **Location preferences** (Dubai, Sharjah, UAE)
+• 🎓 **University and major alignment** 
+• 💼 **Skills and experience match**
+• 📊 **Activity and engagement scores**
+• ⭐ **Profile completeness ratings**
+
+**Finding the best candidates now...** ⚡`,
         actionType: 'search',
         data: {
           searchQuery: context.userQuery,
-          useIntelligentSearch: true,
+          useIntelligentMatching: true,
+          searchEndpoint: '/api/ai-matching/intelligent-search',
           smartFallback: true
         },
         suggestedActions: [
           {
-            label: 'View Search Results',
+            label: 'View Matched Students',
             action: 'search',
-            description: 'See students matching your criteria'
+            description: 'See intelligent matching results'
           },
           {
-            label: 'Refine Search',
-            action: 'guidance',
-            description: 'Get help improving your search'
+            label: 'Refine Criteria',
+            action: 'guidance', 
+            description: 'Adjust search parameters'
           }
         ]
       }

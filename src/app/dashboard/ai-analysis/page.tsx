@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { AIAnalysisAdminPanel } from '@/components/ai-analysis-admin-panel'
+import { StudentProcessingAdmin } from '@/components/student-processing-admin'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -38,7 +38,7 @@ export default function AIAnalysisPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AIAnalysisAdminPanel />
+      <StudentProcessingAdmin />
     </div>
   )
 } 
