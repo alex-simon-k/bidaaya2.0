@@ -49,9 +49,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Search completed: ${matchResults.length} students matched (${searchType})`)
 
-    // Format results for frontend
+    // Format results for frontend (match expected structure)
     const formattedResults = matchResults.map(result => ({
-      student: {
+      candidate: {
         id: result.student.id,
         name: result.student.name,
         email: result.student.email,
@@ -62,11 +62,17 @@ export async function POST(request: NextRequest) {
         graduationYear: result.student.graduationYear,
         interests: result.student.interests,
         goals: result.student.goals,
-        activityScore: result.student.activityScore || 50,
-        lastActiveDate: result.student.lastActiveDate || result.student.updatedAt,
-        applicationCount: result.student.applicationCount || 0,
-        profileCompleteness: result.student.profileCompleteness || 50
+        bio: result.student.bio || `${result.student.major || 'Student'} at ${result.student.university || 'University'}`,
+        image: null, // No profile images in current data
+        engagementLevel: result.student.activityScore > 70 ? 'High' : 
+                        result.student.activityScore > 40 ? 'Medium' : 'Low',
+        applicationsThisMonth: result.student.applicationCount || 0
       },
+      overallScore: result.matchScore,
+      contactCredits: 2, // Default contact reveal cost
+      aiExplanation: result.matchReasons.length > 0 
+        ? `Match reasons: ${result.matchReasons.join(', ')}`
+        : 'Found based on profile matching criteria',
       matching: {
         score: result.matchScore,
         reasons: result.matchReasons,
@@ -217,6 +223,7 @@ async function performFallbackSearch(query: string, limit: number): Promise<any[
           graduationYear: student.graduationYear,
           interests: student.interests || [],
           goals: student.goal || [],
+          bio: student.bio,
           activityScore,
           lastActiveDate: student.updatedAt,
           applicationCount,
