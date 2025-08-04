@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { SubscriptionManager } from '@/lib/subscription-manager'
 import { getPlansByRole, getPlanById } from '@/lib/subscription-config'
 import { SubscriptionManagement } from '@/components/subscription-management'
+import { getCreditAllowance } from '@/lib/pricing'
 // Note: Install @heroicons/react for icons: npm install @heroicons/react
 // For now, using text symbols as placeholders
 const CheckIcon = ({ className }: { className: string }) => <span className={className}>✓</span>
@@ -234,6 +235,16 @@ export default function SubscriptionPage() {
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
                   <p className="text-gray-600 mb-4">{tier.description}</p>
+                  
+                  {/* Credits Badge for Company Plans */}
+                  {userRole === 'COMPANY' && (
+                    <div className="mb-3">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        💳 {getCreditAllowance(tier.id)} credits/month
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="text-4xl font-bold text-gray-900">
                     ${isYearly ? Math.round(tier.price * 12 * 0.8) : tier.price}
                     <span className="text-lg font-normal text-gray-600">
@@ -311,6 +322,18 @@ export default function SubscriptionPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
+                  {userRole === 'COMPANY' && (
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        Contact credits per month
+                      </td>
+                      {availableTiers.map((tier) => (
+                        <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                          {getCreditAllowance(tier.id)}
+                        </td>
+                      ))}
+                    </tr>
+                  )}
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       Applications per month
