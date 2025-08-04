@@ -68,6 +68,45 @@ export default function AIDashboardChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // Chat persistence key
+  const CHAT_STORAGE_KEY = `bidaaya_chat_${session?.user?.id || 'anonymous'}`
+  
+  // Save messages to localStorage
+  const saveMessagesToStorage = (messages: ChatMessage[]) => {
+    try {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages))
+    } catch (error) {
+      console.error('Failed to save chat messages:', error)
+    }
+  }
+
+  // Load messages from localStorage
+  const loadMessagesFromStorage = (): ChatMessage[] => {
+    try {
+      const stored = localStorage.getItem(CHAT_STORAGE_KEY)
+      if (stored) {
+        const parsedMessages = JSON.parse(stored)
+        // Convert timestamp strings back to Date objects
+        return parsedMessages.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to load chat messages:', error)
+    }
+    return []
+  }
+
+  // Clear messages from localStorage
+  const clearMessagesFromStorage = () => {
+    try {
+      localStorage.removeItem(CHAT_STORAGE_KEY)
+    } catch (error) {
+      console.error('Failed to clear chat messages:', error)
+    }
+  }
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -75,6 +114,24 @@ export default function AIDashboardChat() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Load chat history on component mount
+  useEffect(() => {
+    if (session?.user?.id) {
+      const savedMessages = loadMessagesFromStorage()
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages)
+        console.log(`📚 Restored ${savedMessages.length} chat messages`)
+      }
+    }
+  }, [session?.user?.id])
+
+  // Save messages whenever they change (but only if we have messages)
+  useEffect(() => {
+    if (messages.length > 0 && session?.user?.id) {
+      saveMessagesToStorage(messages)
+    }
+  }, [messages, session?.user?.id])
 
   // Auto-resize textarea
   useEffect(() => {
@@ -510,6 +567,8 @@ The candidate will receive a professional email with your calendar link and can 
     setIsProcessing(false)
     setIsAnimatingInput(false)
     setIsTransitioning(false)
+    clearMessagesFromStorage()
+    console.log('🗑️ Chat history cleared')
   }
 
   return (
@@ -740,7 +799,45 @@ The candidate will receive a professional email with your calendar link and can 
                                     {result.candidate.bio && (
                                       <div>
                                         <p className="font-medium text-gray-900">About:</p>
-                                        <p className="text-gray-600 text-sm italic">{result.candidate.bio}</p>
+                                        {(() => {
+                                          // Check if bio contains discovery quiz JSON data
+                                          if (result.candidate.bio.startsWith('{"discoveryProfile"') || result.candidate.bio.includes('discoveryProfile')) {
+                                            try {
+                                              const discoveryData = JSON.parse(result.candidate.bio)
+                                              const profile = discoveryData.discoveryProfile || discoveryData
+                                              
+                                              return (
+                                                <div className="text-sm text-gray-600 space-y-1">
+                                                  {profile.skills && profile.skills.length > 0 && (
+                                                    <p><span className="font-medium">Skills:</span> {profile.skills.join(', ')}</p>
+                                                  )}
+                                                  {profile.careerGoals && profile.careerGoals.length > 0 && (
+                                                    <p><span className="font-medium">Career Goals:</span> {profile.careerGoals.join(', ')}</p>
+                                                  )}
+                                                  {profile.workPreferences && (
+                                                    <div>
+                                                      {profile.workPreferences.projectDuration && (
+                                                        <p><span className="font-medium">Preferred Duration:</span> {profile.workPreferences.projectDuration}</p>
+                                                      )}
+                                                      {profile.workPreferences.teamSize && (
+                                                        <p><span className="font-medium">Team Preference:</span> {profile.workPreferences.teamSize}</p>
+                                                      )}
+                                                    </div>
+                                                  )}
+                                                  {profile.industries && profile.industries.length > 0 && (
+                                                    <p><span className="font-medium">Industry Interests:</span> {profile.industries.join(', ')}</p>
+                                                  )}
+                                                </div>
+                                              )
+                                            } catch (e) {
+                                              // If JSON parsing fails, show as regular text
+                                              return <p className="text-gray-600 text-sm italic">{result.candidate.bio}</p>
+                                            }
+                                          } else {
+                                            // Regular bio text
+                                            return <p className="text-gray-600 text-sm italic">{result.candidate.bio}</p>
+                                          }
+                                        })()}
                                       </div>
                                     )}
 
