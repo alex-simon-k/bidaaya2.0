@@ -61,9 +61,9 @@ export async function POST(request: NextRequest) {
 
       console.log(`📊 Found ${students.length} students`)
 
-      // Format for frontend
+      // Format for frontend (match what the transformer expects)
       const results = students.map(student => ({
-        candidate: {
+        student: {
           id: student.id,
           name: student.name,
           email: student.email,
@@ -75,13 +75,8 @@ export async function POST(request: NextRequest) {
           interests: student.interests || [],
           goals: student.goal || [],
           bio: student.bio || `${student.major || 'Student'} at ${student.university || 'University'}`,
-          image: null,
-          engagementLevel: 'Medium',
-          applicationsThisMonth: 0
+          activityScore: 75 // Fixed score for testing
         },
-        overallScore: 75, // Fixed score for testing
-        contactCredits: 2,
-        aiExplanation: `Found student matching search terms: ${searchTerms.join(', ')}`,
         matching: {
           score: 75,
           reasons: [`Matches search for "${query}"`],

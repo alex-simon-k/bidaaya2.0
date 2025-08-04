@@ -302,22 +302,32 @@ What would you like to do today?`,
 
       const data = await response.json()
       
-      // Transform results to match existing UI structure
+      // Transform results to match existing UI structure (what display code expects)
       const transformedResults = data.results?.map((result: any) => ({
-        id: result.student.id,
-        name: result.student.name,
-        email: result.student.email,
-        university: result.student.university,
-        major: result.student.major,
-        skills: Array.isArray(result.student.skills) ? result.student.skills : [result.student.skills].filter(Boolean),
-        location: result.student.location,
-        graduationYear: result.student.graduationYear,
-        interests: result.student.interests || [],
-        goals: result.student.goals || [],
+        candidate: {
+          id: result.student.id,
+          name: result.student.name,
+          email: result.student.email,
+          university: result.student.university,
+          major: result.student.major,
+          skills: Array.isArray(result.student.skills) ? result.student.skills : [result.student.skills].filter(Boolean),
+          location: result.student.location,
+          graduationYear: result.student.graduationYear,
+          interests: result.student.interests || [],
+          goals: result.student.goals || [],
+          bio: result.student.bio || `${result.student.major || 'Student'} at ${result.student.university || 'University'}`,
+          image: null,
+          engagementLevel: result.student.activityScore > 70 ? 'High' : 
+                          result.student.activityScore > 40 ? 'Medium' : 'Low',
+          applicationsThisMonth: 0
+        },
+        overallScore: result.matching.score,
         matchScore: result.matching.score,
         matchReasons: result.matching.reasons,
         activityScore: result.student.activityScore,
-        overallRating: result.matching.overallRating
+        overallRating: result.matching.overallRating,
+        contactCredits: 2,
+        aiExplanation: result.matching.reasons.join(', ')
       })) || []
 
       setSearchResults(transformedResults)
