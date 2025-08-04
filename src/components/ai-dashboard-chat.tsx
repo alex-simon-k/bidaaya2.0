@@ -838,7 +838,11 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
         let contentMessage = `✅ **Contact revealed for ${data.data?.name || 'candidate'}!**\n\n`
         
         if (revealedContent.calendlyAccess) {
-          contentMessage += `📅 **Calendly Integration:** Available - Use "Send Calendar Invite" below\n`
+          if (hasCalendlyLink) {
+            contentMessage += `📅 **Calendly Integration:** ✅ Ready - Use "Send Calendar Invite" below\n`
+          } else {
+            contentMessage += `📅 **Calendly Integration:** ⚠️ Setup Required - Add your Calendly link in [Profile Settings](/dashboard/profile)\n`
+          }
         }
         
         if (revealedContent.linkedin) {
@@ -908,6 +912,7 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.log('Calendar invite API error:', errorData) // Debug log
         throw new Error(errorData.error || 'Failed to send calendar invite')
       }
 
@@ -934,7 +939,9 @@ The candidate will receive a professional email with your calendar link and can 
       
       // Handle specific error for missing Calendly link
       const errorMessage = (error as Error).message
-      if (errorMessage.includes('Calendly link')) {
+      console.log('Calendar invite error message:', errorMessage) // Debug log
+      
+      if (errorMessage.includes('Calendly link') || errorMessage.includes('calendly') || errorMessage.includes('calendar')) {
         const calendlyErrorMessage: ChatMessage = {
           id: Date.now().toString(),
           type: 'ai',
@@ -1450,17 +1457,52 @@ Something went wrong while sending the invitation. Please try again or contact s
                                       <div className="text-sm text-green-600 font-medium">
                                         ✅ Contact Revealed
                       </div>
-                                      <Button
-                                        size="sm"
-                                        onClick={() => sendCalendarInvite(
-                                          result.candidate.id, 
-                                          (result as any).contact?.email || result.candidate.email,
-                                          result.candidate.name
-                                        )}
-                                        className="bg-purple-600 hover:bg-purple-700 text-white"
-                                      >
-                                        📅 Send Calendar Invite
-                                      </Button>
+                                      {hasCalendlyLink ? (
+                                        <Button
+                                          size="sm"
+                                          onClick={() => sendCalendarInvite(
+                                            result.candidate.id, 
+                                            (result as any).contact?.email || result.candidate.email,
+                                            result.candidate.name
+                                          )}
+                                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                                        >
+                                          📅 Send Calendar Invite
+                                        </Button>
+                                      ) : (
+                                        <div className="space-y-2">
+                                          <Button
+                                            size="sm"
+                                            onClick={() => {
+                                              const calendlyWarningMessage: ChatMessage = {
+                                                id: Date.now().toString(),
+                                                type: 'ai',
+                                                content: `⚠️ **Calendly Link Required**
+
+🔗 **Missing Setup:** You need to add your Calendly link before sending interview invitations.
+
+**Quick Setup:**
+1. Go to your [Profile Settings](/dashboard/profile)
+2. Scroll to "Interview Scheduling (Calendly Link)"
+3. Add your Calendly link (e.g., https://calendly.com/your-company/30min)
+4. Save your profile
+5. Return here and send invitations!
+
+**Why Calendly?** It allows candidates to book interview times that work for both of you automatically. 📅`,
+                                                timestamp: new Date(),
+                                                actionType: 'guidance'
+                                              }
+                                              setMessages(prev => [...prev, calendlyWarningMessage])
+                                            }}
+                                            className="bg-gray-400 hover:bg-gray-500 text-white"
+                                          >
+                                            ⚠️ Setup Calendar First
+                                          </Button>
+                                          <div className="text-xs text-gray-500">
+                                            Add your Calendly link in profile settings
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
