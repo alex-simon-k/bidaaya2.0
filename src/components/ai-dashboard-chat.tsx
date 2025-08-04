@@ -416,13 +416,6 @@ I'll now take you to the project creation page with everything pre-filled. You j
       const userPlan = (session.user as any).subscriptionPlan || 'company_free'
       const allowance = getCreditAllowance(userPlan)
       
-      console.log('🔍 Credit Detection Debug:', {
-        userId: session.user.id,
-        userPlan,
-        allowance,
-        sessionUser: session.user
-      })
-      
       // Check if we have stored credit usage for this month
       const currentDate = new Date()
       const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
@@ -432,14 +425,6 @@ I'll now take you to the project creation page with everything pre-filled. You j
         const storedUsage = localStorage.getItem(storageKey)
         const usedCredits = storedUsage ? parseInt(storedUsage) : 0
         const remainingCredits = Math.max(0, allowance - usedCredits)
-        
-        console.log('🔍 Credit Calculation:', {
-          allowance,
-          usedCredits,
-          remainingCredits,
-          storageKey,
-          storedUsage
-        })
         
         setCredits(remainingCredits)
       } catch (error) {

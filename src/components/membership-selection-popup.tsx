@@ -6,7 +6,6 @@ import { X, Crown, Zap, Star, ArrowRight, Shield, Users, Target, Rocket } from '
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { getHigherTiers } from '@/lib/subscription'
-import { getPricingPlans, getCreditAllowance, getContactFeatures } from '@/lib/pricing'
 
 interface MembershipSelectionPopupProps {
   isOpen: boolean
