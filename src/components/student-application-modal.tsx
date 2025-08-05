@@ -477,7 +477,7 @@ export function StudentApplicationModal({
               <div style="font-size: 24px;">🎉</div>
               <div>
                 <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">Application Submitted!</div>
-                <div style="font-size: 14px; opacity: 0.9;">You have ${data.remainingApplications} applications remaining this month.</div>
+                <div style="font-size: 14px; opacity: 0.9;">You have ${data.limits?.applicationsRemaining || 0} applications remaining this month.</div>
               </div>
             </div>
           </div>
