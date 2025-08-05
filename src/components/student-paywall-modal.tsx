@@ -37,7 +37,7 @@ export function StudentPaywallModal({
     setIsAnimating(true)
     // Add slight delay for better UX
     setTimeout(() => {
-      router.push('/pricing?source=student_modal&trigger=' + trigger)
+      router.push('/subscription?source=student_modal&trigger=' + trigger)
     }, 300)
   }
 

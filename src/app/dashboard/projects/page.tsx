@@ -229,9 +229,9 @@ export default function ProjectsPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-white pr-10 transition-all"
+              className="w-full appearance-none px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-white pr-10 transition-all text-gray-800 font-medium"
             >
-              <option value="">All Categories</option>
+              <option value="" className="text-gray-700 font-medium">All Categories</option>
               {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
                 <option key={key} value={key}>{config.label}</option>
               ))}
@@ -244,9 +244,9 @@ export default function ProjectsPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full appearance-none px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-white pr-10 transition-all"
+                className="w-full appearance-none px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-white pr-10 transition-all text-gray-800 font-medium"
               >
-                <option value="">All Statuses</option>
+                <option value="" className="text-gray-700 font-medium">All Statuses</option>
                 {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                   <option key={key} value={key}>{config.label}</option>
                 ))}

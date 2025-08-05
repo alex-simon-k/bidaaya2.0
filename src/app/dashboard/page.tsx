@@ -72,14 +72,24 @@ export default function DashboardPage() {
 
 
 
-  // Show membership selection popup every time they visit dashboard
+  // Show membership selection popup with frequency control (once per hour)
   useEffect(() => {
     console.log('Membership popup check - session?.user?.role:', session?.user?.role)
     
     if (session?.user?.role === 'STUDENT' || session?.user?.role === 'COMPANY') {
-      // Show membership selection popup
-      console.log('Showing membership popup for:', session.user.role)
-      setShowMembershipPopup(true)
+      const lastShownKey = `membership_popup_last_shown_${session.user.email}`
+      const lastShown = localStorage.getItem(lastShownKey)
+      const oneHourAgo = Date.now() - (60 * 60 * 1000) // 1 hour in milliseconds
+      
+      if (!lastShown || parseInt(lastShown) < oneHourAgo) {
+        // Show membership selection popup
+        console.log('Showing membership popup for:', session.user.role)
+        setShowMembershipPopup(true)
+        // Update last shown timestamp
+        localStorage.setItem(lastShownKey, Date.now().toString())
+      } else {
+        console.log('Membership popup was shown recently, skipping for now')
+      }
     }
   }, [session])
 

@@ -468,8 +468,41 @@ export function StudentApplicationModal({
         clearSavedData()
         onSuccess()
         onClose()
-        // Show success notification
-        alert(`Application submitted successfully! You have ${data.remainingApplications} applications remaining.`)
+        
+        // Show beautiful in-app success notification
+        const successNotification = document.createElement('div')
+        successNotification.innerHTML = `
+          <div style="position: fixed; top: 20px; right: 20px; z-index: 10000; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 20px 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); max-width: 400px; animation: slideInRight 0.3s ease-out;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="font-size: 24px;">🎉</div>
+              <div>
+                <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">Application Submitted!</div>
+                <div style="font-size: 14px; opacity: 0.9;">You have ${data.remainingApplications} applications remaining this month.</div>
+              </div>
+            </div>
+          </div>
+          <style>
+            @keyframes slideInRight {
+              from { transform: translateX(100%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+              from { transform: translateX(0); opacity: 1; }
+              to { transform: translateX(100%); opacity: 0; }
+            }
+          </style>
+        `
+        document.body.appendChild(successNotification)
+        
+        // Auto-remove notification after 5 seconds
+        setTimeout(() => {
+          if (successNotification.parentNode) {
+            successNotification.style.animation = 'slideOutRight 0.3s ease-in'
+            setTimeout(() => {
+              document.body.removeChild(successNotification)
+            }, 300)
+          }
+        }, 5000)
       } else {
         setApplicationError(data.error || 'Failed to submit application')
         
@@ -486,7 +519,7 @@ export function StudentApplicationModal({
   }
 
   const handleUpgrade = () => {
-    window.location.href = '/pricing'
+    window.location.href = '/subscription'
   }
 
   // Handle modal close (track abandonment)
@@ -931,18 +964,18 @@ export function StudentApplicationModal({
                               Upload additional documents to strengthen your application (resume, portfolio, etc.)
                             </p>
                             
-                            <div className="border-2 border-dashed border-purple-200 rounded-xl p-6 text-center bg-gradient-to-br from-purple-50 to-pink-50 relative overflow-hidden">
+                            <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center bg-gradient-to-br from-purple-50 to-pink-50 relative min-h-[240px] flex items-center justify-center">
                               {/* Lock Overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-100/90 to-pink-100/90 flex items-center justify-center">
-                                <div className="text-center">
-                                  <Lock className="h-12 w-12 text-purple-500 mx-auto mb-3" />
-                                  <p className="text-purple-700 font-semibold mb-2">Premium Feature</p>
-                                  <p className="text-purple-600 text-sm mb-4">Upload additional files to stand out</p>
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-100/80 to-pink-100/80 flex items-center justify-center rounded-xl">
+                                <div className="text-center p-6 max-w-sm">
+                                  <Lock className="h-16 w-16 text-purple-600 mx-auto mb-4" />
+                                  <h3 className="text-purple-800 font-bold text-lg mb-2">Premium Feature</h3>
+                                  <p className="text-purple-700 text-sm mb-6 leading-relaxed">Upload additional files to stand out from other candidates</p>
                                   <button
                                     onClick={handleUpgrade}
-                                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all"
+                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg"
                                   >
-                                    <Crown className="h-4 w-4 mr-2" />
+                                    <Crown className="h-5 w-5 mr-2" />
                                     Upgrade to Premium
                                   </button>
                                 </div>

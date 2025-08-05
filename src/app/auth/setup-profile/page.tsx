@@ -147,10 +147,15 @@ const steps: Step[] = [
   },
   {
     key: 'mena',
-    label: 'Will you be in MENA for an extended period during a Bidaaya project?',
+    label: 'How frequently are you in MENA?',
     type: 'radio',
     required: true,
-    options: ['Yes', 'No'],
+    options: [
+      'I live there',
+      'I go back for holidays',
+      'I study abroad and go back as much as possible',
+      'No, I don\'t live there. I\'m a tourist.'
+    ],
     icon: <MapPin className="w-8 h-8 text-emerald-600" />,
   },
   {
