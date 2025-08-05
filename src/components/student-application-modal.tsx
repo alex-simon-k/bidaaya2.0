@@ -570,15 +570,15 @@ export function StudentApplicationModal({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden h-[95vh] sm:max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden h-[85vh] sm:max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 sm:px-6 py-3 sm:py-6 text-white relative">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-3 sm:px-6 py-1 sm:py-6 text-white relative">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1 sm:p-2 hover:bg-white/20 rounded-full transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
           
           {/* Auto-save indicator */}
@@ -589,19 +589,19 @@ export function StudentApplicationModal({
             </div>
           )}
           
-          <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <FileText className="text-white h-6 w-6" />
+          <div className="flex items-start gap-2 sm:gap-4">
+            <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <FileText className="text-white h-4 w-4 sm:h-6 sm:w-6" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-2">Apply to Project</h2>
-              <h3 className="text-xl font-semibold text-blue-100">{project.title}</h3>
-              <p className="text-blue-200">{project.company.companyName || project.company.name}</p>
+              <h2 className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2">Apply to Project</h2>
+              <h3 className="text-base sm:text-xl font-semibold text-blue-100">{project.title}</h3>
+              <p className="text-sm sm:text-base text-blue-200">{project.company.companyName || project.company.name}</p>
             </div>
           </div>
 
           {/* Progress Steps */}
-          <div className="mt-3 sm:mt-6 flex items-center justify-between">
+          <div className="mt-1 sm:mt-6 flex items-center justify-between">
             {[1, 2, 3, 4].map((step) => {
               const StepIcon = getStepIcon(step)
               const isActive = step === currentStep
@@ -624,7 +624,7 @@ export function StudentApplicationModal({
                     )}
                   </div>
                   {step < 4 && (
-                    <div className={`w-16 h-0.5 mx-2 ${
+                    <div className={`w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 ${
                       step < currentStep ? 'bg-white' : 'bg-blue-200'
                     }`} />
                   )}
@@ -635,7 +635,7 @@ export function StudentApplicationModal({
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6">
+        <div className="p-2 sm:p-6">
           {isCheckingLimits ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -737,18 +737,18 @@ export function StudentApplicationModal({
               )}
 
               {/* Step Content */}
-              <div className="min-h-[250px] sm:min-h-[400px]">
+              <div className="min-h-[150px] sm:min-h-[400px]">
                 {currentStep === 1 && (
-                  <div className="space-y-6">
+                                      <div className="space-y-3 sm:space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <User className="h-5 w-5 text-blue-600" />
+                                              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-4 flex items-center gap-2">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                         Why This Project?
                       </h3>
                       
-                      <div className="space-y-4">
+                      <div className="space-y-2 sm:space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                                      <label className="block text-xs sm:text-sm font-semibold text-gray-900 mb-1 sm:mb-2">
                             Why are you interested in this project? *
                           </label>
                           <textarea
@@ -1024,12 +1024,12 @@ export function StudentApplicationModal({
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex flex-col sm:flex-row justify-between items-center pt-4 sm:pt-6 border-t mt-6 gap-3 sm:gap-0">
+              <div className="flex flex-col sm:flex-row justify-between items-center pt-2 sm:pt-6 border-t mt-3 sm:mt-6 gap-2 sm:gap-0">
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={onClose}
-                                          className="px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 text-sm sm:text-base"
+                                          className="px-3 sm:px-6 py-1 sm:py-3 border-2 border-gray-200 text-gray-600 rounded-lg sm:rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 text-xs sm:text-base"
                   >
                     Cancel
                   </button>
@@ -1038,7 +1038,7 @@ export function StudentApplicationModal({
                     <button
                       type="button"
                       onClick={prevStep}
-                                              className="px-4 sm:px-6 py-2 sm:py-3 border-2 border-blue-200 text-blue-600 rounded-xl font-semibold hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 text-sm sm:text-base"
+                                              className="px-3 sm:px-6 py-1 sm:py-3 border-2 border-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-semibold hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 text-xs sm:text-base"
                     >
                       Previous
                     </button>
@@ -1051,7 +1051,7 @@ export function StudentApplicationModal({
                       type="button"
                       onClick={nextStep}
                       disabled={!isStepValid(currentStep)}
-                                              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
+                                              className="px-3 sm:px-6 py-1 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-xs sm:text-base"
                     >
                       Next Step
                     </button>
@@ -1060,7 +1060,7 @@ export function StudentApplicationModal({
                       type="button"
                       onClick={handleSubmit}
                       disabled={isLoading || !canApplyToProject}
-                                              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 text-sm sm:text-base"
+                                              className="px-3 sm:px-6 py-1 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 text-xs sm:text-base"
                     >
                       {isLoading ? (
                         <>
