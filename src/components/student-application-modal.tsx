@@ -565,15 +565,15 @@ export function StudentApplicationModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden h-[95vh] sm:max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-6 text-white relative">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 sm:px-6 py-3 sm:py-6 text-white relative">
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
@@ -601,7 +601,7 @@ export function StudentApplicationModal({
           </div>
 
           {/* Progress Steps */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-3 sm:mt-6 flex items-center justify-between">
             {[1, 2, 3, 4].map((step) => {
               const StepIcon = getStepIcon(step)
               const isActive = step === currentStep
@@ -610,7 +610,7 @@ export function StudentApplicationModal({
               
               return (
                 <div key={step} className="flex items-center">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+                  <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all ${
                     isCompleted 
                       ? 'bg-white text-blue-600 border-white' 
                       : isActive 
@@ -618,9 +618,9 @@ export function StudentApplicationModal({
                         : 'bg-transparent text-blue-200 border-blue-200'
                   }`}>
                     {isCompleted ? (
-                      <CheckCircle className="w-5 h-5" />
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                     ) : (
-                      <StepIcon className="w-5 h-5" />
+                      <StepIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
                   </div>
                   {step < 4 && (
@@ -635,7 +635,7 @@ export function StudentApplicationModal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {isCheckingLimits ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -737,7 +737,7 @@ export function StudentApplicationModal({
               )}
 
               {/* Step Content */}
-              <div className="min-h-[400px]">
+              <div className="min-h-[250px] sm:min-h-[400px]">
                 {currentStep === 1 && (
                   <div className="space-y-6">
                     <div>
@@ -1024,12 +1024,12 @@ export function StudentApplicationModal({
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between items-center pt-6 border-t mt-6">
+              <div className="flex flex-col sm:flex-row justify-between items-center pt-4 sm:pt-6 border-t mt-6 gap-3 sm:gap-0">
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300"
+                                          className="px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 text-sm sm:text-base"
                   >
                     Cancel
                   </button>
@@ -1038,7 +1038,7 @@ export function StudentApplicationModal({
                     <button
                       type="button"
                       onClick={prevStep}
-                      className="px-6 py-3 border-2 border-blue-200 text-blue-600 rounded-xl font-semibold hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
+                                              className="px-4 sm:px-6 py-2 sm:py-3 border-2 border-blue-200 text-blue-600 rounded-xl font-semibold hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 text-sm sm:text-base"
                     >
                       Previous
                     </button>
@@ -1051,7 +1051,7 @@ export function StudentApplicationModal({
                       type="button"
                       onClick={nextStep}
                       disabled={!isStepValid(currentStep)}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
                     >
                       Next Step
                     </button>
@@ -1060,7 +1060,7 @@ export function StudentApplicationModal({
                       type="button"
                       onClick={handleSubmit}
                       disabled={isLoading || !canApplyToProject}
-                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2"
+                                              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 text-sm sm:text-base"
                     >
                       {isLoading ? (
                         <>
