@@ -445,8 +445,12 @@ I'll now take you to the project creation page with everything pre-filled. You j
         if (response.ok) {
           const userData = await response.json()
           console.log('🔍 User profile data for contact check:', userData)
-          console.log('🔍 calendlyLink value from API:', userData.calendlyLink)
-          const hasContact = !!userData.calendlyLink
+          
+          // Fix: The API returns { success: true, profile: { calendlyLink: "..." } }
+          const calendlyLink = userData.profile?.calendlyLink || userData.calendlyLink
+          console.log('🔍 calendlyLink value from API:', calendlyLink)
+          
+          const hasContact = !!calendlyLink
           setHasCalendlyLink(hasContact)
           console.log('🔍 Contact details status updated to:', hasContact)
         }

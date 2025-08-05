@@ -223,8 +223,10 @@ export default function ProfilePage() {
         try {
           const profileData = transformApiResponse(rawProfileData)
           console.log('🔍 Transformed Profile Data:', profileData)
+          console.log('🔍 Initial calendlyLink value:', profileData.calendlyLink)
           setProfileData(profileData)
           setEditData(profileData)
+          console.log('🔍 EditData calendlyLink set to:', profileData.calendlyLink)
         } catch (transformError) {
           console.error('❌ Error transforming profile data:', transformError)
           console.error('❌ Raw data that caused error:', rawProfileData)
@@ -475,9 +477,14 @@ export default function ProfilePage() {
                       <input
                         type="url"
                         value={editData.calendlyLink || ''}
-                        onChange={(e) => setEditData({...editData, calendlyLink: e.target.value})}
+                        onChange={(e) => {
+                          const newValue = e.target.value
+                          console.log('🔍 calendlyLink input changed to:', newValue)
+                          setEditData({...editData, calendlyLink: newValue})
+                        }}
+                        onFocus={() => console.log('🔍 calendlyLink input focused, current value:', editData.calendlyLink)}
                         placeholder="https://calendly.com/your-username/interview or contact email"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Example: https://calendly.com/company-name/30min or your.email@company.com
@@ -487,22 +494,18 @@ export default function ProfilePage() {
                     <div>
                       {profileData?.calendlyLink ? (
                         <div className="flex items-center gap-2">
-                          <a
-                            href={profileData.calendlyLink}
-                            target="_blank"
+                          <Calendar className="h-4 w-4 text-green-600" />
+                          <a 
+                            href={profileData.calendlyLink} 
+                            target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 underline break-all"
+                            className="text-blue-600 hover:text-blue-800 underline"
                           >
                             {profileData.calendlyLink}
                           </a>
-                          <span className="text-green-600 text-sm">✅ Active</span>
                         </div>
                       ) : (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                          <p className="text-yellow-800 text-sm">
-                            ⚠️ No Calendly link set. Click "Edit Profile" to add your interview scheduling link.
-                          </p>
-                        </div>
+                        <p className="text-gray-500 italic">No contact details added yet</p>
                       )}
                     </div>
                   )}

@@ -121,8 +121,17 @@ export async function PATCH(request: NextRequest) {
     if (whatsapp !== undefined) updateData.whatsapp = whatsapp
     if (linkedin !== undefined) updateData.linkedin = linkedin
     if (calendlyLink !== undefined) {
-      updateData.calendlyLink = calendlyLink
-      console.log('🔍 Setting calendlyLink in updateData:', calendlyLink)
+      // Clean up malformed URLs - remove duplicate protocols and domains
+      let cleanedLink = calendlyLink
+      if (calendlyLink && typeof calendlyLink === 'string') {
+        // Remove duplicate https:// prefixes
+        cleanedLink = calendlyLink.replace(/^https:\/\/https:\/\//, 'https://')
+        // Remove duplicate domain concatenations
+        cleanedLink = cleanedLink.replace(/(calendly\.com\/[^\/]+)calendly\.com\//, '$1')
+        console.log('🔍 Cleaned calendlyLink from:', calendlyLink, 'to:', cleanedLink)
+      }
+      updateData.calendlyLink = cleanedLink
+      console.log('🔍 Setting calendlyLink in updateData:', cleanedLink)
     }
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
     if (mena !== undefined) updateData.mena = mena === 'Yes' || mena === true  // Handle radio button value
