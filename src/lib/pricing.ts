@@ -20,6 +20,7 @@ export const PRICING_PLANS = {
     price: 0,
     interval: 'month' as const,
     description: 'Perfect for getting started with internships',
+    credits: 10, // 10 contact credits for companies on FREE plan
     features: [
       '4 Bidaaya applications per month',
       'No additional documents allowed',

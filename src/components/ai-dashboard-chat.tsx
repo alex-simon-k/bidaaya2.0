@@ -415,7 +415,7 @@ I'll now take you to the project creation page with everything pre-filled. You j
   useEffect(() => {
     if (session?.user) {
       // Get the user's current subscription plan
-      const userPlan = (session.user as any).subscriptionPlan || 'company_free'
+      const userPlan = (session.user as any).subscriptionPlan || 'FREE'
       const allowance = getCreditAllowance(userPlan)
       
       // Check if we have stored credit usage for this month
@@ -846,7 +846,7 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
 
       // Add a tier-based success message with delay to prevent immediate scroll
       setTimeout(() => {
-        const userPlan = (session?.user as any)?.subscriptionPlan || 'company_free'
+        const userPlan = (session?.user as any)?.subscriptionPlan || 'FREE'
         const revealedContent = getContactRevealContent(userPlan, data.data)
         
         let contentMessage = `✅ **Contact revealed for ${data.data?.name || 'candidate'}!**\n\n`
@@ -1073,7 +1073,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                     {credits} credits
                   </span>
                   <span className="text-xs text-gray-500">
-                    ({((session?.user as any)?.subscriptionPlan || 'COMPANY_FREE').replace('COMPANY_', '').replace('_', ' ')})
+                    ({((session?.user as any)?.subscriptionPlan || 'FREE').replace('COMPANY_', '').replace('_', ' ')})
                   </span>
                 </div>
               </div>
@@ -1397,7 +1397,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                                 <div className="ml-4 space-y-2">
                                   {/* Contact Features Preview */}
                                   {(() => {
-                                    const userPlan = (session?.user as any)?.subscriptionPlan || 'company_free'
+                                    const userPlan = (session?.user as any)?.subscriptionPlan || 'FREE'
                                     const availableFeatures = getContactFeatures(userPlan)
                                     const lockedFeatures = getLockedFeatures(userPlan)
                                     

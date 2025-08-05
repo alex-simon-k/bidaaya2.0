@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id
-    const userPlan = (session.user as any).subscriptionPlan || 'company_free'
+    const userPlan = (session.user as any).subscriptionPlan || 'FREE'
     
     // Get user's credit allowance and current usage
     const maxCredits = getCreditAllowance(userPlan)
