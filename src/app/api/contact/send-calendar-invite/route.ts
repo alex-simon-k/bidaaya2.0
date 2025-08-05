@@ -74,11 +74,13 @@ export async function POST(request: NextRequest) {
     const companyDisplayName = company.companyName || company.name || 'the company'
     const contactPersonName = company.contactPersonName || company.name || 'Hiring Manager'
     const contactEmail = company.contactEmail || company.email
+    // Always CC the company's registered email (from Google auth) for transparency
+    const registeredEmail = company.email
 
     const emailTemplate = {
       from: `"Bidaaya Team" <${process.env.EMAIL_USER}>`,
       to: candidateEmail,
-      cc: contactEmail, // CC the company
+      cc: registeredEmail, // CC the company's registered email
       subject: `🎯 You've been selected by ${companyDisplayName}!`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9;">

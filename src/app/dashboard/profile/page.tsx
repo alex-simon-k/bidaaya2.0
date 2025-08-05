@@ -449,11 +449,11 @@ export default function ProfilePage() {
                    )}
                 </div>
 
-                {/* Calendly Link Section */}
+                {/* Contact Details Section */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">📅 Interview Scheduling (Calendly Link)</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">📅 Student Contact Details</h3>
                   <p className="text-sm text-gray-600 mb-3">
-                    Add your Calendly link so students can easily schedule interviews when shortlisted.
+                    Add your Calendly link, booking URL, or contact details for students to reach you when shortlisted.
                   </p>
                   {isEditing ? (
                     <div>
@@ -461,11 +461,11 @@ export default function ProfilePage() {
                         type="url"
                         value={editData.calendlyLink || ''}
                         onChange={(e) => setEditData({...editData, calendlyLink: e.target.value})}
-                        placeholder="https://calendly.com/your-username/interview"
+                        placeholder="https://calendly.com/your-username/interview or contact email"
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Example: https://calendly.com/company-name/30min-interview
+                        Example: https://calendly.com/company-name/30min or your.email@company.com
                       </p>
                     </div>
                   ) : (

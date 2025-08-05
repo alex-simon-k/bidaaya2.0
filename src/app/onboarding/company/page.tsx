@@ -164,12 +164,12 @@ const steps: Step[] = [
   },
   {
     key: 'calendlyLink',
-    label: 'Interview Scheduling Link (Calendly) ⭐',
+    label: 'Contact Details for Students (Optional)',
     type: 'url',
-    required: true,
-    placeholder: 'https://calendly.com/your-username/interview',
+    required: false,
+    placeholder: 'https://calendly.com/your-username/interview or your contact email',
     icon: <Calendar className="w-8 h-8 text-purple-600" />,
-    description: '🔗 REQUIRED: Your Calendly link is essential for sending interview invitations to candidates. Without this, you cannot schedule interviews with shortlisted students.'
+    description: '📅 OPTIONAL: Add your Calendly link, booking URL, or contact details for students to reach you. You can skip this and add it later in your profile.'
   },
 ]
 

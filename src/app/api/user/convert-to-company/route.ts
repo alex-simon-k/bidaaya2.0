@@ -109,9 +109,9 @@ export async function POST(request: NextRequest) {
          calendlyLink,
          referralSource,
          referralDetails,
-         // Set subscription to free by default for companies - require payment for approval
-         subscriptionStatus: 'FREE',
-         subscriptionPlan: 'FREE'
+         // Set subscription to company free plan - 10 credits per month
+         subscriptionStatus: 'ACTIVE',
+         subscriptionPlan: 'COMPANY_FREE'
        } as any
      })
 

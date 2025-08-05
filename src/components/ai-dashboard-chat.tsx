@@ -436,28 +436,42 @@ I'll now take you to the project creation page with everything pre-filled. You j
     }
   }, [session?.user])
 
-  // Check if company has Calendly link set up
-  useEffect(() => {
-    const checkCalendlyLink = async () => {
-      if (session?.user?.role === 'COMPANY') {
-        try {
-          const response = await fetch('/api/user/profile')
-          if (response.ok) {
-            const userData = await response.json()
-            setHasCalendlyLink(!!userData.calendlyLink)
-          }
-        } catch (error) {
-          console.error('Failed to check Calendly link:', error)
-          setHasCalendlyLink(false)
+  // Function to check if company has contact details set up
+  const checkContactDetails = async () => {
+    if (session?.user?.role === 'COMPANY') {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const userData = await response.json()
+          setHasCalendlyLink(!!userData.calendlyLink)
+          console.log('Contact details status:', !!userData.calendlyLink) // Debug log
         }
-      } else {
-        setHasCalendlyLink(true) // Non-companies don't need Calendly
+      } catch (error) {
+        console.error('Failed to check contact details:', error)
+        setHasCalendlyLink(false)
+      }
+    } else {
+      setHasCalendlyLink(true) // Non-companies don't need contact details
+    }
+  }
+
+  // Check contact details on mount and when session changes
+  useEffect(() => {
+    if (session?.user) {
+      checkContactDetails()
+    }
+  }, [session?.user])
+
+  // Re-check contact details when user returns to tab (in case they updated profile)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (session?.user?.role === 'COMPANY') {
+        checkContactDetails()
       }
     }
-
-    if (session?.user) {
-      checkCalendlyLink()
-    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [session?.user])
 
   // Function to track credit usage
@@ -839,9 +853,9 @@ ${transformedResults.length >= 9 ? '**📈 More candidates available** - Try ref
         
         if (revealedContent.calendlyAccess) {
           if (hasCalendlyLink) {
-            contentMessage += `📅 **Calendly Integration:** ✅ Ready - Use "Send Calendar Invite" below\n`
+            contentMessage += `📅 **Contact Integration:** ✅ Ready - Use "Send Contact Details" below\n`
           } else {
-            contentMessage += `📅 **Calendly Integration:** ⚠️ Setup Required - Add your Calendly link in [Profile Settings](/dashboard/profile)\n`
+            contentMessage += `📅 **Contact Integration:** ⚠️ Setup Required - Add your contact details in [Profile Settings](/dashboard/profile)\n`
           }
         }
         
@@ -1467,7 +1481,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                                           )}
                                           className="bg-purple-600 hover:bg-purple-700 text-white"
                                         >
-                                          📅 Send Calendar Invite
+                                          📅 Send Contact Details
                                         </Button>
                                       ) : (
                                         <div className="space-y-2">
@@ -1477,30 +1491,34 @@ Something went wrong while sending the invitation. Please try again or contact s
                                               const calendlyWarningMessage: ChatMessage = {
                                                 id: Date.now().toString(),
                                                 type: 'ai',
-                                                content: `⚠️ **Calendly Link Required**
+                                                content: `⚠️ **Contact Details Required**
 
-🔗 **Missing Setup:** You need to add your Calendly link before sending interview invitations.
+🔗 **Missing Setup:** You need to add your contact details before sending interview invitations.
 
 **Quick Setup:**
 1. Go to your [Profile Settings](/dashboard/profile)
-2. Scroll to "Interview Scheduling (Calendly Link)"
-3. Add your Calendly link (e.g., https://calendly.com/your-company/30min)
+2. Scroll to "Student Contact Details"
+3. Add your Calendly link, booking URL, or contact email
 4. Save your profile
-5. Return here and send invitations!
+5. Return here - status will refresh automatically!
 
-**Why Calendly?** It allows candidates to book interview times that work for both of you automatically. 📅`,
+**Examples:** https://calendly.com/your-company/30min or yourname@company.com 📅
+
+*Tip: If you just updated your profile, try clicking this button again in a few seconds.*`,
                                                 timestamp: new Date(),
                                                 actionType: 'guidance'
                                               }
-                                              setMessages(prev => [...prev, calendlyWarningMessage])
-                                            }}
+                                                                                             setMessages(prev => [...prev, calendlyWarningMessage])
+                                               // Refresh contact details status after showing message
+                                               setTimeout(checkContactDetails, 2000)
+                                             }}
                                             className="bg-gray-400 hover:bg-gray-500 text-white"
                                           >
-                                            ⚠️ Setup Calendar First
+                                                                                         ⚠️ Setup Contact Details First
                                           </Button>
-                                          <div className="text-xs text-gray-500">
-                                            Add your Calendly link in profile settings
-                                          </div>
+                                                                                     <div className="text-xs text-gray-500">
+                                             Add your contact details in profile settings
+                                           </div>
                                         </div>
                                       )}
                                     </div>
