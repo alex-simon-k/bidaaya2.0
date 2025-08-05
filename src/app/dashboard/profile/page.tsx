@@ -251,6 +251,9 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
+      console.log('🔍 Saving profile with editData:', editData)
+      console.log('🔍 calendlyLink value being sent:', editData.calendlyLink)
+      
       const response = await fetch('/api/user/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -259,11 +262,23 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const responseData = await response.json()
+        console.log('✅ Save response:', responseData)
         // Handle the API response structure { success: true, profile: user }
         const rawUpdatedData = responseData.profile || responseData
         const updatedData = transformApiResponse(rawUpdatedData)
+        console.log('🔍 Updated calendlyLink after save:', updatedData.calendlyLink)
         setProfileData(updatedData)
         setIsEditing(false)
+        
+        // Force refresh contact details check
+        if (updatedData.calendlyLink) {
+          console.log('✅ calendlyLink saved successfully, should resolve contact warning')
+          // Notify other components that calendlyLink was updated
+          window.postMessage({ type: 'CALENDLY_LINK_UPDATED', calendlyLink: updatedData.calendlyLink }, '*')
+        }
+      } else {
+        const errorData = await response.json()
+        console.error('❌ Save failed:', errorData)
       }
     } catch (error) {
       console.error('Error saving profile:', error)

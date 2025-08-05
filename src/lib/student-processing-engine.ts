@@ -95,48 +95,21 @@ export class StudentProcessingEngine {
       // Calculate overall matching score
       const overallScore = this.calculateOverallScore(processedData, activityMetrics)
 
-      // Clear existing tags for this student
-      await prisma.studentTag.deleteMany({
-        where: { userId }
+      // Note: Smart tagging feature removed due to schema changes
+      // TODO: Re-implement smart tagging when database schema is updated
+
+      // Save processed data back to user record
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          // Update any computed fields if needed
+          lastActiveAt: new Date()
+        }
       })
 
-      // Create new smart tags
-      const tags = await this.generateSmartTags(processedData, searchableKeywords)
+      console.log(`✅ Student processed: ${userId} - Processing completed`)
       
-      for (const tag of tags) {
-        // Create or get existing tag
-        const smartTag = await prisma.smartTag.upsert({
-          where: {
-            category_value: {
-              category: tag.category,
-              value: tag.value
-            }
-          },
-          create: {
-            category: tag.category,
-            value: tag.value,
-            aliases: tag.aliases,
-            frequency: 1
-          },
-          update: {
-            frequency: {
-              increment: 1
-            }
-          }
-        })
-
-        // Link student to tag
-        await prisma.studentTag.create({
-          data: {
-            userId,
-            tagId: smartTag.id,
-            confidence: tag.confidence,
-            source: 'auto_processing'
-          }
-        })
-      }
-
-      console.log(`✅ Student processed: ${userId} - ${tags.length} tags created`)
+      // Function returns void as per original signature
 
     } catch (error) {
       console.error(`❌ Error processing student ${userId}:`, error)
@@ -181,19 +154,40 @@ export class StudentProcessingEngine {
     if (uni.includes('british') || uni.includes('heriot')) return 'british_system'
     if (uni.includes('high school') || uni.includes('secondary')) return 'high_school'
     
-    return 'other_university'
+    // Don't penalize unknown universities - treat them as valid universities
+    return 'accredited_university'  // Changed from 'other_university' to 'accredited_university'
   }
 
   private static categorizeMajor(major: string): string {
     if (!major) return 'unknown'
     const maj = major.toLowerCase()
     
-    if (maj.includes('computer') || maj.includes('software') || maj.includes('cs')) return 'technology'
-    if (maj.includes('business') || maj.includes('management') || maj.includes('mba')) return 'business'
+    // Legal studies
+    if (maj.includes('law') || maj.includes('legal') || maj.includes('jurisprudence')) return 'law'
+    
+    // Technology
+    if (maj.includes('computer') || maj.includes('software') || maj.includes('cs') || maj.includes('information technology')) return 'technology'
+    
+    // Business
+    if (maj.includes('business') || maj.includes('management') || maj.includes('mba') || maj.includes('administration')) return 'business'
+    
+    // Engineering
     if (maj.includes('engineering') || maj.includes('engineer')) return 'engineering'
-    if (maj.includes('design') || maj.includes('art') || maj.includes('creative')) return 'design'
-    if (maj.includes('marketing') || maj.includes('communications')) return 'marketing'
-    if (maj.includes('finance') || maj.includes('accounting')) return 'finance'
+    
+    // Design & Creative
+    if (maj.includes('design') || maj.includes('art') || maj.includes('creative') || maj.includes('graphic')) return 'design'
+    
+    // Marketing & Communications
+    if (maj.includes('marketing') || maj.includes('communications') || maj.includes('media') || maj.includes('advertising')) return 'marketing'
+    
+    // Finance
+    if (maj.includes('finance') || maj.includes('accounting') || maj.includes('economics')) return 'finance'
+    
+    // Medical & Health
+    if (maj.includes('medical') || maj.includes('health') || maj.includes('medicine') || maj.includes('nursing')) return 'medical'
+    
+    // Education
+    if (maj.includes('education') || maj.includes('teaching') || maj.includes('pedagogy')) return 'education'
     
     return 'other'
   }
@@ -455,11 +449,6 @@ Return JSON with these categories:
         ...searchConditions
       },
       include: {
-        studentTags: {
-          include: {
-            tag: true
-          }
-        },
         applications: {
           select: {
             createdAt: true
@@ -560,27 +549,41 @@ Return JSON with these categories:
     const reasons: string[] = []
     const keywordMatches: string[] = []
 
-    // Location matching (30 points)
+    // MAJOR/SUBJECTS MATCHING (40 points) - HIGHEST PRIORITY
+    if (criteria.majorCategories) {
+      let subjectMatch = false
+      
+      // Check major field
+      if (student.major) {
+        const studentMajor = student.major.toLowerCase()
+        subjectMatch = criteria.majorCategories.some((maj: string) => 
+          studentMajor.includes(maj.toLowerCase()) || this.categorizeMajor(student.major) === maj
+        )
+      }
+      
+      // Check subjects field (more specific than major)
+      if (!subjectMatch && student.subjects) {
+        const studentSubjects = student.subjects.toLowerCase()
+        subjectMatch = criteria.majorCategories.some((maj: string) => 
+          studentSubjects.includes(maj.toLowerCase())
+        )
+      }
+      
+      if (subjectMatch) {
+        totalScore += 40  // Increased from 25 to 40
+        reasons.push(`Studies ${student.major || student.subjects}`)
+      }
+    }
+
+    // Location matching (25 points)
     if (criteria.preferredLocations) {
       const studentLocation = student.location?.toLowerCase() || ''
       const locationMatch = criteria.preferredLocations.some((loc: string) => 
         studentLocation.includes(loc.toLowerCase())
       )
       if (locationMatch) {
-        totalScore += 30
+        totalScore += 25  // Decreased from 30 to 25
         reasons.push(`Located in ${student.location}`)
-      }
-    }
-
-    // Major matching (25 points)
-    if (criteria.majorCategories) {
-      const studentMajor = student.major?.toLowerCase() || ''
-      const majorMatch = criteria.majorCategories.some((maj: string) => 
-        studentMajor.includes(maj) || this.categorizeMajor(student.major) === maj
-      )
-      if (majorMatch) {
-        totalScore += 25
-        reasons.push(`Studying ${student.major}`)
       }
     }
 
@@ -597,19 +600,19 @@ Return JSON with these categories:
       }
     }
 
-    // University matching (15 points)
+    // University matching (10 points) - REDUCED PRIORITY
     if (criteria.universityTypes) {
       const universityCategory = this.categorizeUniversity(student.university)
       const universityMatch = criteria.universityTypes.includes(universityCategory)
       if (universityMatch) {
-        totalScore += 15
+        totalScore += 10  // Decreased from 15 to 10
         reasons.push(`Studies at ${student.university}`)
       }
     }
 
-    // Activity bonus (10 points)
+    // Activity bonus (5 points) - Reduced impact
     const activityMetrics = this.calculateActivityMetrics(student)
-    totalScore += activityMetrics.activityScore * 0.1
+    totalScore += activityMetrics.activityScore * 0.05  // Reduced from 0.1 to 0.05
 
     if (activityMetrics.activityScore > 70) {
       reasons.push('Highly active on platform')

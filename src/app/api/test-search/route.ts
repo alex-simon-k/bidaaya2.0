@@ -99,9 +99,9 @@ export async function POST(request: NextRequest) {
           matching: {
             score: scoring.totalScore,
             reasons: scoring.reasons,
-            activityBonus: scoring.activityBonus,
             keywordMatches: scoring.keywordMatches,
-            overallRating: scoring.overallRating
+            overallRating: scoring.overallRating,
+            breakdown: scoring.breakdown
           }
         }
       })
@@ -140,65 +140,70 @@ function calculateStudentScore(student: any, query: string, searchTerms: string[
   let reasons: string[] = []
   let keywordMatches: string[] = []
   
-  // Base score starts at 30-50 (no perfect matches by default)
-  const baseScore = Math.floor(Math.random() * 20) + 30
+  // Base score starts at 20-30 (lower baseline to make matching more selective)
+  const baseScore = Math.floor(Math.random() * 10) + 20
   totalScore += baseScore
 
-  // University/Education matching (15-25 points)
-  if (student.university && searchTerms.some(term => 
-    student.university.toLowerCase().includes(term))) {
-    const universityBonus = Math.floor(Math.random() * 10) + 15
-    totalScore += universityBonus
-    reasons.push(`Studies at ${student.university}`)
-    keywordMatches.push('university')
-  }
-
-  // Major/Subject matching (20-30 points)
+  // MAJOR/SUBJECTS MATCHING (40-50 points) - HIGHEST PRIORITY
+  let majorSubjectMatch = false
+  
+  // Check major field first
   if (student.major && searchTerms.some(term =>
     student.major.toLowerCase().includes(term))) {
-    const majorBonus = Math.floor(Math.random() * 10) + 20
+    const majorBonus = Math.floor(Math.random() * 10) + 40
     totalScore += majorBonus
     reasons.push(`Major: ${student.major}`)
     keywordMatches.push('major')
+    majorSubjectMatch = true
+  }
+  
+  // Check subjects field (more specific than major) - Higher priority than major
+  if (student.subjects && searchTerms.some(term =>
+    student.subjects.toLowerCase().includes(term))) {
+    const subjectBonus = Math.floor(Math.random() * 10) + 45  // Higher than major
+    totalScore += subjectBonus
+    reasons.push(`Studies: ${student.subjects}`)
+    keywordMatches.push('subjects')
+    majorSubjectMatch = true
   }
 
-  // Skills matching (10-25 points based on number of matches)
+  // Skills matching (15-25 points based on number of matches)
   const skillMatches = (student.skills || []).filter((skill: string) =>
     searchTerms.some(term => skill.toLowerCase().includes(term))
   )
   if (skillMatches.length > 0) {
-    const skillBonus = Math.min(25, skillMatches.length * 8 + Math.floor(Math.random() * 5))
+    const skillBonus = Math.min(25, skillMatches.length * 6 + Math.floor(Math.random() * 5))
     totalScore += skillBonus
     reasons.push(`Skills: ${skillMatches.join(', ')}`)
     keywordMatches.push('skills')
   }
 
-  // Interests matching (5-15 points)
+  // Interests matching (10-20 points) - Higher for subject relevance
   const interestMatches = (student.interests || []).filter((interest: string) =>
     searchTerms.some(term => interest.toLowerCase().includes(term))
   )
   if (interestMatches.length > 0) {
-    const interestBonus = Math.min(15, interestMatches.length * 5 + Math.floor(Math.random() * 5))
+    const interestBonus = Math.min(20, interestMatches.length * 8 + Math.floor(Math.random() * 5))
     totalScore += interestBonus
     reasons.push(`Interests: ${interestMatches.join(', ')}`)
     keywordMatches.push('interests')
   }
 
-  // Subject field matching (10-20 points)
-  if (student.subjects && searchTerms.some(term =>
-    student.subjects.toLowerCase().includes(term))) {
-    const subjectBonus = Math.floor(Math.random() * 10) + 10
-    totalScore += subjectBonus
-    reasons.push(`Studies: ${student.subjects}`)
-    keywordMatches.push('subjects')
+  // University/Education matching (10-15 points) - REDUCED PRIORITY
+  if (student.university && searchTerms.some(term => 
+    student.university.toLowerCase().includes(term))) {
+    const universityBonus = Math.floor(Math.random() * 5) + 10  // Reduced from 15-25 to 10-15
+    totalScore += universityBonus
+    reasons.push(`Studies at ${student.university}`)
+    keywordMatches.push('university')
   }
 
-  // Goals matching (8-18 points)
+  // Goals matching (8-15 points) - Slightly reduced
   const goalMatches = (student.goal || []).filter((goal: string) =>
     searchTerms.some(term => goal.toLowerCase().includes(term))
   )
   if (goalMatches.length > 0) {
-    const goalBonus = Math.min(18, goalMatches.length * 6 + Math.floor(Math.random() * 6))
+    const goalBonus = Math.min(15, goalMatches.length * 5 + Math.floor(Math.random() * 5))
     totalScore += goalBonus
     reasons.push(`Goals: ${goalMatches.join(', ')}`)
     keywordMatches.push('goals')
@@ -218,19 +223,25 @@ function calculateStudentScore(student: any, query: string, searchTerms: string[
     activityScore = Math.floor(Math.random() * 30) + 25 // Low activity
   }
 
-  // Activity bonus to total score (0-15 points)
-  const activityBonus = Math.floor(activityScore / 6)
+  // Activity bonus to total score (0-10 points) - Reduced impact
+  const activityBonus = Math.floor(activityScore / 10)  // Reduced from /6 to /10
   totalScore += activityBonus
 
-  // Education level bonus (5-10 points)
+  // Education level bonus (3-8 points) - Reduced
   if (student.education === 'University') {
-    totalScore += Math.floor(Math.random() * 5) + 5
+    totalScore += Math.floor(Math.random() * 5) + 3
   } else if (student.education === 'High School') {
-    totalScore += Math.floor(Math.random() * 3) + 2
+    totalScore += Math.floor(Math.random() * 2) + 1
   }
 
-  // Ensure score is within reasonable bounds (25-95)
-  totalScore = Math.max(25, Math.min(95, totalScore))
+  // Subject relevance bonus: If major/subjects match, give significant boost
+  if (majorSubjectMatch) {
+    totalScore += 15  // Additional bonus for exact subject match
+    reasons.push('Perfect subject alignment')
+  }
+
+  // Ensure score is within reasonable bounds (20-95)
+  totalScore = Math.max(20, Math.min(95, totalScore))
 
   // Add fallback reason if no specific matches
   if (reasons.length === 0) {
@@ -239,17 +250,25 @@ function calculateStudentScore(student: any, query: string, searchTerms: string[
 
   // Overall rating based on score
   let overallRating = 'poor'
-  if (totalScore >= 80) overallRating = 'excellent'
-  else if (totalScore >= 65) overallRating = 'good'
+  if (totalScore >= 75) overallRating = 'excellent'
+  else if (totalScore >= 60) overallRating = 'good'
   else if (totalScore >= 45) overallRating = 'fair'
 
   return {
     totalScore,
     activityScore,
-    activityBonus,
+    overallRating,
     reasons,
     keywordMatches,
-    overallRating
+    breakdown: {
+      major: student.major,
+      subjects: student.subjects,
+      skills: student.skills,
+      interests: student.interests,
+      university: student.university,
+      education: student.education,
+      applicationsThisMonth
+    }
   }
 }
 

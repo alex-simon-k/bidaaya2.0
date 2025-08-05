@@ -440,11 +440,15 @@ I'll now take you to the project creation page with everything pre-filled. You j
   const checkContactDetails = async () => {
     if (session?.user?.role === 'COMPANY') {
       try {
+        console.log('🔍 Checking contact details for company...')
         const response = await fetch('/api/user/profile')
         if (response.ok) {
           const userData = await response.json()
-          setHasCalendlyLink(!!userData.calendlyLink)
-          console.log('Contact details status:', !!userData.calendlyLink) // Debug log
+          console.log('🔍 User profile data for contact check:', userData)
+          console.log('🔍 calendlyLink value from API:', userData.calendlyLink)
+          const hasContact = !!userData.calendlyLink
+          setHasCalendlyLink(hasContact)
+          console.log('🔍 Contact details status updated to:', hasContact)
         }
       } catch (error) {
         console.error('Failed to check contact details:', error)
@@ -470,8 +474,20 @@ I'll now take you to the project creation page with everything pre-filled. You j
       }
     }
     
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'CALENDLY_LINK_UPDATED') {
+        console.log('📬 Received calendlyLink update notification, refreshing contact details...')
+        checkContactDetails()
+      }
+    }
+    
     window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
+    window.addEventListener('message', handleMessage)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('message', handleMessage)
+    }
   }, [session?.user])
 
   // Function to track credit usage

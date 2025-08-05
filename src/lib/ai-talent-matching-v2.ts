@@ -16,6 +16,7 @@ export interface TalentProfile {
   email: string
   university?: string | null
   major?: string | null
+  subjects?: string | null  // Add subjects field
   graduationYear?: number | null
   bio?: string | null
   location?: string | null
@@ -302,33 +303,43 @@ export class NextGenAITalentMatcher {
   private static async calculateStrictRelevanceScore(candidate: TalentProfile, intent: any): Promise<number> {
     let score = 0
     
-         // 🎯 EXACT UNIVERSITY MATCH (30 points)
-     if (intent.strictFilters?.universities?.length > 0 && candidate.university) {
-       const universityMatch = intent.strictFilters.universities.some((uni: string) => 
-         candidate.university!.toLowerCase().includes(uni.toLowerCase()) ||
-         uni.toLowerCase().includes(candidate.university!.toLowerCase())
-       )
-       if (universityMatch) {
-         score += 30
-         console.log(`✅ University match: ${candidate.university}`)
-       }
-     }
-     
-     // 🎯 EXACT MAJOR MATCH (35 points)
-     if (intent.strictFilters?.majors?.length > 0 && candidate.major) {
-       const majorMatch = intent.strictFilters.majors.some((major: string) => 
-         candidate.major!.toLowerCase().includes(major.toLowerCase()) ||
-         major.toLowerCase().includes(candidate.major!.toLowerCase())
-       )
-       if (majorMatch) {
-         score += 35
-         console.log(`✅ Major match: ${candidate.major}`)
-       }
-     }
+    // 🎯 MAJOR/SUBJECT STUDIES MATCH (50 points) - HIGHEST PRIORITY
+    if (intent.strictFilters?.majors?.length > 0) {
+      let majorSubjectMatch = false
+      
+      // Check major field
+      if (candidate.major) {
+        majorSubjectMatch = intent.strictFilters.majors.some((major: string) => 
+          candidate.major!.toLowerCase().includes(major.toLowerCase()) ||
+          major.toLowerCase().includes(candidate.major!.toLowerCase())
+        )
+      }
+      
+      // Check subjects field (this is where "studies law" information is stored)
+      if (!majorSubjectMatch && candidate.subjects) {
+        majorSubjectMatch = intent.strictFilters.majors.some((major: string) => 
+          candidate.subjects!.toLowerCase().includes(major.toLowerCase()) ||
+          major.toLowerCase().includes(candidate.subjects!.toLowerCase())
+        )
+      }
+      
+      // Check interests and goals for subject alignment
+      if (!majorSubjectMatch) {
+        const allInterests = [...(candidate.goal || []), ...(candidate.interests || [])].join(' ').toLowerCase()
+        majorSubjectMatch = intent.strictFilters.majors.some((major: string) => 
+          allInterests.includes(major.toLowerCase())
+        )
+      }
+      
+      if (majorSubjectMatch) {
+        score += 50  // Increased from 35 to 50
+        console.log(`✅ Major/Subject match: ${candidate.major || candidate.subjects}`)
+      }
+    }
     
-    // 🎯 SKILLS/INTERESTS MATCH (25 points)
+    // 🎯 SKILLS/INTERESTS ALIGNMENT (30 points)
     if (intent.strictFilters?.skills?.length > 0) {
-      const skillsText = [...(candidate.goal || []), ...(candidate.interests || []), candidate.bio || ''].join(' ').toLowerCase()
+      const skillsText = [...(candidate.goal || []), ...(candidate.interests || []), candidate.bio || '', candidate.subjects || ''].join(' ').toLowerCase()
       let skillMatches = 0
       
       for (const skill of intent.strictFilters.skills) {
@@ -338,14 +349,26 @@ export class NextGenAITalentMatcher {
       }
       
       if (skillMatches > 0) {
-        score += (skillMatches / intent.strictFilters.skills.length) * 25
+        score += (skillMatches / intent.strictFilters.skills.length) * 30  // Increased from 25 to 30
         console.log(`✅ Skills match: ${skillMatches}/${intent.strictFilters.skills.length}`)
       }
     }
     
-    // 🎯 GENERAL KEYWORD MATCH (10 points) 
+    // 🎯 UNIVERSITY MATCH (15 points) - LOWER PRIORITY than subject relevance
+    if (intent.strictFilters?.universities?.length > 0 && candidate.university) {
+      const universityMatch = intent.strictFilters.universities.some((uni: string) => 
+        candidate.university!.toLowerCase().includes(uni.toLowerCase()) ||
+        uni.toLowerCase().includes(candidate.university!.toLowerCase())
+      )
+      if (universityMatch) {
+        score += 15  // Decreased from 30 to 15
+        console.log(`✅ University match: ${candidate.university}`)
+      }
+    }
+    
+    // 🎯 GENERAL KEYWORD MATCH (5 points) - Minimal impact
     if (intent.keywords?.length > 0) {
-      const profileText = [candidate.university, candidate.major, candidate.bio, ...(candidate.goal || []), ...(candidate.interests || [])].join(' ').toLowerCase()
+      const profileText = [candidate.university, candidate.major, candidate.subjects, candidate.bio, ...(candidate.goal || []), ...(candidate.interests || [])].join(' ').toLowerCase()
       let keywordMatches = 0
       
       for (const keyword of intent.keywords) {
@@ -355,7 +378,7 @@ export class NextGenAITalentMatcher {
       }
       
       if (keywordMatches > 0) {
-        score += (keywordMatches / intent.keywords.length) * 10
+        score += (keywordMatches / intent.keywords.length) * 5  // Decreased from 10 to 5
       }
     }
     

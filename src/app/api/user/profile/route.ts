@@ -71,6 +71,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('🔍 Profile update request body:', body)
+    console.log('🔍 calendlyLink value received:', body.calendlyLink)
+    
     const {
       name,
       dateOfBirth,
@@ -112,10 +115,15 @@ export async function PATCH(request: NextRequest) {
     if (bio !== undefined) updateData.bio = bio
     if (whatsapp !== undefined) updateData.whatsapp = whatsapp
     if (linkedin !== undefined) updateData.linkedin = linkedin
-    if (calendlyLink !== undefined) updateData.calendlyLink = calendlyLink
+    if (calendlyLink !== undefined) {
+      updateData.calendlyLink = calendlyLink
+      console.log('🔍 Setting calendlyLink in updateData:', calendlyLink)
+    }
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
     if (mena !== undefined) updateData.mena = mena === 'Yes' || mena === true  // Handle radio button value
     if (terms !== undefined) updateData.terms = terms
+    
+    console.log('🔍 Final updateData object:', updateData)
     
     // If this is a comprehensive profile update (has key fields), mark profile as completed
     console.log('🔍 Profile completion check:', {
