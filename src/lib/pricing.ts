@@ -71,29 +71,6 @@ export const PRICING_PLANS = {
   },
 
   // Company Plans
-  COMPANY_FREE: {
-    id: 'company_free',
-    name: 'Free Starter',
-    price: 0,
-    interval: 'month' as const,
-    description: 'Try our platform with basic features',
-    credits: 10,
-    contactFeatures: ['calendly'],
-    features: [
-      '10 contact credits per month',
-      '1 active project at a time',
-      'Basic candidate search',
-      'Calendly integration only',
-      'Email notifications',
-      'Basic analytics',
-    ],
-    limitations: [
-      'Only Calendly integration',
-      'Single project limit',
-      'Basic search only',
-      'No LinkedIn or contact details'
-    ]
-  },
   COMPANY_BASIC: {
     id: 'company_basic',
     name: 'Company Basic',
@@ -176,7 +153,7 @@ export const getPricingPlans = (userType: 'STUDENT' | 'COMPANY') => {
     ]
   } else {
     return [
-      PRICING_PLANS.COMPANY_FREE,
+      PRICING_PLANS.STUDENT_FREE, // Companies also start with FREE plan
       PRICING_PLANS.COMPANY_BASIC,
       PRICING_PLANS.COMPANY_PREMIUM,
       PRICING_PLANS.COMPANY_PRO
@@ -241,7 +218,7 @@ export const getCreditAllowance = (planId: string): number => {
   
   // Convert database format to pricing format
   const planMapping: Record<string, string> = {
-    'COMPANY_FREE': 'company_free',
+    'FREE': 'student_free', // Both students and companies start with FREE
     'COMPANY_BASIC': 'company_basic',
     'COMPANY_PREMIUM': 'company_premium', 
     'COMPANY_PRO': 'company_pro',
@@ -264,7 +241,7 @@ export const getContactFeatures = (planId: string): string[] => {
   
   // Convert database format to pricing format
   const planMapping: Record<string, string> = {
-    'COMPANY_FREE': 'company_free',
+    'FREE': 'student_free', // Both students and companies start with FREE
     'COMPANY_BASIC': 'company_basic',
     'COMPANY_PREMIUM': 'company_premium', 
     'COMPANY_PRO': 'company_pro',

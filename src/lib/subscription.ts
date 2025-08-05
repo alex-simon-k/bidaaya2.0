@@ -332,7 +332,7 @@ export function canCompanyGetProjectApproved(user: any): { canApprove: boolean, 
   const subscriptionPlan = user.subscriptionPlan || 'FREE'
   
   // Consider these as unpaid/free tiers that block approval
-  const unpaidTiers = ['FREE', 'COMPANY_FREE'] // Add any other free tier IDs here
+  const unpaidTiers = ['FREE'] // FREE is used for both students and companies starting out
   
   if (unpaidTiers.includes(subscriptionPlan)) {
     return { 
