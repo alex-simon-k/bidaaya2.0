@@ -286,6 +286,58 @@ export default function StudentProposalChat() {
                 </div>
               </div>
 
+              {/* Monthly Usage Progress Bar */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-4 mt-6 mx-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-900">Monthly Usage</h3>
+                  <span className="text-xs text-gray-500">Resets in 12 days</span>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* Applications Progress */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600">Applications</span>
+                      <span className="text-xs font-medium text-gray-900">{applications.used}/{applications.limit}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min((applications.used / applications.limit) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Credits Progress */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600">Direct Proposals</span>
+                      <span className="text-xs font-medium text-gray-900">{credits.total - credits.remaining}/{credits.total}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(((credits.total - credits.remaining) / credits.total) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-blue-200">
+                  <button 
+                    onClick={() => window.location.href = '/subscription'}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Upgrade Plan →
+                  </button>
+                </div>
+              </motion.div>
+
               {/* Messages - Removed completely, now redirects to proper page */}
               {/* No more popup overlay - this now redirects to /dashboard/ai-search */}
             </motion.div>

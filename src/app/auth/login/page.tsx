@@ -466,9 +466,9 @@ function LoginPageContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.6 }}
-              className="text-center"
+              className="text-center mt-8 mb-6"
             >
-              <p className="text-xs text-gray-500 leading-relaxed px-4">
+              <p className="text-sm text-gray-500 leading-relaxed px-4">
                 By continuing, you agree to our{" "}
                 <a href="/terms" className="text-blue-600 hover:text-blue-700 font-medium underline">
                   Terms and Conditions
