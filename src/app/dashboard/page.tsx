@@ -19,6 +19,7 @@ import {
 // Import components based on user role
 import AIDashboardChat from '@/components/ai-dashboard-chat'
 import StudentProposalChat from '@/components/student-proposal-chat'
+import CompanyProposalsInbox from '@/components/company-proposals-inbox'
 
 interface DashboardStats {
   applications: number
@@ -86,6 +87,19 @@ export default function DashboardPage() {
                 Company Dashboard
               </h1>
               <p className="text-gray-600">Find the perfect talent for your projects</p>
+            </div>
+            
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-2">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
+                AI Search
+              </button>
+              <button 
+                onClick={() => window.location.href = '/dashboard/proposals'}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Proposals Inbox
+              </button>
             </div>
           </div>
           
