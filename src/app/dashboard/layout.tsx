@@ -201,7 +201,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className={`min-h-screen ${session?.user?.role === 'COMPANY' ? '' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${session?.user?.role === 'COMPANY' ? 'bg-white' : 'bg-gray-50'}`}>
       {/* Header - Mobile Optimized - Now available for all users */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -281,7 +281,7 @@ export default function DashboardLayout({
             {session.user.role === 'COMPANY' && (
               <>
                 <Link 
-                  href="/dashboard/ai-search" 
+                  href="/dashboard" 
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-3 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
                 >
@@ -395,7 +395,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main content - Mobile Optimized */}
-      <main className={`${session?.user?.role === 'COMPANY' ? 'py-0' : 'max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8'}`}>
+      <main className={`${session?.user?.role === 'COMPANY' ? 'py-4 px-4 sm:py-6 sm:px-6 lg:px-8 bg-white' : 'max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8'}`}>
         {children}
       </main>
     </div>

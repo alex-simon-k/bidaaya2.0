@@ -280,13 +280,8 @@ export default function NewProjectPage() {
   }
 
   const handleCustomProjectSelect = () => {
-    // Check if user has access to custom projects
-    const hasCustomProjectAccess = subscriptionData?.features?.customProjectCreation || false
-    
-    if (!hasCustomProjectAccess) {
-      setError('Custom projects require a Pro or Premium subscription. Please upgrade to access this feature.')
-      return
-    }
+    // Allow all users to create custom projects
+    // Custom projects are now available to everyone
 
     setSelectedTemplate(null)
     setFormData(prev => ({
@@ -543,12 +538,8 @@ export default function NewProjectPage() {
                   <h3 className="text-xl font-semibold text-gray-900">
                     Custom Project
                   </h3>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    subscriptionData?.features?.customProjectCreation 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-purple-100 text-purple-700'
-                  }`}>
-                    {subscriptionData?.features?.customProjectCreation ? 'AVAILABLE' : 'PRO'}
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                    AVAILABLE
                   </span>
                 </div>
                 <p className="text-gray-600 text-sm mb-4">
@@ -571,21 +562,11 @@ export default function NewProjectPage() {
                 </div>
                 
                 <button 
-                  className={`w-full py-2 px-4 rounded-lg transition-colors font-medium ${
-                    subscriptionData?.features?.customProjectCreation
-                      ? 'bg-gray-800 hover:bg-gray-900 text-white'
-                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  }`}
-                  disabled={!subscriptionData?.features?.customProjectCreation}
+                  className="w-full py-2 px-4 rounded-lg transition-colors font-medium bg-gray-800 hover:bg-gray-900 text-white"
+                  onClick={handleCustomProjectSelect}
                 >
-                  {subscriptionData?.features?.customProjectCreation ? 'Create Custom Project' : 'Upgrade Required'}
+                  Create Custom Project
                 </button>
-                
-                {!subscriptionData?.features?.customProjectCreation && (
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Available with Pro or Premium subscription
-                  </p>
-                )}
               </div>
             </motion.div>
           </div>

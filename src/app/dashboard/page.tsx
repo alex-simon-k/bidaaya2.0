@@ -106,45 +106,31 @@ export default function DashboardPage() {
     )
   }
 
-  // Company Dashboard - Clean, Mobile-First Interface
+  // Company Dashboard - Simple Interface
   return (
     <>
       <div className="min-h-screen bg-white">
-        {/* Clean Mobile-Friendly Header */}
-        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4">
+        {/* Simple Header with Small Buttons */}
+        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="text-center sm:text-left">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Company Dashboard</h1>
-                <p className="text-sm text-gray-600 mt-1">Find the perfect talent for your projects</p>
-              </div>
-              
-              {/* Mobile-Friendly Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button 
-                  onClick={() => window.location.href = '/dashboard/ai-search'}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors text-center"
-                >
-                  🔍 Browse Students
-                </button>
-                <button 
-                  onClick={() => window.location.href = '/dashboard/projects/new'}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors text-center"
-                >
-                  ➕ Create Project
-                </button>
-                <button 
-                  onClick={() => window.location.href = '/dashboard/proposals'}
-                  className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors text-center"
-                >
-                  📧 Proposals
-                </button>
-              </div>
+            <div className="flex items-center justify-end gap-3">
+              <button 
+                onClick={() => window.location.href = '/dashboard/proposals'}
+                className="px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+              >
+                Proposals
+              </button>
+              <button 
+                onClick={() => window.location.href = '/dashboard/projects'}
+                className="px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+              >
+                Manage Projects
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Main AI Interface with Better Spacing */}
+        {/* Main AI Interface */}
         <div className="px-4 sm:px-6">
           <AIDashboardChat />
         </div>
