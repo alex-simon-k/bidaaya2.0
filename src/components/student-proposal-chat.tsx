@@ -64,7 +64,6 @@ interface LiveProject {
   type: string
   location: string
   deadline: string
-  applicants: number
 }
 
 interface FeaturedCompany {
@@ -152,8 +151,7 @@ export default function StudentProposalChat() {
           company: 'TechFlow Solutions',
           type: 'Internship',
           location: 'Remote',
-          deadline: '2024-08-15',
-          applicants: 12
+          deadline: '2024-08-15'
         },
         {
           id: '2',
@@ -161,8 +159,7 @@ export default function StudentProposalChat() {
           company: 'DataVision Labs',
           type: 'Part-time',
           location: 'Dubai',
-          deadline: '2024-08-20',
-          applicants: 8
+          deadline: '2024-08-20'
         },
         {
           id: '3',
@@ -170,8 +167,7 @@ export default function StudentProposalChat() {
           company: 'Growth Partners',
           type: 'Full-time',
           location: 'Abu Dhabi',
-          deadline: '2024-08-25',
-          applicants: 15
+          deadline: '2024-08-25'
         }
       ])
 
@@ -406,9 +402,8 @@ export default function StudentProposalChat() {
                         <MapPin className="h-3 w-3" />
                         {project.location}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {project.applicants} applied
+                      <div className="text-green-600 font-medium">
+                        Open to applications
                       </div>
                     </div>
                   </div>
