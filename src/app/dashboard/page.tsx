@@ -47,15 +47,24 @@ export default function DashboardPage() {
     }
   }, [session])
 
-  // Manual popup trigger for testing
+  // Show membership popup every 30 minutes for students and companies
   useEffect(() => {
-    const handleShowPopup = () => {
-      setShowMembershipPopup(true)
+    if (session?.user?.role === 'STUDENT' || session?.user?.role === 'COMPANY') {
+      const lastShownKey = `membership_popup_last_shown_${session.user.email}`
+      const lastShown = localStorage.getItem(lastShownKey)
+      const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000) // 30 minutes in milliseconds
+      
+      if (!lastShown || parseInt(lastShown) < thirtyMinutesAgo) {
+        // Show membership popup after a short delay
+        const timer = setTimeout(() => {
+          setShowMembershipPopup(true)
+          localStorage.setItem(lastShownKey, Date.now().toString())
+        }, 5000) // 5 second delay after page load
+        
+        return () => clearTimeout(timer)
+      }
     }
-    
-    window.addEventListener('showMembershipPopup', handleShowPopup)
-    return () => window.removeEventListener('showMembershipPopup', handleShowPopup)
-  }, [])
+  }, [session])
 
   const loadDashboardStats = async () => {
     try {

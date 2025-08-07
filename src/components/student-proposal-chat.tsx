@@ -363,22 +363,12 @@ export default function StudentProposalChat() {
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-blue-200 flex items-center justify-between">
+                <div className="mt-3 pt-3 border-t border-blue-200">
                   <button 
                     onClick={() => window.location.href = '/subscription'}
                     className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Upgrade Plan →
-                  </button>
-                  <button 
-                    onClick={() => {
-                      // Trigger membership popup for testing
-                      const event = new CustomEvent('showMembershipPopup')
-                      window.dispatchEvent(event)
-                    }}
-                    className="text-xs text-gray-500 hover:text-gray-600 font-medium"
-                  >
-                    Test Popup
                   </button>
                 </div>
               </motion.div>
