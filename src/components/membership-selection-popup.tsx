@@ -108,55 +108,63 @@ export function MembershipSelectionPopup({
 
   const companyPlans: CompanyPlan[] = [
     {
-      id: 'company_basic',
-      name: 'Basic',
-      price: 15,
+      id: 'company_basic_monthly',
+      name: 'Company Basic',
+      price: 17, // £200/12 = ~£17/month for yearly
       currency: '£',
       period: 'month',
-      contacts: 10,
+      contacts: 50,
       features: [
-        '10 student contacts per month',
-        'Basic project posting',
-        'Standard search filters',
-        'Email notifications'
+        '50 contact credits per month',
+        '1 active project at a time',
+        'AI shortlisting (top 10 candidates)',
+        'Template-based projects only',
+        'Interview scheduling tools',
+        'Email notifications',
+        'Basic analytics'
       ],
       popular: false,
       buttonText: 'Get Started'
     },
     {
-      id: 'company_pro',
-      name: 'Pro',
-      price: 35,
-      currency: '£',
-      period: 'month',
-      contacts: 30,
-      features: [
-        '30 student contacts per month',
-        'Priority project placement',
-        'Advanced search & filters',
-        'Candidate shortlisting tools',
-        'Application management dashboard'
-      ],
-      popular: true,
-      buttonText: 'Upgrade to Pro'
-    },
-    {
-      id: 'company_premium',
-      name: 'Premium',
-      price: 65,
+      id: 'company_hr_booster_monthly',
+      name: 'HR Booster',
+      price: 63, // £750/12 = ~£63/month for yearly
       currency: '£',
       period: 'month',
       contacts: 100,
       features: [
-        '100 student contacts per month',
-        'Unlimited project postings',
-        'AI-powered candidate matching',
-        'Direct messaging with students',
-        'Priority customer support',
-        'Analytics and insights dashboard'
+        '100 contact credits per month',
+        'Up to 5 simultaneous projects',
+        'Full applicant pool visibility',
+        'Custom project creation',
+        'Interview scheduling & management',
+        'Advanced analytics dashboard',
+        'Candidate communication tools',
+        'Priority email support'
+      ],
+      popular: true,
+      buttonText: 'Upgrade to HR Booster'
+    },
+    {
+      id: 'company_hr_agent_monthly',
+      name: 'HR Agent',
+      price: 146, // £1750/12 = ~£146/month for yearly
+      currency: '£',
+      period: 'month',
+      contacts: 200,
+      features: [
+        '200 contact credits per month',
+        'Unlimited simultaneous projects',
+        'Complete applicant transparency',
+        'We conduct interviews for you',
+        'Interview transcript analysis',
+        'Team recommendations delivered',
+        'Dedicated account manager',
+        'White-label options'
       ],
       popular: false,
-      buttonText: 'Get Premium'
+      buttonText: 'Get HR Agent'
     }
   ]
 

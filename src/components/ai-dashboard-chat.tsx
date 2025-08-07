@@ -661,26 +661,21 @@ I'll now take you to the project creation page with everything pre-filled. You j
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: `🎯 **Perfect! I'll help you create this project.**
+        content: `🎯 **Great! Let's create your project.**
 
-Based on your description: "${input}"
+Here's our project creation area where you can:
+• Set up all project details
+• Define requirements and skills  
+• Choose budget and timeline
+• Publish when ready
 
-I'm analyzing your requirements and preparing the project details:
-• **Project Type**: ${inputLower.includes('internship') ? 'Internship Program' : inputLower.includes('full-time') ? 'Full-time Position' : 'Project-based Work'}
-• **Duration**: ${inputLower.includes('month') ? 'Multi-month engagement' : inputLower.includes('week') ? 'Short-term project' : 'To be determined'}
-• **Skills Needed**: ${inputLower.includes('marketing') ? 'Marketing & Social Media' : inputLower.includes('developer') || inputLower.includes('programming') ? 'Development & Technical' : inputLower.includes('design') ? 'Design & Creative' : 'General skills based on description'}
+**[➡️ Create Your Project](/dashboard/projects/new)**
 
-**Next Steps:**
-1. **Redirecting you to project creation** in 2 seconds
-2. **Your description will be pre-filled** for faster setup
-3. **AI will suggest optimizations** for better applications
-
-This will attract the right candidates and build your employer brand! 🚀`,
+*Click the link above or use the "New Project" button to get started!*`,
         timestamp: new Date(),
-        actionType: 'project-creation',
+        actionType: 'navigate',
         data: { 
-          description: input,
-          suggestedType: inputLower.includes('internship') ? 'internship' : 'project'
+          redirectUrl: '/dashboard/projects/new'
         }
       }
     }
