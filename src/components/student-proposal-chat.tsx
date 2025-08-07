@@ -111,35 +111,36 @@ export default function StudentProposalChat() {
 
   const loadStudentData = async () => {
     try {
-      // Load user limits from API (includes both applications and credits)
+      // Load user limits for applications
       const limitsResponse = await fetch('/api/user/limits')
       if (limitsResponse.ok) {
         const limitsData = await limitsResponse.json()
         if (limitsData.limits) {
           setUserLimits(limitsData.limits)
-          // Update local state with real data
+          // Update applications data
           setApplications({
             used: limitsData.limits.applicationsUsed,
             limit: limitsData.limits.maxApplications
           })
-          setCredits({
-            remaining: limitsData.limits.creditsRemaining,
-            total: limitsData.limits.maxCredits,
-            plan: limitsData.user?.subscriptionPlan || 'FREE'
-          })
         }
-      } else {
-        // Fallback to original APIs if limits API fails
-        const creditsResponse = await fetch('/api/user/credits')
-        if (creditsResponse.ok) {
-          const creditsData = await creditsResponse.json()
-          setCredits(creditsData)
-        }
+      }
 
+      // Load credits data separately
+      const creditsResponse = await fetch('/api/user/credits')
+      if (creditsResponse.ok) {
+        const creditsData = await creditsResponse.json()
+        setCredits(creditsData)
+      } else {
+        // Fallback for credits
+        setCredits({ remaining: 5, total: 5, plan: 'FREE' })
+      }
+
+      // Fallback for applications if limits API fails
+      if (!limitsResponse.ok) {
         const applicationsResponse = await fetch('/api/dashboard/stats')
         if (applicationsResponse.ok) {
           const stats = await applicationsResponse.json()
-          setApplications({ used: stats.applications || 0, limit: 4 }) // Fixed default to 4 for free users
+          setApplications({ used: stats.applications || 0, limit: 4 })
         }
       }
 

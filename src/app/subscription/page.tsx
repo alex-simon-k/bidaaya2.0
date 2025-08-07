@@ -8,9 +8,9 @@ import { Check, Crown, Zap, Send, Users, Star, Target } from 'lucide-react'
 interface Plan {
   id: string
   name: string
-  price: number
+  monthlyPrice: number
+  yearlyPrice?: number
   currency: string
-  period: string
   credits?: number
   contacts?: number
   features: string[]
@@ -22,6 +22,7 @@ export default function SubscriptionPage() {
   const { data: session } = useSession()
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
   const userRole = (session?.user as any)?.role
 
@@ -29,9 +30,8 @@ export default function SubscriptionPage() {
     {
       id: 'student_free',
       name: 'Free',
-      price: 0,
+      monthlyPrice: 0,
       currency: '£',
-      period: 'month',
       credits: 5,
       features: [
         '4 project applications per month',
@@ -45,11 +45,11 @@ export default function SubscriptionPage() {
       buttonText: 'Current Plan'
     },
     {
-      id: 'student_pro_monthly',
+      id: 'student_pro',
       name: 'Student Pro',
-      price: 5,
+      monthlyPrice: 5,
+      yearlyPrice: 48,
       currency: '£',
-      period: 'month',
       credits: 20,
       features: [
         '10 project applications per month',
@@ -64,11 +64,11 @@ export default function SubscriptionPage() {
       buttonText: 'Upgrade to Pro'
     },
     {
-      id: 'student_premium_monthly',
+      id: 'student_premium',
       name: 'Student Premium',
-      price: 10,
+      monthlyPrice: 10,
+      yearlyPrice: 96,
       currency: '£',
-      period: 'month',
       credits: 50,
       features: [
         '20 project applications per month',
@@ -86,16 +86,35 @@ export default function SubscriptionPage() {
 
   const companyPlans: Plan[] = [
     {
-      id: 'company_basic',
-      name: 'Company Basic',
-      price: 15,
+      id: 'company_free',
+      name: 'Free Trial',
+      monthlyPrice: 0,
       currency: '£',
-      period: 'month',
       contacts: 10,
       features: [
-        '10 student contacts per month',
-        'Basic project posting',
-        'Standard search filters',
+        '10 contact credits per month',
+        'Create draft projects',
+        'Browse student profiles',
+        'Basic platform access',
+        'Email notifications',
+        'Community support'
+      ],
+      popular: false,
+      buttonText: 'Current Plan'
+    },
+    {
+      id: 'company_basic',
+      name: 'Company Basic',
+      monthlyPrice: 20,
+      yearlyPrice: 200,
+      currency: '£',
+      contacts: 50,
+      features: [
+        '50 contact credits per month',
+        '1 active project at a time',
+        'AI shortlisting (top 10 candidates)',
+        'Template-based projects only',
+        'Interview scheduling tools',
         'Email notifications',
         'Basic analytics'
       ],
@@ -103,41 +122,44 @@ export default function SubscriptionPage() {
       buttonText: 'Get Started'
     },
     {
-      id: 'company_pro',
-      name: 'Company Pro',
-      price: 35,
+      id: 'company_hr_booster',
+      name: 'HR Booster',
+      monthlyPrice: 75,
+      yearlyPrice: 750,
       currency: '£',
-      period: 'month',
-      contacts: 30,
-      features: [
-        '30 student contacts per month',
-        'Priority project placement',
-        'Advanced search & filters',
-        'Candidate shortlisting tools',
-        'Application management dashboard',
-        'Proposal inbox management'
-      ],
-      popular: true,
-      buttonText: 'Upgrade to Pro'
-    },
-    {
-      id: 'company_premium',
-      name: 'Company Premium',
-      price: 65,
-      currency: '£',
-      period: 'month',
       contacts: 100,
       features: [
-        '100 student contacts per month',
-        'Unlimited project postings',
-        'AI-powered candidate matching',
-        'Direct messaging with students',
-        'Priority customer support',
-        'Analytics and insights dashboard',
-        'Bulk proposal management'
+        '100 contact credits per month',
+        'Up to 5 simultaneous projects',
+        'Full applicant pool visibility',
+        'Custom project creation',
+        'Interview scheduling & management',
+        'Advanced analytics dashboard',
+        'Candidate communication tools',
+        'Priority email support'
+      ],
+      popular: true,
+      buttonText: 'Upgrade to HR Booster'
+    },
+    {
+      id: 'company_hr_agent',
+      name: 'HR Agent',
+      monthlyPrice: 175,
+      yearlyPrice: 1750,
+      currency: '£',
+      contacts: 200,
+      features: [
+        '200 contact credits per month',
+        'Unlimited simultaneous projects',
+        'Complete applicant transparency',
+        'We conduct interviews for you',
+        'Interview transcript analysis',
+        'Team recommendations delivered',
+        'Dedicated account manager',
+        'White-label options'
       ],
       popular: false,
-      buttonText: 'Get Premium'
+      buttonText: 'Get HR Agent'
     }
   ]
 
@@ -147,17 +169,19 @@ export default function SubscriptionPage() {
     setIsLoading(true)
     setSelectedPlan(planId)
 
+    const actualPlanId = billingCycle === 'yearly' && price > 0 ? `${planId}_yearly` : `${planId}_monthly`
+
     try {
       if (price === 0) {
         // Handle free plan
         const response = await fetch('/api/subscription/free', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ planId }),
+          body: JSON.stringify({ planId: actualPlanId }),
         })
 
         if (response.ok) {
-          console.log(`✅ Successfully upgraded to free ${planId}`)
+          console.log(`✅ Successfully upgraded to free ${actualPlanId}`)
           window.location.reload()
         } else {
           console.error('❌ Failed to upgrade to free plan')
@@ -168,7 +192,7 @@ export default function SubscriptionPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            planId,
+            planId: actualPlanId,
             successUrl: `${window.location.origin}/dashboard?success=true`,
             cancelUrl: `${window.location.origin}/subscription?canceled=true`,
           }),
@@ -190,6 +214,20 @@ export default function SubscriptionPage() {
       setIsLoading(false)
       setSelectedPlan(null)
     }
+  }
+
+  const getCurrentPrice = (plan: Plan) => {
+    if (plan.monthlyPrice === 0) return 0
+    return billingCycle === 'yearly' && plan.yearlyPrice ? plan.yearlyPrice : plan.monthlyPrice
+  }
+
+  const getDisplayPrice = (plan: Plan) => {
+    const price = getCurrentPrice(plan)
+    if (price === 0) return 'Free'
+    if (billingCycle === 'yearly' && plan.yearlyPrice) {
+      return `${plan.currency}${price}/year`
+    }
+    return `${plan.currency}${price}/month`
   }
 
   return (
@@ -217,8 +255,35 @@ export default function SubscriptionPage() {
           </motion.p>
         </div>
 
+        {/* Billing Toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-white rounded-lg p-1 shadow-sm border">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                billingCycle === 'monthly' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                billingCycle === 'yearly' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Yearly
+              <span className="ml-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Save 20%</span>
+            </button>
+          </div>
+        </div>
+
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.id}
@@ -241,140 +306,60 @@ export default function SubscriptionPage() {
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                 <div className="text-4xl font-bold text-gray-900 mb-2">
-                  {plan.currency}{plan.price}
-                  <span className="text-lg text-gray-600">/{plan.period}</span>
+                  {getDisplayPrice(plan)}
                 </div>
                 
                 {userRole === 'STUDENT' && plan.credits && (
                   <div className="flex items-center justify-center gap-2 text-blue-600 font-semibold">
                     <Send className="h-4 w-4" />
-                    <span>{plan.credits} proposals per month</span>
+                    {plan.credits} credits/month
                   </div>
                 )}
                 
                 {userRole === 'COMPANY' && plan.contacts && (
-                  <div className="flex items-center justify-center gap-2 text-blue-600 font-semibold">
+                  <div className="flex items-center justify-center gap-2 text-purple-600 font-semibold">
                     <Users className="h-4 w-4" />
-                    <span>{plan.contacts} student contacts per month</span>
+                    {plan.contacts} contacts/month
                   </div>
                 )}
               </div>
 
               <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-3">
+                {plan.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
+                    <span className="text-gray-700 text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <button
-                onClick={() => handlePlanSelect(plan.id, plan.price)}
+                onClick={() => handlePlanSelect(plan.id, getCurrentPrice(plan))}
                 disabled={isLoading && selectedPlan === plan.id}
-                className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all ${
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
                   plan.popular
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
-                } ${isLoading && selectedPlan === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {isLoading && selectedPlan === plan.id ? 'Processing...' : plan.buttonText}
+                {isLoading && selectedPlan === plan.id ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+                ) : (
+                  plan.buttonText
+                )}
               </button>
             </motion.div>
           ))}
         </div>
 
-        {/* Feature Highlights */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl shadow-xl p-8"
-        >
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            {userRole === 'STUDENT' ? 'Why Students Choose Bidaaya Pro' : 'Why Companies Choose Bidaaya Pro'}
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {userRole === 'STUDENT' ? (
-              <>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Send className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Direct Proposals</h3>
-                  <p className="text-gray-600">
-                    Send personalized proposals directly to companies and stand out from the crowd.
-                  </p>
-                </div>
-                
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Target className="h-8 w-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Priority Matching</h3>
-                  <p className="text-gray-600">
-                    Get priority recommendations for projects that match your skills and interests.
-                  </p>
-                </div>
-                
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Star className="h-8 w-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Career Support</h3>
-                  <p className="text-gray-600">
-                    Access career coaching, interview prep, and professional development resources.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Quality Candidates</h3>
-                  <p className="text-gray-600">
-                    Access a curated pool of talented students and recent graduates.
-                  </p>
-                </div>
-                
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Target className="h-8 w-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Smart Matching</h3>
-                  <p className="text-gray-600">
-                    AI-powered matching connects you with candidates that fit your requirements.
-                  </p>
-                </div>
-                
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="h-8 w-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Efficient Hiring</h3>
-                  <p className="text-gray-600">
-                    Streamlined tools for managing applications, proposals, and candidate communication.
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </motion.div>
-
         {/* Footer */}
-        <div className="text-center mt-12">
+        <div className="text-center">
           <p className="text-gray-600 mb-4">
-            Questions about our plans? Contact our support team for assistance.
+            All plans include our core features and dedicated customer support
           </p>
-          <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            Back to Dashboard
-          </button>
+          <p className="text-sm text-gray-500">
+            Need a custom plan? <a href="mailto:support@bidaaya.ae" className="text-blue-600 hover:underline">Contact us</a>
+          </p>
         </div>
       </div>
     </div>
