@@ -111,73 +111,32 @@ export default function DashboardPage() {
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        {/* Company Stats Header */}
+        {/* Simplified Header with Just Navigation Buttons */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Company Dashboard
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900">Company Dashboard</h1>
                 <p className="text-gray-600">Find the perfect talent for your projects</p>
               </div>
               
-              {/* Navigation Tabs */}
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
+              {/* Simple Navigation Buttons */}
+              <div className="flex items-center gap-3">
+                <button className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                   AI Search
                 </button>
                 <button 
                   onClick={() => window.location.href = '/dashboard/proposals'}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
                   Proposals Inbox
                 </button>
               </div>
             </div>
-            
-            {/* Company Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">Applications Received</p>
-                    <p className="text-2xl font-bold text-blue-900">{stats.applications}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Briefcase className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-purple-600 font-medium">Active Projects</p>
-                    <p className="text-2xl font-bold text-purple-900">{stats.projects}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-green-600 font-medium">Successful Hires</p>
-                    <p className="text-2xl font-bold text-green-900">{stats.connections}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* AI Chat Interface for Companies */}
+        {/* Main AI Interface */}
         <AIDashboardChat />
       </div>
 
