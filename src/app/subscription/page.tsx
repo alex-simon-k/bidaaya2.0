@@ -45,8 +45,8 @@ export default function SubscriptionPage() {
       buttonText: 'Current Plan'
     },
     {
-      id: 'student_pro',
-      name: 'Student Pro',
+      id: 'student_premium',
+      name: 'Student Premium',
       monthlyPrice: 5,
       yearlyPrice: 48,
       currency: '£',
@@ -61,11 +61,11 @@ export default function SubscriptionPage() {
         'Profile optimization tips'
       ],
       popular: true,
-      buttonText: 'Upgrade to Pro'
+      buttonText: 'Upgrade to Premium'
     },
     {
-      id: 'student_premium',
-      name: 'Student Premium',
+      id: 'student_pro',
+      name: 'Student Pro',
       monthlyPrice: 10,
       yearlyPrice: 96,
       currency: '£',
@@ -80,7 +80,7 @@ export default function SubscriptionPage() {
         'Resume review service'
       ],
       popular: false,
-      buttonText: 'Get Premium'
+      buttonText: 'Get Pro'
     }
   ]
 

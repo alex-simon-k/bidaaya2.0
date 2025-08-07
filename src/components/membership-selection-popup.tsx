@@ -67,8 +67,8 @@ export function MembershipSelectionPopup({
       buttonText: 'Current Plan'
     },
     {
-      id: 'student_pro_monthly',
-      name: 'Student Pro',
+      id: 'student_premium_monthly',
+      name: 'Student Premium',
       price: 5,
       currency: '£',
       period: 'month', 
@@ -83,11 +83,11 @@ export function MembershipSelectionPopup({
         'Profile optimization tips'
       ],
       popular: true,
-      buttonText: 'Upgrade to Pro'
+      buttonText: 'Upgrade to Premium'
     },
     {
-      id: 'student_premium_monthly',
-      name: 'Student Premium',
+      id: 'student_pro_monthly',
+      name: 'Student Pro',
       price: 10,
       currency: '£',
       period: 'month',
@@ -102,7 +102,7 @@ export function MembershipSelectionPopup({
         'Resume review service'
       ],
       popular: false,
-      buttonText: 'Get Premium'
+      buttonText: 'Get Pro'
     }
   ]
 
@@ -254,6 +254,13 @@ export function MembershipSelectionPopup({
                       {plan.currency}{plan.price}
                       <span className="text-lg text-gray-600">/{plan.period}</span>
                     </div>
+                    {/* Starting at pricing for yearly savings */}
+                    {plan.price > 0 && userRole === 'STUDENT' && (
+                      <div className="text-sm text-emerald-600 font-medium mt-1">
+                        {plan.name === 'Student Premium' && `Starting at £4/month with yearly plan`}
+                        {plan.name === 'Student Pro' && `Starting at £8/month with yearly plan`}
+                      </div>
+                    )}
                     {userRole === 'STUDENT' ? (
                       <p className="text-sm text-gray-600 mt-2 font-medium">
                         {'proposals' in plan ? plan.proposals : 0} proposals per month
