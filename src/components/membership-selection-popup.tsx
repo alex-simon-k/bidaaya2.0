@@ -251,11 +251,11 @@ export function MembershipSelectionPopup({
                     </div>
                     {userRole === 'STUDENT' ? (
                       <p className="text-sm text-gray-600 mt-2 font-medium">
-                        {(plan as StudentPlan).proposals} proposals per month
+                        {'proposals' in plan ? plan.proposals : 0} proposals per month
                       </p>
                     ) : (
                       <p className="text-sm text-gray-600 mt-2 font-medium">
-                        {(plan as CompanyPlan).contacts} student contacts per month
+                        {'contacts' in plan ? plan.contacts : 0} student contacts per month
                       </p>
                     )}
                   </div>
