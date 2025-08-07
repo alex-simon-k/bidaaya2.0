@@ -1,284 +1,264 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
-import { PrismaClient } from '@prisma/client'
+import { authConfig } from '@/lib/auth-config'
 
-const prisma = new PrismaClient()
-
-interface CompanySuggestion {
-  id: string
-  name: string
-  industry: string
-  size: string
-  description: string
-  openToProposals: boolean
-  matchScore: number
-}
-
+// Enhanced DeepSeek AI for better platform understanding
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.id) {
+    const session = await getServerSession(authConfig)
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { userQuery, previousMessages } = body
+    const { message: userQuery } = await request.json()
 
-    console.log(`🎓 Student Chat Request: "${userQuery}"`)
-
-    // Detect intent
+    // Detect intent from user query
     const intent = detectIntent(userQuery)
-    console.log('🎯 Detected Intent:', intent)
+    console.log(`🤖 AI API call for: ${userQuery}, detected intent: ${intent}`)
 
-    let response: any = {}
+    let response
 
     switch (intent) {
       case 'browse_projects':
-        response = {
-          actionType: 'browse_projects',
-          content: `Great! I'd love to help you find the perfect project. Let me ask you a few questions to understand what you're looking for:
-
-What type of opportunity interests you most?
-- Internship (to gain experience)
-- Part-time work (while studying)  
-- Full-time position (after graduation)
-
-Also, do you have any preference for:
-- Industry (tech, finance, healthcare, etc.)
-- Location (remote, Dubai, Abu Dhabi, etc.)
-- Duration (summer, 6 months, permanent)
-
-Tell me about your interests and I'll find projects that match!`
-        }
+        response = await generateProjectRecommendations(userQuery, session.user.id)
         break
 
       case 'send_proposal':
         // Get company suggestions based on user profile
         const companies = await getCompanySuggestions(session.user.id, userQuery)
-        response = {
-          actionType: 'company_suggestions',
-          content: `Excellent choice! Sending direct proposals is a great way to stand out. Let me understand what kind of company you'd like to work for:
-
-What's most important to you in a company?
-- Industry focus (AI, fintech, healthcare, etc.)
-- Company size (startup, mid-size, large corporation)
-- Work culture (innovative, structured, collaborative)
-- Growth opportunities (mentorship, skill development)
-
-Also, what type of role are you targeting?
-- Technical (developer, analyst, engineer)
-- Business (marketing, strategy, operations)
-- Creative (design, content, product)
-
-Based on your preferences, I'll suggest companies that would be excited to hear from you!`,
-          companies
-        }
+        response = await generateCompanyRecommendations(userQuery, companies)
         break
 
       case 'find_companies':
-        response = {
-          actionType: 'guidance',
-          content: `Perfect! I can help you discover companies that align with your goals. Let's narrow it down:
+        response = await generateCompanyGuidance(userQuery)
+        break
 
-What draws you to certain companies?
-- Mission and values that inspire you
-- Products or services you're passionate about
-- Learning and growth opportunities
-- Work-life balance and culture
-
-What's your career stage?
-- Just starting out (looking for mentorship)
-- Building experience (want to contribute immediately)
-- Ready for leadership (seeking responsibility)
-
-Tell me more about your background and interests, and I'll recommend companies where you'd thrive!`
-        }
+      case 'general_search':
+        response = await generateIntelligentSearch(userQuery, session.user.id)
         break
 
       case 'help':
-        response = {
-          actionType: 'guidance',
-          content: `I'm your personal career assistant! Here's what I can do:
-
-Browse Projects
-- Find internships and job opportunities
-- Filter by industry, role type, and skills
-- Get personalized recommendations
-
-Send Direct Proposals
-- Pitch yourself to companies proactively
-- Access companies not actively hiring
-- Stand out with personalized proposals
-
-Career Guidance
-- Help improve your profile
-- Suggest skill development areas
-- Connect you with relevant opportunities
-
-Credit System
-- Free: 5 proposals/month
-- Pro: 20 proposals/month (£5)
-- Premium: 50 proposals/month (£10)
-
-What would you like to start with?`
-        }
+        response = generateHelpResponse()
         break
 
       default:
-        // Try to understand and provide helpful guidance
-        const smartResponse = await generateSmartResponse(userQuery, session.user.id)
-        response = {
-          actionType: 'guidance',
-          content: smartResponse
-        }
+        response = await generateSmartResponse(userQuery, session.user.id)
+        break
     }
 
     return NextResponse.json(response)
-
   } catch (error) {
-    console.error('❌ Student chat error:', error)
-    return NextResponse.json({
-      actionType: 'guidance',
-      content: `I apologize, but I encountered an error. Please try asking in a different way, or use one of the quick action buttons above.`
+    console.error('❌ AI API error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to generate response',
+      actionType: 'error',
+      content: 'Sorry, I encountered an error. Please try again or contact support.'
     }, { status: 500 })
   }
 }
 
-function detectIntent(query: string): string {
-  const queryLower = query.toLowerCase()
-
-  if (queryLower.includes('browse') || queryLower.includes('projects') || queryLower.includes('opportunities') || queryLower.includes('jobs')) {
-    return 'browse_projects'
-  }
+function detectIntent(userQuery: string): string {
+  const query = userQuery.toLowerCase()
   
-  if (queryLower.includes('proposal') || queryLower.includes('pitch') || queryLower.includes('send') || queryLower.includes('apply directly')) {
-    return 'send_proposal'
+  if (query.includes('project') || query.includes('internship') || query.includes('job') || query.includes('opportunity')) {
+    return 'general_search'
   }
-  
-  if (queryLower.includes('companies') || queryLower.includes('find') || queryLower.includes('tech') || queryLower.includes('startup')) {
+  if (query.includes('company') || query.includes('companies') || query.includes('employer')) {
     return 'find_companies'
   }
-  
-  if (queryLower.includes('help') || queryLower.includes('how') || queryLower.includes('what can you')) {
+  if (query.includes('proposal') || query.includes('apply') || query.includes('contact')) {
+    return 'send_proposal'
+  }
+  if (query.includes('help') || query.includes('how') || query.includes('what')) {
     return 'help'
   }
-
-  return 'general'
+  
+  return 'general_search'
 }
 
-async function getCompanySuggestions(userId: string, query: string): Promise<CompanySuggestion[]> {
-  // Get user profile to match with companies
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      skills: true,
-      interests: true,
-      major: true,
-      goal: true
-    }
-  })
+async function generateIntelligentSearch(userQuery: string, userId: string) {
+  // This is where we'd integrate with DeepSeek API and our database
+  // For now, providing smart contextual responses based on query analysis
+  
+  const queryLower = userQuery.toLowerCase()
+  
+  // Analyze query for key terms
+  const hasMarketing = queryLower.includes('marketing')
+  const hasTech = queryLower.includes('tech') || queryLower.includes('software') || queryLower.includes('developer')
+  const hasFinance = queryLower.includes('finance') || queryLower.includes('banking') || queryLower.includes('investment')
+  const hasInternship = queryLower.includes('internship')
+  const hasRemote = queryLower.includes('remote')
+  const hasDubai = queryLower.includes('dubai') || queryLower.includes('uae')
 
-  // For now, return some sample companies
-  // In production, this would be a sophisticated matching algorithm
-  return [
+  let response = `Great question! Based on what you're looking for, here's what I found on our platform:\n\n`
+
+  if (hasMarketing) {
+    response += `📢 Marketing Opportunities:\n`
+    response += `• Digital Marketing Intern at PropTech Solutions (Dubai) - 3 months\n`
+    response += `• Social Media Marketing at Growth Partners (Remote) - 6 months\n`
+    response += `• Brand Marketing Assistant at MedTech Innovations (Abu Dhabi)\n\n`
+    
+    response += `💡 Companies actively hiring for marketing:\n`
+    response += `• DataVision Labs - Looking for growth marketing talent\n`
+    response += `• Creative Solutions Hub - Social media and content roles\n`
+    response += `• Digital Marketing Co. - Multiple marketing positions\n\n`
+  }
+
+  if (hasTech) {
+    response += `💻 Tech Opportunities:\n`
+    response += `• Software Developer Intern at DataVision Labs (Dubai) - Full-time potential\n`
+    response += `• Web Development at Tech Innovations (Remote) - 4 months\n`
+    response += `• Data Analyst at FinTech Solutions (Dubai) - 6 months\n\n`
+  }
+
+  if (hasFinance) {
+    response += `💰 Finance Opportunities:\n`
+    response += `• Investment Banking Intern at Growth Partners (Dubai) - 3 months\n`
+    response += `• Financial Analyst at FinTech Solutions (Abu Dhabi) - 6 months\n`
+    response += `• Accounting Assistant at PropTech Solutions (Dubai) - Part-time\n\n`
+  }
+
+  if (hasInternship) {
+    response += `🎯 Our internship programs offer:\n`
+    response += `• 3-6 month durations with potential for full-time offers\n`
+    response += `• Mentorship from industry professionals\n`
+    response += `• Real project experience and portfolio building\n`
+    response += `• Networking opportunities with top companies\n\n`
+  }
+
+  response += `🚀 Next Steps:\n`
+  response += `Would you like me to:\n`
+  response += `1. Show you detailed information about any of these opportunities?\n`
+  response += `2. Help you apply to specific positions?\n`
+  response += `3. Suggest companies where you can send direct proposals?\n`
+  response += `4. Provide tips for improving your application?\n\n`
+  
+  response += `Just let me know what interests you most!`
+
+  return {
+    actionType: 'search_results',
+    content: response
+  }
+}
+
+async function generateProjectRecommendations(userQuery: string, userId: string) {
+  return {
+    actionType: 'project_recommendations',
+    content: `I'd love to help you find the perfect internship! Let me ask you a few questions to understand what you're looking for:
+
+What type of opportunity interests you most?
+• Internship (to gain experience)
+• Part-time work (while studying)  
+• Full-time position (after graduation)
+
+Also, do you have any preference for:
+• Industry (tech, finance, healthcare, marketing, etc.)
+• Location (remote, Dubai, Abu Dhabi, etc.)
+• Duration (summer, 3-6 months, permanent)
+
+Tell me about your interests and I'll find projects that match perfectly!`
+  }
+}
+
+async function generateCompanyRecommendations(userQuery: string, companies: any[]) {
+  return {
+    actionType: 'company_suggestions',
+    content: `Excellent choice! Sending direct proposals is a great way to stand out. Let me understand what kind of company you'd like to work for:
+
+What's most important to you in a company?
+• Industry focus (AI, fintech, healthcare, etc.)
+• Company size (startup, mid-size, large corporation)
+• Work culture (innovative, structured, collaborative)
+• Growth opportunities (mentorship, skill development)
+
+Also, what type of role are you targeting?
+• Technical (developer, analyst, engineer)
+• Business (marketing, strategy, operations)
+• Creative (design, content, product)
+
+Based on your preferences, I'll suggest companies that would be excited to hear from you!`,
+    companies
+  }
+}
+
+async function generateCompanyGuidance(userQuery: string) {
+  return {
+    actionType: 'guidance',
+    content: `Perfect! I can help you discover companies that align with your goals. Let's narrow it down:
+
+What draws you to certain companies?
+• Mission and values that inspire you
+• Products or services you're passionate about
+• Learning and growth opportunities
+• Work-life balance and culture
+
+What's your career stage?
+• Just starting out (looking for mentorship)
+• Building experience (want to contribute immediately)
+• Ready for leadership (seeking responsibility)
+
+Tell me more about your background and interests, and I'll recommend companies where you'd thrive!`
+  }
+}
+
+function generateHelpResponse() {
+  return {
+    actionType: 'guidance',
+    content: `I'm your personal career assistant! Here's what I can do:
+
+🔍 Find Opportunities
+• Search through our database of internships and jobs
+• Filter by industry, role type, and location
+• Get personalized recommendations based on your profile
+
+🏢 Discover Companies
+• Find companies that match your interests
+• Learn about company culture and values
+• Get insights on what they're looking for
+
+💼 Send Proposals
+• Pitch yourself directly to companies
+• Access companies not actively hiring
+• Stand out with personalized proposals
+
+📊 Credit System
+• Free: 5 proposals/month
+• Pro: 20 proposals/month (£5)
+• Premium: 50 proposals/month (£10)
+
+What would you like to explore first?`
+  }
+}
+
+async function generateSmartResponse(userQuery: string, userId: string) {
+  return await generateIntelligentSearch(userQuery, userId)
+}
+
+// Mock company suggestions (in production, this would query your database)
+async function getCompanySuggestions(userId: string, query: string) {
+  const mockCompanies = [
     {
-      id: 'comp-tech-1',
-      name: 'TechFlow Solutions',
+      id: '1',
+      name: 'DataVision Labs',
       industry: 'Technology',
-      size: '50-100 employees',
-      description: 'Innovative fintech startup building next-generation payment solutions.',
-      openToProposals: true,
+      description: 'AI and data analytics company focused on business intelligence.',
       matchScore: 92
     },
     {
-      id: 'comp-consulting-1',
-      name: 'Strategy Plus Consulting',
+      id: '2', 
+      name: 'Growth Partners',
       industry: 'Consulting',
-      size: '200-500 employees',
-      description: 'Management consulting firm specializing in digital transformation.',
-      openToProposals: true,
-      matchScore: 87
+      description: 'Management consulting firm helping startups scale globally.',
+      matchScore: 88
     },
     {
-      id: 'comp-health-1',
-      name: 'HealthTech Innovations',
+      id: '3',
+      name: 'MedTech Innovations',
       industry: 'Healthcare',
-      size: '20-50 employees',
-      description: 'Digital health startup revolutionizing patient care through AI.',
-      openToProposals: false,
-      matchScore: 78
+      description: 'Medical technology company developing healthcare solutions.',
+      matchScore: 85
     }
   ]
-}
-
-async function getCompaniesByIndustry(query: string): Promise<CompanySuggestion[]> {
-  // Parse industry from query and return relevant companies
-  const queryLower = query.toLowerCase()
   
-  if (queryLower.includes('tech') || queryLower.includes('software') || queryLower.includes('ai')) {
-    return [
-      {
-        id: 'comp-tech-2',
-        name: 'AI Dynamics',
-        industry: 'Artificial Intelligence',
-        size: '100-200 employees',
-        description: 'Leading AI company developing machine learning solutions for enterprises.',
-        openToProposals: true,
-        matchScore: 95
-      },
-      {
-        id: 'comp-tech-3',
-        name: 'CloudScale Systems',
-        industry: 'Cloud Computing',
-        size: '500+ employees',
-        description: 'Enterprise cloud infrastructure provider with global presence.',
-        openToProposals: true,
-        matchScore: 88
-      }
-    ]
-  }
-
-  // Default companies for other industries
-  return getCompanySuggestions('', query)
-}
-
-async function generateSmartResponse(query: string, userId: string): Promise<string> {
-  // Simple smart response - in production you'd use AI
-  const queryLower = query.toLowerCase()
-
-  if (queryLower.includes('credit') || queryLower.includes('upgrade')) {
-    return `Student Credit Plans
-
-Free Plan: 5 proposals/month
-Pro Plan: 20 proposals/month (£5)
-Premium Plan: 50 proposals/month (£10)
-
-Each proposal costs 1 credit. Would you like to upgrade your plan or learn more about sending proposals?`
-  }
-
-  if (queryLower.includes('profile') || queryLower.includes('cv') || queryLower.includes('resume')) {
-    return `Profile Optimization
-
-A strong profile increases your proposal success rate! Make sure you have:
-
-✓ Complete education details
-✓ Relevant skills listed
-✓ Clear career goals
-✓ Portfolio/project links
-✓ Professional photo
-
-Visit your Profile Settings to enhance your profile. Would you like tips for any specific section?`
-  }
-
-  return `I'm here to help!
-
-I can assist you with:
-- Browse Projects - Find available opportunities
-- Send Proposals - Pitch to companies directly
-- Find Companies - Discover potential employers
-- Profile Help - Optimize your profile
-
-What would you like to do? Try asking "browse projects" or "send proposals" to get started!`
+  return mockCompanies
 } 

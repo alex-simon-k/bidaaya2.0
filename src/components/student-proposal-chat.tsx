@@ -18,7 +18,8 @@ import {
   TrendingUp,
   Award,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react'
 
 interface ChatMessage {
@@ -278,7 +279,9 @@ export default function StudentProposalChat() {
             >
               {/* Simple Header */}
               <div className="text-center py-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Find your opportunity</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Find your internship in <span className="font-black">one prompt</span>
+                </h2>
                 
                 {/* Search Bar */}
                 <div className="max-w-md mx-auto mb-6">
@@ -290,7 +293,7 @@ export default function StudentProposalChat() {
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyPress={handleKeyPress}
                         placeholder="Search for opportunities or companies..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 bg-white"
                         disabled={isLoading}
                       />
                     </div>
@@ -321,20 +324,26 @@ export default function StudentProposalChat() {
                 </div>
               </div>
 
-              {/* Messages */}
+              {/* Messages - Full Page Experience */}
               {messages.length > 0 && (
-                <div className="border border-gray-200 rounded-2xl shadow-lg overflow-hidden h-[500px] flex flex-col">
+                <div className="fixed inset-0 bg-white z-50 flex flex-col">
                   {/* Chat Header */}
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-white/20 rounded-lg">
                         <Search className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-white font-semibold">Opportunity Search</h3>
-                        <p className="text-blue-100 text-sm">Find projects and companies</p>
+                        <h3 className="text-white font-semibold">AI Opportunity Assistant</h3>
+                        <p className="text-blue-100 text-sm">Finding the perfect match for you</p>
                       </div>
                     </div>
+                    <button
+                      onClick={() => setMessages([])}
+                      className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                    >
+                      <X className="h-5 w-5 text-white" />
+                    </button>
                   </div>
 
                   {/* Messages Container */}
@@ -348,11 +357,11 @@ export default function StudentProposalChat() {
                           exit={{ opacity: 0, y: -20 }}
                           className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                          <div className={`max-w-xs lg:max-w-md ${
+                          <div className={`max-w-2xl ${
                             message.type === 'user' 
                               ? 'bg-blue-600 text-white' 
                               : 'bg-white border border-gray-200 text-gray-900'
-                          } rounded-2xl px-4 py-3 shadow-sm`}>
+                          } rounded-2xl px-6 py-4 shadow-sm`}>
                             <div className="text-sm leading-relaxed whitespace-pre-wrap">
                               {message.content}
                             </div>
@@ -399,14 +408,14 @@ export default function StudentProposalChat() {
                         animate={{ opacity: 1, y: 0 }}
                         className="flex justify-start"
                       >
-                        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
+                        <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
                           <div className="flex items-center gap-2">
                             <div className="flex space-x-1">
                               <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
                               <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                               <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                             </div>
-                            <span className="text-sm text-gray-600">Searching...</span>
+                            <span className="text-sm text-gray-600">Searching through opportunities...</span>
                           </div>
                         </div>
                       </motion.div>
@@ -415,26 +424,26 @@ export default function StudentProposalChat() {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Chat Input - Only show if conversation started */}
-                  <div className="bg-white border-t border-gray-200 p-4">
-                    <div className="flex items-center gap-3">
+                  {/* Chat Input - Full Width */}
+                  <div className="bg-white border-t border-gray-200 p-6">
+                    <div className="max-w-4xl mx-auto flex items-center gap-3">
                       <div className="flex-1 relative">
                         <input
                           type="text"
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyPress={handleKeyPress}
-                          placeholder="Ask follow-up questions..."
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          placeholder="Ask follow-up questions or refine your search..."
+                          className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white text-base"
                           disabled={isLoading}
                         />
                       </div>
                       <button
                         onClick={handleSendMessage}
                         disabled={!inputValue.trim() || isLoading}
-                        className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        <Send className="h-4 w-4" />
+                        <Send className="h-5 w-5" />
                       </button>
                     </div>
                   </div>
@@ -527,82 +536,6 @@ export default function StudentProposalChat() {
               </button>
             </motion.div>
           </div>
-        </div>
-
-        {/* Stats Cards - Below Chat */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-          {/* Credits & Applications Combined */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Zap className="h-6 w-6 text-blue-600" />
-              </div>
-              <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                {credits.plan}
-              </span>
-            </div>
-            <h3 className="text-sm font-medium text-blue-600 mb-1">Credits & Applications</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Proposals</span>
-                <span className="font-semibold text-blue-900">{credits.remaining}/{credits.total}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Applications</span>
-                <span className="font-semibold text-blue-900">{applications.used}/{applications.limit}</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Profile Views - Mock Data */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100"
-          >
-            <div className="p-3 bg-green-100 rounded-xl mb-4 w-fit">
-              <Star className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-sm font-medium text-green-600 mb-1">Profile Views</h3>
-            <p className="text-2xl font-bold text-green-900">0</p>
-            <p className="text-xs text-green-600">This week</p>
-          </motion.div>
-
-          {/* Success Rate - Mock Data */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100"
-          >
-            <div className="p-3 bg-purple-100 rounded-xl mb-4 w-fit">
-              <Award className="h-6 w-6 text-purple-600" />
-            </div>
-            <h3 className="text-sm font-medium text-purple-600 mb-1">Response Rate</h3>
-            <p className="text-2xl font-bold text-purple-900">0%</p>
-            <p className="text-xs text-purple-600">From proposals</p>
-          </motion.div>
-
-          {/* Active Opportunities */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100"
-          >
-            <div className="p-3 bg-orange-100 rounded-xl mb-4 w-fit">
-              <Target className="h-6 w-6 text-orange-600" />
-            </div>
-            <h3 className="text-sm font-medium text-orange-600 mb-1">Live Opportunities</h3>
-            <p className="text-2xl font-bold text-orange-900">{liveProjects.length}</p>
-            <p className="text-xs text-orange-600">Available now</p>
-          </motion.div>
         </div>
       </div>
     </div>
