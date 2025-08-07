@@ -396,6 +396,18 @@ I'll now take you to the project creation page with everything pre-filled. You j
   // Load chat history on component mount
   useEffect(() => {
     if (session?.user?.id) {
+      // Check if there's a URL parameter to clear chat
+      const urlParams = new URLSearchParams(window.location.search)
+      const clearChat = urlParams.get('clear') === 'true'
+      
+      if (clearChat) {
+        // Clear chat and remove URL parameter
+        clearMessagesFromStorage()
+        window.history.replaceState({}, '', window.location.pathname)
+        console.log('🗑️ Chat cleared via URL parameter')
+        return
+      }
+      
       const savedMessages = loadMessagesFromStorage()
       if (savedMessages.length > 0) {
         setMessages(savedMessages)
@@ -1058,7 +1070,16 @@ Something went wrong while sending the invitation. Please try again or contact s
       {hasMessages && (
         <div className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-between">
+              {/* Return to Dashboard Button */}
+              <button
+                onClick={resetChat}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Dashboard
+              </button>
+              
               {/* Credit Display Only */}
               <div className="px-2 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200/50">
                 <div className="flex items-center gap-1 sm:gap-2">

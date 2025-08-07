@@ -281,7 +281,7 @@ export default function DashboardLayout({
             {session.user.role === 'COMPANY' && (
               <>
                 <Link 
-                  href="/dashboard" 
+                  href="/dashboard?clear=true" 
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-3 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
                 >
