@@ -251,16 +251,11 @@ export function MembershipSelectionPopup({
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                     <div className="text-3xl font-bold text-gray-900">
-                      {plan.currency}{plan.price}
+                      {plan.currency}{plan.price > 0 && userRole === 'STUDENT' ? 
+                        (plan.name === 'Student Premium' ? '4' : plan.name === 'Student Pro' ? '8' : plan.price) 
+                        : plan.price}
                       <span className="text-lg text-gray-600">/{plan.period}</span>
                     </div>
-                    {/* Starting at pricing for yearly savings */}
-                    {plan.price > 0 && userRole === 'STUDENT' && (
-                      <div className="text-sm text-emerald-600 font-medium mt-1">
-                        {plan.name === 'Student Premium' && `Starting at £4/month with yearly plan`}
-                        {plan.name === 'Student Pro' && `Starting at £8/month with yearly plan`}
-                      </div>
-                    )}
                     {userRole === 'STUDENT' ? (
                       <p className="text-sm text-gray-600 mt-2 font-medium">
                         {'proposals' in plan ? plan.proposals : 0} proposals per month
