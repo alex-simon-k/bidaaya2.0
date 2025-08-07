@@ -1056,62 +1056,42 @@ Something went wrong while sending the invitation. Please try again or contact s
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Header */}
       <div className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               {hasMessages && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={resetChat}
-                  className="mr-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium"
+                  className="hidden sm:flex bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back
                 </Button>
               )}
-              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-                <Brain className="h-6 w-6 text-white" />
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex-shrink-0">
+                <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">AI Recruitment Assistant</h1>
-                <p className="text-sm text-gray-600">Find perfect candidates & create projects effortlessly</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">AI Recruitment Assistant</h1>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Find perfect candidates & create projects</p>
               </div>
             </div>
             
-            {/* Credit Display */}
-            <div className="flex items-center gap-4">
-              <div className="px-4 py-2 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl border border-emerald-200/50">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-emerald-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    {credits} credits
+            {/* Credit Display - Mobile Responsive */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="px-2 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200/50">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">
+                    {credits}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="hidden sm:inline text-xs text-gray-500">
                     ({((session?.user as any)?.subscriptionPlan || 'FREE').replace('COMPANY_', '').replace('_', ' ')})
                   </span>
                 </div>
               </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-sm font-medium flex items-center gap-2"
-              >
-                <Crown className="h-4 w-4" />
-                Upgrade
-              </motion.button>
-              
-              {hasMessages && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={resetChat}
-                  className="ml-2 hover:bg-gray-100"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
         </div>
@@ -1166,8 +1146,8 @@ Something went wrong while sending the invitation. Please try again or contact s
           // Full Chat Layout 
           <>
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+              <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div
@@ -1177,7 +1157,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                   exit={{ opacity: 0, y: -20 }}
                   className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-3xl ${message.type === 'user' ? 'ml-12' : 'mr-12'} flex items-start gap-3`}>
+                  <div className={`max-w-2xl ${message.type === 'user' ? 'ml-4 sm:ml-12' : 'mr-4 sm:mr-12'} flex items-start gap-2 sm:gap-3`}>
                     {/* Avatar */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       message.type === 'user' ? 'bg-gray-900 order-2' : 'bg-blue-100'
@@ -1190,7 +1170,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                     </div>
                     
                     {/* Message Content */}
-                    <div className={`rounded-2xl px-6 py-4 ${
+                    <div className={`rounded-2xl px-3 sm:px-6 py-3 sm:py-4 ${
                       message.type === 'user' 
                         ? 'bg-gray-900 text-white order-1' 
                         : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
@@ -1215,7 +1195,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                 animate={{ opacity: 1 }}
                 className="flex justify-start"
               >
-                <div className="max-w-3xl mr-12 flex items-start gap-3">
+                <div className="max-w-2xl mr-4 sm:mr-12 flex items-start gap-2 sm:gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                     <Brain className="h-4 w-4 text-blue-600" />
                   </div>
