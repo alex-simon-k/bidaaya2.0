@@ -179,47 +179,9 @@ export default function StudentProposalChat() {
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputValue,
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setInputValue('')
-    setIsLoading(true)
-
-    try {
-      const response = await fetch('/api/student-chat/generate-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userQuery: inputValue,
-          userRole: 'STUDENT',
-          userName: session?.user?.name,
-          previousMessages: messages.slice(-5)
-        })
-      })
-
-      if (response.ok) {
-        const aiResponse = await response.json()
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: aiResponse.content,
-          timestamp: new Date(),
-          actionType: aiResponse.actionType,
-          companies: aiResponse.companies
-        }
-        setMessages(prev => [...prev, aiMessage])
-      }
-    } catch (error) {
-      console.error('Error sending message:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    
+    // Redirect to AI search page with the query
+    window.location.href = `/dashboard/ai-search?q=${encodeURIComponent(inputValue)}`
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -230,8 +192,8 @@ export default function StudentProposalChat() {
   }
 
   const handleSuggestedPrompt = (prompt: string) => {
-    setInputValue(prompt)
-    setTimeout(() => handleSendMessage(), 100)
+    // Redirect to AI search page with the prompt
+    window.location.href = `/dashboard/ai-search?q=${encodeURIComponent(prompt)}`
   }
 
   const handleSendProposal = async (company: CompanySuggestion) => {
@@ -324,157 +286,8 @@ export default function StudentProposalChat() {
                 </div>
               </div>
 
-              {/* Messages - ChatGPT Style Full Page Experience */}
-              {messages.length > 0 && (
-                <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
-                  {/* Clean Header - ChatGPT Style */}
-                  <div className="bg-gray-900 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="text-white font-semibold text-lg">Bidaaya AI</div>
-                    </div>
-                    <button
-                      onClick={() => setMessages([])}
-                      className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  {/* Messages Container - ChatGPT Style */}
-                  <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
-                    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-                      <AnimatePresence>
-                        {messages.map((message) => (
-                          <motion.div
-                            key={message.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="space-y-4"
-                          >
-                            {message.type === 'user' ? (
-                              <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                  A
-                                </div>
-                                <div className="flex-1 text-white">
-                                  <div className="whitespace-pre-wrap">{message.content}</div>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                  B
-                                </div>
-                                <div className="flex-1 text-gray-100">
-                                  <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
-                                  
-                                  {/* Company Suggestions */}
-                                  {message.companies && message.companies.length > 0 && (
-                                    <div className="mt-4 space-y-3">
-                                      {message.companies.map((company) => (
-                                        <div key={company.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                                          <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                              <Building2 className="h-4 w-4 text-gray-400" />
-                                              <h4 className="font-medium text-white text-sm">{company.name}</h4>
-                                            </div>
-                                            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                                              {company.matchScore}% match
-                                            </span>
-                                          </div>
-                                          <p className="text-xs text-gray-400 mb-3">{company.description}</p>
-                                          <button
-                                            onClick={() => handleSendProposal(company)}
-                                            className="w-full bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                                          >
-                                            Send Proposal (1 credit)
-                                          </button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                      
-                      {isLoading && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="flex items-start gap-3"
-                        >
-                          <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            B
-                          </div>
-                          <div className="flex-1 text-gray-100">
-                            <div className="flex items-center gap-2">
-                              <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                              </div>
-                              <span className="text-sm text-gray-400">Searching opportunities...</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                      
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </div>
-
-                  {/* Bottom Input - ChatGPT Style with Suggested Prompts */}
-                  <div className="bg-gray-900 border-t border-gray-700 p-4">
-                    <div className="max-w-3xl mx-auto space-y-4">
-                      {/* Suggested Prompts - Only show if no messages or conversation just started */}
-                      {messages.length <= 2 && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <button
-                            onClick={() => handleSuggestedPrompt('Find a project for me')}
-                            className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl transition-colors"
-                          >
-                            <div className="text-white font-medium mb-1">Find a project</div>
-                            <div className="text-gray-400 text-sm">Discover internships and opportunities</div>
-                          </button>
-                          <button
-                            onClick={() => handleSuggestedPrompt('Find a company for me')}
-                            className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl transition-colors"
-                          >
-                            <div className="text-white font-medium mb-1">Send a proposal</div>
-                            <div className="text-gray-400 text-sm">Connect directly with companies</div>
-                          </button>
-                        </div>
-                      )}
-                      
-                      {/* Input Box */}
-                      <div className="flex items-center gap-3 bg-gray-800 rounded-xl border border-gray-600 p-3">
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            placeholder="Message Bidaaya AI..."
-                            className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none text-base"
-                            disabled={isLoading}
-                          />
-                        </div>
-                        <button
-                          onClick={handleSendMessage}
-                          disabled={!inputValue.trim() || isLoading}
-                          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <Send className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Messages - Removed completely, now redirects to proper page */}
+              {/* No more popup overlay - this now redirects to /dashboard/ai-search */}
             </motion.div>
           </div>
 
