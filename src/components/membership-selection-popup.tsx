@@ -67,7 +67,7 @@ export function MembershipSelectionPopup({
       buttonText: 'Current Plan'
     },
     {
-      id: 'student_pro',
+      id: 'student_pro_monthly',
       name: 'Student Pro',
       price: 5,
       currency: '£',
@@ -86,7 +86,7 @@ export function MembershipSelectionPopup({
       buttonText: 'Upgrade to Pro'
     },
     {
-      id: 'student_premium',
+      id: 'student_premium_monthly',
       name: 'Student Premium',
       price: 10,
       currency: '£',

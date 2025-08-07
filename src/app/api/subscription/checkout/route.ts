@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from "@/lib/auth-config"
 import { headers } from 'next/headers'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
 
 // Stripe configuration
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
@@ -60,8 +57,9 @@ export async function POST(request: NextRequest) {
     }
 
     // FOR TESTING: Allow direct database updates without Stripe
-    // ENABLED temporarily to fix broken Stripe links
-    if (testMode === true || process.env.NODE_ENV === 'development' || !process.env.STRIPE_SECRET_KEY) {
+    // DISABLED: Using real Stripe checkout now
+    /*
+    if (testMode === true || process.env.NODE_ENV === 'development') {
       console.log(`🧪 TEST MODE: Directly updating user subscription to ${planId}`)
       
       // Map planId to subscription plan
@@ -104,6 +102,7 @@ export async function POST(request: NextRequest) {
         await prisma.$disconnect()
       }
     }
+    */
 
     // REAL STRIPE MODE: Create checkout session
 
