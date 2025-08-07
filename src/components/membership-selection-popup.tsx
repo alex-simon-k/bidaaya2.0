@@ -5,6 +5,30 @@ import { useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Crown, Zap, Star, Check, Send } from 'lucide-react'
 
+interface StudentPlan {
+  id: string
+  name: string
+  price: number
+  currency: string
+  period: string
+  proposals: number
+  features: string[]
+  popular: boolean
+  buttonText: string
+}
+
+interface CompanyPlan {
+  id: string
+  name: string
+  price: number
+  currency: string
+  period: string
+  contacts: number
+  features: string[]
+  popular: boolean
+  buttonText: string
+}
+
 interface MembershipSelectionPopupProps {
   isOpen: boolean
   onClose: () => void
@@ -23,7 +47,7 @@ export function MembershipSelectionPopup({
 
   if (!isOpen) return null
 
-  const studentPlans = [
+  const studentPlans: StudentPlan[] = [
     {
       id: 'student_free',
       name: 'Free',
@@ -77,7 +101,7 @@ export function MembershipSelectionPopup({
     }
   ]
 
-  const companyPlans = [
+  const companyPlans: CompanyPlan[] = [
     {
       id: 'company_basic',
       name: 'Basic',
@@ -227,11 +251,11 @@ export function MembershipSelectionPopup({
                     </div>
                     {userRole === 'STUDENT' ? (
                       <p className="text-sm text-gray-600 mt-2 font-medium">
-                        {plan.proposals} proposals per month
+                        {(plan as StudentPlan).proposals} proposals per month
                       </p>
                     ) : (
                       <p className="text-sm text-gray-600 mt-2 font-medium">
-                        {plan.contacts} student contacts per month
+                        {(plan as CompanyPlan).contacts} student contacts per month
                       </p>
                     )}
                   </div>
