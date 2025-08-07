@@ -49,21 +49,22 @@ export default function DashboardPage() {
 
   // Show membership popup for both students and companies with reduced frequency
   useEffect(() => {
-    if (session?.user?.role === 'STUDENT' || session?.user?.role === 'COMPANY') {
-      const lastShownKey = `membership_popup_last_shown_${session.user.email}`
-      const lastShown = localStorage.getItem(lastShownKey)
-      const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000) // 6 hours in milliseconds
-      
-      if (!lastShown || parseInt(lastShown) < sixHoursAgo) {
-        // Show membership popup after a short delay
-        const timer = setTimeout(() => {
-          setShowMembershipPopup(true)
-          localStorage.setItem(lastShownKey, Date.now().toString())
-        }, 3000) // 3 second delay
-        
-        return () => clearTimeout(timer)
-      }
-    }
+    // Commenting out popup for now as user doesn't want it on dashboard load
+    // if (session?.user?.role === 'STUDENT' || session?.user?.role === 'COMPANY') {
+    //   const lastShownKey = `membership_popup_last_shown_${session.user.email}`
+    //   const lastShown = localStorage.getItem(lastShownKey)
+    //   const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000) // 6 hours in milliseconds
+    //   
+    //   if (!lastShown || parseInt(lastShown) < sixHoursAgo) {
+    //     // Show membership popup after a short delay
+    //     const timer = setTimeout(() => {
+    //       setShowMembershipPopup(true)
+    //       localStorage.setItem(lastShownKey, Date.now().toString())
+    //     }, 3000) // 3 second delay
+    //     
+    //     return () => clearTimeout(timer)
+    //   }
+    // }
   }, [session])
 
   const loadDashboardStats = async () => {

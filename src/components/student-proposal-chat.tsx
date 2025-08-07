@@ -324,127 +324,153 @@ export default function StudentProposalChat() {
                 </div>
               </div>
 
-              {/* Messages - Full Page Experience */}
+              {/* Messages - ChatGPT Style Full Page Experience */}
               {messages.length > 0 && (
-                <div className="fixed inset-0 bg-white z-50 flex flex-col">
-                  {/* Chat Header */}
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
+                <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
+                  {/* Clean Header - ChatGPT Style */}
+                  <div className="bg-gray-900 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white/20 rounded-lg">
-                        <Search className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-semibold">AI Opportunity Assistant</h3>
-                        <p className="text-blue-100 text-sm">Finding the perfect match for you</p>
-                      </div>
+                      <div className="text-white font-semibold text-lg">Bidaaya AI</div>
                     </div>
                     <button
                       onClick={() => setMessages([])}
-                      className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                      className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                     >
-                      <X className="h-5 w-5 text-white" />
+                      <X className="h-5 w-5" />
                     </button>
                   </div>
 
-                  {/* Messages Container */}
-                  <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
-                    <AnimatePresence>
-                      {messages.map((message) => (
-                        <motion.div
-                          key={message.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className={`max-w-2xl ${
-                            message.type === 'user' 
-                              ? 'bg-blue-600 text-white' 
-                              : 'bg-white border border-gray-200 text-gray-900'
-                          } rounded-2xl px-6 py-4 shadow-sm`}>
-                            <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {message.content}
-                            </div>
-                            
-                            {/* Company Suggestions */}
-                            {message.companies && message.companies.length > 0 && (
-                              <div className="mt-4 space-y-2">
-                                {message.companies.map((company) => (
-                                  <div key={company.id} className="bg-gray-50 rounded-lg p-3 border">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div className="flex items-center gap-2">
-                                        <Building2 className="h-4 w-4 text-gray-600" />
-                                        <h4 className="font-medium text-gray-900 text-sm">{company.name}</h4>
-                                      </div>
-                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                        {company.matchScore}% match
-                                      </span>
+                  {/* Messages Container - ChatGPT Style */}
+                  <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
+                    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+                      <AnimatePresence>
+                        {messages.map((message) => (
+                          <motion.div
+                            key={message.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="space-y-4"
+                          >
+                            {message.type === 'user' ? (
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                  A
+                                </div>
+                                <div className="flex-1 text-white">
+                                  <div className="whitespace-pre-wrap">{message.content}</div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                  B
+                                </div>
+                                <div className="flex-1 text-gray-100">
+                                  <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                                  
+                                  {/* Company Suggestions */}
+                                  {message.companies && message.companies.length > 0 && (
+                                    <div className="mt-4 space-y-3">
+                                      {message.companies.map((company) => (
+                                        <div key={company.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                              <Building2 className="h-4 w-4 text-gray-400" />
+                                              <h4 className="font-medium text-white text-sm">{company.name}</h4>
+                                            </div>
+                                            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                                              {company.matchScore}% match
+                                            </span>
+                                          </div>
+                                          <p className="text-xs text-gray-400 mb-3">{company.description}</p>
+                                          <button
+                                            onClick={() => handleSendProposal(company)}
+                                            className="w-full bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                          >
+                                            Send Proposal (1 credit)
+                                          </button>
+                                        </div>
+                                      ))}
                                     </div>
-                                    <p className="text-xs text-gray-600 mb-2">{company.description}</p>
-                                    <button
-                                      onClick={() => handleSendProposal(company)}
-                                      className="w-full bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                                    >
-                                      Send Proposal (1 credit)
-                                    </button>
-                                  </div>
-                                ))}
+                                  )}
+                                </div>
                               </div>
                             )}
-
-                            <div className={`text-xs mt-2 ${
-                              message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                            }`}>
-                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                      
+                      {isLoading && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-start gap-3"
+                        >
+                          <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            B
+                          </div>
+                          <div className="flex-1 text-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="flex space-x-1">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                              </div>
+                              <span className="text-sm text-gray-400">Searching opportunities...</span>
                             </div>
                           </div>
                         </motion.div>
-                      ))}
-                    </AnimatePresence>
-                    
-                    {isLoading && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-start"
-                      >
-                        <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                            </div>
-                            <span className="text-sm text-gray-600">Searching through opportunities...</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
+                      )}
+                      
+                      <div ref={messagesEndRef} />
+                    </div>
                   </div>
 
-                  {/* Chat Input - Full Width */}
-                  <div className="bg-white border-t border-gray-200 p-6">
-                    <div className="max-w-4xl mx-auto flex items-center gap-3">
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          value={inputValue}
-                          onChange={(e) => setInputValue(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Ask follow-up questions or refine your search..."
-                          className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white text-base"
-                          disabled={isLoading}
-                        />
+                  {/* Bottom Input - ChatGPT Style with Suggested Prompts */}
+                  <div className="bg-gray-900 border-t border-gray-700 p-4">
+                    <div className="max-w-3xl mx-auto space-y-4">
+                      {/* Suggested Prompts - Only show if no messages or conversation just started */}
+                      {messages.length <= 2 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <button
+                            onClick={() => handleSuggestedPrompt('Find a project for me')}
+                            className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl transition-colors"
+                          >
+                            <div className="text-white font-medium mb-1">Find a project</div>
+                            <div className="text-gray-400 text-sm">Discover internships and opportunities</div>
+                          </button>
+                          <button
+                            onClick={() => handleSuggestedPrompt('Find a company for me')}
+                            className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl transition-colors"
+                          >
+                            <div className="text-white font-medium mb-1">Send a proposal</div>
+                            <div className="text-gray-400 text-sm">Connect directly with companies</div>
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Input Box */}
+                      <div className="flex items-center gap-3 bg-gray-800 rounded-xl border border-gray-600 p-3">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            placeholder="Message Bidaaya AI..."
+                            className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none text-base"
+                            disabled={isLoading}
+                          />
+                        </div>
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={!inputValue.trim() || isLoading}
+                          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <Send className="h-4 w-4" />
+                        </button>
                       </div>
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={!inputValue.trim() || isLoading}
-                        className="p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <Send className="h-5 w-5" />
-                      </button>
                     </div>
                   </div>
                 </div>
