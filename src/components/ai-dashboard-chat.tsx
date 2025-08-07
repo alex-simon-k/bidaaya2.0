@@ -1054,48 +1054,24 @@ Something went wrong while sending the invitation. Please try again or contact s
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Header */}
-      <div className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              {hasMessages && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={resetChat}
-                  className="hidden sm:flex bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-              )}
-              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex-shrink-0">
-                <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">AI Recruitment Assistant</h1>
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Find perfect candidates & create projects</p>
-              </div>
-            </div>
-            
-            {/* Credit Display - Mobile Responsive */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+      {/* Clean Chat Header - Only Show When in Chat Mode */}
+      {hasMessages && (
+        <div className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
+            <div className="flex items-center justify-end">
+              {/* Credit Display Only */}
               <div className="px-2 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200/50">
                 <div className="flex items-center gap-1 sm:gap-2">
                   <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
                   <span className="text-xs sm:text-sm font-medium text-gray-700">
-                    {credits}
-                  </span>
-                  <span className="hidden sm:inline text-xs text-gray-500">
-                    ({((session?.user as any)?.subscriptionPlan || 'FREE').replace('COMPANY_', '').replace('_', ' ')})
+                    {credits} credits
                   </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Calendly Setup Banner */}
       {hasCalendlyLink === false && (
@@ -1607,6 +1583,27 @@ Something went wrong while sending the invitation. Please try again or contact s
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                   Describe what you need and I'll help you find perfect talent or create amazing projects.
                 </p>
+              </motion.div>
+
+              {/* Quick Navigation */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="flex justify-center gap-4 mb-8"
+              >
+                <button 
+                  onClick={() => window.location.href = '/dashboard/proposals'}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-colors shadow-sm"
+                >
+                  📧 Proposals
+                </button>
+                <button 
+                  onClick={() => window.location.href = '/dashboard/projects'}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-colors shadow-sm"
+                >
+                  💼 Manage Projects
+                </button>
               </motion.div>
 
         {/* Input Area */}

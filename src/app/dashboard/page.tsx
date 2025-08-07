@@ -106,34 +106,12 @@ export default function DashboardPage() {
     )
   }
 
-  // Company Dashboard - Simple Interface
+  // Company Dashboard - Full Screen AI Interface
   return (
     <>
       <div className="min-h-screen bg-white">
-        {/* Simple Header with Small Buttons */}
-        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-end gap-3">
-              <button 
-                onClick={() => window.location.href = '/dashboard/proposals'}
-                className="px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-              >
-                Proposals
-              </button>
-              <button 
-                onClick={() => window.location.href = '/dashboard/projects'}
-                className="px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-              >
-                Manage Projects
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main AI Interface */}
-        <div className="px-4 sm:px-6">
-          <AIDashboardChat />
-        </div>
+        {/* Main AI Interface - Full Screen */}
+        <AIDashboardChat />
       </div>
 
       {/* Membership Popup */}
