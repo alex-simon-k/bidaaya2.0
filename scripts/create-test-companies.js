@@ -264,13 +264,10 @@ async function createTestCompanies() {
       }
 
       // Create company account
-      const hashedPassword = await bcrypt.hash('TestCompany123!', 10)
-      
       const newCompany = await prisma.user.create({
         data: {
           name: company.name,
           email: company.email,
-          password: hashedPassword,
           role: 'COMPANY',
           emailVerified: new Date(),
           profileCompleted: true,
