@@ -33,10 +33,15 @@ export default function AISearchPage() {
   // Add welcome message on load
   useEffect(() => {
     if (session?.user && messages.length === 0) {
+      const isCompany = session.user.role === 'COMPANY'
+      const userName = session.user.name?.split(' ')[0]
+      
       const welcomeMessage: Message = {
         id: 'welcome',
         type: 'assistant',
-        content: `Hi ${session.user.name?.split(' ')[0]}! I can help you find opportunities and connect with companies. What are you looking for today?`,
+        content: isCompany 
+          ? `Hi ${userName}! I can help you find the perfect talent for your projects. Describe what skills you're looking for, the type of role, or your project requirements and I'll find matching candidates.`
+          : `Hi ${userName}! I can help you find opportunities and connect with companies. What are you looking for today?`,
         timestamp: new Date()
       }
       setMessages([welcomeMessage])
@@ -109,13 +114,22 @@ export default function AISearchPage() {
     window.location.href = `/dashboard/send-proposal?company=${company.id}`
   }
 
+  const isCompany = session?.user?.role === 'COMPANY'
+  
   return (
     <div className="min-h-screen bg-white">
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Career Assistant</h1>
-          <p className="text-gray-600">Find opportunities and connect with companies using natural language</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {isCompany ? 'AI Talent Search' : 'AI Career Assistant'}
+          </h1>
+          <p className="text-gray-600">
+            {isCompany 
+              ? 'Find and connect with the perfect talent for your projects' 
+              : 'Find opportunities and connect with companies using natural language'
+            }
+          </p>
         </div>
       </div>
 
