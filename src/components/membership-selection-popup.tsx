@@ -56,45 +56,50 @@ export function MembershipSelectionPopup({
       period: 'month',
       proposals: 5,
       features: [
+        '4 project applications per month',
         '5 direct proposals per month',
         'Browse all projects',
         'Basic profile features',
-        'Email notifications'
+        'Email notifications',
+        'Access to company database'
       ],
       popular: false,
       buttonText: 'Current Plan'
     },
     {
       id: 'student_pro',
-      name: 'Pro',
+      name: 'Student Pro',
       price: 5,
       currency: '£',
       period: 'month', 
       proposals: 20,
       features: [
+        '10 project applications per month',
         '20 direct proposals per month',
         'Priority project recommendations',
         'Enhanced profile features',
         'Advanced search filters',
-        'Career guidance resources'
+        'Career guidance resources',
+        'Profile optimization tips'
       ],
       popular: true,
       buttonText: 'Upgrade to Pro'
     },
     {
       id: 'student_premium',
-      name: 'Premium',
+      name: 'Student Premium',
       price: 10,
       currency: '£',
       period: 'month',
       proposals: 50,
       features: [
+        '20 project applications per month',
         '50 direct proposals per month',
-        'Unlimited project applications',
         'Premium profile badge',
         'One-on-one career coaching',
         'Company introduction service',
-        'Interview preparation resources'
+        'Interview preparation resources',
+        'Resume review service'
       ],
       popular: false,
       buttonText: 'Get Premium'

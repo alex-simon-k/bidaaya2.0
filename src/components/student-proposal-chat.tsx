@@ -47,6 +47,16 @@ interface StudentCredits {
   plan: string
 }
 
+interface UserLimits {
+  applicationsUsed: number
+  applicationsRemaining: number
+  maxApplications: number
+  creditsUsed: number
+  creditsRemaining: number
+  maxCredits: number
+  resetDate: string
+}
+
 interface LiveProject {
   id: string
   title: string
@@ -72,7 +82,8 @@ export default function StudentProposalChat() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [credits, setCredits] = useState<StudentCredits>({ remaining: 5, total: 5, plan: 'FREE' })
-  const [applications, setApplications] = useState({ used: 2, limit: 4 })
+  const [applications, setApplications] = useState({ used: 0, limit: 4 })
+  const [userLimits, setUserLimits] = useState<UserLimits | null>(null)
   const [liveProjects, setLiveProjects] = useState<LiveProject[]>([])
   const [featuredCompanies, setFeaturedCompanies] = useState<FeaturedCompany[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -100,18 +111,36 @@ export default function StudentProposalChat() {
 
   const loadStudentData = async () => {
     try {
-      // Load credits
-      const creditsResponse = await fetch('/api/user/credits')
-      if (creditsResponse.ok) {
-        const creditsData = await creditsResponse.json()
-        setCredits(creditsData)
-      }
+      // Load user limits from API (includes both applications and credits)
+      const limitsResponse = await fetch('/api/user/limits')
+      if (limitsResponse.ok) {
+        const limitsData = await limitsResponse.json()
+        if (limitsData.limits) {
+          setUserLimits(limitsData.limits)
+          // Update local state with real data
+          setApplications({
+            used: limitsData.limits.applicationsUsed,
+            limit: limitsData.limits.maxApplications
+          })
+          setCredits({
+            remaining: limitsData.limits.creditsRemaining,
+            total: limitsData.limits.maxCredits,
+            plan: limitsData.user?.subscriptionPlan || 'FREE'
+          })
+        }
+      } else {
+        // Fallback to original APIs if limits API fails
+        const creditsResponse = await fetch('/api/user/credits')
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json()
+          setCredits(creditsData)
+        }
 
-      // Load applications count
-      const applicationsResponse = await fetch('/api/dashboard/stats')
-      if (applicationsResponse.ok) {
-        const stats = await applicationsResponse.json()
-        setApplications({ used: stats.applications || 0, limit: 10 })
+        const applicationsResponse = await fetch('/api/dashboard/stats')
+        if (applicationsResponse.ok) {
+          const stats = await applicationsResponse.json()
+          setApplications({ used: stats.applications || 0, limit: 4 }) // Fixed default to 4 for free users
+        }
       }
 
       // Mock data for live projects and companies (using completely fictional names)
@@ -295,7 +324,12 @@ export default function StudentProposalChat() {
               >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-gray-900">Monthly Usage</h3>
-                  <span className="text-xs text-gray-500">Resets in 12 days</span>
+                  <span className="text-xs text-gray-500">
+                    {userLimits?.resetDate ? 
+                      `Resets ${Math.ceil((new Date(userLimits.resetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days` : 
+                      'Resets monthly'
+                    }
+                  </span>
                 </div>
                 
                 <div className="space-y-3">
@@ -328,12 +362,22 @@ export default function StudentProposalChat() {
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-blue-200">
+                <div className="mt-3 pt-3 border-t border-blue-200 flex items-center justify-between">
                   <button 
                     onClick={() => window.location.href = '/subscription'}
                     className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Upgrade Plan →
+                  </button>
+                  <button 
+                    onClick={() => {
+                      // Trigger membership popup for testing
+                      const event = new CustomEvent('showMembershipPopup')
+                      window.dispatchEvent(event)
+                    }}
+                    className="text-xs text-gray-500 hover:text-gray-600 font-medium"
+                  >
+                    Test Popup
                   </button>
                 </div>
               </motion.div>
