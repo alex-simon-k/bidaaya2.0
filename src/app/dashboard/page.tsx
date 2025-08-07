@@ -20,6 +20,7 @@ import {
 import AIDashboardChat from '@/components/ai-dashboard-chat'
 import StudentProposalChat from '@/components/student-proposal-chat'
 import CompanyProposalsInbox from '@/components/company-proposals-inbox'
+import { MembershipSelectionPopup } from '@/components/membership-selection-popup'
 
 interface DashboardStats {
   applications: number
@@ -36,12 +37,32 @@ export default function DashboardPage() {
     connections: 0,
     proposals: 0
   })
+  const [showMembershipPopup, setShowMembershipPopup] = useState(false)
 
   const userRole = (session?.user as any)?.role
 
   useEffect(() => {
     if (session?.user) {
       loadDashboardStats()
+    }
+  }, [session])
+
+  // Show membership popup for both students and companies with reduced frequency
+  useEffect(() => {
+    if (session?.user?.role === 'STUDENT' || session?.user?.role === 'COMPANY') {
+      const lastShownKey = `membership_popup_last_shown_${session.user.email}`
+      const lastShown = localStorage.getItem(lastShownKey)
+      const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000) // 6 hours in milliseconds
+      
+      if (!lastShown || parseInt(lastShown) < sixHoursAgo) {
+        // Show membership popup after a short delay
+        const timer = setTimeout(() => {
+          setShowMembershipPopup(true)
+          localStorage.setItem(lastShownKey, Date.now().toString())
+        }, 3000) // 3 second delay
+        
+        return () => clearTimeout(timer)
+      }
     }
   }, [session])
 
@@ -68,84 +89,104 @@ export default function DashboardPage() {
   // Student Dashboard - Chat-based interface
   if (userRole === 'STUDENT') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Main Chat Interface */}
-        <StudentProposalChat />
-      </div>
+      <>
+        <div className="min-h-screen bg-gray-50">
+          {/* Main Chat Interface */}
+          <StudentProposalChat />
+        </div>
+
+        {/* Membership Popup */}
+        <MembershipSelectionPopup
+          isOpen={showMembershipPopup}
+          onClose={() => setShowMembershipPopup(false)}
+          userRole="STUDENT"
+          userName={session?.user?.name?.split(' ')[0] || 'Student'}
+        />
+      </>
     )
   }
 
   // Company Dashboard - Existing AI Chat interface
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Company Stats Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Company Dashboard
-              </h1>
-              <p className="text-gray-600">Find the perfect talent for your projects</p>
-            </div>
-            
-            {/* Navigation Tabs */}
-            <div className="flex items-center gap-2">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
-                AI Search
-              </button>
-              <button 
-                onClick={() => window.location.href = '/dashboard/proposals'}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
-              >
-                Proposals Inbox
-              </button>
-            </div>
-          </div>
-          
-          {/* Company Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">Applications Received</p>
-                  <p className="text-2xl font-bold text-blue-900">{stats.applications}</p>
-                </div>
+    <>
+      <div className="min-h-screen bg-gray-50">
+        {/* Company Stats Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Company Dashboard
+                </h1>
+                <p className="text-gray-600">Find the perfect talent for your projects</p>
+              </div>
+              
+              {/* Navigation Tabs */}
+              <div className="flex items-center gap-2">
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
+                  AI Search
+                </button>
+                <button 
+                  onClick={() => window.location.href = '/dashboard/proposals'}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+                >
+                  Proposals Inbox
+                </button>
               </div>
             </div>
             
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Briefcase className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Active Projects</p>
-                  <p className="text-2xl font-bold text-purple-900">{stats.projects}</p>
+            {/* Company Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Users className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-600 font-medium">Applications Received</p>
+                    <p className="text-2xl font-bold text-blue-900">{stats.applications}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
+              
+              <div className="bg-purple-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Briefcase className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-purple-600 font-medium">Active Projects</p>
+                    <p className="text-2xl font-bold text-purple-900">{stats.projects}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Successful Hires</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.connections}</p>
+              </div>
+              
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-green-600 font-medium">Successful Hires</p>
+                    <p className="text-2xl font-bold text-green-900">{stats.connections}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* AI Chat Interface for Companies */}
+        <AIDashboardChat />
       </div>
 
-      {/* AI Chat Interface for Companies */}
-      <AIDashboardChat />
-    </div>
+      {/* Membership Popup */}
+      <MembershipSelectionPopup
+        isOpen={showMembershipPopup}
+        onClose={() => setShowMembershipPopup(false)}
+        userRole="COMPANY"
+        userName={session?.user?.name?.split(' ')[0] || 'Company'}
+      />
+    </>
   )
 } 

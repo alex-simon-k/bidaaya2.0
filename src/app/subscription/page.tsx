@@ -2,407 +2,377 @@
 
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { SubscriptionManager } from '@/lib/subscription-manager'
-import { getPlansByRole, getPlanById } from '@/lib/subscription-config'
-import { SubscriptionManagement } from '@/components/subscription-management'
-import { getCreditAllowance } from '@/lib/pricing'
-// Note: Install @heroicons/react for icons: npm install @heroicons/react
-// For now, using text symbols as placeholders
-const CheckIcon = ({ className }: { className: string }) => <span className={className}>✓</span>
-const XMarkIcon = ({ className }: { className: string }) => <span className={className}>✗</span>
+import { motion } from 'framer-motion'
+import { Check, Crown, Zap, Send, Users, Star, Target } from 'lucide-react'
+
+interface Plan {
+  id: string
+  name: string
+  price: number
+  currency: string
+  period: string
+  credits?: number
+  contacts?: number
+  features: string[]
+  popular: boolean
+  buttonText: string
+}
 
 export default function SubscriptionPage() {
-  const { data: session, status, update } = useSession()
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [isYearly, setIsYearly] = useState(false)
+  const { data: session } = useSession()
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login')
+  const userRole = (session?.user as any)?.role
+
+  const studentPlans: Plan[] = [
+    {
+      id: 'student_free',
+      name: 'Free',
+      price: 0,
+      currency: '£',
+      period: 'month',
+      credits: 5,
+      features: [
+        '5 direct proposals per month',
+        'Browse all projects',
+        'Basic profile features',
+        'Email notifications',
+        'Access to company database'
+      ],
+      popular: false,
+      buttonText: 'Current Plan'
+    },
+    {
+      id: 'student_pro',
+      name: 'Student Pro',
+      price: 5,
+      currency: '£',
+      period: 'month',
+      credits: 20,
+      features: [
+        '20 direct proposals per month',
+        'Priority project recommendations',
+        'Enhanced profile features',
+        'Advanced search filters',
+        'Career guidance resources',
+        'Profile optimization tips'
+      ],
+      popular: true,
+      buttonText: 'Upgrade to Pro'
+    },
+    {
+      id: 'student_premium',
+      name: 'Student Premium',
+      price: 10,
+      currency: '£',
+      period: 'month',
+      credits: 50,
+      features: [
+        '50 direct proposals per month',
+        'Unlimited project applications',
+        'Premium profile badge',
+        'One-on-one career coaching',
+        'Company introduction service',
+        'Interview preparation resources',
+        'Resume review service'
+      ],
+      popular: false,
+      buttonText: 'Get Premium'
     }
-  }, [status, router])
+  ]
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
-  if (!session?.user) {
-    return null
-  }
-
-  const userRole = session.user.role as 'STUDENT' | 'COMPANY'
-  const currentPlan = (session.user as any).subscriptionPlan || 'FREE'
-  const userData = {
-    id: (session.user as any).id || '',
-    role: userRole,
-    subscriptionPlan: currentPlan,
-    subscriptionStatus: (session.user as any).subscriptionStatus
-  }
-  const availableTiers = getPlansByRole(userRole)
-  const currentTier = SubscriptionManager.getUserPlan(userData)
-
-  const handleUpgrade = async (tier: any) => {
-    if (!tier) {
-      setError('Invalid plan selected. Please try again.')
-      return
+  const companyPlans: Plan[] = [
+    {
+      id: 'company_basic',
+      name: 'Company Basic',
+      price: 15,
+      currency: '£',
+      period: 'month',
+      contacts: 10,
+      features: [
+        '10 student contacts per month',
+        'Basic project posting',
+        'Standard search filters',
+        'Email notifications',
+        'Basic analytics'
+      ],
+      popular: false,
+      buttonText: 'Get Started'
+    },
+    {
+      id: 'company_pro',
+      name: 'Company Pro',
+      price: 35,
+      currency: '£',
+      period: 'month',
+      contacts: 30,
+      features: [
+        '30 student contacts per month',
+        'Priority project placement',
+        'Advanced search & filters',
+        'Candidate shortlisting tools',
+        'Application management dashboard',
+        'Proposal inbox management'
+      ],
+      popular: true,
+      buttonText: 'Upgrade to Pro'
+    },
+    {
+      id: 'company_premium',
+      name: 'Company Premium',
+      price: 65,
+      currency: '£',
+      period: 'month',
+      contacts: 100,
+      features: [
+        '100 student contacts per month',
+        'Unlimited project postings',
+        'AI-powered candidate matching',
+        'Direct messaging with students',
+        'Priority customer support',
+        'Analytics and insights dashboard',
+        'Bulk proposal management'
+      ],
+      popular: false,
+      buttonText: 'Get Premium'
     }
+  ]
 
-    setLoading(true)
-    setError('')
+  const plans = userRole === 'STUDENT' ? studentPlans : companyPlans
+
+  const handlePlanSelect = async (planId: string, price: number) => {
+    setIsLoading(true)
+    setSelectedPlan(planId)
 
     try {
-      // Map tier to planId format expected by checkout API
-      const planIdMap: Record<string, string> = {
-        'STUDENT_PREMIUM': isYearly ? 'student_premium_yearly' : 'student_premium_monthly',
-        'STUDENT_PRO': isYearly ? 'student_pro_yearly' : 'student_pro_monthly',
-        'COMPANY_BASIC': isYearly ? 'company_basic_yearly' : 'company_basic_monthly',
-        'COMPANY_PRO': isYearly ? 'company_hr_booster_yearly' : 'company_hr_booster_monthly',
-        'COMPANY_PREMIUM': isYearly ? 'company_hr_agent_yearly' : 'company_hr_agent_monthly',
-      }
+      if (price === 0) {
+        // Handle free plan
+        const response = await fetch('/api/subscription/free', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId }),
+        })
 
-      const planId = planIdMap[tier.id]
-      if (!planId) {
-        setError('Plan configuration error. Please contact support.')
-        return
-      }
-
-      console.log(`🚀 Starting Stripe checkout for plan: ${planId}`)
-
-      const response = await fetch('/api/subscription/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          planId: planId,
-          // testMode: true, // Disabled to show real Stripe checkout
-          successUrl: `${window.location.origin}/dashboard?success=true&plan=${tier.id}`,
-          cancelUrl: `${window.location.origin}/subscription?canceled=true`,
-        }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('🎯 Subscription checkout response:', data)
-        
-        if (data.testMode && data.redirectUrl) {
-          // Test mode - refresh session and redirect
-          console.log(`✅ Test mode upgrade successful: ${data.subscriptionPlan}`)
-          
-          if (data.refreshSession) {
-            console.log('🔄 Refreshing session with latest subscription data...')
-            // Force session refresh to get updated subscription data
-            await update()
-          }
-          
-          // Small delay to ensure session update completes
-          setTimeout(() => {
-            window.location.href = data.redirectUrl
-          }, 500)
-        } else if (data.url) {
-          // Normal Stripe mode - redirect to Stripe checkout
-          console.log(`🚀 Redirecting to Stripe: ${data.url}`)
-          window.location.href = data.url
+        if (response.ok) {
+          console.log(`✅ Successfully upgraded to free ${planId}`)
+          window.location.reload()
         } else {
-          // Fallback - redirect to dashboard
-          console.log('⚠️ No URL in response, redirecting to dashboard')
-          window.location.href = `${window.location.origin}/dashboard?upgraded=true`
+          console.error('❌ Failed to upgrade to free plan')
         }
       } else {
-        const errorData = await response.json()
-        console.error('Checkout API error:', errorData)
-        setError(errorData.error || 'Failed to start upgrade process. Please try again.')
+        // Handle paid plans - redirect to Stripe checkout
+        const response = await fetch('/api/subscription/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            planId,
+            successUrl: `${window.location.origin}/dashboard?success=true`,
+            cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+          }),
+        })
+
+        if (response.ok) {
+          const { url } = await response.json()
+          window.location.href = url
+        } else {
+          const errorData = await response.json()
+          console.error('❌ Failed to create checkout session:', errorData)
+          alert('Unable to start checkout process. Please try again or contact support.')
+        }
       }
     } catch (error) {
-      console.error('Error starting checkout:', error)
-      setError('Network error. Please check your connection and try again.')
+      console.error('❌ Error selecting plan:', error)
+      alert('An unexpected error occurred. Please try again or contact support.')
     } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCancelSubscription = async () => {
-    setLoading(true)
-    try {
-      // Use Stripe Customer Portal for subscription management
-      const response = await fetch('/api/subscription/portal', {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        const { url } = await response.json()
-        window.location.href = url // Redirect to Stripe Customer Portal
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Failed to open subscription management. Please try again.')
-      }
-    } catch (error) {
-      console.error('Error opening customer portal:', error)
-      setError('Failed to open subscription management. Please try again.')
-    } finally {
-      setLoading(false)
+      setIsLoading(false)
+      setSelectedPlan(null)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            {userRole === 'STUDENT' ? 'Student' : 'Company'} Subscription Plans
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Choose the plan that best fits your needs and unlock powerful features to accelerate your 
-            {userRole === 'STUDENT' ? ' career growth' : ' hiring process'}.
-          </p>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-bold text-gray-900 mb-4"
+          >
+            {userRole === 'STUDENT' ? 'Unlock Your Career Potential' : 'Scale Your Hiring Process'}
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-xl text-gray-600 max-w-2xl mx-auto"
+          >
+            {userRole === 'STUDENT' 
+              ? 'Send more proposals, access premium features, and land your dream opportunity'
+              : 'Connect with top talent and build your dream team'
+            }
+          </motion.p>
         </div>
 
-        {/* Subscription Management */}
-        <SubscriptionManagement />
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-            <div className="flex">
-              <XMarkIcon className="h-5 w-5 text-red-400 mt-0.5" />
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Billing Toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center p-1 bg-gray-100 rounded-lg">
-            <button
-              onClick={() => setIsYearly(false)}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                !isYearly 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
+        {/* Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {plans.map((plan, index) => (
+            <motion.div
+              key={plan.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={`relative bg-white rounded-2xl shadow-xl p-8 ${
+                plan.popular ? 'ring-2 ring-blue-500 scale-105' : ''
               }`}
             >
-              Monthly
-            </button>
-            <button
-              onClick={() => setIsYearly(true)}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                isYearly 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Yearly
-              <span className="ml-1 text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
-                Save 20%
-              </span>
-            </button>
-          </div>
-        </div>
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1">
+                    <Crown className="h-4 w-4" />
+                    Most Popular
+                  </div>
+                </div>
+              )}
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {availableTiers.map((tier) => {
-            const isCurrentPlan = tier.id === currentPlan
-            const isUpgrade = availableTiers.findIndex(t => t.id === currentPlan) < availableTiers.findIndex(t => t.id === tier.id)
-
-            return (
-              <div
-                key={tier.id}
-                className={`relative bg-white rounded-lg shadow-sm border-2 p-8 ${
-                  isCurrentPlan 
-                    ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-20' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                {isCurrentPlan && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Current Plan
-                    </span>
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                <div className="text-4xl font-bold text-gray-900 mb-2">
+                  {plan.currency}{plan.price}
+                  <span className="text-lg text-gray-600">/{plan.period}</span>
+                </div>
+                
+                {userRole === 'STUDENT' && plan.credits && (
+                  <div className="flex items-center justify-center gap-2 text-blue-600 font-semibold">
+                    <Send className="h-4 w-4" />
+                    <span>{plan.credits} proposals per month</span>
                   </div>
                 )}
-
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
-                  <p className="text-gray-600 mb-4">{tier.description}</p>
-                  
-                  {/* Credits Badge for Company Plans */}
-                  {userRole === 'COMPANY' && (
-                    <div className="mb-3">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                        💳 {getCreditAllowance(tier.id)} credits/month
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="text-4xl font-bold text-gray-900">
-                    ${isYearly ? Math.round(tier.price * 12 * 0.8) : tier.price}
-                    <span className="text-lg font-normal text-gray-600">
-                      {isYearly ? '/year' : '/month'}
-                    </span>
+                
+                {userRole === 'COMPANY' && plan.contacts && (
+                  <div className="flex items-center justify-center gap-2 text-blue-600 font-semibold">
+                    <Users className="h-4 w-4" />
+                    <span>{plan.contacts} student contacts per month</span>
                   </div>
-                  {isYearly && tier.price > 0 && (
-                    <div className="text-green-600 text-sm font-medium mt-1">
-                      Save ${Math.round(tier.price * 12 * 0.2)} per year
-                    </div>
-                  )}
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {tier.displayFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckIcon className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="text-center">
-                  {isCurrentPlan ? (
-                    <button
-                      disabled
-                      className="w-full py-3 px-4 bg-gray-100 text-gray-500 rounded-md cursor-not-allowed"
-                    >
-                      Current Plan
-                    </button>
-                  ) : tier.price === 0 ? (
-                    <button
-                      disabled
-                      className="w-full py-3 px-4 bg-gray-100 text-gray-500 rounded-md cursor-not-allowed"
-                    >
-                      Free Plan
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleUpgrade(tier)}
-                      disabled={loading}
-                      className={`w-full py-3 px-4 rounded-md font-medium transition-colors ${
-                        isUpgrade
-                          ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
-                          : 'bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50'
-                      }`}
-                    >
-                      {loading ? 'Processing...' : isUpgrade ? 'Upgrade' : 'Change Plan'}
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
-            )
-          })}
+
+              <ul className="space-y-4 mb-8">
+                {plan.features.map((feature, featureIndex) => (
+                  <li key={featureIndex} className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => handlePlanSelect(plan.id, plan.price)}
+                disabled={isLoading && selectedPlan === plan.id}
+                className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all ${
+                  plan.popular
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                } ${isLoading && selectedPlan === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isLoading && selectedPlan === plan.id ? 'Processing...' : plan.buttonText}
+              </button>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Features Comparison */}
-        <div className="mt-16">
+        {/* Feature Highlights */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-2xl shadow-xl p-8"
+        >
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Compare All Features
+            {userRole === 'STUDENT' ? 'Why Students Choose Bidaaya Pro' : 'Why Companies Choose Bidaaya Pro'}
           </h2>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Feature
-                    </th>
-                    {availableTiers.map((tier) => (
-                      <th key={tier.id} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {tier.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {userRole === 'COMPANY' && (
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        Contact credits per month
-                      </td>
-                      {availableTiers.map((tier) => (
-                        <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                          {getCreditAllowance(tier.id)}
-                        </td>
-                      ))}
-                    </tr>
-                  )}
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      Applications per month
-                    </td>
-                    {availableTiers.map((tier) => (
-                      <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                        {tier.features.applicationsPerMonth === -1 ? 'Unlimited' : tier.features.applicationsPerMonth}
-                      </td>
-                    ))}
-                  </tr>
-                  {userRole === 'COMPANY' && (
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        Active projects
-                      </td>
-                      {availableTiers.map((tier) => (
-                        <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                          {tier.features.activeProjectsAllowed === -1 ? 'Unlimited' : tier.features.activeProjectsAllowed || 'N/A'}
-                        </td>
-                      ))}
-                    </tr>
-                  )}
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      External job tracking
-                    </td>
-                    {availableTiers.map((tier) => (
-                      <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        {tier.features.externalJobTracking ? (
-                          <CheckIcon className="h-5 w-5 text-green-500 mx-auto" />
-                        ) : (
-                          <XMarkIcon className="h-5 w-5 text-gray-300 mx-auto" />
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      Priority support
-                    </td>
-                    {availableTiers.map((tier) => (
-                      <td key={tier.id} className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        {tier.features.prioritySupport || tier.features.priorityCustomerSupport ? (
-                          <CheckIcon className="h-5 w-5 text-green-500 mx-auto" />
-                        ) : (
-                          <XMarkIcon className="h-5 w-5 text-gray-300 mx-auto" />
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {userRole === 'STUDENT' ? (
+              <>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Send className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Direct Proposals</h3>
+                  <p className="text-gray-600">
+                    Send personalized proposals directly to companies and stand out from the crowd.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Target className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Priority Matching</h3>
+                  <p className="text-gray-600">
+                    Get priority recommendations for projects that match your skills and interests.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Star className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Career Support</h3>
+                  <p className="text-gray-600">
+                    Access career coaching, interview prep, and professional development resources.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Quality Candidates</h3>
+                  <p className="text-gray-600">
+                    Access a curated pool of talented students and recent graduates.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Target className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Smart Matching</h3>
+                  <p className="text-gray-600">
+                    AI-powered matching connects you with candidates that fit your requirements.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Zap className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Efficient Hiring</h3>
+                  <p className="text-gray-600">
+                    Streamlined tools for managing applications, proposals, and candidate communication.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Contact Support */}
-        <div className="mt-16 text-center">
-          <div className="bg-blue-50 rounded-lg p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Need help choosing a plan?
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Our team is here to help you find the perfect plan for your needs.
-            </p>
-            <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              Contact Support
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="text-center mt-12">
+          <p className="text-gray-600 mb-4">
+            Questions about our plans? Contact our support team for assistance.
+          </p>
+          <button
+            onClick={() => window.location.href = '/dashboard'}
+            className="text-blue-600 hover:text-blue-700 font-semibold"
+          >
+            Back to Dashboard
+          </button>
         </div>
       </div>
     </div>

@@ -274,142 +274,172 @@ export default function StudentProposalChat() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden h-[600px] flex flex-col"
+              className="bg-white rounded-2xl"
             >
-              {/* Chat Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Search className="h-5 w-5 text-white" />
+              {/* Simple Header */}
+              <div className="text-center py-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Find your opportunity</h2>
+                
+                {/* Search Bar */}
+                <div className="max-w-md mx-auto mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Search for opportunities or companies..."
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!inputValue.trim() || isLoading}
+                      className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Send className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="text-white font-semibold">Opportunity Search</h3>
-                    <p className="text-blue-100 text-sm">Find projects and companies</p>
-                  </div>
+                </div>
+
+                {/* Suggested Prompts */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    onClick={() => handleSuggestedPrompt('Find a project for me')}
+                    className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                  >
+                    Find a project for me
+                  </button>
+                  <button
+                    onClick={() => handleSuggestedPrompt('Find a company for me')}
+                    className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
+                  >
+                    Find a company for me
+                  </button>
                 </div>
               </div>
 
               {/* Messages */}
-              <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
-                <AnimatePresence>
-                  {messages.map((message) => (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`max-w-xs lg:max-w-md ${
-                        message.type === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-white border border-gray-200 text-gray-900'
-                      } rounded-2xl px-4 py-3 shadow-sm`}>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {message.content}
-                        </div>
-                        
-                        {/* Company Suggestions */}
-                        {message.companies && message.companies.length > 0 && (
-                          <div className="mt-4 space-y-2">
-                            {message.companies.map((company) => (
-                              <div key={company.id} className="bg-gray-50 rounded-lg p-3 border">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <Building2 className="h-4 w-4 text-gray-600" />
-                                    <h4 className="font-medium text-gray-900 text-sm">{company.name}</h4>
-                                  </div>
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                    {company.matchScore}% match
-                                  </span>
-                                </div>
-                                <p className="text-xs text-gray-600 mb-2">{company.description}</p>
-                                <button
-                                  onClick={() => handleSendProposal(company)}
-                                  className="w-full bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                  Send Proposal (1 credit)
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className={`text-xs mt-2 ${
-                          message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
+              {messages.length > 0 && (
+                <div className="border border-gray-200 rounded-2xl shadow-lg overflow-hidden h-[500px] flex flex-col">
+                  {/* Chat Header */}
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white/20 rounded-lg">
+                        <Search className="h-5 w-5 text-white" />
                       </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                
-                {isLoading && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-start"
-                  >
-                    <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                        <span className="text-sm text-gray-600">Searching...</span>
+                      <div>
+                        <h3 className="text-white font-semibold">Opportunity Search</h3>
+                        <p className="text-blue-100 text-sm">Find projects and companies</p>
                       </div>
                     </div>
-                  </motion.div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
+                  </div>
 
-              {/* Suggested Prompts */}
-              {messages.length === 1 && (
-                <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => handleSuggestedPrompt('Find a project for me')}
-                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
-                    >
-                      Find a project for me
-                    </button>
-                    <button
-                      onClick={() => handleSuggestedPrompt('Find a company for me')}
-                      className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
-                    >
-                      Find a company for me
-                    </button>
+                  {/* Messages Container */}
+                  <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+                    <AnimatePresence>
+                      {messages.map((message) => (
+                        <motion.div
+                          key={message.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`max-w-xs lg:max-w-md ${
+                            message.type === 'user' 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-white border border-gray-200 text-gray-900'
+                          } rounded-2xl px-4 py-3 shadow-sm`}>
+                            <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                              {message.content}
+                            </div>
+                            
+                            {/* Company Suggestions */}
+                            {message.companies && message.companies.length > 0 && (
+                              <div className="mt-4 space-y-2">
+                                {message.companies.map((company) => (
+                                  <div key={company.id} className="bg-gray-50 rounded-lg p-3 border">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <Building2 className="h-4 w-4 text-gray-600" />
+                                        <h4 className="font-medium text-gray-900 text-sm">{company.name}</h4>
+                                      </div>
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                        {company.matchScore}% match
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mb-2">{company.description}</p>
+                                    <button
+                                      onClick={() => handleSendProposal(company)}
+                                      className="w-full bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                      Send Proposal (1 credit)
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className={`text-xs mt-2 ${
+                              message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                            }`}>
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    
+                    {isLoading && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex justify-start"
+                      >
+                        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                            <span className="text-sm text-gray-600">Searching...</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Chat Input - Only show if conversation started */}
+                  <div className="bg-white border-t border-gray-200 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          placeholder="Ask follow-up questions..."
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={!inputValue.trim() || isLoading}
+                        className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Send className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
-
-              {/* Chat Input */}
-              <div className="bg-white border-t border-gray-200 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Search for opportunities or companies..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim() || isLoading}
-                    className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Send className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
             </motion.div>
           </div>
 

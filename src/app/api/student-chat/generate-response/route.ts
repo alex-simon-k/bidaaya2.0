@@ -38,15 +38,19 @@ export async function POST(request: NextRequest) {
       case 'browse_projects':
         response = {
           actionType: 'browse_projects',
-          content: `I'll help you find exciting opportunities. Here are your options:
+          content: `Great! I'd love to help you find the perfect project. Let me ask you a few questions to understand what you're looking for:
 
-Quick Browse:
-Click the button below to browse all available projects, or tell me:
-- What industry interests you? (Tech, Finance, Healthcare, etc.)
-- What type of role? (Internship, Part-time, Full-time)
-- Any specific skills you want to use?
+What type of opportunity interests you most?
+- Internship (to gain experience)
+- Part-time work (while studying)  
+- Full-time position (after graduation)
 
-You can also send direct proposals to companies even if they don't have posted projects. Want to try that instead?`
+Also, do you have any preference for:
+- Industry (tech, finance, healthcare, etc.)
+- Location (remote, Dubai, Abu Dhabi, etc.)
+- Duration (summer, 6 months, permanent)
+
+Tell me about your interests and I'll find projects that match!`
         }
         break
 
@@ -55,32 +59,41 @@ You can also send direct proposals to companies even if they don't have posted p
         const companies = await getCompanySuggestions(session.user.id, userQuery)
         response = {
           actionType: 'company_suggestions',
-          content: `Great idea! Sending direct proposals shows initiative and can lead to hidden opportunities. Here are some companies that might be interested in your profile:
+          content: `Excellent choice! Sending direct proposals is a great way to stand out. Let me understand what kind of company you'd like to work for:
 
-How it works:
-1. Choose a company below
-2. I'll help you craft a compelling proposal
-3. Send it directly to their inbox (1 credit per proposal)
+What's most important to you in a company?
+- Industry focus (AI, fintech, healthcare, etc.)
+- Company size (startup, mid-size, large corporation)
+- Work culture (innovative, structured, collaborative)
+- Growth opportunities (mentorship, skill development)
 
-Suggested Companies:`,
+Also, what type of role are you targeting?
+- Technical (developer, analyst, engineer)
+- Business (marketing, strategy, operations)
+- Creative (design, content, product)
+
+Based on your preferences, I'll suggest companies that would be excited to hear from you!`,
           companies
         }
         break
 
       case 'find_companies':
-        const industryCompanies = await getCompaniesByIndustry(userQuery)
         response = {
-          actionType: 'company_suggestions',
-          content: `Based on your query, here are companies that align with your interests:
+          actionType: 'guidance',
+          content: `Perfect! I can help you discover companies that align with your goals. Let's narrow it down:
 
-Why direct proposals work:
-- Stand out from the crowd
-- Show initiative and enthusiasm  
-- Access hidden opportunities
-- Build direct relationships
+What draws you to certain companies?
+- Mission and values that inspire you
+- Products or services you're passionate about
+- Learning and growth opportunities
+- Work-life balance and culture
 
-Ready to make an impression?`,
-          companies: industryCompanies
+What's your career stage?
+- Just starting out (looking for mentorship)
+- Building experience (want to contribute immediately)
+- Ready for leadership (seeking responsibility)
+
+Tell me more about your background and interests, and I'll recommend companies where you'd thrive!`
         }
         break
 
