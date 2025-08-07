@@ -34,8 +34,8 @@ export default function SubscriptionPage() {
       period: 'month',
       credits: 5,
       features: [
+        '4 project applications per month',
         '5 direct proposals per month',
-        '1 application per project',
         'Browse all projects',
         'Basic profile features',
         'Email notifications',
@@ -52,8 +52,8 @@ export default function SubscriptionPage() {
       period: 'month',
       credits: 20,
       features: [
+        '10 project applications per month',
         '20 direct proposals per month',
-        '3 applications per project',
         'Priority project recommendations',
         'Enhanced profile features',
         'Advanced search filters',
@@ -71,8 +71,8 @@ export default function SubscriptionPage() {
       period: 'month',
       credits: 50,
       features: [
+        '20 project applications per month',
         '50 direct proposals per month',
-        'Unlimited applications per project',
         'Premium profile badge',
         'One-on-one career coaching',
         'Company introduction service',

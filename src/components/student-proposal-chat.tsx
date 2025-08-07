@@ -72,7 +72,7 @@ export default function StudentProposalChat() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [credits, setCredits] = useState<StudentCredits>({ remaining: 5, total: 5, plan: 'FREE' })
-  const [applications, setApplications] = useState({ used: 2, limit: 10 })
+  const [applications, setApplications] = useState({ used: 2, limit: 4 })
   const [liveProjects, setLiveProjects] = useState<LiveProject[]>([])
   const [featuredCompanies, setFeaturedCompanies] = useState<FeaturedCompany[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
