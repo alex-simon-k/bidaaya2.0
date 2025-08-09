@@ -9,6 +9,10 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Feature flag: control whether admin signup notification emails are sent
+// Default: enabled (unless explicitly set to 'false')
+const ADMIN_SIGNUP_EMAIL_ENABLED = process.env.ADMIN_SIGNUP_EMAIL_ENABLED !== 'false';
+
 export interface EmailTemplate {
   subject: string;
   html: string;
@@ -293,6 +297,11 @@ export async function sendStudentWelcomeEmail(data: StudentWelcomeData): Promise
 
 export async function sendAdminNotificationEmail(data: AdminNotificationData): Promise<boolean> {
   try {
+    if (!ADMIN_SIGNUP_EMAIL_ENABLED) {
+      console.log('📧 Admin signup notification email is disabled via ADMIN_SIGNUP_EMAIL_ENABLED=false');
+      return true; // Treat as success to avoid error paths upstream
+    }
+
     const template = emailTemplates.adminNotification(data);
     
     // Send to admin email (you)
