@@ -19,12 +19,13 @@ export async function POST(request: NextRequest) {
 
     // Always use the Student AI service with the rulebook
     const ai = await studentAIService.generateResponse(session.user.id, userQuery, previousMessages || [])
+    const proposalsOnly = /\bproposal(s)?\b/i.test(userQuery)
     return NextResponse.json({
       actionType: 'student_ai',
       content: ai.content,
       companies: [],
-      projects: ai.projects || [],
-      proposals: ai.proposals || []
+      projects: proposalsOnly ? [] : (ai.projects || []),
+      proposals: proposalsOnly ? (ai.proposals || []) : (ai.proposals ? ai.proposals.slice(0, 1) : [])
     })
   } catch (error) {
     console.error('❌ AI API error:', error)

@@ -79,7 +79,12 @@ export default function AISearchPage() {
           type: 'assistant',
           content: data.content || 'I apologize, but I encountered an issue. Please try again.',
           timestamp: new Date(),
-          companies: data.projects || []
+          companies: (data.projects || []).map((p: any) => ({
+            id: p.companyId || p.id,
+            name: `${p.companyName} — ${p.title}`,
+            description: p.description || '',
+            matchScore: 90
+          }))
         }
         setMessages(prev => [...prev, assistantMessage])
       } else {

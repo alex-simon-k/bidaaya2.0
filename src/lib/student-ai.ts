@@ -6,8 +6,8 @@ type PreviousMessage = { role: 'user' | 'assistant', content: string }
 
 interface StudentAIResponse {
   content: string
-  projects?: Array<{ id: string; title: string; companyName: string; location?: string | null; description: string }>
-  proposals?: Array<{ companyName: string; proposal: string }>
+  projects?: Array<{ id: string; title: string; companyId: string; companyName: string; location?: string | null; description: string }>
+  proposals?: Array<{ companyId?: string; companyName: string; proposal: string }>
 }
 
 export class StudentAIService {
@@ -32,7 +32,11 @@ export class StudentAIService {
         return this.basicResponse(projects, shouldFocusOnProposals)
       }
 
-      const ai = await this.callDeepSeek(systemRulebook, contextPrompt)
+      // Race DeepSeek with a fast timeout to keep UX snappy
+      const ai = await Promise.race([
+        this.callDeepSeek(systemRulebook, contextPrompt),
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+      ])
 
       // Parse with safety and merge with retrieved projects if needed
       const content = ai.content || 'Here are tailored opportunities and a suggested proposal for you.'
@@ -40,7 +44,17 @@ export class StudentAIService {
         ? ai.projects.slice(0, 3)
         : projects.slice(0, 3)
 
-      const proposalsOut = Array.isArray(ai.proposals) ? ai.proposals.slice(0, shouldFocusOnProposals ? 3 : 1) : []
+      // Ensure proposals are populated and have company names; fill from top projects if missing
+      let proposalsOut: StudentAIResponse['proposals'] = []
+      if (Array.isArray(ai.proposals) && ai.proposals.length > 0) {
+        proposalsOut = ai.proposals.slice(0, shouldFocusOnProposals ? 3 : 1).map((p: any, idx: number) => ({
+          companyId: p.companyId || projects[idx]?.companyId,
+          companyName: p.companyName || projects[idx]?.companyName || 'Company',
+          proposal: p.proposal || `Hi ${projects[idx]?.companyName || 'there'}, I'm excited about ${projects[idx]?.title}. My skills align well; could we discuss opportunities?`
+        }))
+      } else {
+        proposalsOut = this.buildDefaultProposals(projects, shouldFocusOnProposals)
+      }
 
       return { content, projects: projectsOut, proposals: proposalsOut }
     } catch (error) {
@@ -65,7 +79,7 @@ export class StudentAIService {
       where: { status: 'LIVE' },
       orderBy: { createdAt: 'desc' },
       take: 20,
-      include: { company: { select: { companyName: true } } }
+      include: { company: { select: { id: true, companyName: true } } }
     })
 
     const scored = projects.map(p => {
@@ -82,6 +96,7 @@ export class StudentAIService {
     return scored.map(({ project }) => ({
       id: project.id,
       title: project.title,
+      companyId: project.company.id,
       companyName: project.company.companyName || 'Company',
       location: project.location || (project.remote ? 'Remote' : null),
       description: project.description
@@ -172,11 +187,11 @@ Please respond in the required JSON schema.`
       : 'Here are three opportunities to apply to, plus a tailored proposal you can send.'
 
     const proposals = [
-      { companyName: top[0]?.companyName || 'Company', proposal: `Hi ${top[0]?.companyName || 'there'}, I'm interested in ${top[0]?.title}. I have relevant skills and would love to contribute. Could we connect?` }
+      { companyId: top[0]?.companyId, companyName: top[0]?.companyName || 'Company', proposal: `Hi ${top[0]?.companyName || 'there'}, I'm interested in ${top[0]?.title}. I have relevant skills and would love to contribute. Could we connect?` }
     ]
 
     if (proposalsOnly) {
-      const three = [0,1,2].map(i => ({ companyName: top[i]?.companyName || 'Company', proposal: `Hi ${top[i]?.companyName || 'there'}, I'm excited about ${top[i]?.title}. My skills align well; could we discuss opportunities?` }))
+      const three = [0,1,2].map(i => ({ companyId: top[i]?.companyId, companyName: top[i]?.companyName || 'Company', proposal: `Hi ${top[i]?.companyName || 'there'}, I'm excited about ${top[i]?.title}. My skills align well; could we discuss opportunities?` }))
       return { content, proposals: three }
     }
 
