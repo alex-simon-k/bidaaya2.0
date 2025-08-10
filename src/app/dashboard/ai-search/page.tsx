@@ -234,14 +234,14 @@ export default function AISearchPage() {
         {messages.length <= 1 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <button
-              onClick={() => handleSuggestedPrompt('Find a project for me')}
+              onClick={() => handleSuggestedPrompt('Find projects for me')}
               className="text-left p-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors"
             >
               <div className="text-blue-900 font-medium mb-1">Find a project</div>
               <div className="text-blue-700 text-sm">Discover internships and opportunities</div>
             </button>
             <button
-              onClick={() => handleSuggestedPrompt('Find a company for me')}
+              onClick={() => handleSuggestedPrompt('I want to send proposals. Find companies for me')}
               className="text-left p-4 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl transition-colors"
             >
               <div className="text-purple-900 font-medium mb-1">Send a proposal</div>

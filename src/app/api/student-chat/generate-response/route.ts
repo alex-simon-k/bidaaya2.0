@@ -19,13 +19,27 @@ export async function POST(request: NextRequest) {
 
     // Always use the Student AI service with the rulebook
     const ai = await studentAIService.generateResponse(session.user.id, userQuery, previousMessages || [])
-    const proposalsOnly = /\bproposal(s)?\b/i.test(userQuery)
+
+    // Determine if the user intent is proposal/company focused
+    const proposalsOnly = /\bproposal(s)?\b/i.test(userQuery) || /\bcompany|companies|employer\b/i.test(userQuery) || intent === 'find_companies' || intent === 'send_proposal'
+
+    if (proposalsOnly) {
+      const companies = await getCompanySuggestions(session.user.id, userQuery)
+      return NextResponse.json({
+        actionType: 'student_ai',
+        content: ai.content,
+        companies,
+        projects: [],
+        proposals: ai.proposals || []
+      })
+    }
+
     return NextResponse.json({
       actionType: 'student_ai',
       content: ai.content,
       companies: [],
-      projects: proposalsOnly ? [] : (ai.projects || []),
-      proposals: proposalsOnly ? (ai.proposals || []) : (ai.proposals ? ai.proposals.slice(0, 1) : [])
+      projects: ai.projects || [],
+      proposals: ai.proposals ? ai.proposals.slice(0, 1) : []
     })
   } catch (error) {
     console.error('❌ AI API error:', error)
