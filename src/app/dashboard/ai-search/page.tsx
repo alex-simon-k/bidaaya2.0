@@ -15,6 +15,8 @@ interface Message {
   content: string
   timestamp: Date
   projects?: any[]
+  proposals?: Array<{ companyId?: string; companyName: string; proposal: string }>
+  companies?: Array<{ id: string; name: string; description?: string; matchScore?: number }>
 }
 
 export default function AISearchPage() {
@@ -86,6 +88,17 @@ export default function AISearchPage() {
             companyName: p.companyName,
             description: p.description || '',
             matchScore: 90
+          })),
+          proposals: (data.proposals || []).map((p: any) => ({
+            companyId: p.companyId,
+            companyName: p.companyName,
+            proposal: p.proposal
+          })),
+          companies: (data.companies || []).map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            description: c.description,
+            matchScore: c.matchScore
           }))
         }
         setMessages(prev => [...prev, assistantMessage])
@@ -122,6 +135,11 @@ export default function AISearchPage() {
   const handleApplyToProject = async (project: any) => {
     // Navigate to the project details page where the user can apply
     window.location.href = `/dashboard/projects/${project.id}`
+  }
+
+  const handleSendProposal = (target: { companyId?: string; companyName?: string; id?: string }) => {
+    const id = target.companyId || target.id || (target.companyName ? target.companyName.toLowerCase().replace(/\s+/g, '-').slice(0, 50) : 'company')
+    window.location.href = `/dashboard/send-proposal?company=${encodeURIComponent(id)}`
   }
 
   const isCompany = session?.user?.role === 'COMPANY'
@@ -193,6 +211,55 @@ export default function AISearchPage() {
                                 className="w-full bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition-colors"
                               >
                                 Apply Now
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Proposal Suggestions */}
+                      {message.proposals && message.proposals.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                          {message.proposals.map((p, idx) => (
+                            <div key={`${p.companyId || p.companyName || idx}`} className="bg-white rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="h-4 w-4 text-gray-500" />
+                                  <h4 className="font-medium text-gray-900 text-sm">{p.companyName}</h4>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-3 whitespace-pre-wrap">{p.proposal}</p>
+                              <button
+                                onClick={() => handleSendProposal({ companyId: p.companyId, companyName: p.companyName })}
+                                className="w-full bg-purple-600 text-white text-sm py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                              >
+                                Send Proposal (1 credit)
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Company Suggestions (when proposals not provided) */}
+                      {(!message.proposals || message.proposals.length === 0) && message.companies && message.companies.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                          {message.companies.map((company) => (
+                            <div key={company.id} className="bg-white rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="h-4 w-4 text-gray-500" />
+                                  <h4 className="font-medium text-gray-900 text-sm">{company.name}</h4>
+                                </div>
+                                {company.matchScore && (
+                                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">{company.matchScore}% match</span>
+                                )}
+                              </div>
+                              {company.description && <p className="text-xs text-gray-600 mb-3">{company.description}</p>}
+                              <button
+                                onClick={() => handleSendProposal({ id: company.id })}
+                                className="w-full bg-purple-600 text-white text-sm py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                              >
+                                Send Proposal (1 credit)
                               </button>
                             </div>
                           ))}
