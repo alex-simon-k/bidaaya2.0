@@ -193,45 +193,88 @@ export default function AISearchPage() {
                       
                       {/* Project Suggestions */}
                       {message.projects && message.projects.length > 0 && (
-                        <div className="mt-4 space-y-3">
-                          {message.projects.map((project) => (
-                            <div key={project.id} className="bg-white rounded-lg p-4 border border-gray-200">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="h-4 w-4 text-gray-500" />
-                                  <h4 className="font-medium text-gray-900 text-sm">{project.title} — {project.companyName}</h4>
+                        <div className="mt-4 space-y-4">
+                          {message.projects.map((project) => {
+                            // Extract key info from description
+                            const problemSection = project.description.split('**What You\'ll Do:**')[0]
+                            const problem = problemSection.replace('**Problem Statement:**\n', '').trim()
+                            const summary = problem.length > 150 ? problem.substring(0, 150) + '...' : problem
+                            
+                            return (
+                              <div key={project.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all">
+                                {/* Header */}
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                      <Building2 className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div>
+                                      <h4 className="font-semibold text-gray-900 text-base">{project.title}</h4>
+                                      <p className="text-sm text-gray-600">{project.companyName}</p>
+                                    </div>
+                                  </div>
+                                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                                    {project.matchScore}% match
+                                  </span>
                                 </div>
-                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                  {project.matchScore}% match
-                                </span>
+
+                                {/* Summary */}
+                                <p className="text-gray-600 text-sm leading-relaxed mb-4">{summary}</p>
+
+                                {/* Skills */}
+                                {project.skills && project.skills.length > 0 && (
+                                  <div className="mb-4">
+                                    <div className="flex flex-wrap gap-2">
+                                      {project.skills.slice(0, 3).map((skill: string, index: number) => (
+                                        <span key={index} className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium">
+                                          {skill}
+                                        </span>
+                                      ))}
+                                      {project.skills.length > 3 && (
+                                        <span className="text-gray-500 text-xs">+{project.skills.length - 3} more</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Action Button */}
+                                <button
+                                  onClick={() => handleApplyToProject(project)}
+                                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                >
+                                  Apply Now
+                                </button>
                               </div>
-                              <p className="text-xs text-gray-600 mb-3">{project.description}</p>
-                              <button
-                                onClick={() => handleApplyToProject(project)}
-                                className="w-full bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                Apply Now
-                              </button>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
 
                       {/* Proposal Suggestions */}
                       {message.proposals && message.proposals.length > 0 && (
-                        <div className="mt-4 space-y-3">
+                        <div className="mt-4 space-y-4">
                           {message.proposals.map((p, idx) => (
-                            <div key={`${p.companyId || p.companyName || idx}`} className="bg-white rounded-lg p-4 border border-gray-200">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="h-4 w-4 text-gray-500" />
-                                  <h4 className="font-medium text-gray-900 text-sm">{p.companyName}</h4>
+                            <div key={`${p.companyId || p.companyName || idx}`} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-purple-200 hover:shadow-md transition-all">
+                              {/* Header */}
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                                  <Building2 className="h-5 w-5 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-900 text-base">{p.companyName}</h4>
+                                  <p className="text-sm text-gray-600">Potential collaboration opportunity</p>
                                 </div>
                               </div>
-                              <p className="text-xs text-gray-600 mb-3 whitespace-pre-wrap">{p.proposal}</p>
+
+                              {/* Proposal Text */}
+                              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{p.proposal}</p>
+                              </div>
+
+                              {/* Action Button */}
                               <button
                                 onClick={() => handleSendProposal({ companyId: p.companyId, companyName: p.companyName })}
-                                className="w-full bg-purple-600 text-white text-sm py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                                className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2"
                               >
                                 Send Proposal (1 credit)
                               </button>
