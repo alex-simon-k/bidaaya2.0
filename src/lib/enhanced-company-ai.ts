@@ -1,5 +1,6 @@
 import { DynamicAIService } from './dynamic-ai-service'
 import { PrismaClient } from '@prisma/client'
+import { hybridSearchService } from './hybrid-search-service'
 
 const prisma = new PrismaClient()
 
@@ -74,7 +75,7 @@ export class EnhancedCompanyAI extends DynamicAIService {
       const response = await this.generateResponse(query, enrichedContext)
       
       // Convert to company chat format
-      return this.formatForCompanyChat(response, context)
+      return await this.formatForCompanyChat(response, context)
     } catch (error) {
       console.error('Enhanced Company AI error:', error)
       return this.getCompanyFallback(query, context)
@@ -144,7 +145,7 @@ export class EnhancedCompanyAI extends DynamicAIService {
     return goals.length > 0 ? goals : ['general-guidance']
   }
 
-  private formatForCompanyChat(response: any, context: CompanyChatContext): EnhancedCompanyResponse {
+  private async formatForCompanyChat(response: any, context: CompanyChatContext): Promise<EnhancedCompanyResponse> {
     // Handle specific company intents with direct actions
     const userMessages = context.previousMessages.filter(msg => msg.role === 'user')
     const lastUserMessage = userMessages[userMessages.length - 1]?.content?.toLowerCase() || ''
@@ -168,18 +169,27 @@ export class EnhancedCompanyAI extends DynamicAIService {
       }
     }
 
-    // Talent search gets search action
+    // Talent search gets hybrid search treatment
     if (lastUserMessage.includes('find') || lastUserMessage.includes('search') || lastUserMessage.includes('talent') || lastUserMessage.includes('candidate')) {
+      // Use hybrid search service to determine complexity
+      const searchResult = await hybridSearchService.hybridSearch(lastUserMessage, context)
+      
       return {
-        content: response.message.length > 200 
-          ? `I'll help you find the right talent. Let me search our database of 6000+ students for candidates that match your needs.`
-          : response.message,
+        content: searchResult.message,
         actionType: 'search',
         data: { 
           searchQuery: lastUserMessage,
-          useIntelligentMatching: true 
+          results: searchResult.results,
+          searchType: searchResult.searchType,
+          filters: searchResult.filters,
+          aiReasoning: (searchResult as any).aiReasoning || '',
+          useIntelligentMatching: searchResult.searchType === 'ai-enhanced'
         },
-        suggestedActions: response.actions
+        suggestedActions: [{
+          label: 'View Results',
+          action: 'search', 
+          description: `Found ${searchResult.results.length} matching candidates (${searchResult.searchType})`
+        }]
       }
     }
 

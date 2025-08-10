@@ -585,7 +585,14 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
 
       // Handle different action types
       if (aiResponse.actionType === 'search') {
-        await performTalentSearch(message)
+        const responseData = (aiResponse as any).data
+        if (responseData?.results && responseData.results.length > 0) {
+          // Use hybrid search results directly
+          displayHybridSearchResults(responseData)
+        } else {
+          // Fallback to old search method
+          await performTalentSearch(message)
+        }
       } else if (aiResponse.actionType === 'navigate') {
         // Handle navigation - redirect to specified URL
         const responseData = (aiResponse as any).data
@@ -720,6 +727,54 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
 - Find Talent`,
       timestamp: new Date(),
       actionType: 'guidance'
+    }
+  }
+
+  const displayHybridSearchResults = (searchData: any) => {
+    try {
+      setIsLoading(true)
+      setShowResults(false)
+
+      // Transform hybrid search results to match UI expectations
+      const transformedResults = searchData.results.map((student: any) => ({
+        candidate: {
+          id: student.id,
+          name: student.name || 'Student',
+          email: student.id, // Use ID as placeholder
+          university: student.university,
+          major: student.major,
+          skills: Array.isArray(student.skills) ? student.skills : [],
+          location: student.location,
+          graduationYear: student.graduationYear,
+          interests: Array.isArray(student.goal) ? student.goal : [],
+          goal: Array.isArray(student.goal) ? student.goal : [],
+          bio: `${student.major || 'Student'} at ${student.university || 'University'}`,
+          engagementLevel: 'Medium',
+          applicationsThisMonth: 0
+        },
+        overallScore: 85, // Default good score for filtered results
+        matchScore: 85,
+        skillMatches: student.skills?.slice(0, 3) || [],
+        topSkills: student.skills?.slice(0, 3) || []
+      }))
+
+      setSearchResults(transformedResults)
+
+      // Add search summary message
+      const summaryMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'ai', 
+        content: `🎯 **${searchData.searchType === 'filter' ? 'Fast Filter' : 'AI-Enhanced'} Search Results**\n\n${searchData.message}\n\n${searchData.aiReasoning || ''}\n\nFilters used: ${Object.entries(searchData.filters || {}).map(([k,v]) => `${k}: ${v}`).join(', ') || 'None'}`,
+        timestamp: new Date(),
+        actionType: 'search'
+      }
+      
+      setMessages(prev => [...prev, summaryMessage])
+      setShowResults(true)
+    } catch (error) {
+      console.error('Error displaying hybrid search results:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 

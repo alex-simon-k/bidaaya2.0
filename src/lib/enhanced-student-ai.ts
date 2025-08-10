@@ -1,5 +1,6 @@
 import { DynamicAIService } from './dynamic-ai-service'
 import { PrismaClient } from '@prisma/client'
+import { studentCareerGuidance } from './student-career-guidance'
 
 const prisma = new PrismaClient()
 
@@ -18,13 +19,37 @@ interface EnhancedStudentResponse {
   projects?: Array<{ id: string; title: string; companyId: string; companyName: string; location?: string | null; description: string }>
   proposals?: Array<{ companyId?: string; companyName: string; proposal: string }>
   companies?: Array<{ id: string; name: string; description?: string; matchScore?: number }>
+  followUpQuestions?: string[]
+  recommendations?: any[]
 }
 
 export class EnhancedStudentAI extends DynamicAIService {
   
   async generateStudentResponse(query: string, context: StudentChatContext): Promise<EnhancedStudentResponse> {
     try {
-      // Determine intent - projects vs proposals/companies
+      // FIRST: Check if student needs career guidance
+      const guidanceResponse = await studentCareerGuidance.provideGuidance(query, context)
+      
+      if (guidanceResponse.actionType === 'guidance') {
+        if (guidanceResponse.needsAI) {
+          // Complex guidance needs AI reasoning
+          const enrichedContext = await this.buildStudentContext(query, context)
+          const aiResponse = await this.generateResponse(query, enrichedContext)
+          return {
+            content: aiResponse.message,
+            followUpQuestions: guidanceResponse.followUpQuestions
+          }
+        } else {
+          // Fast guidance response
+          return {
+            content: guidanceResponse.content,
+            followUpQuestions: guidanceResponse.followUpQuestions,
+            recommendations: guidanceResponse.recommendations
+          }
+        }
+      }
+
+      // SECOND: Determine intent - projects vs proposals/companies
       const wantsProposals = /\bproposal(s)?\b/i.test(query) || /\bcompany|companies|employer\b/i.test(query)
       
       // Get relevant projects or companies based on intent (FAST - skip AI for speed)
