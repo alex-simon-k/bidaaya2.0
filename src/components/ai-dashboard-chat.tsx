@@ -586,6 +586,13 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
       // Handle different action types
       if (aiResponse.actionType === 'search') {
         await performTalentSearch(message)
+      } else if (aiResponse.actionType === 'navigate') {
+        // Handle navigation - redirect to specified URL
+        const responseData = (aiResponse as any).data
+        if (responseData?.redirectUrl) {
+          // Immediate redirect to the specified URL
+          window.location.href = responseData.redirectUrl
+        }
       } else if (aiResponse.actionType === 'project-creation') {
         // Start the project creation conversation flow
         const responseData = (aiResponse as any).data

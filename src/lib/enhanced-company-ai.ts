@@ -26,6 +26,47 @@ export class EnhancedCompanyAI extends DynamicAIService {
   
   async generateCompanyResponse(query: string, context: CompanyChatContext): Promise<EnhancedCompanyResponse> {
     try {
+      // IMMEDIATE project creation check - before any AI processing
+      const queryLower = query.toLowerCase()
+      
+      // Enhanced detection for exact phrases from your examples
+      const directProjectPhrases = [
+        'want to create a project',
+        'create a project',
+        'make a project',
+        'marketing project',
+        'how do i make it',
+        'post a project',
+        'posting a project',
+        'new project'
+      ]
+      
+      const hasDirectPhrase = directProjectPhrases.some(phrase => queryLower.includes(phrase))
+      
+      // Keyword-based detection as backup
+      const projectKeywords = ['create', 'post', 'posting', 'publish', 'new', 'make', 'build']
+      const projectNouns = ['project', 'internship', 'job', 'position', 'opportunity', 'role']
+      const hasKeywordMatch = projectKeywords.some(keyword => queryLower.includes(keyword)) && 
+                             (projectNouns.some(noun => queryLower.includes(noun)) || 
+                              queryLower.includes('campaign') || 
+                              queryLower.includes('listing'))
+      
+      const isProjectCreation = hasDirectPhrase || hasKeywordMatch
+      
+      // Force immediate redirect for project creation
+      if (isProjectCreation) {
+        return {
+          content: `Let's create your project! I'll take you to our project setup page.`,
+          actionType: 'navigate',
+          data: { redirectUrl: '/dashboard/projects/new' },
+          suggestedActions: [{
+            label: 'Create Project',
+            action: 'navigate',
+            description: 'Set up your project details'
+          }]
+        }
+      }
+      
       // Build enriched context for the dynamic AI service
       const enrichedContext = await this.buildCompanyContext(query, context)
       
