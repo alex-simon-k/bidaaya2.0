@@ -66,7 +66,10 @@ export default function AISearchPage() {
       const response = await fetch('/api/student-chat/generate-response', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputValue })
+        body: JSON.stringify({ 
+          message: inputValue,
+          previousMessages: messages.slice(-4).map(m => ({ role: m.type === 'user' ? 'user' : 'assistant', content: m.content }))
+        })
       })
 
       if (response.ok) {
@@ -76,7 +79,7 @@ export default function AISearchPage() {
           type: 'assistant',
           content: data.content || 'I apologize, but I encountered an issue. Please try again.',
           timestamp: new Date(),
-          companies: data.companies || []
+          companies: data.projects || []
         }
         setMessages(prev => [...prev, assistantMessage])
       } else {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
+import { studentAIService } from '@/lib/student-ai'
 
 // Enhanced DeepSeek AI for better platform understanding
 export async function POST(request: NextRequest) {
@@ -10,43 +11,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { message: userQuery } = await request.json()
+    const { message: userQuery, previousMessages } = await request.json()
 
     // Detect intent from user query
     const intent = detectIntent(userQuery)
     console.log(`🤖 AI API call for: ${userQuery}, detected intent: ${intent}`)
 
-    let response
-
-    switch (intent) {
-      case 'browse_projects':
-        response = await generateProjectRecommendations(userQuery, session.user.id)
-        break
-
-      case 'send_proposal':
-        // Get company suggestions based on user profile
-        const companies = await getCompanySuggestions(session.user.id, userQuery)
-        response = await generateCompanyRecommendations(userQuery, companies)
-        break
-
-      case 'find_companies':
-        response = await generateCompanyGuidance(userQuery)
-        break
-
-      case 'general_search':
-        response = await generateIntelligentSearch(userQuery, session.user.id)
-        break
-
-      case 'help':
-        response = generateHelpResponse()
-        break
-
-      default:
-        response = await generateSmartResponse(userQuery, session.user.id)
-        break
-    }
-
-    return NextResponse.json(response)
+    // Always use the Student AI service with the rulebook
+    const ai = await studentAIService.generateResponse(session.user.id, userQuery, previousMessages || [])
+    return NextResponse.json({
+      actionType: 'student_ai',
+      content: ai.content,
+      companies: [],
+      projects: ai.projects || [],
+      proposals: ai.proposals || []
+    })
   } catch (error) {
     console.error('❌ AI API error:', error)
     return NextResponse.json({ 
