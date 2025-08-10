@@ -145,49 +145,53 @@ export class EnhancedStudentAI extends DynamicAIService {
   }
 
   private async getRelevantProjects(query: string, userId: string, excludeIds: Set<string>, wantsAlternatives: boolean) {
-    const searchTerms = query.toLowerCase().split(' ').filter(term => 
-      term.length > 2 && !['the', 'and', 'for', 'with', 'can', 'you', 'give', 'me', 'some', 'more', 'other', 'different'].includes(term)
-    )
+    try {
+      const searchTerms = query.toLowerCase().split(' ').filter(term => 
+        term.length > 2 && !['the', 'and', 'for', 'with', 'can', 'you', 'give', 'me', 'some', 'more', 'other', 'different'].includes(term)
+      )
 
-    const whereConditions: any = {
-      status: 'LIVE',
-      ...(excludeIds.size > 0 && { id: { notIn: Array.from(excludeIds) } })
-    }
+      const whereConditions: any = {
+        status: 'LIVE',
+        ...(excludeIds.size > 0 && { id: { notIn: Array.from(excludeIds) } })
+      }
 
-    if (searchTerms.length > 0) {
-      whereConditions.OR = [
-        { title: { contains: searchTerms.join(' '), mode: 'insensitive' } },
-        { description: { contains: searchTerms.join(' '), mode: 'insensitive' } },
-        { skillsRequired: { hasSome: searchTerms } },
-        { category: { contains: searchTerms.join(' '), mode: 'insensitive' } },
-        // Also try individual terms
-        ...searchTerms.map(term => ({ title: { contains: term, mode: 'insensitive' } })),
-        ...searchTerms.map(term => ({ description: { contains: term, mode: 'insensitive' } }))
-      ]
-    }
+      if (searchTerms.length > 0) {
+        whereConditions.OR = [
+          { title: { contains: searchTerms.join(' '), mode: 'insensitive' } },
+          { description: { contains: searchTerms.join(' '), mode: 'insensitive' } },
+          { category: { contains: searchTerms.join(' '), mode: 'insensitive' } },
+          // Also try individual terms
+          ...searchTerms.map(term => ({ title: { contains: term, mode: 'insensitive' } })),
+          ...searchTerms.map(term => ({ description: { contains: term, mode: 'insensitive' } }))
+        ]
+      }
 
-    const projects = await prisma.project.findMany({
-      where: whereConditions,
-      include: {
-        company: {
-          select: {
-            id: true,
-            companyName: true
+      const projects = await prisma.project.findMany({
+        where: whereConditions,
+        include: {
+          company: {
+            select: {
+              id: true,
+              companyName: true
+            }
           }
-        }
-      },
-      take: 15,
-      orderBy: wantsAlternatives ? { updatedAt: 'desc' } : { createdAt: 'desc' }
-    })
+        },
+        take: 15,
+        orderBy: wantsAlternatives ? { updatedAt: 'desc' } : { createdAt: 'desc' }
+      })
 
-    return projects.map(p => ({
-      id: p.id,
-      title: p.title,
-      companyId: p.company.id,
-      companyName: p.company.companyName || 'Company',
-      location: p.location,
-      description: p.description
-    })).slice(0, 3) // Return top 3
+      return projects.map(p => ({
+        id: p.id,
+        title: p.title,
+        companyId: p.company.id,
+        companyName: p.company.companyName || 'Company',
+        location: p.location,
+        description: p.description
+      })).slice(0, 3) // Return top 3
+    } catch (error) {
+      console.error('Error fetching relevant projects:', error)
+      return []
+    }
   }
 
   private async getRelevantCompanies(query: string, userId: string) {

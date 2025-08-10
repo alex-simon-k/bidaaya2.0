@@ -105,12 +105,18 @@ export class EnhancedCompanyAI extends DynamicAIService {
 
   private formatForCompanyChat(response: any, context: CompanyChatContext): EnhancedCompanyResponse {
     // Handle specific company intents with direct actions
-    const query = context.previousMessages[context.previousMessages.length - 1]?.content?.toLowerCase() || ''
+    const userMessages = context.previousMessages.filter(msg => msg.role === 'user')
+    const lastUserMessage = userMessages[userMessages.length - 1]?.content?.toLowerCase() || ''
     
-    // Project creation gets immediate redirect
-    if (query.includes('create') && (query.includes('project') || query.includes('internship') || query.includes('job'))) {
+    // Enhanced project creation detection
+    const projectKeywords = ['create', 'post', 'posting', 'publish', 'new']
+    const projectNouns = ['project', 'internship', 'job', 'position', 'opportunity', 'role']
+    const isProjectCreation = projectKeywords.some(keyword => lastUserMessage.includes(keyword)) && 
+                             (projectNouns.some(noun => lastUserMessage.includes(noun)) || lastUserMessage.includes('campaign'))
+    
+    if (isProjectCreation) {
       return {
-        content: `Perfect! Let's get your project set up. I'll take you to our project creation page where you can define your requirements and start attracting talent.`,
+        content: `Let's create your project! I'll take you to our project setup page.`,
         actionType: 'navigate',
         data: { redirectUrl: '/dashboard/projects/new' },
         suggestedActions: [{
@@ -122,14 +128,14 @@ export class EnhancedCompanyAI extends DynamicAIService {
     }
 
     // Talent search gets search action
-    if (query.includes('find') || query.includes('search') || query.includes('talent') || query.includes('candidate')) {
+    if (lastUserMessage.includes('find') || lastUserMessage.includes('search') || lastUserMessage.includes('talent') || lastUserMessage.includes('candidate')) {
       return {
         content: response.message.length > 200 
           ? `I'll help you find the right talent. Let me search our database of 6000+ students for candidates that match your needs.`
           : response.message,
         actionType: 'search',
         data: { 
-          searchQuery: query,
+          searchQuery: lastUserMessage,
           useIntelligentMatching: true 
         },
         suggestedActions: response.actions
@@ -176,7 +182,13 @@ export class EnhancedCompanyAI extends DynamicAIService {
   private getCompanyFallback(query: string, context: CompanyChatContext): EnhancedCompanyResponse {
     const queryLower = query.toLowerCase()
     
-    if (queryLower.includes('create') && (queryLower.includes('project') || queryLower.includes('job'))) {
+    // Enhanced project creation detection for fallback
+    const projectKeywords = ['create', 'post', 'posting', 'publish', 'new']
+    const projectNouns = ['project', 'internship', 'job', 'position', 'opportunity', 'role']
+    const isProjectCreation = projectKeywords.some(keyword => queryLower.includes(keyword)) && 
+                             (projectNouns.some(noun => queryLower.includes(noun)) || queryLower.includes('campaign'))
+    
+    if (isProjectCreation) {
       return {
         content: `Let's create your project! I'll take you to our project setup page.`,
         actionType: 'navigate',
