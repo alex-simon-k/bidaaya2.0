@@ -18,7 +18,7 @@ export class StudentAIService {
     try {
       const [profile, projects] = await Promise.all([
         this.fetchStudentProfile(userId),
-        this.fetchMatchingProjects(userId, userQuery)
+        this.fetchMatchingProjects(userId, userQuery, previousMessages)
       ])
 
       const shouldFocusOnProposals = /\bproposal(s)?\b/i.test(userQuery) || /\bcompany|companies|employer\b/i.test(userQuery)
@@ -69,7 +69,7 @@ export class StudentAIService {
     } catch (error) {
       console.error('❌ StudentAIService.generateResponse failed:', error)
       // Final fallback
-      const projects = await this.fetchMatchingProjects(userId, userQuery)
+      const projects = await this.fetchMatchingProjects(userId, userQuery, previousMessages)
       return this.basicResponse(projects, /\bproposal(s)?\b/i.test(userQuery))
     }
   }
@@ -81,12 +81,29 @@ export class StudentAIService {
     })
   }
 
-  private async fetchMatchingProjects(userId: string, userQuery: string) {
+  private async fetchMatchingProjects(userId: string, userQuery: string, previousMessages: PreviousMessage[] = []) {
     // Simple matching heuristic: show LIVE projects, prioritize by skills keywords
     const lower = userQuery.toLowerCase()
+    const wantsAlternatives = /\b(more|another|other|different|else|new|alternative)\b/i.test(userQuery)
+    
+    // Extract previously shown project IDs to avoid repetition
+    const previousProjectIds = new Set<string>()
+    if (wantsAlternatives && previousMessages.length > 0) {
+      previousMessages.forEach(msg => {
+        if (msg.role === 'assistant') {
+          // Look for project IDs in the content (rough heuristic)
+          const matches = msg.content.match(/\b[a-zA-Z0-9]{8,}\b/g) || []
+          matches.forEach(id => previousProjectIds.add(id))
+        }
+      })
+    }
+
     const projects = await prisma.project.findMany({
-      where: { status: 'LIVE' },
-      orderBy: { createdAt: 'desc' },
+      where: { 
+        status: 'LIVE',
+        ...(previousProjectIds.size > 0 && { id: { notIn: Array.from(previousProjectIds) } })
+      },
+      orderBy: wantsAlternatives ? { updatedAt: 'desc' } : { createdAt: 'desc' },
       take: 20,
       include: { company: { select: { id: true, companyName: true } } }
     })

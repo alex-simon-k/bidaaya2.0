@@ -379,46 +379,11 @@ Searching for: *"${context.userQuery}"*
    * Handle conversational project creation flow
    */
   private handleProjectCreationFlow(context: ChatContext): AIResponse {
-    // Check if this is the initial project creation request
-    const queryLower = context.userQuery.toLowerCase()
-    
-    // Step 1: Initial project creation request
-    if (queryLower.includes('create project') || queryLower.includes('new project') || queryLower.includes('post project')) {
-      return {
-        content: `🚀 **Perfect! Let's create your project step by step.**
-
-I'll guide you through the essential details we need. This will only take a few minutes, and then you'll have a professional project ready to post!
-
-**First, let's start with the basics:**
-
-**What's the title of your project?**
-_For example: "Social Media Marketing Campaign" or "Mobile App Development" or "Market Research Analysis"_
-
-Just type your project title and I'll ask you the next question! 📝`,
-        actionType: 'project-creation' as const,
-        data: {
-          step: 'title',
-          collectedData: {}
-        }
-      }
-    }
-
-    // If we have previous messages, we can parse the flow state
-    // This would need to be enhanced with session storage in the frontend
-    // For now, let's provide a general response
     return {
-      content: `🚀 **Let's create your project!**
-
-I'll help you create a professional project posting step by step. Just tell me:
-
-**What's the title of your project?**
-_For example: "Social Media Marketing Campaign" or "Mobile App Development"_
-
-Type your project title and I'll guide you through the rest! 📝`,
-      actionType: 'project-creation' as const,
+      content: `[Create Project](/dashboard/projects/new)`,
+      actionType: 'navigate' as const,
       data: {
-        step: 'title',
-        collectedData: {}
+        redirectUrl: '/dashboard/projects/new'
       }
     }
   }

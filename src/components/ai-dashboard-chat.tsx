@@ -538,6 +538,16 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
     if (!message.trim() || isProcessing) return
 
     setIsProcessing(true)
+    
+    // Add immediate loading message for company chat to show progress
+    const loadingMessage: ChatMessage = {
+      id: `loading_${Date.now()}`,
+      type: 'ai',
+      content: '⚡ Thinking...',
+      timestamp: new Date(),
+      actionType: 'guidance'
+    }
+    setMessages(prev => [...prev, loadingMessage])
 
     // Check if we're in project creation flow
     if (projectCreationState.isActive) {
@@ -580,7 +590,12 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
     try {
       // Generate AI response based on mode
       const aiResponse = await generateModeBasedResponse(message, autoMode)
-      setMessages(prev => [...prev, aiResponse])
+      
+      // Remove loading message and add real response
+      setMessages(prev => {
+        const withoutLoading = prev.filter(msg => !msg.id.startsWith('loading_'))
+        return [...withoutLoading, aiResponse]
+      })
 
       // Handle different action types
       if (aiResponse.actionType === 'search') {
