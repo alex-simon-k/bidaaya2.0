@@ -21,7 +21,8 @@ export class StudentAIService {
         this.fetchMatchingProjects(userId, userQuery)
       ])
 
-      const shouldFocusOnProposals = /\bproposal(s)?\b/i.test(userQuery)
+      const shouldFocusOnProposals = /\bproposal(s)?\b/i.test(userQuery) || /\bcompany|companies|employer\b/i.test(userQuery)
+      const wantsMoreOrDifferent = /\b(more|another|other|different|else)\b/i.test(userQuery)
 
       // Build DeepSeek prompt
       const systemRulebook = this.buildRulebook(shouldFocusOnProposals)
@@ -40,9 +41,11 @@ export class StudentAIService {
 
       // Parse with safety and merge with retrieved projects if needed
       const content = ai.content || 'Here are tailored opportunities and a suggested proposal for you.'
-      const projectsOut = Array.isArray(ai.projects) && ai.projects.length > 0
-        ? ai.projects.slice(0, 3)
-        : projects.slice(0, 3)
+      const baseProjects: any[] = Array.isArray(ai.projects) && ai.projects.length > 0 ? ai.projects : projects
+      const offset = wantsMoreOrDifferent ? 3 : 0
+      const primary = baseProjects.slice(offset, offset + 3)
+      const fillFrom = baseProjects.filter(p => !primary.find(pp => pp.id === p.id))
+      const projectsOut = [...primary, ...fillFrom].slice(0, 3)
 
       // Ensure proposals are populated and have company names; fill from top projects if missing
       let proposalsOut: StudentAIResponse['proposals'] = []
@@ -54,6 +57,12 @@ export class StudentAIService {
         }))
       } else {
         proposalsOut = this.buildDefaultProposals(projects, shouldFocusOnProposals)
+      }
+
+      // If user did not ask for proposals but matches seem weak, proactively add proposals as alternatives
+      const maxScore = (projects[0] as any)?.score ?? 0
+      if (!shouldFocusOnProposals && maxScore <= 0 && (!proposalsOut || proposalsOut.length === 0)) {
+        proposalsOut = this.buildDefaultProposals(projects, false)
       }
 
       return { content, projects: projectsOut, proposals: proposalsOut }

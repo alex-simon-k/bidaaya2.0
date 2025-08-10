@@ -317,10 +317,12 @@ I'll now take you to the project creation page with everything pre-filled. You j
           break
 
         default:
-          nextResponse = `I'd be happy to help you create a project! Let's start with the basics:
+          nextResponse = `🎯 **Create your project in one click.**
 
-**What's the title of your project?**`
-          nextStep = 'title'
+**[➡️ Open Create Project](/dashboard/projects/new)**
+
+If you'd like, I can also walk you through setting it up step-by-step. Just say "guide me" to continue here.`
+          nextStep = ''
       }
 
       // Update project creation state
@@ -1032,7 +1034,7 @@ Something went wrong while sending the invitation. Please try again or contact s
     {
       icon: Search,
       label: "Find Talent", 
-      description: "Search our database of 500+ candidates",
+      description: "Search our database of 5000+ candidates",
       action: () => handleSendMessage("I want to find talent", 'find-talent', true)
     }
   ]

@@ -176,7 +176,7 @@ export class AIChatResponseService {
     const systemContext = `You are Bidaaya's AI Recruitment Assistant. You help companies find talent and students find opportunities.
 
 PLATFORM CONTEXT:
-- Total active students: ${contextData.totalStudents || '500+'}
+- Total active students: ${contextData.totalStudents || '5000+'}
 - Popular universities: ${contextData.popularUniversities?.join(', ') || 'AUD, AUS, Zayed University'}
 - Active projects: ${contextData.activeProjects || '50+'}
 - User role: ${context.userRole}
@@ -431,7 +431,7 @@ Type your project title and I'll guide you through the rest! 📝`,
       COMPANY: {
         content: `I'm here to help with your recruitment needs! I can help you:
 
-🔍 **Find Talent** - Search our database of 500+ active students
+🔍 **Find Talent** - Search our database of 5000+ active students
 🎯 **Create Projects** - Post internships and job opportunities  
 📧 **Contact Candidates** - Reach out to promising matches
 ⚡ **Get Guidance** - Receive personalized hiring recommendations
