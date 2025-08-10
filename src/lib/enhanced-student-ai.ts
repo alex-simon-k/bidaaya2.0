@@ -51,7 +51,7 @@ export class EnhancedStudentAI extends DynamicAIService {
       }
 
       // SECOND: Analyze intent and generate appropriate response
-      const intent = this.analyzeUserIntent(query)
+      const intent = this.analyzeUserIntent(query, context)
       
       if (intent.type === 'projects') {
         return await this.handleProjectSearch(query, context, intent)
@@ -480,14 +480,31 @@ export class EnhancedStudentAI extends DynamicAIService {
   }
 
   /**
-   * Analyze user intent from query
+   * Analyze user intent from query with conversation context
    */
-  private analyzeUserIntent(query: string): { type: 'projects' | 'proposals', keywords: string[] } {
+  private analyzeUserIntent(query: string, context?: StudentChatContext): { type: 'projects' | 'proposals', keywords: string[] } {
     const queryLower = query.toLowerCase()
     
-    // Check for proposal/company intent
+    // Check for explicit proposal/company intent
     if (/\b(proposal|proposals|company|companies|employer|reach out|connect)\b/i.test(query)) {
       return { type: 'proposals', keywords: this.extractKeywords(query) }
+    }
+    
+    // Check for continuation requests ("another", "more", "different")
+    if (/\b(another|more|different|else|alternative)\b/i.test(query) && context) {
+      // Look at recent conversation to determine if we were showing companies or projects
+      const recentMessages = context.previousMessages.slice(-3)
+      const wasShowingCompanies = recentMessages.some(msg => 
+        msg.role === 'assistant' && (
+          msg.content.includes('company you could connect with') ||
+          msg.content.includes('reach out to') ||
+          msg.content.includes('Send Proposal')
+        )
+      )
+      
+      if (wasShowingCompanies) {
+        return { type: 'proposals', keywords: this.extractKeywords(query) }
+      }
     }
     
     // Default to projects
@@ -521,7 +538,8 @@ export class EnhancedStudentAI extends DynamicAIService {
     const matchedProjects = await studentMatcher.getMatchedProjects(
       studentProfile, 
       excludeProjectIds, 
-      10
+      10,
+      query // Pass the search query for relevance matching
     )
 
     // Show only ONE project at a time

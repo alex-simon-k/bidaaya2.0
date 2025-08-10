@@ -39,7 +39,8 @@ export class ImprovedStudentMatcher {
   async getMatchedProjects(
     studentProfile: StudentProfile, 
     excludeProjectIds: string[] = [],
-    limit: number = 10
+    limit: number = 10,
+    searchQuery?: string
   ): Promise<ProjectMatch[]> {
     
     // Get all available projects
@@ -60,7 +61,7 @@ export class ImprovedStudentMatcher {
 
     // Calculate raw scores for all projects
     const projectsWithRawScores = projects.map(project => {
-      const { score, reasons } = this.calculateRawMatchScore(studentProfile, project)
+      const { score, reasons } = this.calculateRawMatchScore(studentProfile, project, searchQuery)
       
       return {
         id: project.id,
@@ -103,7 +104,8 @@ export class ImprovedStudentMatcher {
    */
   private calculateRawMatchScore(
     student: StudentProfile, 
-    project: any
+    project: any,
+    searchQuery?: string
   ): { score: number, reasons: string[] } {
     
     let score = 0
@@ -154,10 +156,19 @@ export class ImprovedStudentMatcher {
       }
     }
 
+    // 5. SEARCH QUERY RELEVANCE BOOST (50 points max) - HIGH PRIORITY
+    if (searchQuery) {
+      const queryScore = this.calculateQueryRelevance(searchQuery, project)
+      if (queryScore > 0) {
+        score += queryScore
+        reasons.push('Matches your search')
+      }
+    }
+
     // Base score to ensure everyone gets some points
     score += 20
 
-    return { score: Math.min(score, 120), reasons } // Cap at 120 for normalization
+    return { score: Math.min(score, 170), reasons } // Cap at 170 for normalization (increased for query boost)
   }
 
   /**
@@ -272,6 +283,58 @@ export class ImprovedStudentMatcher {
     }
 
     return Math.min(alignmentCount * 5, 15) // Cap at 15 points
+  }
+
+  /**
+   * Calculate search query relevance to project
+   */
+  private calculateQueryRelevance(query: string, project: any): number {
+    const queryLower = query.toLowerCase()
+    const projectText = `${project.title} ${project.description} ${project.category || ''}`.toLowerCase()
+    
+    let score = 0
+    
+    // Extract keywords from query
+    const keywords = queryLower.split(/\s+/).filter(word => 
+      word.length > 2 && 
+      !['the', 'and', 'for', 'with', 'can', 'you', 'give', 'me', 'some', 'want', 'need', 'looking'].includes(word)
+    )
+    
+    // Direct keyword matches in title (highest priority)
+    for (const keyword of keywords) {
+      if (project.title.toLowerCase().includes(keyword)) {
+        score += 25 // High score for title match
+      }
+    }
+    
+    // Category/field matches
+    const fieldMappings: Record<string, string[]> = {
+      'finance': ['finance', 'financial', 'investment', 'banking', 'accounting'],
+      'data': ['data', 'analytics', 'science', 'analysis', 'database'],
+      'marketing': ['marketing', 'social', 'media', 'advertising', 'branding'],
+      'technology': ['tech', 'software', 'programming', 'coding', 'development'],
+      'design': ['design', 'ui', 'ux', 'graphics', 'creative']
+    }
+    
+    for (const [field, terms] of Object.entries(fieldMappings)) {
+      if (keywords.some(keyword => terms.includes(keyword))) {
+        // Check if project matches this field
+        if (project.category?.toLowerCase().includes(field) || 
+            terms.some(term => projectText.includes(term))) {
+          score += 30 // High score for field match
+          break // Only count one field match
+        }
+      }
+    }
+    
+    // Description keyword matches (lower priority)
+    for (const keyword of keywords) {
+      if (project.description.toLowerCase().includes(keyword)) {
+        score += 10 // Lower score for description match
+      }
+    }
+    
+    return Math.min(score, 50) // Cap at 50 points
   }
 }
 
