@@ -8,6 +8,11 @@ interface StudentChatContext {
   previousMessages: Array<{ role: 'user' | 'assistant', content: string }>
 }
 
+interface SimpleAIResponse {
+  content: string
+  actionType?: string
+}
+
 interface EnhancedStudentResponse {
   content: string
   projects?: Array<{ id: string; title: string; companyId: string; companyName: string; location?: string | null; description: string }>
@@ -19,16 +24,10 @@ export class EnhancedStudentAI extends DynamicAIService {
   
   async generateStudentResponse(query: string, context: StudentChatContext): Promise<EnhancedStudentResponse> {
     try {
-      // Build enriched context for the dynamic AI service
-      const enrichedContext = await this.buildStudentContext(query, context)
-      
       // Determine intent - projects vs proposals/companies
       const wantsProposals = /\bproposal(s)?\b/i.test(query) || /\bcompany|companies|employer\b/i.test(query)
       
-      // Use the dynamic AI service
-      const response = await this.generateResponse(query, enrichedContext)
-      
-      // Get relevant projects or companies based on intent
+      // Get relevant projects or companies based on intent (FAST - skip AI for speed)
       let relevantData = await this.getRelevantOpportunities(query, context, wantsProposals)
 
       // HARD GUARANTEE: if user asked for projects and none found, show latest live projects
@@ -48,6 +47,9 @@ export class EnhancedStudentAI extends DynamicAIService {
           description: p.description
         }))
       }
+      
+      // Generate tailored response based on what we found
+      const response = this.generateTailoredResponse(query, relevantData, wantsProposals)
       
       // Convert to student chat format
       return this.formatForStudentChat(response, relevantData, wantsProposals)
@@ -139,16 +141,37 @@ export class EnhancedStudentAI extends DynamicAIService {
     // Extract previously shown project IDs to avoid repetition
     const previousProjectIds = new Set<string>()
     if (wantsAlternatives && context.previousMessages.length > 0) {
-      context.previousMessages.forEach(msg => {
+      // Look through recent conversation for previously shown projects
+      const recentMessages = context.previousMessages.slice(-6) // Last 6 messages
+      recentMessages.forEach(msg => {
         if (msg.role === 'assistant') {
-          // Look for project IDs in the content (improved detection)
-          const matches = msg.content.match(/project[/-](\w+)|apply to (\w+)|opportunity (\w+)/gi) || []
-          matches.forEach(match => {
-            const id = match.split(/[/-]/).pop()?.replace(/[^a-zA-Z0-9]/g, '')
-            if (id && id.length > 5) previousProjectIds.add(id)
+          // Better pattern matching for project names/IDs
+          const projectPatterns = [
+            /Social Media Campaigns/gi,
+            /Smart City Internship/gi,
+            /Cybersecurity Internship/gi,
+            /EssayPilot/gi,
+            /SmartCity Analytics/gi,
+            /SecureLearn Systems/gi,
+            // Generic patterns
+            /project[/-](\w+)/gi,
+            /internship.*?(\w+)/gi,
+            /opportunity.*?(\w+)/gi
+          ]
+          
+          projectPatterns.forEach(pattern => {
+            const matches = msg.content.match(pattern) || []
+            matches.forEach(match => {
+              // Add both the full match and extracted ID
+              previousProjectIds.add(match.toLowerCase().trim())
+              const id = match.split(/[/-]/).pop()?.replace(/[^a-zA-Z0-9]/g, '')
+              if (id && id.length > 3) previousProjectIds.add(id.toLowerCase())
+            })
           })
         }
       })
+      
+      console.log('🔍 Previous project tracking:', Array.from(previousProjectIds))
     }
 
     if (wantsProposals) {
@@ -168,44 +191,88 @@ export class EnhancedStudentAI extends DynamicAIService {
         term.length > 2 && !['the', 'and', 'for', 'with', 'can', 'you', 'give', 'me', 'some', 'more', 'other', 'different'].includes(term)
       )
 
-      const whereConditions: any = {
-        status: 'LIVE',
-        ...(excludeIds.size > 0 && { id: { notIn: Array.from(excludeIds) } })
+      // Smart matching strategy: Mix keyword relevance with variety
+      let projects: any[] = []
+      
+      if (wantsAlternatives && excludeIds.size > 0) {
+        // For "different" requests - get completely fresh projects from different categories
+        // Also exclude by title similarity to avoid showing same projects with different IDs
+        const excludeArray = Array.from(excludeIds)
+        projects = await prisma.project.findMany({
+          where: {
+            status: 'LIVE',
+            id: { notIn: excludeArray }
+          },
+          include: { company: { select: { id: true, companyName: true } } },
+          take: 20,
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }]
+        })
+      } else {
+        // Initial search - prioritize keyword relevance but ensure variety
+        const keywordProjects = searchTerms.length > 0 ? await prisma.project.findMany({
+          where: {
+            status: 'LIVE',
+            OR: [
+              { title: { contains: searchTerms.join(' '), mode: 'insensitive' as any } },
+              { description: { contains: searchTerms.join(' '), mode: 'insensitive' as any } },
+              ...searchTerms.map(term => ({ title: { contains: term, mode: 'insensitive' as any } })),
+              ...searchTerms.map(term => ({ description: { contains: term, mode: 'insensitive' as any } }))
+            ]
+          },
+          include: { company: { select: { id: true, companyName: true } } },
+          take: 10,
+          orderBy: { createdAt: 'desc' }
+        }) : []
+
+        // Also get some recent projects for variety (from different companies)
+        const recentProjects = await prisma.project.findMany({
+          where: { 
+            status: 'LIVE',
+            ...(keywordProjects.length > 0 && { id: { notIn: keywordProjects.map(p => p.id) } })
+          },
+          include: { company: { select: { id: true, companyName: true } } },
+          take: 10,
+          orderBy: { createdAt: 'desc' }
+        })
+
+        // Combine and ensure variety
+        projects = [...keywordProjects, ...recentProjects]
       }
 
-      if (searchTerms.length > 0) {
-        whereConditions.OR = [
-          { title: { contains: searchTerms.join(' '), mode: 'insensitive' } },
-          { description: { contains: searchTerms.join(' '), mode: 'insensitive' } },
-          { category: { contains: searchTerms.join(' '), mode: 'insensitive' } },
-          // Also try individual terms
-          ...searchTerms.map(term => ({ title: { contains: term, mode: 'insensitive' } })),
-          ...searchTerms.map(term => ({ description: { contains: term, mode: 'insensitive' } }))
-        ]
+      // Smart selection: ensure variety and relevance
+      const uniqueProjects = projects.filter((project, index, self) => 
+        index === self.findIndex(p => p.id === project.id)
+      )
+      
+      // For variety, prefer projects from different companies
+      const diverseProjects: any[] = []
+      const usedCompanies = new Set<string>()
+      
+      // First pass: get one project per company
+      for (const project of uniqueProjects) {
+        if (!usedCompanies.has(project.company.id) && diverseProjects.length < 3) {
+          diverseProjects.push(project)
+          usedCompanies.add(project.company.id)
+        }
       }
+      
+      // Second pass: fill remaining slots if needed
+      for (const project of uniqueProjects) {
+        if (diverseProjects.length < 3 && !diverseProjects.find(p => p.id === project.id)) {
+          diverseProjects.push(project)
+        }
+      }
+      
+      const selected = diverseProjects.slice(0, 3)
 
-      const projects = await prisma.project.findMany({
-        where: whereConditions,
-        include: {
-          company: {
-            select: {
-              id: true,
-              companyName: true
-            }
-          }
-        },
-        take: 15,
-        orderBy: wantsAlternatives ? { updatedAt: 'desc' } : { createdAt: 'desc' }
-      })
-
-      return projects.map(p => ({
+      return selected.map(p => ({
         id: p.id,
         title: p.title,
         companyId: p.company.id,
         companyName: p.company.companyName || 'Company',
         location: p.location,
         description: p.description
-      })).slice(0, 3) // Return top 3
+      }))
     } catch (error) {
       console.error('Error fetching relevant projects:', error)
       return []
@@ -243,11 +310,45 @@ export class EnhancedStudentAI extends DynamicAIService {
     }))
   }
 
+  private generateTailoredResponse(query: string, relevantData: any, wantsProposals: boolean): SimpleAIResponse {
+    if (wantsProposals) {
+      return {
+        content: `Here are ${relevantData.companies?.length || 0} companies you can reach out to:`,
+        actionType: 'guidance'
+      }
+    } else {
+      const projectCount = relevantData.projects?.length || 0
+      const queryLower = query.toLowerCase()
+      
+      // Tailored responses based on query content
+      let message = `Here are ${projectCount} matching projects:`
+      
+      if (queryLower.includes('different') || queryLower.includes('other') || queryLower.includes('more')) {
+        message = `Here are ${projectCount} different opportunities:`
+      } else if (queryLower.includes('marketing')) {
+        message = `Found ${projectCount} marketing opportunities:`
+      } else if (queryLower.includes('tech') || queryLower.includes('software') || queryLower.includes('development')) {
+        message = `Found ${projectCount} tech projects:`
+      } else if (queryLower.includes('design')) {
+        message = `Found ${projectCount} design projects:`
+      } else if (queryLower.includes('remote')) {
+        message = `Found ${projectCount} remote opportunities:`
+      } else if (queryLower.includes('internship')) {
+        message = `Found ${projectCount} internship opportunities:`
+      }
+      
+      return {
+        content: message,
+        actionType: 'guidance'
+      }
+    }
+  }
+
   private formatForStudentChat(response: any, data: any, wantsProposals: boolean): EnhancedStudentResponse {
-    // Always keep replies ultra-brief and action-oriented on student side
-    const briefContent = wantsProposals
+    // Use the tailored content from response
+    const briefContent = response.content || (wantsProposals
       ? 'Here are companies to reach out to:'
-      : `Here are ${Math.min(3, (data.projects || []).length)} matching projects:`
+      : `Here are ${Math.min(3, (data.projects || []).length)} matching projects:`)
 
     if (wantsProposals) {
       return {
