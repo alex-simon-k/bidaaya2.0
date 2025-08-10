@@ -29,7 +29,25 @@ export class EnhancedStudentAI extends DynamicAIService {
       const response = await this.generateResponse(query, enrichedContext)
       
       // Get relevant projects or companies based on intent
-      const relevantData = await this.getRelevantOpportunities(query, context, wantsProposals)
+      let relevantData = await this.getRelevantOpportunities(query, context, wantsProposals)
+
+      // HARD GUARANTEE: if user asked for projects and none found, show latest live projects
+      if (!wantsProposals && (!relevantData.projects || relevantData.projects.length === 0)) {
+        const fallback = await prisma.project.findMany({
+          where: { status: 'LIVE' },
+          include: { company: { select: { id: true, companyName: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 3
+        })
+        relevantData.projects = fallback.map(p => ({
+          id: p.id,
+          title: p.title,
+          companyId: p.company.id,
+          companyName: p.company.companyName || 'Company',
+          location: p.location,
+          description: p.description
+        }))
+      }
       
       // Convert to student chat format
       return this.formatForStudentChat(response, relevantData, wantsProposals)
