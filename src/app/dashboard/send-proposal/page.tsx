@@ -63,25 +63,26 @@ export default function SendProposalPage() {
   }, [companyId])
 
   const loadCompanyInfo = async (id: string) => {
-    // For now, use mock data - in production this would be an API call
-    const mockCompanies: { [key: string]: CompanyInfo } = {
-      'comp-tech-1': {
-        id: 'comp-tech-1',
-        name: 'TechFlow Solutions',
-        industry: 'Technology',
-        size: '50-100 employees',
-        description: 'Innovative fintech startup building next-generation payment solutions.'
-      },
-      'comp-consulting-1': {
-        id: 'comp-consulting-1',
-        name: 'Strategy Plus Consulting',
-        industry: 'Consulting',
-        size: '200-500 employees',
-        description: 'Management consulting firm specializing in digital transformation.'
+    try {
+      const res = await fetch(`/api/companies/${encodeURIComponent(id)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setCompany({
+          id: data.id,
+          name: data.name,
+          industry: data.industry,
+          size: data.size,
+          description: data.description
+        })
+        setFormData(prev => ({ ...prev, companyId: data.id }))
+        return
       }
+    } catch (e) {
+      console.error('Failed to fetch company info', e)
     }
 
-    setCompany(mockCompanies[id] || {
+    // Fallback
+    setCompany({
       id,
       name: 'Selected Company',
       industry: 'Various',

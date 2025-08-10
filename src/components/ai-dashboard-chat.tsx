@@ -675,22 +675,10 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: `🎯 **Great! Let's create your project.**
-
-Here's our project creation area where you can:
-• Set up all project details
-• Define requirements and skills  
-• Choose budget and timeline
-• Publish when ready
-
-**[➡️ Create Your Project](/dashboard/projects/new)**
-
-*Click the link above or use the "New Project" button to get started!*`,
+        content: `[Create Project](/dashboard/projects/new)` ,
         timestamp: new Date(),
         actionType: 'navigate',
-        data: { 
-          redirectUrl: '/dashboard/projects/new'
-        }
+        data: { redirectUrl: '/dashboard/projects/new' }
       }
     }
 
@@ -708,23 +696,7 @@ Here's our project creation area where you can:
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: `🔍 **Perfect! Searching for ${field} talent${university !== 'top universities' ? ` from ${university}` : ''}.**
-
-Analyzing your request: "${input}"
-
-I'm using our advanced AI matching system to find:
-• **${field} students** with relevant experience
-• **${university} candidates** for quality assurance
-• **Active students** with high engagement levels
-• **Business-focused profiles** matching your needs
-
-**🎯 Search Strategy:**
-• Filtering by university: ${university}
-• Matching field of study: ${field}
-• Prioritizing recent activity and response rates
-• Relevance-first scoring for quality matches
-
-**Searching now...** This will cost 1-2 credits per contact reveal.`,
+        content: `Searching for ${field} candidates...`,
         timestamp: new Date(),
         actionType: 'search',
         data: { query: input }
@@ -735,13 +707,9 @@ I'm using our advanced AI matching system to find:
     return {
       id: Date.now().toString(),
       type: 'ai',
-      content: `I'm here to help with your recruitment needs! I can help you:
-
-🎯 **Create Projects** - Describe what you need and I'll guide you through project creation
-🔍 **Find Talent** - Search our database of 500+ active students and candidates
-⚡ **Get Guidance** - Receive personalized hiring recommendations
-
-What would you like to do today?`,
+      content: `What do you want to do?
+- [Create Project](/dashboard/projects/new)
+- Find Talent`,
       timestamp: new Date(),
       actionType: 'guidance'
     }
@@ -807,20 +775,7 @@ What would you like to do today?`,
       const resultsMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'ai',
-        content: `🎉 **Found ${transformedResults.length} excellent matches!**
-
-${transformedResults.length > 0 ? 
-  `I've analyzed **${data.searchMetadata?.candidatesEvaluated || 'multiple'}** candidates and selected the **top ${transformedResults.length}** based on relevance and quality.
-
-${transformedResults.length >= 9 ? '**📈 More candidates available** - Try refining your search for different results!' : ''}
-
-**💳 Credits:** ${credits} remaining | **📞 Contact reveals:** 1 credit each
-
-**👆 Review the candidates above and click "Reveal Contact" for promising matches!**` : 
-  `No exact matches found for this search. Try:
-• Broader terms like "motivated students" or "active candidates"
-• Specific universities: "Computer Science students at AUD"  
-• Skills-based search: "Students with marketing experience"`}`,
+        content: `${transformedResults.length} matches found. ${credits} credits left.`,
         timestamp: new Date(),
         actionType: 'guidance'
       }
