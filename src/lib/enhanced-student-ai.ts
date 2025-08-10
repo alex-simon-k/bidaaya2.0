@@ -161,47 +161,47 @@ export class EnhancedStudentAI extends DynamicAIService {
   }
 
   private async getRelevantOpportunities(query: string, context: StudentChatContext, wantsProposals: boolean) {
-    const wantsAlternatives = /\b(more|another|other|different|else|new|alternative)\b/i.test(query)
+    const wantsAlternatives = /\b(more|another|other|different|else|new|alternative|various|diverse)\b/i.test(query)
     
-    // Extract previously shown project IDs to avoid repetition
+    // Extract previously shown items to avoid repetition
     const previousProjectIds = new Set<string>()
+    const previousCompanyIds = new Set<string>()
+    
     if (wantsAlternatives && context.previousMessages.length > 0) {
-      // Look through recent conversation for previously shown projects
-      const recentMessages = context.previousMessages.slice(-6) // Last 6 messages
+      // Look through recent conversation for previously shown items
+      const recentMessages = context.previousMessages.slice(-8) // Last 8 messages
       recentMessages.forEach(msg => {
         if (msg.role === 'assistant') {
-          // Better pattern matching for project names/IDs
-          const projectPatterns = [
-            /Social Media Campaigns/gi,
-            /Smart City Internship/gi,
-            /Cybersecurity Internship/gi,
-            /EssayPilot/gi,
-            /SmartCity Analytics/gi,
-            /SecureLearn Systems/gi,
-            // Generic patterns
-            /project[/-](\w+)/gi,
-            /internship.*?(\w+)/gi,
-            /opportunity.*?(\w+)/gi
+          // Track projects by name patterns
+          const projectNames = [
+            'Social Media Campaigns', 'Smart City Internship', 'Cybersecurity Internship',
+            'EssayPilot', 'SmartCity Analytics', 'SecureLearn Systems'
           ]
+          projectNames.forEach(name => {
+            if (msg.content.includes(name)) {
+              previousProjectIds.add(name.toLowerCase())
+            }
+          })
           
-          projectPatterns.forEach(pattern => {
-            const matches = msg.content.match(pattern) || []
-            matches.forEach(match => {
-              // Add both the full match and extracted ID
-              previousProjectIds.add(match.toLowerCase().trim())
-              const id = match.split(/[/-]/).pop()?.replace(/[^a-zA-Z0-9]/g, '')
-              if (id && id.length > 3) previousProjectIds.add(id.toLowerCase())
-            })
+          // Track companies by name patterns  
+          const companyNames = [
+            'NeoBank Solutions', 'ContentAI Labs', 'EcoThread Fashion',
+            'TechFlow Systems', 'GreenTech Solutions', 'DataViz Corp'
+          ]
+          companyNames.forEach(name => {
+            if (msg.content.includes(name)) {
+              previousCompanyIds.add(name.toLowerCase())
+            }
           })
         }
       })
       
-      console.log('🔍 Previous project tracking:', Array.from(previousProjectIds))
+      console.log('🔍 Previous tracking - Projects:', Array.from(previousProjectIds), 'Companies:', Array.from(previousCompanyIds))
     }
 
     if (wantsProposals) {
       // Return companies for proposal sending
-      const companies = await this.getRelevantCompanies(query, context.userId)
+      const companies = await this.getRelevantCompanies(query, context.userId, previousCompanyIds, wantsAlternatives)
       return { companies, projects: [], proposals: this.generateProposals(companies) }
     } else {
       // Return projects for applications
@@ -221,12 +221,24 @@ export class EnhancedStudentAI extends DynamicAIService {
       
       if (wantsAlternatives && excludeIds.size > 0) {
         // For "different" requests - get completely fresh projects from different categories
-        // Also exclude by title similarity to avoid showing same projects with different IDs
         const excludeArray = Array.from(excludeIds)
+        
+        // First, try to exclude by project title patterns to avoid similar projects
+        const excludeTitles = ['Social Media Campaigns', 'Smart City Internship', 'Cybersecurity Internship']
+        const shouldExcludeTitles = excludeArray.some(id => 
+          excludeTitles.some(title => id.includes(title.toLowerCase().replace(/\s+/g, '')))
+        )
+        
         projects = await prisma.project.findMany({
           where: {
             status: 'LIVE',
-            id: { notIn: excludeArray }
+            ...(shouldExcludeTitles && {
+              NOT: {
+                OR: excludeTitles.map(title => ({
+                  title: { contains: title, mode: 'insensitive' as any }
+                }))
+              }
+            })
           },
           include: { company: { select: { id: true, companyName: true } } },
           take: 20,
@@ -304,9 +316,9 @@ export class EnhancedStudentAI extends DynamicAIService {
     }
   }
 
-  private async getRelevantCompanies(query: string, userId: string) {
+  private async getRelevantCompanies(query: string, userId: string, excludeCompanies: Set<string> = new Set(), wantsAlternatives: boolean = false) {
     // Get companies with active projects for proposal sending
-    const companies = await prisma.user.findMany({
+    let companies = await prisma.user.findMany({
       where: {
         role: 'COMPANY',
         companyName: { not: null }
@@ -316,10 +328,39 @@ export class EnhancedStudentAI extends DynamicAIService {
         companyName: true,
         industry: true
       },
-      take: 5
+      take: 15,
+      orderBy: wantsAlternatives ? { updatedAt: 'desc' } : { createdAt: 'desc' }
     })
 
-    return companies.map(c => ({
+    // Filter out previously shown companies if requesting alternatives
+    if (wantsAlternatives && excludeCompanies.size > 0) {
+      companies = companies.filter(c => 
+        !excludeCompanies.has((c.companyName || '').toLowerCase())
+      )
+    }
+
+    // If no companies after filtering, get different ones
+    if (companies.length === 0) {
+      companies = await prisma.user.findMany({
+        where: {
+          role: 'COMPANY',
+          companyName: { not: null }
+        },
+        select: {
+          id: true,
+          companyName: true,
+          industry: true
+        },
+        take: 5,
+        orderBy: { createdAt: 'asc' } // Get oldest companies for variety
+      })
+    }
+
+    // Shuffle for variety and take 5
+    const shuffled = companies.sort(() => Math.random() - 0.5)
+    const selected = shuffled.slice(0, 5)
+
+    return selected.map(c => ({
       id: c.id,
       name: c.companyName || 'Company',
       description: `${c.industry || 'Technology'} company`,
