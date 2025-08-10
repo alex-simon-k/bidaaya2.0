@@ -226,20 +226,22 @@ export class EnhancedStudentAI extends DynamicAIService {
   }
 
   private formatForStudentChat(response: any, data: any, wantsProposals: boolean): EnhancedStudentResponse {
-    // Clean the response content
-    const cleanContent = this.cleanStudentResponse(response.message)
-    
+    // Always keep replies ultra-brief and action-oriented on student side
+    const briefContent = wantsProposals
+      ? 'Here are companies to reach out to:'
+      : `Here are ${Math.min(3, (data.projects || []).length)} matching projects:`
+
     if (wantsProposals) {
       return {
-        content: cleanContent || 'Here are some companies you can send proposals to.',
+        content: briefContent,
         companies: data.companies,
         proposals: data.proposals
       }
-    } else {
-      return {
-        content: cleanContent || 'Here are some great opportunities for you to explore.',
-        projects: data.projects
-      }
+    }
+
+    return {
+      content: briefContent,
+      projects: data.projects
     }
   }
 
