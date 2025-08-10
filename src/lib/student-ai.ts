@@ -180,6 +180,29 @@ Please respond in the required JSON schema.`
     return JSON.parse(content)
   }
 
+  private buildDefaultProposals(
+    projects: Array<{ id: string; title: string; companyId: string; companyName: string; location?: string | null; description: string }>,
+    proposalsOnly: boolean
+  ): StudentAIResponse['proposals'] {
+    const top = projects.slice(0, 3)
+
+    if (proposalsOnly) {
+      return [0, 1, 2].map(i => ({
+        companyId: top[i]?.companyId,
+        companyName: top[i]?.companyName || 'Company',
+        proposal: `Hi ${top[i]?.companyName || 'there'}, I'm excited about ${top[i]?.title}. My skills align well; could we discuss opportunities?`
+      }))
+    }
+
+    return [
+      {
+        companyId: top[0]?.companyId,
+        companyName: top[0]?.companyName || 'Company',
+        proposal: `Hi ${top[0]?.companyName || 'there'}, I'm interested in ${top[0]?.title}. I have relevant skills and would love to contribute. Could we connect?`
+      }
+    ]
+  }
+
   private basicResponse(projects: any[], proposalsOnly: boolean): StudentAIResponse {
     const top = projects.slice(0, 3)
     const content = proposalsOnly
