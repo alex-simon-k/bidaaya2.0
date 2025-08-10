@@ -16,7 +16,8 @@ interface Message {
   timestamp: Date
   projects?: any[]
   proposals?: Array<{ companyId?: string; companyName: string; proposal: string }>
-  companies?: Array<{ id: string; name: string; description?: string; matchScore?: number }>
+  companies?: Array<{ id: string; name: string; description?: string; matchScore?: number; industry?: string; location?: string; activeProjects?: number; teamSize?: string }>
+  showMoreButton?: boolean
 }
 
 export default function AISearchPage() {
@@ -98,8 +99,13 @@ export default function AISearchPage() {
             id: c.id,
             name: c.name,
             description: c.description,
-            matchScore: c.matchScore
-          }))
+            matchScore: c.matchScore,
+            industry: c.industry,
+            location: c.location,
+            activeProjects: c.activeProjects,
+            teamSize: c.teamSize
+          })),
+          showMoreButton: data.showMoreButton || false
         }
         setMessages(prev => [...prev, assistantMessage])
       } else {
@@ -283,24 +289,48 @@ export default function AISearchPage() {
                         </div>
                       )}
 
-                      {/* Company Suggestions (when proposals not provided) */}
-                      {(!message.proposals || message.proposals.length === 0) && message.companies && message.companies.length > 0 && (
-                        <div className="mt-4 space-y-3">
+                      {/* Company Suggestions with detailed information */}
+                      {message.companies && message.companies.length > 0 && (
+                        <div className="mt-4 space-y-4">
                           {message.companies.map((company) => (
-                            <div key={company.id} className="bg-white rounded-lg p-4 border border-gray-200">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="h-4 w-4 text-gray-500" />
-                                  <h4 className="font-medium text-gray-900 text-sm">{company.name}</h4>
+                            <div key={company.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-purple-200 hover:shadow-md transition-all">
+                              {/* Header */}
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                                  <Building2 className="h-5 w-5 text-white" />
                                 </div>
-                                {company.matchScore && (
-                                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">{company.matchScore}% match</span>
+                                <div>
+                                  <h4 className="font-semibold text-gray-900 text-base">{company.name}</h4>
+                                  <p className="text-sm text-gray-600">{company.industry || 'Technology'}</p>
+                                </div>
+                              </div>
+
+                              {/* Company Details */}
+                              <div className="space-y-2 mb-4">
+                                {company.location && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <span>Location: {company.location}</span>
+                                  </div>
+                                )}
+                                {company.activeProjects !== undefined && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                    <span>Active Projects: {company.activeProjects}</span>
+                                  </div>
+                                )}
+                                {company.teamSize && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                    <span>Team: {company.teamSize}</span>
+                                  </div>
                                 )}
                               </div>
-                              {company.description && <p className="text-xs text-gray-600 mb-3">{company.description}</p>}
+
+                              {/* Action Button */}
                               <button
                                 onClick={() => handleSendProposal({ id: company.id })}
-                                className="w-full bg-purple-600 text-white text-sm py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                                className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
                               >
                                 Send Proposal (1 credit)
                               </button>
@@ -356,6 +386,18 @@ export default function AISearchPage() {
             >
               <div className="text-purple-900 font-medium mb-1">Send a proposal</div>
               <div className="text-purple-700 text-sm">Connect directly with companies</div>
+            </button>
+          </div>
+        )}
+
+        {/* Show More Button - appears when there are more results available */}
+        {messages.length > 0 && messages[messages.length - 1]?.showMoreButton && (
+          <div className="mb-4">
+            <button
+              onClick={() => handleSuggestedPrompt('Show me another project')}
+              className="w-full p-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all shadow-sm font-medium"
+            >
+              ✨ Not what you're looking for? Show me another project
             </button>
           </div>
         )}

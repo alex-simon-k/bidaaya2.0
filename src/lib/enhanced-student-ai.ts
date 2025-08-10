@@ -1,6 +1,7 @@
 import { DynamicAIService } from './dynamic-ai-service'
 import { PrismaClient } from '@prisma/client'
 import { studentCareerGuidance } from './student-career-guidance'
+import { studentMatcher } from './improved-student-matching'
 
 const prisma = new PrismaClient()
 
@@ -49,37 +50,17 @@ export class EnhancedStudentAI extends DynamicAIService {
         }
       }
 
-      // SECOND: Determine intent - projects vs proposals/companies
-      const wantsProposals = /\bproposal(s)?\b/i.test(query) || /\bcompany|companies|employer\b/i.test(query)
+      // SECOND: Analyze intent and generate appropriate response
+      const intent = this.analyzeUserIntent(query)
       
-      // Get relevant projects or companies based on intent (FAST - skip AI for speed)
-      let relevantData = await this.getRelevantOpportunities(query, context, wantsProposals)
-
-      // HARD GUARANTEE: if user asked for projects and none found, show latest live projects
-      if (!wantsProposals && (!relevantData.projects || relevantData.projects.length === 0)) {
-        console.log('🔍 No projects found for query, using fallback')
-        const fallback = await prisma.project.findMany({
-          where: { status: 'LIVE' },
-          include: { company: { select: { id: true, companyName: true } } },
-          orderBy: { createdAt: 'desc' },
-          take: 5
-        })
-        console.log('🔍 Fallback projects found:', fallback.length)
-        relevantData.projects = fallback.map(p => ({
-          id: p.id,
-          title: p.title,
-          companyId: p.company.id,
-          companyName: p.company.companyName || 'Company',
-          location: p.location,
-          description: p.description
-        })).slice(0, 3)
+      if (intent.type === 'projects') {
+        return await this.handleProjectSearch(query, context, intent)
+      } else if (intent.type === 'proposals') {
+        return await this.handleProposalSearch(query, context, intent)
+      } else {
+        // Default to project search with guidance
+        return await this.handleProjectSearch(query, context, { type: 'projects', keywords: [] })
       }
-      
-      // Generate tailored response based on what we found
-      const response = this.generateTailoredResponse(query, relevantData, wantsProposals)
-      
-      // Convert to student chat format
-      return this.formatForStudentChat(response, relevantData, wantsProposals)
     } catch (error) {
       console.error('Enhanced Student AI error:', error)
       return this.getStudentFallback(query, context)
@@ -495,6 +476,312 @@ export class EnhancedStudentAI extends DynamicAIService {
         content: 'Here are some opportunities that might interest you.',
         projects
       }
+    }
+  }
+
+  /**
+   * Analyze user intent from query
+   */
+  private analyzeUserIntent(query: string): { type: 'projects' | 'proposals', keywords: string[] } {
+    const queryLower = query.toLowerCase()
+    
+    // Check for proposal/company intent
+    if (/\b(proposal|proposals|company|companies|employer|reach out|connect)\b/i.test(query)) {
+      return { type: 'proposals', keywords: this.extractKeywords(query) }
+    }
+    
+    // Default to projects
+    return { type: 'projects', keywords: this.extractKeywords(query) }
+  }
+
+  /**
+   * Extract relevant keywords from query
+   */
+  private extractKeywords(query: string): string[] {
+    const keywords = query.toLowerCase()
+      .split(/\s+/)
+      .filter(word => 
+        word.length > 2 && 
+        !['the', 'and', 'for', 'with', 'can', 'you', 'give', 'me', 'some', 'more', 'other', 'different', 'looking', 'want', 'need'].includes(word)
+      )
+    return keywords
+  }
+
+  /**
+   * Handle project search with improved messaging and one-at-a-time display
+   */
+  private async handleProjectSearch(query: string, context: StudentChatContext, intent: any): Promise<any> {
+    // Get student profile for matching
+    const studentProfile = await this.getStudentProfile(context.userId)
+    
+    // Get previously shown projects to exclude
+    const excludeProjectIds = this.getPreviouslyShownProjects(context.previousMessages)
+    
+    // Get matched projects using improved algorithm
+    const matchedProjects = await studentMatcher.getMatchedProjects(
+      studentProfile, 
+      excludeProjectIds, 
+      10
+    )
+
+    // Show only ONE project at a time
+    const selectedProject = matchedProjects[0]
+    
+    if (!selectedProject) {
+      return {
+        content: "I've looked through all available opportunities, but it seems we've shown you everything that matches your profile right now. New projects are added regularly, so check back soon!",
+        projects: [],
+        companies: [],
+        proposals: [],
+        showMoreButton: false
+      }
+    }
+
+    // Generate contextual message based on search keywords
+    const contextualMessage = this.generateContextualMessage(query, intent.keywords, selectedProject)
+    
+    return {
+      content: contextualMessage,
+      projects: [this.formatProjectForResponse(selectedProject)],
+      companies: [],
+      proposals: [],
+      showMoreButton: matchedProjects.length > 1
+    }
+  }
+
+  /**
+   * Handle proposal/company search
+   */
+  private async handleProposalSearch(query: string, context: StudentChatContext, intent: any): Promise<any> {
+    // Get companies with detailed information
+    const companies = await this.getCompaniesWithDetails(intent.keywords)
+    
+    if (companies.length === 0) {
+      return {
+        content: "I couldn't find any companies that match your criteria right now. Try searching for different industries or fields!",
+        projects: [],
+        companies: [],
+        proposals: [],
+        showMoreButton: false
+      }
+    }
+
+    // Show one company at a time for proposals
+    const selectedCompany = companies[0]
+    const contextualMessage = this.generateProposalContextualMessage(query, intent.keywords, selectedCompany)
+    
+    return {
+      content: contextualMessage,
+      projects: [],
+      companies: [selectedCompany],
+      proposals: [],
+      showMoreButton: companies.length > 1
+    }
+  }
+
+  /**
+   * Get student profile for matching
+   */
+  private async getStudentProfile(userId: string) {
+    try {
+      const profile = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          major: true,
+          university: true,
+          skills: true,
+          interests: true,
+          goal: true,
+          location: true
+        }
+      })
+      
+      return {
+        id: userId,
+        major: profile?.major,
+        university: profile?.university,
+        skills: profile?.skills || [],
+        interests: profile?.interests || [],
+        goal: profile?.goal || [],
+        location: profile?.location
+      }
+    } catch (error) {
+      console.error('Error fetching student profile:', error)
+      return {
+        id: userId,
+        major: null,
+        university: null,
+        skills: [],
+        interests: [],
+        goal: [],
+        location: null
+      }
+    }
+  }
+
+  /**
+   * Get previously shown projects from conversation history
+   */
+  private getPreviouslyShownProjects(messages: Array<{ role: string, content: string }>): string[] {
+    const projectIds: string[] = []
+    
+    // Look for project names in recent messages to avoid repetition
+    const recentMessages = messages.slice(-6) // Last 6 messages
+    recentMessages.forEach(msg => {
+      if (msg.role === 'assistant') {
+        // Try to extract project titles (this is a simple heuristic)
+        const projectMatches = msg.content.match(/([A-Z][a-z\s]+(?:Intern|Developer|Analyst|Manager))/g)
+        if (projectMatches) {
+          projectIds.push(...projectMatches)
+        }
+      }
+    })
+    
+    return projectIds
+  }
+
+  /**
+   * Generate contextual message for project search
+   */
+  private generateContextualMessage(query: string, keywords: string[], project: any): string {
+    const field = this.detectField(keywords)
+    const queryLower = query.toLowerCase()
+    
+    let contextual = ""
+    
+    if (field) {
+      contextual = `I see you're looking for ${field} opportunities. `
+    } else if (queryLower.includes('internship') || queryLower.includes('intern')) {
+      contextual = `I see you're looking for internship opportunities. `
+    } else {
+      contextual = `I found something that might interest you. `
+    }
+    
+    contextual += `Here's the best match we have on the platform right now:\n\n`
+    contextual += `**${project.title}** at ${project.companyName}\n`
+    contextual += `Match Score: ${project.matchScore}%\n`
+    
+    if (project.matchReasons && project.matchReasons.length > 0) {
+      contextual += `Why it's a good fit: ${project.matchReasons.join(', ')}\n\n`
+    }
+    
+    contextual += `Not what you're looking for? You can also ask me to help you send proposals to companies or discover more opportunities in different fields.`
+    
+    return contextual
+  }
+
+  /**
+   * Generate contextual message for proposal search
+   */
+  private generateProposalContextualMessage(query: string, keywords: string[], company: any): string {
+    const field = this.detectField(keywords)
+    
+    let contextual = ""
+    
+    if (field) {
+      contextual = `I see you want to reach out to ${field} companies. `
+    } else {
+      contextual = `I see you want to reach out to companies. `
+    }
+    
+    contextual += `Here's a great company you could connect with:\n\n`
+    contextual += `**${company.name}**\n`
+    
+    if (company.industry) {
+      contextual += `Industry: ${company.industry}\n`
+    }
+    if (company.location) {
+      contextual += `Location: ${company.location}\n`
+    }
+    if (company.activeProjects) {
+      contextual += `Active Projects: ${company.activeProjects}\n`
+    }
+    if (company.teamSize) {
+      contextual += `Team Size: ${company.teamSize}\n`
+    }
+    
+    contextual += `\nReady to reach out? Click the button below to send them a proposal!`
+    
+    return contextual
+  }
+
+  /**
+   * Detect field/industry from keywords
+   */
+  private detectField(keywords: string[]): string | null {
+    const fieldMappings: Record<string, string[]> = {
+      'marketing': ['marketing', 'social', 'media', 'advertising', 'branding'],
+      'technology': ['tech', 'software', 'programming', 'coding', 'development', 'engineering'],
+      'finance': ['finance', 'accounting', 'investment', 'banking', 'financial'],
+      'design': ['design', 'ui', 'ux', 'graphics', 'creative'],
+      'data science': ['data', 'analytics', 'science', 'machine', 'learning', 'ai']
+    }
+    
+    for (const [field, terms] of Object.entries(fieldMappings)) {
+      if (keywords.some(keyword => terms.some(term => keyword.includes(term)))) {
+        return field
+      }
+    }
+    
+    return null
+  }
+
+  /**
+   * Format project for response
+   */
+  private formatProjectForResponse(project: any) {
+    return {
+      id: project.id,
+      title: project.title,
+      companyId: project.companyId,
+      companyName: project.companyName || 'Company',
+      location: project.location,
+      description: project.description,
+      matchScore: project.matchScore,
+      skills: project.skillsRequired || []
+    }
+  }
+
+  /**
+   * Get companies with detailed information instead of generic proposals
+   */
+  private async getCompaniesWithDetails(keywords: string[]) {
+    try {
+      const companies = await prisma.user.findMany({
+        where: {
+          role: 'COMPANY',
+          companyName: { not: null }
+        },
+        select: {
+          id: true,
+          companyName: true,
+          industry: true,
+          location: true,
+          projects: {
+            where: { status: 'LIVE' },
+            select: { id: true, title: true }
+          }
+        },
+        take: 10,
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return companies.map(company => ({
+        id: company.id,
+        companyId: company.id,
+        name: company.companyName || 'Company',
+        companyName: company.companyName || 'Company',
+        industry: company.industry || 'Technology',
+        location: company.location || 'Remote',
+        activeProjects: company.projects.length,
+        teamSize: company.projects.length > 3 ? 'Growing team' : 'Small team',
+        description: `${company.industry || 'Technology'} company based in ${company.location || 'various locations'}`
+      }))
+    } catch (error) {
+      console.error('Error fetching companies:', error)
+      return []
     }
   }
 }
