@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
-import { studentAIService } from '@/lib/student-ai'
+import { enhancedStudentAI } from '@/lib/enhanced-student-ai'
 
 // Enhanced DeepSeek AI for better platform understanding
 export async function POST(request: NextRequest) {
@@ -17,29 +17,18 @@ export async function POST(request: NextRequest) {
     const intent = detectIntent(userQuery)
     console.log(`🤖 AI API call for: ${userQuery}, detected intent: ${intent}`)
 
-    // Always use the Student AI service with the rulebook
-    const ai = await studentAIService.generateResponse(session.user.id, userQuery, previousMessages || [])
-
-    // Determine if the user intent is proposal/company focused
-    const proposalsOnly = /\bproposal(s)?\b/i.test(userQuery) || /\bcompany|companies|employer\b/i.test(userQuery) || intent === 'find_companies' || intent === 'send_proposal'
-
-    if (proposalsOnly) {
-      const companies = await getCompanySuggestions(session.user.id, userQuery)
-      return NextResponse.json({
-        actionType: 'student_ai',
-        content: ai.content,
-        companies,
-        projects: [],
-        proposals: ai.proposals || []
-      })
-    }
-
+    // Use enhanced student AI service
+    const ai = await enhancedStudentAI.generateStudentResponse(userQuery, {
+      userId: session.user.id,
+      previousMessages: previousMessages || []
+    })
+    
     return NextResponse.json({
       actionType: 'student_ai',
       content: ai.content,
-      companies: [],
+      companies: ai.companies || [],
       projects: ai.projects || [],
-      proposals: ai.proposals ? ai.proposals.slice(0, 1) : []
+      proposals: ai.proposals || []
     })
   } catch (error) {
     console.error('❌ AI API error:', error)

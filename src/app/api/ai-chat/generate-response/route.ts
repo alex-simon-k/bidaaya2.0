@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
-import { aiChatService } from '@/lib/ai-chat-responses'
+import { enhancedCompanyAI } from '@/lib/enhanced-company-ai'
 
 export async function POST(request: NextRequest) {
   console.log('🚀 AI Chat API Route - Request received')
@@ -21,18 +21,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    console.log(`🤖 AI Chat Request from ${session.user.id}: "${userQuery}"`)
+    console.log(`🤖 Enhanced AI Chat Request from ${session.user.id}: "${userQuery}"`)
 
-    // Generate AI response
-    const aiResponse = await aiChatService.generateResponse({
-      userQuery: userQuery.trim(),
-      userRole: userRole || 'COMPANY',
-      userName: userName || session.user.id,
-      detectedIntent,
-      previousMessages
+    // Use enhanced company AI service
+    const aiResponse = await enhancedCompanyAI.generateCompanyResponse(userQuery.trim(), {
+      userId: session.user.id,
+      previousMessages: previousMessages || []
     })
 
-    console.log(`✅ AI Response generated: ${aiResponse.actionType}`)
+    console.log(`✅ Enhanced AI Response generated: ${aiResponse.actionType}`)
 
     return NextResponse.json(aiResponse)
 
