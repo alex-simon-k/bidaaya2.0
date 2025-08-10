@@ -57,12 +57,14 @@ export class EnhancedStudentAI extends DynamicAIService {
 
       // HARD GUARANTEE: if user asked for projects and none found, show latest live projects
       if (!wantsProposals && (!relevantData.projects || relevantData.projects.length === 0)) {
+        console.log('🔍 No projects found for query, using fallback')
         const fallback = await prisma.project.findMany({
           where: { status: 'LIVE' },
           include: { company: { select: { id: true, companyName: true } } },
           orderBy: { createdAt: 'desc' },
-          take: 3
+          take: 5
         })
+        console.log('🔍 Fallback projects found:', fallback.length)
         relevantData.projects = fallback.map(p => ({
           id: p.id,
           title: p.title,
@@ -70,7 +72,7 @@ export class EnhancedStudentAI extends DynamicAIService {
           companyName: p.company.companyName || 'Company',
           location: p.location,
           description: p.description
-        }))
+        })).slice(0, 3)
       }
       
       // Generate tailored response based on what we found
@@ -216,6 +218,8 @@ export class EnhancedStudentAI extends DynamicAIService {
         term.length > 2 && !['the', 'and', 'for', 'with', 'can', 'you', 'give', 'me', 'some', 'more', 'other', 'different'].includes(term)
       )
 
+      console.log('🔍 Search terms extracted:', searchTerms)
+
       // Smart matching strategy: Mix keyword relevance with variety
       let projects: any[] = []
       
@@ -261,6 +265,8 @@ export class EnhancedStudentAI extends DynamicAIService {
           orderBy: { createdAt: 'desc' }
         }) : []
 
+        console.log('🔍 Keyword projects found:', keywordProjects.length, keywordProjects.map(p => p.title))
+
         // Also get some recent projects for variety (from different companies)
         const recentProjects = await prisma.project.findMany({
           where: { 
@@ -272,8 +278,14 @@ export class EnhancedStudentAI extends DynamicAIService {
           orderBy: { createdAt: 'desc' }
         })
 
-        // Combine and ensure variety
-        projects = [...keywordProjects, ...recentProjects]
+        // Combine and ensure variety - prioritize keyword matches
+        if (keywordProjects.length >= 3) {
+          // If we have enough keyword matches, use those primarily
+          projects = keywordProjects
+        } else {
+          // Mix keyword projects with recent ones, but put keyword matches first
+          projects = [...keywordProjects, ...recentProjects]
+        }
       }
 
       // Smart selection: ensure variety and relevance
@@ -281,26 +293,47 @@ export class EnhancedStudentAI extends DynamicAIService {
         index === self.findIndex(p => p.id === project.id)
       )
       
-      // For variety, prefer projects from different companies
-      const diverseProjects: any[] = []
-      const usedCompanies = new Set<string>()
+      // Smart selection: prioritize keyword relevance over company diversity for specific searches
+      let selected: any[] = []
       
-      // First pass: get one project per company
-      for (const project of uniqueProjects) {
-        if (!usedCompanies.has(project.company.id) && diverseProjects.length < 3) {
-          diverseProjects.push(project)
-          usedCompanies.add(project.company.id)
+      if (searchTerms.length > 0) {
+        // For keyword searches, prioritize relevance over diversity
+        const keywordMatches = uniqueProjects.filter(project => 
+          searchTerms.some(term => 
+            project.title.toLowerCase().includes(term) || 
+            project.description.toLowerCase().includes(term)
+          )
+        )
+        
+        if (keywordMatches.length >= 3) {
+          selected = keywordMatches.slice(0, 3)
+        } else {
+          // Mix keyword matches with other projects
+          const others = uniqueProjects.filter(p => !keywordMatches.find(k => k.id === p.id))
+          selected = [...keywordMatches, ...others].slice(0, 3)
         }
-      }
-      
-      // Second pass: fill remaining slots if needed
-      for (const project of uniqueProjects) {
-        if (diverseProjects.length < 3 && !diverseProjects.find(p => p.id === project.id)) {
-          diverseProjects.push(project)
+      } else {
+        // For general searches, prioritize company diversity
+        const diverseProjects: any[] = []
+        const usedCompanies = new Set<string>()
+        
+        // First pass: get one project per company
+        for (const project of uniqueProjects) {
+          if (!usedCompanies.has(project.company.id) && diverseProjects.length < 3) {
+            diverseProjects.push(project)
+            usedCompanies.add(project.company.id)
+          }
         }
+        
+        // Second pass: fill remaining slots if needed
+        for (const project of uniqueProjects) {
+          if (diverseProjects.length < 3 && !diverseProjects.find(p => p.id === project.id)) {
+            diverseProjects.push(project)
+          }
+        }
+        
+        selected = diverseProjects.slice(0, 3)
       }
-      
-      const selected = diverseProjects.slice(0, 3)
 
       return selected.map(p => ({
         id: p.id,
