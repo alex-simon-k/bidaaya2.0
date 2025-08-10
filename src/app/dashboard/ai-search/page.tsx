@@ -14,7 +14,7 @@ interface Message {
   type: 'user' | 'assistant'
   content: string
   timestamp: Date
-  companies?: any[]
+  projects?: any[]
 }
 
 export default function AISearchPage() {
@@ -79,9 +79,11 @@ export default function AISearchPage() {
           type: 'assistant',
           content: data.content || 'I apologize, but I encountered an issue. Please try again.',
           timestamp: new Date(),
-          companies: (data.projects || []).map((p: any) => ({
-            id: p.companyId || p.id,
-            name: `${p.companyName} — ${p.title}`,
+          projects: (data.projects || []).map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            companyId: p.companyId,
+            companyName: p.companyName,
             description: p.description || '',
             matchScore: 90
           }))
@@ -117,9 +119,9 @@ export default function AISearchPage() {
     setTimeout(() => handleSendMessage(), 100)
   }
 
-  const handleSendProposal = async (company: any) => {
-    // Navigate to proposal page
-    window.location.href = `/dashboard/send-proposal?company=${company.id}`
+  const handleApplyToProject = async (project: any) => {
+    // Navigate to the project details page where the user can apply
+    window.location.href = `/dashboard/projects/${project.id}`
   }
 
   const isCompany = session?.user?.role === 'COMPANY'
@@ -171,26 +173,26 @@ export default function AISearchPage() {
                     <div className="flex-1 bg-gray-50 rounded-lg p-4">
                       <div className="text-gray-900 whitespace-pre-wrap leading-relaxed">{message.content}</div>
                       
-                      {/* Company Suggestions */}
-                      {message.companies && message.companies.length > 0 && (
+                      {/* Project Suggestions */}
+                      {message.projects && message.projects.length > 0 && (
                         <div className="mt-4 space-y-3">
-                          {message.companies.map((company) => (
-                            <div key={company.id} className="bg-white rounded-lg p-4 border border-gray-200">
+                          {message.projects.map((project) => (
+                            <div key={project.id} className="bg-white rounded-lg p-4 border border-gray-200">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                   <Building2 className="h-4 w-4 text-gray-500" />
-                                  <h4 className="font-medium text-gray-900 text-sm">{company.name}</h4>
+                                  <h4 className="font-medium text-gray-900 text-sm">{project.title} — {project.companyName}</h4>
                                 </div>
                                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                  {company.matchScore}% match
+                                  {project.matchScore}% match
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-600 mb-3">{company.description}</p>
+                              <p className="text-xs text-gray-600 mb-3">{project.description}</p>
                               <button
-                                onClick={() => handleSendProposal(company)}
+                                onClick={() => handleApplyToProject(project)}
                                 className="w-full bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition-colors"
                               >
-                                Send Proposal (1 credit)
+                                Apply Now
                               </button>
                             </div>
                           ))}
