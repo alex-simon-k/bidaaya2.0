@@ -296,6 +296,9 @@ export default function SetupProfilePage() {
       console.log('🔄 Updating session with completed profile data');
       await update({ profileCompleted: true });
       
+      // Wait a moment for session to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Complete onboarding session
       completeOnboarding();
       
@@ -306,11 +309,12 @@ export default function SetupProfilePage() {
       // Show success message briefly before redirecting
       setIsProfileComplete(true);
       
-      // Small delay to show success message, then redirect to guided profile completion
+      // Wait longer to ensure session is fully propagated
       setTimeout(() => {
         console.log('🚀 Redirecting to profile completion');
-        router.push('/dashboard/profile?guided=true&welcome=true');
-      }, 1500);
+        // Force a hard navigation to ensure clean state and bypass potential middleware issues
+        window.location.href = '/dashboard/profile?guided=true&welcome=true&onboarding_complete=true';
+      }, 2500); // Longer delay to ensure session propagation
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred. Please try again.');

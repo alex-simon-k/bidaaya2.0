@@ -82,6 +82,15 @@ export default withAuth(
       
              // Redirect to role selection ONLY if they don't have a role yet OR trying to access dashboard
        if (pathname.startsWith("/dashboard")) {
+         // Check if this is the onboarding completion flow
+         const url = new URL(req.url);
+         const isOnboardingComplete = url.searchParams.get('onboarding_complete') === 'true';
+         
+         if (isOnboardingComplete && pathname === '/dashboard/profile') {
+           console.log('🛡️ ✅ Allowing onboarding completion flow to profile page');
+           return NextResponse.next();
+         }
+         
          if (!token.role) {
            console.log('🛡️ ❌ No role set, redirecting to role selection from:', pathname);
            return NextResponse.redirect(new URL("/auth/role-selection", req.url));
