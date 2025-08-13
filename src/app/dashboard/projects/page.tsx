@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
   Plus, 
@@ -75,6 +75,7 @@ const STATUS_CONFIG = {
 export default function ProjectsPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -83,6 +84,10 @@ export default function ProjectsPage() {
   const [showPaywallModal, setShowPaywallModal] = useState(false)
   const [paywallPrompt, setPaywallPrompt] = useState<CompanyUpgradePrompt | null>(null)
   const [activatingProject, setActivatingProject] = useState<string | null>(null)
+
+  // Guided first application experience
+  const isGuided = searchParams.get('guided') === 'true'
+  const isFirstApplication = searchParams.get('first') === 'true'
 
   useEffect(() => {
     fetchProjects()
@@ -200,6 +205,57 @@ export default function ProjectsPage() {
           </button>
         )}
       </div>
+
+      {/* Guided First Application Banner */}
+      {isGuided && isFirstApplication && !isCompany && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-6 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 rounded-full p-3">
+                <Rocket className="h-8 w-8" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">🎉 Ready for Your First Application!</h3>
+                <p className="text-purple-100">
+                  Browse projects below and apply to one that excites you. We'll guide you through the process!
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-purple-100">Step 3 of 3</div>
+              <div className="text-lg font-bold">Complete Journey</div>
+            </div>
+          </div>
+          
+          {/* Progress indicator */}
+          <div className="mt-4 bg-white/20 rounded-full h-2">
+            <div className="bg-white rounded-full h-2 w-full"></div>
+          </div>
+
+          {/* Instruction */}
+          <div className="mt-4 bg-white/10 rounded-lg p-4">
+            <h4 className="font-semibold mb-2">💡 How to Choose Your First Project:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-300" />
+                <span>Pick a category you're passionate about</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-300" />
+                <span>Check if it matches your skill level</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-300" />
+                <span>Read the requirements carefully</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Filters - Mobile First Design */}
       <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">

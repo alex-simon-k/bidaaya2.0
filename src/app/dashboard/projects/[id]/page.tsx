@@ -25,6 +25,7 @@ import {
   UserCheck
 } from 'lucide-react'
 import { StudentApplicationModal } from '@/components/student-application-modal'
+import { FirstApplicationSuccessModal } from '@/components/first-application-success-modal'
 
 interface Project {
   id: string
@@ -87,12 +88,30 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showApplicationModal, setShowApplicationModal] = useState(false)
   const [hasApplied, setHasApplied] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [isFirstApplication, setIsFirstApplication] = useState(false)
+  const [compatibilityScore, setCompatibilityScore] = useState(85)
 
   useEffect(() => {
     if (projectId) {
       fetchProject()
+      checkIfFirstApplication()
     }
   }, [projectId, session])
+
+  const checkIfFirstApplication = async () => {
+    if (!session?.user?.id) return
+    
+    try {
+      const response = await fetch('/api/applications/count')
+      if (response.ok) {
+        const data = await response.json()
+        setIsFirstApplication(data.count === 0)
+      }
+    } catch (error) {
+      console.error('Failed to check application count:', error)
+    }
+  }
 
   const fetchProject = async () => {
     try {
@@ -532,12 +551,29 @@ export default function ProjectDetailPage() {
           project={project}
           isOpen={showApplicationModal}
           onClose={() => setShowApplicationModal(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setHasApplied(true)
+            setShowApplicationModal(false)
+            
+            // If this was their first application, show the gamification modal
+            if (isFirstApplication) {
+              // Calculate compatibility score (simulate for now)
+              setCompatibilityScore(Math.floor(Math.random() * 25) + 75) // 75-100%
+              setShowSuccessModal(true)
+            }
+            
             fetchProject() // Refresh to update application count
           }}
         />
       )}
+
+      {/* First Application Success Modal */}
+      <FirstApplicationSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        projectTitle={project?.title || ''}
+        compatibilityScore={compatibilityScore}
+      />
     </div>
   )
 } 
