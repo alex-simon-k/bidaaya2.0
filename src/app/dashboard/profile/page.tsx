@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
   Camera, 
@@ -111,13 +111,79 @@ const BADGES = {
 export default function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [editData, setEditData] = useState<Partial<ProfileData>>({})
   const [activeTab, setActiveTab] = useState('overview')
 
+  // Guided experience state
+  const isGuided = searchParams.get('guided') === 'true'
+  const isWelcome = searchParams.get('welcome') === 'true'
+  const [guidedStep, setGuidedStep] = useState(1)
+  const [guidedProgress, setGuidedProgress] = useState(0)
+
   const userRole = session?.user?.role as 'STUDENT' | 'COMPANY'
+
+  // Guided experience configuration for students
+  const guidedSteps = [
+    {
+      id: 1,
+      title: 'Add Your Educational Background',
+      description: 'Tell companies about your university and field of study',
+      fields: ['university', 'major'],
+      icon: '🎓'
+    },
+    {
+      id: 2,
+      title: 'Write Your Bio',
+      description: 'Share something interesting about yourself that makes you stand out',
+      fields: ['bio'],
+      icon: '✨'
+    },
+    {
+      id: 3,
+      title: 'Add Your Skills',
+      description: 'List your technical and soft skills to help with project matching',
+      fields: ['skills'],
+      icon: '🚀'
+    },
+    {
+      id: 4,
+      title: 'Set Your Interests',
+      description: 'Choose industries and project types that excite you',
+      fields: ['interests'],
+      icon: '🎯'
+    }
+  ]
+
+  // Calculate completion progress
+  const calculateGuidedProgress = () => {
+    if (!profileData) return 0
+    
+    const totalFields = guidedSteps.reduce((acc, step) => acc + step.fields.length, 0)
+    let completedFields = 0
+    
+    guidedSteps.forEach(step => {
+      step.fields.forEach(field => {
+        const value = profileData[field as keyof ProfileData]
+        if (value && (Array.isArray(value) ? value.length > 0 : value.toString().trim() !== '')) {
+          completedFields++
+        }
+      })
+    })
+    
+    return Math.round((completedFields / totalFields) * 100)
+  }
+
+  // Update progress when profile data changes
+  useEffect(() => {
+    if (isGuided && profileData) {
+      const progress = calculateGuidedProgress()
+      setGuidedProgress(progress)
+    }
+  }, [profileData, isGuided])
 
   const transformApiResponse = (apiData: any): ProfileData => {
     // Parse bio field to extract original bio if it contains discovery profile data

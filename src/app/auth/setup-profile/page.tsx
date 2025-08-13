@@ -24,9 +24,9 @@ import { useOnboardingSession } from '@/lib/onboarding-session-manager'
 import { OnboardingSessionManager } from '@/lib/onboarding-session-manager'
 
 interface Step {
-  key: keyof StudentProfileFormData | 'institutions' | 'contact-and-terms';
+  key: keyof StudentProfileFormData | 'contact-and-terms';
   label: string;
-  type: 'text' | 'date' | 'select' | 'checkbox' | 'checkbox-single' | 'radio' | 'institutions' | 'textarea' | 'contact-with-terms';
+  type: 'text' | 'date' | 'select' | 'radio' | 'contact-with-terms';
   required: boolean;
   placeholder?: string;
   options?: string[];
@@ -39,12 +39,6 @@ interface StudentProfileFormData {
   name: string;
   dateOfBirth: string;
   educationStatus: string;
-  highSchool: string;
-  university: string;
-  subjects: string;
-  goal: string[];
-  interests: string[];
-  bio: string;
   whatsapp: string;
   linkedin: string;
   mena: string;
@@ -52,6 +46,7 @@ interface StudentProfileFormData {
   [key: string]: string | string[] | boolean;
 }
 
+// Minimal onboarding - just the essentials to get students to their profile quickly
 const steps: Step[] = [
   {
     key: 'name',
@@ -76,59 +71,6 @@ const steps: Step[] = [
     options: ['High School', 'Gap Year', 'University', 'Graduated'],
     placeholder: 'Select your status',
     icon: <GraduationCap className="w-8 h-8 text-white" />,
-  },
-  {
-    key: 'institutions',
-    label: 'What are your educational institutions?',
-    type: 'institutions',
-    required: true,
-    icon: <GraduationCap className="w-8 h-8 text-white" />,
-  },
-  {
-    key: 'subjects',
-    label: 'What subjects have you pursued most recently?',
-    type: 'text',
-    required: true,
-    placeholder: 'E.g. Computer Science, Business...',
-    icon: <Book className="w-8 h-8 text-white" />,
-  },
-  {
-    key: 'goal',
-    label: 'What is your main goal with Bidaaya?',
-    type: 'checkbox',
-    required: true,
-    options: ['Get Hired', 'Get Experience', 'Try New Things'],
-    icon: <Target className="w-8 h-8 text-white" />,
-  },
-  {
-    key: 'interests',
-    label: 'What types of programs or industries interest you most?',
-    type: 'checkbox',
-    required: true,
-    options: [
-      'Technology & Software Development',
-      'Marketing & Digital Media',
-      'Finance & Banking',
-      'Healthcare & Medical',
-      'Education & Training',
-      'Consulting & Strategy',
-      'Design & Creative Arts',
-      'Engineering & Manufacturing',
-      'Sales & Business Development',
-      'Non-profit & Social Impact',
-      'Startups & Entrepreneurship',
-      'Government & Public Sector'
-    ],
-    icon: <Rocket className="w-8 h-8 text-white" />,
-  },
-  {
-    key: 'bio',
-    label: 'Tell us something interesting about yourself.',
-    type: 'textarea',
-    required: true,
-    placeholder: 'Something you are proud of, or a fun fact!',
-    icon: <Info className="w-8 h-8 text-white" />,
-    maxLength: 100,
   },
   {
     key: 'mena',
@@ -165,12 +107,6 @@ export default function SetupProfilePage() {
     name: '',
     dateOfBirth: '',
     educationStatus: '',
-    highSchool: '',
-    university: '',
-    subjects: '',
-    goal: [],
-    interests: [],
-    bio: '',
     whatsapp: '',
     linkedin: '',
     mena: '',
@@ -268,47 +204,14 @@ export default function SetupProfilePage() {
   const progress = ((step + 1) / steps.length) * 100
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    if (currentStep.type === 'checkbox' && type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => {
-        const fieldName = currentStep.key === 'goal' ? 'goal' : 'interests';
-        const arr = Array.isArray(prev[fieldName]) ? prev[fieldName] as string[] : [];
-        if (checked) {
-          return { ...prev, [fieldName]: [...arr, value] };
-        } else {
-          return { ...prev, [fieldName]: arr.filter((item: string) => item !== value) };
-        }
-      });
-    } else if (currentStep.type === 'checkbox-single' && type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
     setError(null);
   };
 
   const validateStep = () => {
     if (currentStep.required) {
-      if (currentStep.type === 'institutions') {
-        if (!formData.highSchool && !formData.university) {
-          setError('Please enter at least one educational institution.');
-          return false;
-        }
-      } else if (currentStep.type === 'checkbox') {
-        const fieldName = currentStep.key === 'goal' ? 'goal' : 'interests';
-        const fieldValue = formData[fieldName];
-        if (!fieldValue || (Array.isArray(fieldValue) && fieldValue.length === 0)) {
-          setError(`Please select at least one ${currentStep.key === 'goal' ? 'goal' : 'interest'}.`);
-          return false;
-        }
-      } else if (currentStep.type === 'checkbox-single') {
-        if (!formData.terms) {
-          setError('You must agree to the Terms & Conditions.');
-          return false;
-        }
-      } else if (currentStep.type === 'contact-with-terms') {
+      if (currentStep.type === 'contact-with-terms') {
         if (!formData.terms) {
           setError('You must agree to the Terms & Conditions to continue.');
           return false;
@@ -403,10 +306,10 @@ export default function SetupProfilePage() {
       // Show success message briefly before redirecting
       setIsProfileComplete(true);
       
-      // Small delay to show success message, then redirect to dashboard
+      // Small delay to show success message, then redirect to guided profile completion
       setTimeout(() => {
-        console.log('🚀 Redirecting to dashboard');
-        router.push('/dashboard');
+        console.log('🚀 Redirecting to profile completion');
+        router.push('/dashboard/profile?guided=true&welcome=true');
       }, 1500);
       
     } catch (err) {
@@ -494,12 +397,7 @@ export default function SetupProfilePage() {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">{currentStep.label}</h2>
-                  {currentStep.type === 'institutions' && (
-                    <p className="text-gray-600">Enter at least one educational institution</p>
-                  )}
-                  {currentStep.type === 'checkbox' && (
-                    <p className="text-gray-600">Select all that apply</p>
-                  )}
+
                   {!currentStep.required && (
                     <p className="text-gray-500 text-sm">Optional</p>
                   )}
@@ -547,26 +445,7 @@ export default function SetupProfilePage() {
                   </div>
                 )}
 
-                {/* Textarea */}
-                {currentStep.type === 'textarea' && (
-                  <div>
-                    <textarea
-                      name={currentStep.key as string}
-                      value={formData[currentStep.key] as string}
-                      onChange={handleChange}
-                      placeholder={currentStep.placeholder}
-                      className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-6 py-4 text-lg text-gray-800 placeholder-gray-400 focus:border-emerald-500 focus:bg-white focus:outline-none transition-all duration-300 resize-none h-32"
-                      required={currentStep.required}
-                      maxLength={currentStep.maxLength}
-                    />
-                    <div className="flex justify-between items-center mt-2">
-                      <p className="text-sm text-gray-500">Share something that makes you unique!</p>
-                      <p className="text-sm text-gray-400">
-                        {(formData.bio || '').length} / {currentStep.maxLength}
-                      </p>
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Select Options */}
                 {currentStep.type === 'select' && (
@@ -590,81 +469,11 @@ export default function SetupProfilePage() {
                   </div>
                 )}
 
-                {/* Institutions */}
-                {currentStep.type === 'institutions' && (
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">High School</label>
-                      <input
-                        type="text"
-                        name="highSchool"
-                        value={formData.highSchool}
-                        onChange={handleChange}
-                        placeholder="E.g., International School of Choueifat"
-                        className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-6 py-4 text-lg text-gray-800 placeholder-gray-400 focus:border-emerald-500 focus:bg-white focus:outline-none transition-all duration-300"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">University</label>
-                      <input
-                        type="text"
-                        name="university"
-                        value={formData.university}
-                        onChange={handleChange}
-                        placeholder="E.g., American University of Sharjah"
-                        className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-6 py-4 text-lg text-gray-800 placeholder-gray-400 focus:border-emerald-500 focus:bg-white focus:outline-none transition-all duration-300"
-                      />
-                    </div>
-                  </div>
-                )}
 
-                {/* Checkbox Multiple */}
-                {currentStep.type === 'checkbox' && (
-                  <div className="grid gap-3">
-                    {currentStep.options?.map((opt: string) => {
-                      const fieldName = currentStep.key === 'goal' ? 'goal' : 'interests';
-                      const isChecked = Array.isArray(formData[fieldName]) && 
-                        (formData[fieldName] as string[]).includes(opt);
-                      
-                      return (
-                        <label
-                          key={opt}
-                          className="flex items-start gap-4 p-4 rounded-xl border-2 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            name={currentStep.key as string}
-                            value={opt}
-                            checked={isChecked}
-                            onChange={handleChange}
-                            className="w-5 h-5 text-white border-gray-300 rounded focus:ring-emerald-500 focus:border-emerald-500 mt-0.5"
-                          />
-                          <div className="flex-1">
-                            <span className="text-lg font-medium text-gray-800">{opt}</span>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
 
-                {/* Checkbox Single */}
-                {currentStep.type === 'checkbox-single' && (
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setFormData(prev => ({ ...prev, terms: !prev.terms }))}
-                    className={`w-full py-4 px-6 rounded-xl text-lg font-semibold border-2 transition-all duration-300 flex items-center justify-center gap-3 ${
-                      formData.terms
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-500 shadow-lg shadow-emerald-200'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50'
-                    }`}
-                  >
-                    <span>I agree to the <a href="/terms" className="underline" target="_blank" rel="noopener noreferrer">Terms & Conditions</a></span>
-                    {formData.terms && <CheckCircle className="h-5 w-5" />}
-                  </motion.button>
-                )}
+
+
+
 
                 {/* Radio Options */}
                 {currentStep.type === 'radio' && (
