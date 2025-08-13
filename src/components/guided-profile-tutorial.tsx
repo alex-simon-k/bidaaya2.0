@@ -36,7 +36,7 @@ interface Step {
   field: string
   icon: React.ReactNode
   placeholder: string
-  type: 'text' | 'textarea' | 'select' | 'multi-select'
+  type: 'text' | 'textarea' | 'select' | 'multi-select' | 'institutions'
   options?: string[]
   required: boolean
   maxLength?: number
@@ -45,21 +45,21 @@ interface Step {
 const tutorialSteps: Step[] = [
   {
     id: 1,
-    title: "Add Your Educational Background",
-    description: "Tell companies about your university and field of study so they can find you for relevant opportunities.",
-    field: "university",
+    title: "Add Your Educational Institutions",
+    description: "Tell companies about your educational background. Fill in the institution that's most relevant to you.",
+    field: "institutions",
     icon: <GraduationCap className="h-6 w-6" />,
-    placeholder: "e.g., American University of Sharjah",
-    type: "text",
+    placeholder: "Enter your institution name",
+    type: "institutions",
     required: true
   },
   {
     id: 2,
-    title: "What's Your Major?",
-    description: "This helps us match you with projects that align with your academic background and interests.",
-    field: "major",
+    title: "What are your most recent subjects?",
+    description: "Tell us about the most recent modules or subjects you've studied. This helps with project matching.",
+    field: "subjects",
     icon: <GraduationCap className="h-6 w-6" />,
-    placeholder: "e.g., Computer Science, Business Administration",
+    placeholder: "e.g., Computer Science, Business Administration, Marketing",
     type: "text",
     required: true
   },
@@ -76,17 +76,6 @@ const tutorialSteps: Step[] = [
   },
   {
     id: 4,
-    title: "Add Your Skills",
-    description: "List your technical and soft skills. The more specific you are, the better we can match you with projects.",
-    field: "skills",
-    icon: <Rocket className="h-6 w-6" />,
-    placeholder: "Type a skill and press Enter",
-    type: "multi-select",
-    required: true,
-    options: ['JavaScript', 'Python', 'React', 'Node.js', 'Design', 'Marketing', 'Data Analysis', 'Project Management']
-  },
-  {
-    id: 5,
     title: "Choose Your Interests",
     description: "Select the industries and project types that excite you most. This helps us recommend the perfect opportunities.",
     field: "interests",
@@ -115,14 +104,14 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<Record<string, any>>({
+    highSchool: '',
     university: '',
-    major: '',
+    subjects: '',
     bio: '',
-    skills: [],
     interests: []
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [skillInput, setSkillInput] = useState('')
+
 
   const currentStepData = tutorialSteps.find(step => step.id === currentStep)
   const progress = (currentStep / tutorialSteps.length) * 100
@@ -137,16 +126,7 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSkillAdd = (skill: string) => {
-    if (skill.trim() && !formData.skills.includes(skill.trim())) {
-      handleInputChange('skills', [...formData.skills, skill.trim()])
-      setSkillInput('')
-    }
-  }
 
-  const handleSkillRemove = (skillToRemove: string) => {
-    handleInputChange('skills', formData.skills.filter((skill: string) => skill !== skillToRemove))
-  }
 
   const handleInterestToggle = (interest: string) => {
     const currentInterests = formData.interests || []
@@ -160,13 +140,20 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
   const canProceed = () => {
     if (!currentStepData) return false
     
-    const value = formData[currentStepData.field]
     if (!currentStepData.required) return true
     
+    if (currentStepData.type === 'institutions') {
+      // For institutions, user needs to fill at least one field
+      return (formData.highSchool && formData.highSchool.trim()) || 
+             (formData.university && formData.university.trim())
+    }
+    
     if (currentStepData.type === 'multi-select') {
+      const value = formData[currentStepData.field]
       return Array.isArray(value) && value.length > 0
     }
     
+    const value = formData[currentStepData.field]
     return value && value.toString().trim().length > 0
   }
 
@@ -189,16 +176,34 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
   const handleComplete = async () => {
     setIsLoading(true)
     try {
+      // Prepare data in the correct format for the API
+      const profileData = {
+        highSchool: formData.highSchool || '',
+        university: formData.university || '',
+        subjects: formData.subjects || '',
+        bio: formData.bio || '',
+        interests: formData.interests || []
+      }
+
+      console.log('Saving profile data:', profileData)
+
       // Save profile data
       const response = await fetch('/api/user/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(profileData)
       })
 
       if (response.ok) {
-        // Redirect to projects with first application flow
-        router.push('/dashboard/projects?guided=true&first=true&tutorial_complete=true')
+        console.log('Profile saved successfully')
+        // Close the tutorial first
+        onClose()
+        // Small delay then redirect to projects with first application flow
+        setTimeout(() => {
+          router.push('/dashboard/projects?guided=true&first=true&tutorial_complete=true')
+        }, 500)
+      } else {
+        console.error('Failed to save profile:', await response.text())
       }
     } catch (error) {
       console.error('Failed to save profile:', error)
@@ -218,7 +223,7 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
               value={formData[currentStepData.field] || ''}
               onChange={(e) => handleInputChange(currentStepData.field, e.target.value)}
               placeholder={currentStepData.placeholder}
-              className="w-full h-32 p-4 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
+              className="w-full h-32 p-4 text-lg text-gray-900 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
               maxLength={currentStepData.maxLength}
             />
             {currentStepData.maxLength && (
@@ -230,88 +235,56 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
         )
       
       case 'multi-select':
-        if (currentStepData.field === 'skills') {
-          return (
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleSkillAdd(skillInput))}
-                  placeholder={currentStepData.placeholder}
-                  className="flex-1 p-4 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                />
+        // Interests
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {currentStepData.options?.map(option => {
+              const isSelected = formData.interests?.includes(option)
+              return (
                 <button
-                  onClick={() => handleSkillAdd(skillInput)}
-                  className="px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-                  disabled={!skillInput.trim()}
+                  key={option}
+                  onClick={() => handleInterestToggle(option)}
+                  className={`p-4 text-left rounded-xl border-2 transition-all ${
+                    isSelected 
+                      ? 'border-blue-500 bg-blue-50 text-blue-900' 
+                      : 'border-gray-200 hover:border-gray-300 text-gray-900'
+                  }`}
                 >
-                  Add
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{option}</span>
+                    {isSelected && <Check className="h-5 w-5 text-blue-600" />}
+                  </div>
                 </button>
-              </div>
-              
-              {/* Suggested skills */}
-              <div>
-                <p className="text-sm text-gray-600 mb-2">Suggested skills:</p>
-                <div className="flex flex-wrap gap-2">
-                  {currentStepData.options?.map(skill => (
-                    <button
-                      key={skill}
-                      onClick={() => handleSkillAdd(skill)}
-                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-blue-100 transition-colors"
-                      disabled={formData.skills.includes(skill)}
-                    >
-                      {skill}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Added skills */}
-              {formData.skills.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.skills.map((skill: string) => (
-                    <div key={skill} className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
-                      <span>{skill}</span>
-                      <button
-                        onClick={() => handleSkillRemove(skill)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              )
+            })}
+          </div>
+        )
+      case 'institutions':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">High School (Optional)</label>
+              <input
+                type="text"
+                value={formData.highSchool || ''}
+                onChange={(e) => handleInputChange('highSchool', e.target.value)}
+                placeholder="e.g., International School of Choueifat"
+                className="w-full p-4 text-lg text-gray-900 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+              />
             </div>
-          )
-        } else {
-          // Interests
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {currentStepData.options?.map(option => {
-                const isSelected = formData.interests?.includes(option)
-                return (
-                  <button
-                    key={option}
-                    onClick={() => handleInterestToggle(option)}
-                    className={`p-4 text-left rounded-xl border-2 transition-all ${
-                      isSelected 
-                        ? 'border-blue-500 bg-blue-50 text-blue-900' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{option}</span>
-                      {isSelected && <Check className="h-5 w-5 text-blue-600" />}
-                    </div>
-                  </button>
-                )
-              })}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">University (Optional)</label>
+              <input
+                type="text"
+                value={formData.university || ''}
+                onChange={(e) => handleInputChange('university', e.target.value)}
+                placeholder="e.g., American University of Sharjah"
+                className="w-full p-4 text-lg text-gray-900 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+              />
             </div>
-          )
-        }
+            <p className="text-sm text-gray-600">Fill in the institution that's most relevant to you. You only need to complete one field.</p>
+          </div>
+        )
       
       default:
         return (
@@ -320,7 +293,7 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
             value={formData[currentStepData.field] || ''}
             onChange={(e) => handleInputChange(currentStepData.field, e.target.value)}
             placeholder={currentStepData.placeholder}
-            className="w-full p-4 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+            className="w-full p-4 text-lg text-gray-900 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
           />
         )
     }
@@ -394,11 +367,10 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
                   <div>
                     <h4 className="font-semibold text-blue-900 mb-1">Pro Tip</h4>
                     <p className="text-blue-800 text-sm">
-                      {currentStep === 1 && "Include the full name of your institution as it appears officially."}
-                      {currentStep === 2 && "Be specific about your field of study - this helps with better project matching."}
+                      {currentStep === 1 && "Include the full name of your institution as it appears officially. Only fill the one most relevant to you."}
+                      {currentStep === 2 && "Be specific about your recent subjects/modules - this helps with better project matching."}
                       {currentStep === 3 && "Mention achievements, interests, or unique experiences that make you memorable."}
-                      {currentStep === 4 && "Include both technical skills (like programming languages) and soft skills (like leadership)."}
-                      {currentStep === 5 && "Choose at least 3-4 interests to get diverse project recommendations."}
+                      {currentStep === 4 && "Choose at least 3-4 interests to get diverse project recommendations."}
                     </p>
                   </div>
                 </div>
