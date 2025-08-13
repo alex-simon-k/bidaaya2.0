@@ -24,14 +24,15 @@ import { useOnboardingSession } from '@/lib/onboarding-session-manager'
 import { OnboardingSessionManager } from '@/lib/onboarding-session-manager'
 
 interface Step {
-  key: keyof StudentProfileFormData | 'institutions';
+  key: keyof StudentProfileFormData | 'institutions' | 'contact-and-terms';
   label: string;
-  type: 'text' | 'date' | 'select' | 'checkbox' | 'checkbox-single' | 'radio' | 'institutions' | 'textarea';
+  type: 'text' | 'date' | 'select' | 'checkbox' | 'checkbox-single' | 'radio' | 'institutions' | 'textarea' | 'contact-with-terms';
   required: boolean;
   placeholder?: string;
   options?: string[];
   icon: JSX.Element;
   maxLength?: number;
+  description?: string;
 }
 
 interface StudentProfileFormData {
@@ -130,22 +131,6 @@ const steps: Step[] = [
     maxLength: 100,
   },
   {
-    key: 'whatsapp',
-    label: 'What is your WhatsApp number? (Optional)',
-    type: 'text',
-    required: false,
-    placeholder: 'Enter your WhatsApp number',
-    icon: <Phone className="w-8 h-8 text-emerald-600" />,
-  },
-  {
-    key: 'linkedin',
-    label: 'What is your LinkedIn URL? (Optional)',
-    type: 'text',
-    required: false,
-    placeholder: 'Paste your LinkedIn profile URL',
-    icon: <Linkedin className="w-8 h-8 text-emerald-600" />,
-  },
-  {
     key: 'mena',
     label: 'How frequently are you in MENA?',
     type: 'radio',
@@ -159,11 +144,12 @@ const steps: Step[] = [
     icon: <MapPin className="w-8 h-8 text-emerald-600" />,
   },
   {
-    key: 'terms',
-    label: 'I agree to the Terms & Conditions',
-    type: 'checkbox-single',
+    key: 'contact-and-terms',
+    label: 'Help companies contact you faster',
+    type: 'contact-with-terms',
     required: true,
-    icon: <CheckCircle className="w-8 h-8 text-emerald-600" />,
+    icon: <Phone className="w-8 h-8 text-emerald-600" />,
+    description: 'Students who provide contact details receive 50% more interview opportunities',
   },
 ]
 
@@ -320,6 +306,11 @@ export default function SetupProfilePage() {
       } else if (currentStep.type === 'checkbox-single') {
         if (!formData.terms) {
           setError('You must agree to the Terms & Conditions.');
+          return false;
+        }
+      } else if (currentStep.type === 'contact-with-terms') {
+        if (!formData.terms) {
+          setError('You must agree to the Terms & Conditions to continue.');
           return false;
         }
       } else if (!formData[currentStep.key as keyof StudentProfileFormData]) {
@@ -694,6 +685,64 @@ export default function SetupProfilePage() {
                         {opt}
                       </motion.button>
                     ))}
+                  </div>
+                )}
+
+                {/* Contact with Terms */}
+                {currentStep.type === 'contact-with-terms' && (
+                  <div className="space-y-6">
+                    {/* Motivational Text */}
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4">
+                      <p className="text-sm text-emerald-700 font-medium text-center">
+                        📊 Students who provide contact details receive 50% more interview opportunities
+                      </p>
+                    </div>
+
+                    {/* WhatsApp Input */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        WhatsApp Number (This helps companies verify and contact you faster)
+                      </label>
+                      <input
+                        type="tel"
+                        name="whatsapp"
+                        placeholder="Enter your WhatsApp number"
+                        value={formData.whatsapp}
+                        onChange={handleChange}
+                        className="w-full py-4 px-6 text-lg border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-300"
+                      />
+                    </div>
+
+                    {/* LinkedIn Input */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        LinkedIn URL (This helps companies verify and contact you faster)
+                      </label>
+                      <input
+                        type="url"
+                        name="linkedin"
+                        placeholder="Paste your LinkedIn profile URL"
+                        value={formData.linkedin}
+                        onChange={handleChange}
+                        className="w-full py-4 px-6 text-lg border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-300"
+                      />
+                    </div>
+
+                    {/* Terms and Conditions Checkbox */}
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setFormData(prev => ({ ...prev, terms: !prev.terms }))}
+                      className={`w-full py-4 px-6 rounded-xl text-lg font-semibold border-2 transition-all duration-300 flex items-center justify-center gap-3 ${
+                        formData.terms
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-500 shadow-lg shadow-emerald-200'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50'
+                      }`}
+                    >
+                      <span>I agree to the <a href="/terms" className="underline" target="_blank" rel="noopener noreferrer">Terms & Conditions</a></span>
+                      {formData.terms && <CheckCircle className="h-5 w-5" />}
+                    </motion.button>
                   </div>
                 )}
 
