@@ -18,6 +18,7 @@ import {
   Calendar
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 interface GuidedProfileTutorialProps {
   isOpen: boolean
@@ -76,14 +77,14 @@ const tutorialSteps: Step[] = [
   },
   {
     id: 4,
-    title: "Regional Background",
-    description: "Are you based in or from the MENA region? This helps us connect you with relevant regional opportunities.",
+    title: "How often are you in the MENA region?",
+    description: "This helps us match you with opportunities based on your regional availability and presence.",
     field: "mena",
     icon: <MapPin className="h-6 w-6" />,
-    placeholder: "Select your regional background",
+    placeholder: "Select your regional presence",
     type: "mena-select",
     required: true,
-    options: ['Yes', 'No']
+    options: ['Often/Regularly', 'Rarely/Never']
   },
   {
     id: 5,
@@ -113,6 +114,7 @@ const tutorialSteps: Step[] = [
 
 export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfileTutorialProps) {
   const router = useRouter()
+  const { update } = useSession()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<Record<string, any>>({
     highSchool: '',
@@ -214,12 +216,24 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
 
       if (response.ok) {
         console.log('Profile saved successfully')
+        
+        // Force session update to refresh the token with new profile completion status
+        console.log('🔄 Triggering session refresh...')
+        try {
+          await update({ profileCompleted: true })
+          console.log('✅ Session updated with profileCompleted: true')
+        } catch (error) {
+          console.error('⚠️ Session update failed:', error)
+        }
+        
         // Close the tutorial first
         onClose()
-        // Small delay then redirect to projects with first application flow
+        
+        // Longer delay to ensure session propagation, then use hard redirect
         setTimeout(() => {
-          router.push('/dashboard/projects?guided=true&first=true&tutorial_complete=true')
-        }, 500)
+          console.log('🚀 Redirecting to projects with forced page reload')
+          window.location.href = '/dashboard/projects?guided=true&first=true&tutorial_complete=true'
+        }, 1500)
       } else {
         console.error('Failed to save profile:', await response.text())
       }
@@ -256,21 +270,21 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
         return (
           <div className="grid grid-cols-2 gap-4">
             {currentStepData.options?.map(option => {
-              const isSelected = formData.mena === (option === 'Yes')
+              const isSelected = formData.mena === (option === 'Often/Regularly')
               return (
                 <button
                   key={option}
-                  onClick={() => handleInputChange('mena', option === 'Yes')}
+                  onClick={() => handleInputChange('mena', option === 'Often/Regularly')}
                   className={`p-6 text-center rounded-xl border-2 transition-all ${
                     isSelected 
                       ? 'border-blue-500 bg-blue-50 text-blue-900' 
                       : 'border-gray-200 hover:border-gray-300 text-gray-900'
                   }`}
                 >
-                  <div className="text-2xl mb-2">{option === 'Yes' ? '🌍' : '🌎'}</div>
+                  <div className="text-2xl mb-2">{option === 'Often/Regularly' ? '🌍' : '🌎'}</div>
                   <div className="font-semibold">{option}</div>
                   <div className="text-sm text-gray-600 mt-1">
-                    {option === 'Yes' ? 'MENA Region' : 'Other Regions'}
+                    {option === 'Often/Regularly' ? 'Frequently in MENA' : 'Rarely in MENA'}
                   </div>
                   {isSelected && <Check className="h-5 w-5 text-blue-600 mx-auto mt-2" />}
                 </button>

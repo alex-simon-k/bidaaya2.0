@@ -32,6 +32,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { GuidedProfileTutorial } from '@/components/guided-profile-tutorial'
+import { CleanProfilePage } from '@/components/clean-profile-page'
 
 interface ProfileData {
   // Basic Info
@@ -401,7 +402,30 @@ export default function ProfilePage() {
   // Default student profile
   return (
     <>
-      {renderStudentProfile()}
+      {/* Use clean profile page for all users */}
+      <CleanProfilePage
+        profileData={profileData || {
+          id: '',
+          name: session?.user?.name || '',
+          email: session?.user?.email || ''
+        }}
+        onUpdate={async (data) => {
+          try {
+            const response = await fetch('/api/user/profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            })
+            
+            if (response.ok) {
+              // Refresh profile data
+              fetchProfileData()
+            }
+          } catch (error) {
+            console.error('Failed to update profile:', error)
+          }
+        }}
+      />
       
       {/* Guided Profile Tutorial */}
       <GuidedProfileTutorial
