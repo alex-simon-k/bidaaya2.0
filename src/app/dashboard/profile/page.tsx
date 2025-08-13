@@ -31,6 +31,7 @@ import {
   Badge as BadgeIcon,
   ArrowRight
 } from 'lucide-react'
+import { GuidedProfileTutorial } from '@/components/guided-profile-tutorial'
 
 interface ProfileData {
   // Basic Info
@@ -124,6 +125,7 @@ export default function ProfilePage() {
   const isWelcome = searchParams.get('welcome') === 'true'
   const [guidedStep, setGuidedStep] = useState(1)
   const [guidedProgress, setGuidedProgress] = useState(0)
+  const [showGuidedTutorial, setShowGuidedTutorial] = useState(false)
 
   const userRole = session?.user?.role as 'STUDENT' | 'COMPANY'
 
@@ -183,8 +185,13 @@ export default function ProfilePage() {
     if (isGuided && profileData) {
       const progress = calculateGuidedProgress()
       setGuidedProgress(progress)
+      
+      // Auto-open tutorial if profile is incomplete and we're in guided mode
+      if (isWelcome && progress < 100) {
+        setShowGuidedTutorial(true)
+      }
     }
-  }, [profileData, isGuided])
+  }, [profileData, isGuided, isWelcome])
 
   const transformApiResponse = (apiData: any): ProfileData => {
     // Parse bio field to extract original bio if it contains discovery profile data
@@ -392,7 +399,21 @@ export default function ProfilePage() {
   }
 
   // Default student profile
-  return renderStudentProfile()
+  return (
+    <>
+      {renderStudentProfile()}
+      
+      {/* Guided Profile Tutorial */}
+      <GuidedProfileTutorial
+        isOpen={showGuidedTutorial}
+        onClose={() => setShowGuidedTutorial(false)}
+        userData={{
+          name: profileData?.name || '',
+          email: profileData?.email || ''
+        }}
+      />
+    </>
+  )
 
   function renderCompanyProfile() {
     return (
@@ -1063,17 +1084,10 @@ export default function ProfilePage() {
                   <p className="text-emerald-100 text-sm">{guidedSteps[guidedStep - 1]?.description}</p>
                 </div>
                 <button
-                  onClick={() => {
-                    setIsEditing(true)
-                    // Scroll to relevant section based on current step
-                    const targetTab = guidedStep === 1 ? 'overview' : 
-                                     guidedStep === 2 ? 'overview' : 
-                                     guidedStep === 3 ? 'skills' : 'skills'
-                    setActiveTab(targetTab)
-                  }}
+                  onClick={() => setShowGuidedTutorial(true)}
                   className="bg-white text-emerald-600 px-4 py-2 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
                 >
-                  Complete Step
+                  Start Tutorial
                 </button>
               </div>
             </div>
@@ -1276,6 +1290,7 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+
   )
   }
 } 
