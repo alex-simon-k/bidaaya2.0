@@ -204,8 +204,11 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
       if (response.ok) {
         console.log('Profile saved successfully')
         
-        // Force session update to refresh the token with new profile completion status
-        console.log('🔄 Triggering session refresh...')
+        // Close the tutorial immediately for smooth UX
+        onClose()
+        
+        // Update session in background and redirect smoothly
+        console.log('🔄 Updating session and redirecting...')
         try {
           await update({ profileCompleted: true })
           console.log('✅ Session updated with profileCompleted: true')
@@ -213,15 +216,8 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
           console.error('⚠️ Session update failed:', error)
         }
         
-        // Close the tutorial first
-        onClose()
-        
-        // Force an immediate session refresh by reloading the page
-        console.log('🔄 Forcing complete page reload to refresh session...')
-        setTimeout(() => {
-          // Use replace to avoid back button issues
-          window.location.replace('/dashboard/projects?guided=true&first=true&tutorial_complete=true')
-        }, 1000)
+        // Immediate redirect - no delay, no flicker
+        window.location.href = '/dashboard/projects?guided=true&first=true&tutorial_complete=true'
       } else {
         console.error('Failed to save profile:', await response.text())
       }

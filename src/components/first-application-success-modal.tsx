@@ -176,11 +176,11 @@ export function FirstApplicationSuccessModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-2xl font-bold text-blue-600">85%</div>
-                <div className="text-sm text-gray-600">Students with complete profiles get 50% more interviews</div>
+                <div className="text-sm text-gray-800">Students with complete profiles get 50% more interviews</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-purple-600">#{Math.floor(Math.random() * 15) + 1}</div>
-                <div className="text-sm text-gray-600">Your rank among applicants for similar projects</div>
+                <div className="text-sm text-gray-800">Your rank among applicants for similar projects</div>
               </div>
             </div>
           </motion.div>
@@ -196,15 +196,15 @@ export function FirstApplicationSuccessModal({
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm">We've notified the company about your application</span>
+                <span className="text-sm text-gray-800">We've notified the company about your application</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm">You'll receive an email confirmation shortly</span>
+                <span className="text-sm text-gray-800">You'll receive an email confirmation shortly</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm">Companies typically respond within 3-5 business days</span>
+                <span className="text-sm text-gray-800">Companies typically respond within 3-5 business days</span>
               </div>
             </div>
           </motion.div>

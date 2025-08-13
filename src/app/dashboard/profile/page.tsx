@@ -32,7 +32,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { GuidedProfileTutorial } from '@/components/guided-profile-tutorial'
-import { CleanProfilePage } from '@/components/clean-profile-page'
+import { BeautifulProfilePage } from '@/components/beautiful-profile-page'
 
 interface ProfileData {
   // Basic Info
@@ -54,6 +54,14 @@ interface ProfileData {
   degree?: string
   graduationYear?: number
   major?: string
+  
+  // Additional fields for clean profile
+  highSchool?: string
+  subjects?: string
+  mena?: boolean
+  dateOfBirth?: string
+  education?: string
+  profileCompleted?: boolean
   
   // Skills & Experience
   skills: string[]
@@ -243,6 +251,13 @@ export default function ProfilePage() {
       major: apiData.major || '',
       graduationYear: apiData.graduationYear || undefined,
       calendlyLink: apiData.calendlyLink || '', // Add Calendly link support
+      // Add fields for clean profile page
+      highSchool: apiData.highSchool || '',
+      subjects: apiData.subjects || '',
+      mena: apiData.mena || false,
+      dateOfBirth: apiData.dateOfBirth || '',
+      education: apiData.education || '',
+      profileCompleted: apiData.profileCompleted || false,
       skills: Array.isArray(apiData.skills) ? apiData.skills : 
               (apiData.skills ? apiData.skills.split(',').map((s: string) => s.trim()) : []),
       interests: Array.isArray(apiData.interests) ? apiData.interests : [],
@@ -402,8 +417,8 @@ export default function ProfilePage() {
   // Default student profile
   return (
     <>
-      {/* Use clean profile page for all users */}
-      <CleanProfilePage
+      {/* Use beautiful profile page for all users */}
+      <BeautifulProfilePage
         profileData={profileData || {
           id: '',
           name: session?.user?.name || '',
