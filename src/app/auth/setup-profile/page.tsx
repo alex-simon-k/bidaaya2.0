@@ -59,14 +59,14 @@ const steps: Step[] = [
     type: 'text',
     required: true,
     placeholder: 'Enter your full name',
-    icon: <User className="w-8 h-8 text-emerald-600" />,
+    icon: <User className="w-8 h-8 text-white" />,
   },
   {
     key: 'dateOfBirth',
     label: 'What is your date of birth?',
     type: 'date',
     required: true,
-    icon: <Calendar className="w-8 h-8 text-emerald-600" />,
+    icon: <Calendar className="w-8 h-8 text-white" />,
   },
   {
     key: 'educationStatus',
@@ -75,14 +75,14 @@ const steps: Step[] = [
     required: true,
     options: ['High School', 'Gap Year', 'University', 'Graduated'],
     placeholder: 'Select your status',
-    icon: <GraduationCap className="w-8 h-8 text-emerald-600" />,
+    icon: <GraduationCap className="w-8 h-8 text-white" />,
   },
   {
     key: 'institutions',
     label: 'What are your educational institutions?',
     type: 'institutions',
     required: true,
-    icon: <GraduationCap className="w-8 h-8 text-emerald-600" />,
+    icon: <GraduationCap className="w-8 h-8 text-white" />,
   },
   {
     key: 'subjects',
@@ -90,7 +90,7 @@ const steps: Step[] = [
     type: 'text',
     required: true,
     placeholder: 'E.g. Computer Science, Business...',
-    icon: <Book className="w-8 h-8 text-emerald-600" />,
+    icon: <Book className="w-8 h-8 text-white" />,
   },
   {
     key: 'goal',
@@ -98,7 +98,7 @@ const steps: Step[] = [
     type: 'checkbox',
     required: true,
     options: ['Get Hired', 'Get Experience', 'Try New Things'],
-    icon: <Target className="w-8 h-8 text-emerald-600" />,
+    icon: <Target className="w-8 h-8 text-white" />,
   },
   {
     key: 'interests',
@@ -119,7 +119,7 @@ const steps: Step[] = [
       'Startups & Entrepreneurship',
       'Government & Public Sector'
     ],
-    icon: <Rocket className="w-8 h-8 text-emerald-600" />,
+    icon: <Rocket className="w-8 h-8 text-white" />,
   },
   {
     key: 'bio',
@@ -127,7 +127,7 @@ const steps: Step[] = [
     type: 'textarea',
     required: true,
     placeholder: 'Something you are proud of, or a fun fact!',
-    icon: <Info className="w-8 h-8 text-emerald-600" />,
+    icon: <Info className="w-8 h-8 text-white" />,
     maxLength: 100,
   },
   {
@@ -141,14 +141,14 @@ const steps: Step[] = [
       'I study abroad and go back as much as possible',
       'No, I don\'t live there. I\'m a tourist.'
     ],
-    icon: <MapPin className="w-8 h-8 text-emerald-600" />,
+    icon: <MapPin className="w-8 h-8 text-white" />,
   },
   {
     key: 'contact-and-terms',
     label: 'Help companies contact you faster',
     type: 'contact-with-terms',
     required: true,
-    icon: <Phone className="w-8 h-8 text-emerald-600" />,
+    icon: <Phone className="w-8 h-8 text-white" />,
     description: 'Students who provide contact details receive 50% more interview opportunities',
   },
 ]
@@ -431,7 +431,7 @@ export default function SetupProfilePage() {
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Profile Complete!</h2>
           <p className="text-gray-600 mb-6">Welcome to Bidaaya! You're all set to start exploring opportunities.</p>
-          <div className="flex items-center justify-center gap-2 text-emerald-600">
+          <div className="flex items-center justify-center gap-2 text-white">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
                             <span>Taking you to your dashboard...</span>
           </div>
@@ -637,7 +637,7 @@ export default function SetupProfilePage() {
                             value={opt}
                             checked={isChecked}
                             onChange={handleChange}
-                            className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 focus:border-emerald-500 mt-0.5"
+                            className="w-5 h-5 text-white border-gray-300 rounded focus:ring-emerald-500 focus:border-emerald-500 mt-0.5"
                           />
                           <div className="flex-1">
                             <span className="text-lg font-medium text-gray-800">{opt}</span>
@@ -709,7 +709,7 @@ export default function SetupProfilePage() {
                         placeholder="Enter your WhatsApp number"
                         value={formData.whatsapp}
                         onChange={handleChange}
-                        className="w-full py-4 px-6 text-lg border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-300"
+                        className="w-full py-4 px-6 text-lg text-gray-800 bg-gray-50 border-2 border-gray-200 rounded-xl placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:bg-white transition-all duration-300"
                       />
                     </div>
 
@@ -724,7 +724,7 @@ export default function SetupProfilePage() {
                         placeholder="Paste your LinkedIn profile URL"
                         value={formData.linkedin}
                         onChange={handleChange}
-                        className="w-full py-4 px-6 text-lg border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-300"
+                        className="w-full py-4 px-6 text-lg text-gray-800 bg-gray-50 border-2 border-gray-200 rounded-xl placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:bg-white transition-all duration-300"
                       />
                     </div>
 
