@@ -211,46 +211,22 @@ export default function ProjectsPage() {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-6 text-white"
+          className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-8 text-white text-center"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 rounded-full p-3">
-                <Rocket className="h-8 w-8" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">🎉 Ready for Your First Application!</h3>
-                <p className="text-purple-100">
-                  Browse projects below and apply to one that excites you. We'll guide you through the process!
-                </p>
-              </div>
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white/20 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+              <Rocket className="h-8 w-8" />
             </div>
-            <div className="text-right">
-              <div className="text-sm text-purple-100">Step 3 of 3</div>
-              <div className="text-lg font-bold">Complete Journey</div>
-            </div>
-          </div>
-          
-          {/* Progress indicator */}
-          <div className="mt-4 bg-white/20 rounded-full h-2">
-            <div className="bg-white rounded-full h-2 w-full"></div>
-          </div>
-
-          {/* Instruction */}
-          <div className="mt-4 bg-white/10 rounded-lg p-4">
-            <h4 className="font-semibold mb-2">💡 How to Choose Your First Project:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-300" />
-                <span>Pick a category you're passionate about</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-300" />
-                <span>Check if it matches your skill level</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-300" />
-                <span>Read the requirements carefully</span>
+            
+            <h2 className="text-3xl font-bold mb-2">Apply to Your First Project!</h2>
+            <p className="text-xl text-purple-100 mb-6">
+              Now is your time. Choose a project below and apply.
+            </p>
+            
+            <div className="bg-white/10 rounded-lg p-4">
+              <div className="flex items-center justify-center gap-2 text-lg">
+                <span>👇</span>
+                <span className="font-medium">Browse projects below and click apply!</span>
               </div>
             </div>
           </div>

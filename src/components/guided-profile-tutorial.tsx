@@ -77,17 +77,6 @@ const tutorialSteps: Step[] = [
   },
   {
     id: 4,
-    title: "How often are you in the MENA region?",
-    description: "This helps us match you with opportunities based on your regional availability and presence.",
-    field: "mena",
-    icon: <MapPin className="h-6 w-6" />,
-    placeholder: "Select your regional presence",
-    type: "mena-select",
-    required: true,
-    options: ['Often/Regularly', 'Rarely/Never']
-  },
-  {
-    id: 5,
     title: "Choose Your Interests",
     description: "Select the industries and project types that excite you most. This helps us recommend the perfect opportunities.",
     field: "interests",
@@ -121,7 +110,6 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
     university: '',
     subjects: '',
     bio: '',
-    mena: null,
     interests: []
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -162,9 +150,7 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
              (formData.university && formData.university.trim())
     }
     
-    if (currentStepData.type === 'mena-select') {
-      return formData.mena !== null
-    }
+
     
     if (currentStepData.type === 'multi-select') {
       const value = formData[currentStepData.field]
@@ -201,7 +187,6 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
         university: formData.university || '',
         subjects: formData.subjects || '',
         bio: formData.bio || '',
-        mena: formData.mena || false,
         interests: formData.interests || [],
         terms: true, // Include terms for hasRequiredFields check  
         profileCompleted: true
@@ -269,33 +254,6 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
           </div>
         )
       
-      case 'mena-select':
-        return (
-          <div className="grid grid-cols-2 gap-4">
-            {currentStepData.options?.map(option => {
-              const isSelected = formData.mena === (option === 'Often/Regularly')
-              return (
-                <button
-                  key={option}
-                  onClick={() => handleInputChange('mena', option === 'Often/Regularly')}
-                  className={`p-6 text-center rounded-xl border-2 transition-all ${
-                    isSelected 
-                      ? 'border-blue-500 bg-blue-50 text-blue-900' 
-                      : 'border-gray-200 hover:border-gray-300 text-gray-900'
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{option === 'Often/Regularly' ? '🌍' : '🌎'}</div>
-                  <div className="font-semibold">{option}</div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {option === 'Often/Regularly' ? 'Frequently in MENA' : 'Rarely in MENA'}
-                  </div>
-                  {isSelected && <Check className="h-5 w-5 text-blue-600 mx-auto mt-2" />}
-                </button>
-              )
-            })}
-          </div>
-        )
-
       case 'multi-select':
         // Interests
         return (
@@ -432,8 +390,7 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
                       {currentStep === 1 && "Include the full name of your institution as it appears officially. Only fill the one most relevant to you."}
                       {currentStep === 2 && "Be specific about your recent subjects/modules - this helps with better project matching."}
                       {currentStep === 3 && "Mention achievements, interests, or unique experiences that make you memorable."}
-                      {currentStep === 4 && "This helps us connect you with companies and opportunities in your region."}
-                      {currentStep === 5 && "Choose at least 3-4 interests to get diverse project recommendations."}
+                      {currentStep === 4 && "Choose at least 3-4 interests to get diverse project recommendations."}
                     </p>
                   </div>
                 </div>

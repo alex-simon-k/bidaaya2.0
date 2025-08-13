@@ -1304,7 +1304,7 @@ export default function ProfilePage() {
                       onClick={() => router.push('/dashboard/projects')}
                       className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
           >
-                      Browse Projects
+                      Test Out AI Matchmaker
           </button>
                   </div>
                 )}

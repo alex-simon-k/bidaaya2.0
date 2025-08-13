@@ -28,6 +28,8 @@ interface ProfileData {
   dateOfBirth?: string
   education?: string
   profileCompleted?: boolean
+  // Add any additional fields from API
+  [key: string]: any
 }
 
 interface CleanProfilePageProps {

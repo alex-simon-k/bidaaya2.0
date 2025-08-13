@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
         highSchool: true,
         university: true,
         major: true,
+        subjects: true,
         goal: true,
         interests: true,
         skills: true,
