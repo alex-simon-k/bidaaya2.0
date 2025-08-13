@@ -28,7 +28,8 @@ import {
   CheckCircle,
   Zap,
   TrendingUp,
-  Badge as BadgeIcon
+  Badge as BadgeIcon,
+  ArrowRight
 } from 'lucide-react'
 
 interface ProfileData {
@@ -1013,6 +1014,84 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Guided Experience Banner */}
+        {isGuided && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg shadow-lg mb-8 p-6 text-white"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 rounded-full p-3">
+                  <span className="text-2xl">{guidedSteps[guidedStep - 1]?.icon}</span>
+                </div>
+                <div>
+                  {isWelcome && (
+                    <div className="mb-2">
+                      <span className="text-emerald-100 text-sm font-medium">🎉 Welcome to Bidaaya!</span>
+                    </div>
+                  )}
+                  <h3 className="text-xl font-bold">Complete Your Profile</h3>
+                  <p className="text-emerald-100">
+                    Help companies discover you by completing your profile ({guidedProgress}% done)
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold">{guidedProgress}%</div>
+                <div className="text-emerald-100 text-sm">Progress</div>
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mt-4 bg-white/20 rounded-full h-2">
+              <motion.div 
+                className="bg-white rounded-full h-2"
+                initial={{ width: 0 }}
+                animate={{ width: `${guidedProgress}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+
+            {/* Current Step */}
+            <div className="mt-4 bg-white/10 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold">{guidedSteps[guidedStep - 1]?.title}</h4>
+                  <p className="text-emerald-100 text-sm">{guidedSteps[guidedStep - 1]?.description}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsEditing(true)
+                    // Scroll to relevant section based on current step
+                    const targetTab = guidedStep === 1 ? 'overview' : 
+                                     guidedStep === 2 ? 'overview' : 
+                                     guidedStep === 3 ? 'skills' : 'skills'
+                    setActiveTab(targetTab)
+                  }}
+                  className="bg-white text-emerald-600 px-4 py-2 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
+                >
+                  Complete Step
+                </button>
+              </div>
+            </div>
+
+            {/* Complete Profile CTA */}
+            {guidedProgress === 100 && (
+              <div className="mt-4 text-center">
+                <p className="text-emerald-100 mb-3">🎉 Amazing! Your profile is complete!</p>
+                <button
+                  onClick={() => router.push('/dashboard/projects?guided=true&first=true')}
+                  className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-bold hover:bg-emerald-50 transition-colors inline-flex items-center gap-2"
+                >
+                  Apply to Your First Project <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-lg mb-8">
