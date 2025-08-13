@@ -196,12 +196,14 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
     try {
       // Prepare data in the correct format for the API
       const profileData = {
+        name: userData.name, // Include name for hasRequiredFields check
         highSchool: formData.highSchool || '',
         university: formData.university || '',
         subjects: formData.subjects || '',
         bio: formData.bio || '',
         mena: formData.mena || false,
         interests: formData.interests || [],
+        terms: true, // Include terms for hasRequiredFields check  
         profileCompleted: true
       }
 
@@ -229,11 +231,12 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
         // Close the tutorial first
         onClose()
         
-        // Longer delay to ensure session propagation, then use hard redirect
+        // Force an immediate session refresh by reloading the page
+        console.log('🔄 Forcing complete page reload to refresh session...')
         setTimeout(() => {
-          console.log('🚀 Redirecting to projects with forced page reload')
-          window.location.href = '/dashboard/projects?guided=true&first=true&tutorial_complete=true'
-        }, 1500)
+          // Use replace to avoid back button issues
+          window.location.replace('/dashboard/projects?guided=true&first=true&tutorial_complete=true')
+        }, 1000)
       } else {
         console.error('Failed to save profile:', await response.text())
       }

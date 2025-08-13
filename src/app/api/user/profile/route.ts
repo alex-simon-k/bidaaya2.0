@@ -98,7 +98,8 @@ export async function PATCH(request: NextRequest) {
       mena,
       terms,
       discoveryProfile,
-      discoveryCompleted
+      discoveryCompleted,
+      profileCompleted
     } = body
 
     // Build update data object
@@ -163,7 +164,11 @@ export async function PATCH(request: NextRequest) {
     const wasAlreadyCompleted = currentUser?.profileCompleted === true
     const isFirstTimeCompletion = hasRequiredFields && !wasAlreadyCompleted
     
-    if (hasRequiredFields) {
+    // Handle explicit profileCompleted flag (from guided tutorial)
+    if (profileCompleted !== undefined) {
+      updateData.profileCompleted = profileCompleted
+      console.log('🎯 EXPLICIT profileCompleted flag received:', profileCompleted)
+    } else if (hasRequiredFields) {
       updateData.profileCompleted = true
       console.log('✅ Marking profile as completed in database - profileCompleted will be set to TRUE')
       if (isFirstTimeCompletion) {
@@ -206,8 +211,15 @@ export async function PATCH(request: NextRequest) {
     })
 
     console.log(`✅ User profile updated for ${session.user?.email}:`, {
-      fieldsUpdated: Object.keys(updateData)
+      fieldsUpdated: Object.keys(updateData),
+      profileCompleted: updatedUser.profileCompleted
     })
+    
+    // CRITICAL: If profileCompleted was updated, log this for debugging
+    if (updateData.profileCompleted !== undefined) {
+      console.log('🔑 PROFILE COMPLETION STATUS UPDATE - Database now shows:', updatedUser.profileCompleted)
+      console.log('🔄 NextAuth should refresh session token on next request')
+    }
 
     // Track analytics for first-time profile completion
     if (isFirstTimeCompletion) {
