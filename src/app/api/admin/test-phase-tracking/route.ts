@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         highSchool: true,
         major: true,
         subjects: true,
-        educationStatus: true,
+        education: true,
         name: true,
         terms: true,
         skills: true
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       const hasEducationDetails = !!(user.university || user.highSchool || user.major || user.subjects)
       
       // Simulate the hasRequiredFields logic from profile API
-      const hasRequiredFields = user.name && (user.university || user.major || user.subjects || user.skills || user.educationStatus) && user.terms
+      const hasRequiredFields = user.name && (user.university || user.major || user.subjects || user.skills || user.education) && user.terms
       
       return {
         email: user.email,
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
           highSchool: !!user.highSchool,
           major: !!user.major,
           subjects: !!user.subjects,
-          educationStatus: !!user.educationStatus,
+          education: !!user.education,
           terms: !!user.terms,
           skills: !!user.skills
         }
