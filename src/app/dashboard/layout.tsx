@@ -154,20 +154,8 @@ export default function DashboardLayout({
 
           console.log('🏠 DashboardLayout - Profile is completed, profileCompleted value:', sessionData.profileCompleted);
 
-          // Phase 2 enforcement: Check if student has completed detailed profile
-          if (session.user.role === 'STUDENT') {
-            const user = session.user as any;
-            const hasDetailedProfile = !!(user.university || user.highSchool || user.major || user.subjects);
-            
-            if (!hasDetailedProfile) {
-              console.log('🏠 DashboardLayout - Student has not completed detailed profile, redirecting to profile page for Phase 2');
-              // Allow access to the profile page itself where the guided tutorial will show
-              if (pathname !== '/dashboard/profile') {
-                router.replace('/dashboard/profile');
-                return;
-              }
-            }
-          }
+          // Phase 2 enforcement is now handled by middleware only for restricted actions
+          // Users can browse dashboard freely, but will be redirected when trying to apply/chat
 
           // No special Calendly flow handling needed anymore
 

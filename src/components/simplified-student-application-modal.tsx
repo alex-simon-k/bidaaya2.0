@@ -155,6 +155,16 @@ export function SimplifiedStudentApplicationModal({
 
   const handleSubmit = async () => {
     if (!project || !session?.user?.id) return
+    
+    // Check if Phase 2 (detailed profile) is completed
+    const user = session.user as any;
+    const hasDetailedProfile = !!(user.university || user.highSchool || user.major || user.subjects);
+    
+    if (!hasDetailedProfile) {
+      // Redirect to profile page to complete Phase 2
+      window.location.href = '/dashboard/profile?action=required';
+      return;
+    }
 
     // Validation
     if (formData.whyInterested.length < 50) {

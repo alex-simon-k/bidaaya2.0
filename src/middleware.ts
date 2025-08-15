@@ -77,13 +77,24 @@ export default withAuth(
     }
     
     // Check if student has completed Phase 2 (detailed profile with education info)
+    // Only redirect when trying to apply or use restricted features, not for general browsing
     if (token && token.emailVerified && token.profileCompleted && token.role === 'STUDENT') {
       // Check if they have completed the detailed profile (Phase 2) by looking for education fields
       const hasDetailedProfile = !!(token.university || token.highSchool || token.major || token.subjects);
       
-      if (!hasDetailedProfile && pathname.startsWith("/dashboard") && pathname !== '/dashboard/profile') {
-        console.log('🛡️ ❌ Student has completed basic profile but not detailed profile, redirecting to profile page for Phase 2 from:', pathname);
-        return NextResponse.redirect(new URL("/dashboard/profile", req.url));
+      // Only redirect on specific action pages, not general dashboard browsing
+      const restrictedPaths = [
+        '/dashboard/projects/apply',
+        '/dashboard/chat',
+        '/api/applications/',
+        '/api/chat'
+      ];
+      
+      const isRestrictedAction = restrictedPaths.some(path => pathname.startsWith(path));
+      
+      if (!hasDetailedProfile && isRestrictedAction) {
+        console.log('🛡️ ❌ Student trying to use restricted feature without completed Phase 2, redirecting to profile page from:', pathname);
+        return NextResponse.redirect(new URL("/dashboard/profile?action=required", req.url));
       }
     }
     
