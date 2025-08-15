@@ -159,7 +159,10 @@ export async function PATCH(request: NextRequest) {
     // Get current user status BEFORE update to check if this is first-time completion
     const currentUser = await prisma.user.findUnique({
       where: { id: session.user?.id },
-      select: { profileCompleted: true }
+      select: { 
+        profileCompleted: true,
+        onboardingStepsCompleted: true
+      }
     })
     
     const wasAlreadyCompleted = currentUser?.profileCompleted === true
@@ -222,12 +225,24 @@ export async function PATCH(request: NextRequest) {
       console.log('🔄 NextAuth should refresh session token on next request')
     }
 
-    // Track analytics for first-time profile completion
+    // Track analytics for first-time profile completion and phases
+    const currentSteps = currentUser?.onboardingStepsCompleted || []
+    const hasEducationDetails = !!(university || highSchool || major || subjects)
+    
+    console.log('🔍 Phase tracking analysis:', {
+      isFirstTimeCompletion,
+      hasEducationDetails,
+      currentSteps,
+      profileCompleted: updatedUser.profileCompleted,
+      userEmail: session.user?.email
+    })
+    
+    // Track Phase 1 completion for first-time profile completion
     if (isFirstTimeCompletion) {
       try {
         await AnalyticsTracker.trackProfileCompleted(session.user?.id!)
         await AnalyticsTracker.trackPhase1Completed(session.user?.id!)
-        console.log('📊 Analytics tracked: Profile completion and Phase 1 completion')
+        console.log('📊 ✅ Analytics tracked: Profile completion and Phase 1 completion for', session.user?.email)
       } catch (analyticsError) {
         console.error('Failed to track profile completion analytics (non-blocking):', analyticsError)
         // Don't block the user's flow if analytics fails
@@ -235,22 +250,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Track Phase 2 completion when detailed education profile is added
-    if (university || highSchool || major || subjects) {
+    if (hasEducationDetails && !currentSteps.includes('phase_2_completed')) {
       try {
-        // Check if user hasn't completed Phase 2 yet
-        const existingUser = await prisma.user.findUnique({
-          where: { id: session.user?.id },
-          select: { onboardingStepsCompleted: true }
-        })
-        
-        const hasPhase2Completed = existingUser?.onboardingStepsCompleted?.includes('phase_2_completed')
-        if (!hasPhase2Completed) {
-          await AnalyticsTracker.trackPhase2Completed(session.user?.id!)
-          console.log('📊 Analytics tracked: Phase 2 completion (education details added)')
-        }
+        await AnalyticsTracker.trackPhase2Completed(session.user?.id!)
+        console.log('📊 ✅ Analytics tracked: Phase 2 completion (education details added) for', session.user?.email)
       } catch (analyticsError) {
         console.error('Failed to track Phase 2 completion analytics (non-blocking):', analyticsError)
       }
+    } else if (hasEducationDetails && currentSteps.includes('phase_2_completed')) {
+      console.log('📊 ⏭️ Phase 2 already tracked for', session.user?.email)
     }
 
     // Send Slack notification ONLY for first-time profile completion (prevents duplicates)
