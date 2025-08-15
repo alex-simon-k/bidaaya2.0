@@ -1,6 +1,18 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
+// Helper function to check if student has completed discovery quiz
+function hasCompletedDiscoveryQuiz(userBio: string | null | undefined): boolean {
+  if (!userBio) return false;
+  
+  try {
+    const bioData = JSON.parse(userBio);
+    return bioData.discoveryCompleted === true;
+  } catch (error) {
+    return false;
+  }
+}
+
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
@@ -62,6 +74,16 @@ export default withAuth(
       // For other pages, allow access (don't force verification everywhere)
       console.log('🛡️ Email not verified but allowing access to non-protected page:', pathname);
       return NextResponse.next();
+    }
+    
+    // Check if student has completed discovery quiz (Phase 2)
+    if (token && token.emailVerified && token.profileCompleted && token.role === 'STUDENT') {
+      const hasCompletedQuiz = hasCompletedDiscoveryQuiz(token.bio as string);
+      
+      if (!hasCompletedQuiz && pathname.startsWith("/dashboard") && pathname !== '/dashboard/discovery-quiz') {
+        console.log('🛡️ ❌ Student has completed profile but not discovery quiz, redirecting to discovery quiz from:', pathname);
+        return NextResponse.redirect(new URL("/dashboard/discovery-quiz", req.url));
+      }
     }
     
     // If user is verified but profile not completed, redirect to appropriate onboarding
