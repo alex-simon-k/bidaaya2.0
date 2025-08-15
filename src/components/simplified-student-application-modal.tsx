@@ -27,6 +27,7 @@ interface Project {
   description: string
   skillsRequired: string[]
   category?: string
+  problemStatement?: string
   company: {
     companyName?: string
     name?: string
