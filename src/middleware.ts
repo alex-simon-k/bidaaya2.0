@@ -76,13 +76,14 @@ export default withAuth(
       return NextResponse.next();
     }
     
-    // Check if student has completed discovery quiz (Phase 2)
+    // Check if student has completed Phase 2 (detailed profile with education info)
     if (token && token.emailVerified && token.profileCompleted && token.role === 'STUDENT') {
-      const hasCompletedQuiz = hasCompletedDiscoveryQuiz(token.bio as string);
+      // Check if they have completed the detailed profile (Phase 2) by looking for education fields
+      const hasDetailedProfile = !!(token.university || token.highSchool || token.major || token.subjects);
       
-      if (!hasCompletedQuiz && pathname.startsWith("/dashboard") && pathname !== '/dashboard/discovery-quiz') {
-        console.log('🛡️ ❌ Student has completed profile but not discovery quiz, redirecting to discovery quiz from:', pathname);
-        return NextResponse.redirect(new URL("/dashboard/discovery-quiz", req.url));
+      if (!hasDetailedProfile && pathname.startsWith("/dashboard") && pathname !== '/dashboard/profile') {
+        console.log('🛡️ ❌ Student has completed basic profile but not detailed profile, redirecting to profile page for Phase 2 from:', pathname);
+        return NextResponse.redirect(new URL("/dashboard/profile", req.url));
       }
     }
     

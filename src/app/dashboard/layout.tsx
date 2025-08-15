@@ -7,19 +7,7 @@ import { useState, useEffect } from 'react'
 import { OnboardingSessionManager } from '@/lib/onboarding-session-manager'
 import { ChevronDown } from 'lucide-react'
 
-// Helper function to check if student has completed discovery quiz
-function checkDiscoveryQuizCompletion(user: any): boolean {
-  if (!user?.bio) return false;
-  
-  try {
-    // The discovery quiz data is stored in the bio field as JSON
-    const bioData = JSON.parse(user.bio);
-    return bioData.discoveryCompleted === true;
-  } catch (error) {
-    // If bio is not JSON or doesn't contain discovery data, assume not completed
-    return false;
-  }
-}
+
 
 export default function DashboardLayout({
   children,
@@ -166,15 +154,15 @@ export default function DashboardLayout({
 
           console.log('🏠 DashboardLayout - Profile is completed, profileCompleted value:', sessionData.profileCompleted);
 
-          // Phase 2 enforcement: Check if student has completed discovery quiz
+          // Phase 2 enforcement: Check if student has completed detailed profile
           if (session.user.role === 'STUDENT') {
-            const hasCompletedDiscoveryQuiz = checkDiscoveryQuizCompletion(session.user);
+            const hasDetailedProfile = !!(session.user.university || session.user.highSchool || session.user.major || session.user.subjects);
             
-            if (!hasCompletedDiscoveryQuiz) {
-              console.log('🏠 DashboardLayout - Student has not completed discovery quiz, redirecting to discovery quiz');
-              // Allow access to the discovery quiz page itself
-              if (pathname !== '/dashboard/discovery-quiz') {
-                router.replace('/dashboard/discovery-quiz');
+            if (!hasDetailedProfile) {
+              console.log('🏠 DashboardLayout - Student has not completed detailed profile, redirecting to profile page for Phase 2');
+              // Allow access to the profile page itself where the guided tutorial will show
+              if (pathname !== '/dashboard/profile') {
+                router.replace('/dashboard/profile');
                 return;
               }
             }
