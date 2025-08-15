@@ -103,7 +103,7 @@ const tutorialSteps: Step[] = [
 
 export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfileTutorialProps) {
   const router = useRouter()
-  const { update } = useSession()
+  const { data: session, update } = useSession()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<Record<string, any>>({
     highSchool: '',
