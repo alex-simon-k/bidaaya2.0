@@ -204,6 +204,17 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
       if (response.ok) {
         console.log('Profile saved successfully')
         
+        // Track Phase 2 completion
+        if (session?.user?.id) {
+          try {
+            const { AnalyticsTracker } = await import('@/lib/analytics-tracker')
+            await AnalyticsTracker.trackPhase2Completed(session.user.id)
+            console.log('📊 Analytics tracked: Phase 2 completion')
+          } catch (error) {
+            console.error('Failed to track Phase 2 completion:', error)
+          }
+        }
+        
         // Close the tutorial immediately for smooth UX
         onClose()
         

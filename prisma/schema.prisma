@@ -55,6 +55,8 @@ model User {
   referralDetails          String?
   emailVerifiedAt          DateTime?
   profileCompletedAt       DateTime?
+  phase1CompletedAt        DateTime?  // Basic profile completion (name, education status, terms)
+  phase2CompletedAt        DateTime?  // Detailed education profile completion
   roleSelectedAt           DateTime?
   firstLoginAt             DateTime?
   lastActiveAt             DateTime?

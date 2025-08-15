@@ -63,6 +63,46 @@ export class AnalyticsTracker {
   }
 
   /**
+   * Track Phase 1 completion (basic profile setup)
+   */
+  static async trackPhase1Completed(userId: string) {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          phase1CompletedAt: new Date(),
+          onboardingStepsCompleted: {
+            push: 'phase_1_completed'
+          }
+        }
+      })
+      console.log('🎯 Tracked Phase 1 completion for user:', userId)
+    } catch (error) {
+      console.error('Failed to track Phase 1 completion:', error)
+    }
+  }
+
+  /**
+   * Track Phase 2 completion (detailed profile with education)
+   */
+  static async trackPhase2Completed(userId: string) {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          phase2CompletedAt: new Date(),
+          onboardingStepsCompleted: {
+            push: 'phase_2_completed'
+          }
+        }
+      })
+      console.log('🎯 Tracked Phase 2 completion for user:', userId)
+    } catch (error) {
+      console.error('Failed to track Phase 2 completion:', error)
+    }
+  }
+
+  /**
    * Track role selection
    */
   static async trackRoleSelected(userId: string, role: string) {

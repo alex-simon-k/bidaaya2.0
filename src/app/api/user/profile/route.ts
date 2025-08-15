@@ -226,10 +226,30 @@ export async function PATCH(request: NextRequest) {
     if (isFirstTimeCompletion) {
       try {
         await AnalyticsTracker.trackProfileCompleted(session.user?.id!)
-        console.log('📊 Analytics tracked: Profile completion timestamp saved')
+        await AnalyticsTracker.trackPhase1Completed(session.user?.id!)
+        console.log('📊 Analytics tracked: Profile completion and Phase 1 completion')
       } catch (analyticsError) {
         console.error('Failed to track profile completion analytics (non-blocking):', analyticsError)
         // Don't block the user's flow if analytics fails
+      }
+    }
+
+    // Track Phase 2 completion when detailed education profile is added
+    if (university || highSchool || major || subjects) {
+      try {
+        // Check if user hasn't completed Phase 2 yet
+        const existingUser = await prisma.user.findUnique({
+          where: { id: session.user?.id },
+          select: { onboardingStepsCompleted: true }
+        })
+        
+        const hasPhase2Completed = existingUser?.onboardingStepsCompleted?.includes('phase_2_completed')
+        if (!hasPhase2Completed) {
+          await AnalyticsTracker.trackPhase2Completed(session.user?.id!)
+          console.log('📊 Analytics tracked: Phase 2 completion (education details added)')
+        }
+      } catch (analyticsError) {
+        console.error('Failed to track Phase 2 completion analytics (non-blocking):', analyticsError)
       }
     }
 
