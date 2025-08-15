@@ -222,15 +222,17 @@ export function StudentApplicationModal({
     }
   }
 
-  // Initialize form with user bio
+  // Pre-fill with user bio when modal first opens (only once)
+  const [hasPreFilledBio, setHasPreFilledBio] = useState(false)
   useEffect(() => {
-    if (userBio && !formData.whyInterested) {
+    if (userBio && !formData.whyInterested && !hasPreFilledBio && isOpen) {
       setFormData(prev => ({
         ...prev,
         whyInterested: userBio
       }))
+      setHasPreFilledBio(true)
     }
-  }, [userBio, formData.whyInterested])
+  }, [userBio, formData.whyInterested, hasPreFilledBio, isOpen])
 
   // Load saved form data when modal opens and start session tracking
   useEffect(() => {
@@ -580,6 +582,7 @@ export function StudentApplicationModal({
         })
       }).catch(error => console.error('Failed to track session abandonment:', error))
     }
+    setHasPreFilledBio(false) // Reset pre-fill flag for next time
     onClose()
   }
 
@@ -787,7 +790,7 @@ export function StudentApplicationModal({
                     <div>
                                               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-4 flex items-center gap-2">
                         <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                        Why This Project?
+                        Tell us about yourself
                       </h3>
                       
                       <div className="space-y-2 sm:space-y-4">

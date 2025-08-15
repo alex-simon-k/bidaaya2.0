@@ -90,15 +90,17 @@ export function SimplifiedStudentApplicationModal({
     }
   }
 
-  // Initialize form with user bio
+  // Pre-fill with user bio when modal first opens (only once)
+  const [hasPreFilledBio, setHasPreFilledBio] = useState(false)
   useEffect(() => {
-    if (userBio && !formData.whyInterested) {
+    if (userBio && !formData.whyInterested && !hasPreFilledBio && isOpen) {
       setFormData(prev => ({
         ...prev,
         whyInterested: userBio
       }))
+      setHasPreFilledBio(true)
     }
-  }, [userBio, formData.whyInterested])
+  }, [userBio, formData.whyInterested, hasPreFilledBio, isOpen])
 
   useEffect(() => {
     if (isOpen && project && session?.user?.id) {
@@ -216,7 +218,7 @@ export function SimplifiedStudentApplicationModal({
 
       if (response.ok) {
         onSuccess()
-        onClose()
+        handleClose()
         resetForm()
       } else if (response.status === 403 && data.code === 'LIMIT_REACHED') {
         const prompt = getApplicationUpgradePrompt(session.user as any)
@@ -242,6 +244,11 @@ export function SimplifiedStudentApplicationModal({
     return formData.whyInterested.length >= 50 && formData.proposedApproach.length >= 100
   }
 
+  const handleClose = () => {
+    setHasPreFilledBio(false) // Reset pre-fill flag for next time
+    onClose()
+  }
+
   if (!isOpen || !project) return null
 
   return (
@@ -256,7 +263,7 @@ export function SimplifiedStudentApplicationModal({
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-6 text-white relative">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
             >
               <X className="h-5 w-5" />
