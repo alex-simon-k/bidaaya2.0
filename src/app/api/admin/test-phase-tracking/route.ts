@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
       analysis,
       summary: {
         usersWithProfileCompleted: analysis.filter(u => u.profileCompleted).length,
-        usersWithPhase1Tracking: analysis.filter(u => u.hasPhase1Marker || u.phase1CompletedAt).length,
-        usersWithPhase2Tracking: analysis.filter(u => u.hasPhase2Marker || u.phase2CompletedAt).length,
+        usersWithPhase1Tracking: analysis.filter(u => u.analysis.hasPhase1Marker || u.phase1CompletedAt).length,
+        usersWithPhase2Tracking: analysis.filter(u => u.analysis.hasPhase2Marker || u.phase2CompletedAt).length,
         usersMissingPhase1: analysis.filter(u => u.analysis.shouldHavePhase1 && !u.analysis.hasPhase1Marker && !u.phase1CompletedAt).length,
         usersMissingPhase2: analysis.filter(u => u.analysis.shouldHavePhase2 && !u.analysis.hasPhase2Marker && !u.phase2CompletedAt).length
       }
