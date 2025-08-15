@@ -64,11 +64,25 @@ export async function POST(request: NextRequest) {
         email: true,
         university: true,
         major: true,
+        highSchool: true,
+        subjects: true,
+        role: true,
       }
     })
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Check if student has completed Phase 2 (detailed profile)
+    if (user.role === 'STUDENT') {
+      const hasDetailedProfile = !!(user.university || user.highSchool || user.major || user.subjects);
+      if (!hasDetailedProfile) {
+        return NextResponse.json({ 
+          error: 'Please complete your education details in your profile before applying',
+          code: 'PROFILE_INCOMPLETE'
+        }, { status: 400 })
+      }
     }
 
     // Reset monthly applications if needed

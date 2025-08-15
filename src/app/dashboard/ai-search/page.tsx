@@ -139,6 +139,16 @@ export default function AISearchPage() {
   }
 
   const handleApplyToProject = async (project: any) => {
+    // Check if Phase 2 (detailed profile) is completed
+    const user = session?.user as any;
+    const hasDetailedProfile = !!(user?.university || user?.highSchool || user?.major || user?.subjects);
+    
+    if (!hasDetailedProfile && session?.user?.role === 'STUDENT') {
+      // Redirect to profile page to complete Phase 2
+      window.location.href = '/dashboard/profile?action=required';
+      return;
+    }
+    
     // Navigate to the project details page where the user can apply
     window.location.href = `/dashboard/projects/${project.id}`
   }
