@@ -156,7 +156,8 @@ export default function DashboardLayout({
 
           // Phase 2 enforcement: Check if student has completed detailed profile
           if (session.user.role === 'STUDENT') {
-            const hasDetailedProfile = !!(session.user.university || session.user.highSchool || session.user.major || session.user.subjects);
+            const user = session.user as any;
+            const hasDetailedProfile = !!(user.university || user.highSchool || user.major || user.subjects);
             
             if (!hasDetailedProfile) {
               console.log('🏠 DashboardLayout - Student has not completed detailed profile, redirecting to profile page for Phase 2');
