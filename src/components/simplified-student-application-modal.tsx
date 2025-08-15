@@ -57,6 +57,7 @@ export function SimplifiedStudentApplicationModal({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<'application_limit' | 'file_upload' | 'external_tracking' | undefined>(undefined)
   const [upgradePrompt, setUpgradePrompt] = useState<any>(null)
+  const [userBio, setUserBio] = useState<string>('')
   
   // Simple form with only 2 questions
   const [formData, setFormData] = useState({
@@ -66,9 +67,42 @@ export function SimplifiedStudentApplicationModal({
   
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
+  // Fetch user profile to get bio
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile')
+      if (response.ok) {
+        const data = await response.json()
+        const bio = data.profile?.bio || ''
+        
+        // Extract original bio from discovery profile data if available
+        try {
+          const bioData = JSON.parse(bio)
+          setUserBio(bioData.originalBio || '')
+        } catch {
+          // If bio is not JSON, use it directly
+          setUserBio(bio)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error)
+    }
+  }
+
+  // Initialize form with user bio
+  useEffect(() => {
+    if (userBio && !formData.whyInterested) {
+      setFormData(prev => ({
+        ...prev,
+        whyInterested: userBio
+      }))
+    }
+  }, [userBio, formData.whyInterested])
+
   useEffect(() => {
     if (isOpen && project && session?.user?.id) {
       checkLimits()
+      fetchUserProfile()
     }
   }, [isOpen, project, session?.user?.id])
 
@@ -252,18 +286,18 @@ export function SimplifiedStudentApplicationModal({
             {/* Application form */}
             {canApplyToProject && !isCheckingLimits && (
               <div className="space-y-6">
-                {/* Question 1: Why interested */}
+                {/* Question 1: About yourself */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <MessageSquare className="h-5 w-5 text-blue-600" />
                     <label className="text-lg font-semibold text-gray-900">
-                      Why are you interested in this project? *
+                      Tell us about yourself and why you're here *
                     </label>
                   </div>
                   <textarea
                     value={formData.whyInterested}
                     onChange={(e) => handleInputChange('whyInterested', e.target.value)}
-                    placeholder="Explain what excites you about this project and why you want to be involved..."
+                    placeholder={userBio || "Tell us a bit about yourself, your background, interests, and what you're looking to achieve through internships like this one."}
                     className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     maxLength={500}
                   />
@@ -272,18 +306,26 @@ export function SimplifiedStudentApplicationModal({
                   </p>
                 </div>
 
-                {/* Question 2: Proposed approach */}
+                {/* Problem Statement Display - Mobile optimized */}
+                {project.problemStatement && (
+                  <div className="bg-blue-50 rounded-xl p-3 sm:p-4 border-l-4 border-blue-500">
+                    <h4 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">Problem to Solve:</h4>
+                    <p className="text-blue-800 font-medium text-sm sm:text-base leading-relaxed">{project.problemStatement}</p>
+                  </div>
+                )}
+
+                {/* Question 2: Problem solving approach */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Target className="h-5 w-5 text-blue-600" />
                     <label className="text-lg font-semibold text-gray-900">
-                      What is your proposed approach (your solution to this project)? *
+                      How would you solve this problem? *
                     </label>
                   </div>
                   <textarea
                     value={formData.proposedApproach}
                     onChange={(e) => handleInputChange('proposedApproach', e.target.value)}
-                    placeholder="Describe your approach, methodology, and how you would tackle this project..."
+                    placeholder="Describe your approach to solving this problem. What steps would you take? What methods or strategies would you use?"
                     className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     maxLength={800}
                   />

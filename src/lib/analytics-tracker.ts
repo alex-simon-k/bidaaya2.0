@@ -83,6 +83,27 @@ export class AnalyticsTracker {
   }
 
   /**
+   * Track discovery quiz completion (Phase 2 for students)
+   */
+  static async trackDiscoveryQuizCompleted(userId: string) {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          onboardingStepsCompleted: {
+            push: 'discovery_quiz_completed'
+          }
+        }
+      })
+      console.log('🔍 Tracked discovery quiz completion for user:', userId)
+    } catch (error) {
+      console.error('Failed to track discovery quiz completion:', error)
+    }
+  }
+
+
+
+  /**
    * Track first login (after registration)
    */
   static async trackFirstLogin(userId: string, deviceInfo?: { deviceType?: string, browserInfo?: string }) {
@@ -172,6 +193,9 @@ export class AnalyticsTracker {
             firstApplicationAt: new Date(),
             featuresUsed: {
               push: 'application_submission'
+            },
+            onboardingStepsCompleted: {
+              push: 'first_application_submitted'
             }
           }
         })

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { StudentDiscoveryQuiz } from '@/components/student-discovery-quiz'
 import type { StudentProfile } from '@/lib/project-matching'
+import { AnalyticsTracker } from '@/lib/analytics-tracker'
 
 export default function DiscoveryQuizPage() {
   const { data: session } = useSession()
@@ -61,6 +62,11 @@ export default function DiscoveryQuizPage() {
         setQuizResults(profile)
         setIsCompleted(true)
         console.log('✅ Discovery quiz profile saved successfully')
+        
+        // Track discovery quiz completion
+        if (session?.user?.id) {
+          await AnalyticsTracker.trackDiscoveryQuizCompleted(session.user.id)
+        }
       } else {
         throw new Error('Failed to save profile')
       }
