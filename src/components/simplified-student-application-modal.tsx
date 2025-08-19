@@ -324,13 +324,15 @@ export function SimplifiedStudentApplicationModal({
                   </p>
                 </div>
 
-                {/* Problem Statement Display - Mobile optimized */}
-                {project.problemStatement && (
-                  <div className="bg-blue-50 rounded-xl p-3 sm:p-4 border-l-4 border-blue-500">
-                    <h4 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">Problem to Solve:</h4>
-                    <p className="text-blue-800 font-medium text-sm sm:text-base leading-relaxed">{project.problemStatement}</p>
-                  </div>
-                )}
+                {/* Problem Statement Display - Always show project context */}
+                <div className="bg-blue-50 rounded-xl p-3 sm:p-4 border-l-4 border-blue-500">
+                  <h4 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">Problem to Solve:</h4>
+                  <p className="text-blue-800 font-medium text-sm sm:text-base leading-relaxed">
+                    {project.problemStatement || 
+                     project.description || 
+                     `Help ${project.company.companyName || project.company.name} with their ${project.title} project. Review the project details above to understand what they're looking for.`}
+                  </p>
+                </div>
 
                 {/* Question 2: Problem solving approach */}
                 <div>
@@ -392,25 +394,37 @@ export function SimplifiedStudentApplicationModal({
                   </div>
                 )}
 
-                {/* Submit button */}
-                <div className="flex justify-end pt-4">
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!isFormValid() || isLoading}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4" />
-                        Submit Application
-                      </>
-                    )}
-                  </button>
+                {/* Submit button - Centered and prominent */}
+                <div className="flex flex-col gap-4 pt-4 border-t">
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleSubmit}
+                      disabled={!isFormValid() || isLoading}
+                      className="flex-1 max-w-xs px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          Submit Application
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  
+                  {/* Cancel button - Secondary */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleClose}
+                      className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

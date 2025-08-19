@@ -821,13 +821,15 @@ export function StudentApplicationModal({
                         Your Solution Approach
                       </h3>
                       
-                      {/* Problem Statement - Prominently displayed with mobile optimization */}
-                      {project.problemStatement && (
-                        <div className="bg-blue-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-l-4 border-blue-500">
-                          <h4 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">Problem to Solve:</h4>
-                          <p className="text-blue-800 font-medium text-sm sm:text-base leading-relaxed">{project.problemStatement}</p>
-                        </div>
-                      )}
+                      {/* Problem Statement - Always show project context */}
+                      <div className="bg-blue-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-l-4 border-blue-500">
+                        <h4 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">Problem to Solve:</h4>
+                        <p className="text-blue-800 font-medium text-sm sm:text-base leading-relaxed">
+                          {project.problemStatement || 
+                           project.description || 
+                           `Help ${project.company.companyName || project.company.name} with their ${project.title} project. Review the project details above to understand what they're looking for.`}
+                        </p>
+                      </div>
 
                       <div className="space-y-4">
                         <div>
@@ -1061,35 +1063,16 @@ export function StudentApplicationModal({
                 </div>
               )}
 
-              {/* Navigation Buttons */}
-              <div className="flex flex-col sm:flex-row justify-between items-center pt-2 sm:pt-6 border-t mt-3 sm:mt-6 gap-2 sm:gap-0">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                                          className="px-3 sm:px-6 py-1 sm:py-3 border-2 border-gray-200 text-gray-600 rounded-lg sm:rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 text-xs sm:text-base"
-                  >
-                    Cancel
-                  </button>
-                  
-                  {currentStep > 1 && (
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                                              className="px-3 sm:px-6 py-1 sm:py-3 border-2 border-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-semibold hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 text-xs sm:text-base"
-                    >
-                      Previous
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
+              {/* Navigation Buttons - Centered layout for better mobile visibility */}
+              <div className="flex flex-col gap-4 pt-4 border-t mt-6">
+                {/* Main action buttons - Always visible and prominent */}
+                <div className="flex justify-center gap-3">
                   {currentStep < 4 ? (
                     <button
                       type="button"
                       onClick={nextStep}
                       disabled={!isStepValid(currentStep)}
-                                              className="px-3 sm:px-6 py-1 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-xs sm:text-base"
+                      className="flex-1 max-w-xs px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                     >
                       Next Step
                     </button>
@@ -1098,7 +1081,7 @@ export function StudentApplicationModal({
                       type="button"
                       onClick={handleSubmit}
                       disabled={isLoading || !canApplyToProject}
-                                              className="px-3 sm:px-6 py-1 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg sm:rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 text-xs sm:text-base"
+                      className="flex-1 max-w-xs px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2"
                     >
                       {isLoading ? (
                         <>
@@ -1111,6 +1094,27 @@ export function StudentApplicationModal({
                           Submit Application
                         </>
                       )}
+                    </button>
+                  )}
+                </div>
+                
+                {/* Secondary buttons - Smaller and less prominent */}
+                <div className="flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  
+                  {currentStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={prevStep}
+                      className="px-4 py-2 border border-blue-300 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+                    >
+                      Previous
                     </button>
                   )}
                 </div>
