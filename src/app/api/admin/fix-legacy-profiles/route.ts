@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
       where: {
         role: 'STUDENT',
         profileCompleted: false,
-        interests: {
-          not: null
+        NOT: {
+          interests: null
         },
         OR: [
           { subjects: null },
