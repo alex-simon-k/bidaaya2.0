@@ -151,6 +151,19 @@ export function ProfileCompletionIndicator({
     return 'Optional'
   }
 
+  // Don't show the component if everything is complete
+  const hasIncompleteFields = fields.some(field => {
+    const shouldShow = showApplicationRequirements 
+      ? (field.requiredFor === 'applications' || field.requiredFor === 'both')
+      : true
+    return shouldShow && !field.isCompleted
+  })
+
+  // If profile is complete AND can apply AND no incomplete fields, don't show
+  if (profileCompleted && canApply && !hasIncompleteFields) {
+    return null
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <div className="mb-6">
@@ -167,98 +180,82 @@ export function ProfileCompletionIndicator({
           />
         </div>
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className={`p-4 rounded-lg border-2 ${
-            profileCompleted 
-              ? 'border-green-200 bg-green-50' 
-              : 'border-orange-200 bg-orange-50'
-          }`}>
-            <div className="flex items-center gap-2 mb-1">
-              {profileCompleted ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-orange-600" />
-              )}
-              <span className={`font-medium ${
-                profileCompleted ? 'text-green-800' : 'text-orange-800'
-              }`}>
-                Profile Status
-              </span>
-            </div>
-            <p className={`text-sm ${
-              profileCompleted ? 'text-green-700' : 'text-orange-700'
-            }`}>
-              {profileCompleted ? 'Your profile is complete!' : 'Complete required fields to finish your profile'}
-            </p>
-          </div>
+        {/* Status Cards - Only show if there are issues */}
+        {(!profileCompleted || !canApply) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {!profileCompleted && (
+              <div className="p-4 rounded-lg border-2 border-orange-200 bg-orange-50">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertCircle className="h-5 w-5 text-orange-600" />
+                  <span className="font-medium text-orange-800">Profile Incomplete</span>
+                </div>
+                <p className="text-sm text-orange-700">
+                  Complete required fields to finish your profile
+                </p>
+              </div>
+            )}
 
-          <div className={`p-4 rounded-lg border-2 ${
-            canApply 
-              ? 'border-green-200 bg-green-50' 
-              : 'border-red-200 bg-red-50'
-          }`}>
-            <div className="flex items-center gap-2 mb-1">
-              {canApply ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-red-600" />
-              )}
-              <span className={`font-medium ${
-                canApply ? 'text-green-800' : 'text-red-800'
-              }`}>
-                Application Eligibility
-              </span>
-            </div>
-            <p className={`text-sm ${
-              canApply ? 'text-green-700' : 'text-red-700'
-            }`}>
-              {canApply ? 'You can apply to projects!' : 'Add education details to apply to projects'}
-            </p>
+            {!canApply && (
+              <div className="p-4 rounded-lg border-2 border-red-200 bg-red-50">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <span className="font-medium text-red-800">Can't Apply to Projects</span>
+                </div>
+                <p className="text-sm text-red-700">
+                  Add education details to apply to projects
+                </p>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Field List */}
-      <div className="space-y-3">
-        <h4 className="font-medium text-gray-900 mb-3">
-          {showApplicationRequirements ? 'Application Requirements' : 'Profile Fields'}
-        </h4>
-        
-        {fields.map((field) => {
-          const shouldShow = showApplicationRequirements 
-            ? (field.requiredFor === 'applications' || field.requiredFor === 'both')
-            : true
+      {/* Field List - Only show incomplete items */}
+      {fields.filter(field => {
+        const shouldShow = showApplicationRequirements 
+          ? (field.requiredFor === 'applications' || field.requiredFor === 'both')
+          : true
+        return shouldShow && !field.isCompleted
+      }).length > 0 && (
+        <div className="space-y-3">
+          <h4 className="font-medium text-gray-900 mb-3">
+            Complete Your Profile
+          </h4>
+          
+          {fields.map((field) => {
+            const shouldShow = showApplicationRequirements 
+              ? (field.requiredFor === 'applications' || field.requiredFor === 'both')
+              : true
 
-          if (!shouldShow) return null
+            // Only show incomplete fields
+            if (!shouldShow || field.isCompleted) return null
 
-          return (
-            <div key={field.key} className="flex items-center justify-between p-3 rounded-lg border hover:border-gray-300 transition-colors">
-              <div className="flex items-center gap-3">
-                {getFieldIcon(field)}
-                <div>
-                  <p className="font-medium text-gray-900">{field.label}</p>
-                  <p className="text-sm text-gray-600">{field.description}</p>
+            return (
+              <div key={field.key} className="flex items-center justify-between p-3 rounded-lg border-2 border-orange-200 bg-orange-50 hover:border-orange-300 transition-colors">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                  <div>
+                    <p className="font-medium text-gray-900">{field.label}</p>
+                    <p className="text-sm text-gray-600">{field.description}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    field.required || (showApplicationRequirements && field.requiredFor === 'applications')
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {field.required || (showApplicationRequirements && field.requiredFor === 'applications') ? 'Required' : 'Optional'}
+                  </span>
                 </div>
               </div>
-              <div className="text-right">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  field.isCompleted 
-                    ? 'bg-green-100 text-green-800'
-                    : field.required || (showApplicationRequirements && field.requiredFor === 'applications')
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {getFieldStatus(field)}
-                </span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
-      {/* Action Buttons */}
-      {!profileCompleted || !canApply ? (
+      {/* Action Buttons - Only show if there are incomplete items */}
+      {hasIncompleteFields && (
         <div className="mt-6 pt-4 border-t">
           <div className="flex flex-col sm:flex-row gap-3">
             {!profileCompleted && (
@@ -279,13 +276,6 @@ export function ProfileCompletionIndicator({
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-6 pt-4 border-t">
-          <div className="flex items-center gap-2 text-green-600">
-            <CheckCircle className="h-5 w-5" />
-            <span className="font-medium">All set! You can now apply to projects.</span>
           </div>
         </div>
       )}
