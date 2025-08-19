@@ -101,6 +101,15 @@ export function ProfileCompletionIndicator({
         requiredFor: 'profile',
         value: profileData.skills?.length > 0 ? profileData.skills : null,
         isCompleted: !!(profileData.skills?.length > 0)
+      },
+      {
+        key: 'interests',
+        label: 'Interests',
+        description: 'Your interests and areas you want to work in',
+        required: false,
+        requiredFor: 'profile',
+        value: profileData.interests?.length > 0 ? profileData.interests : null,
+        isCompleted: !!(profileData.interests?.length > 0)
       }
     ]
 
@@ -119,9 +128,9 @@ export function ProfileCompletionIndicator({
     f.requiredFor === 'applications' || f.requiredFor === 'both'
   )
 
-  // For profile completion: name + (university OR major OR subjects OR skills OR education) + terms
+  // For profile completion: name + (university OR major OR subjects OR skills OR interests OR education) + terms
   const hasBasicEducationInfo = fields.some(f => 
-    ['university', 'major', 'subjects', 'skills', 'education'].includes(f.key) && f.isCompleted
+    ['university', 'major', 'subjects', 'skills', 'interests', 'education'].includes(f.key) && f.isCompleted
   )
   const profileCompleted = profileRequiredFields.every(f => f.isCompleted) && hasBasicEducationInfo
 

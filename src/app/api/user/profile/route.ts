@@ -153,7 +153,7 @@ export async function PATCH(request: NextRequest) {
       subjectsValue: subjects
     })
     
-    const hasRequiredFields = name && (university || major || subjects || skills || educationStatus) && terms
+    const hasRequiredFields = name && (university || major || subjects || skills || educationStatus || interests) && terms
     console.log('🔍 Has required fields for completion:', hasRequiredFields)
     
     // Get current user status BEFORE update to check if this is first-time completion

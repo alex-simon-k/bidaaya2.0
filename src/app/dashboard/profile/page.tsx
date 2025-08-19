@@ -198,7 +198,10 @@ export default function ProfilePage() {
       // Auto-open tutorial if Phase 2 is incomplete (missing education details)
       const hasDetailedProfile = !!(profileData?.university || profileData?.highSchool || profileData?.major || profileData?.subjects);
       
-      if (!hasDetailedProfile && userRole === 'STUDENT') {
+      // Also check if user clicked "Complete Profile" button
+      const shouldOpenTutorial = (!hasDetailedProfile && userRole === 'STUDENT') || isGuided;
+      
+      if (shouldOpenTutorial) {
         setShowGuidedTutorial(true)
         
         // Show action required banner if redirected from application attempt
