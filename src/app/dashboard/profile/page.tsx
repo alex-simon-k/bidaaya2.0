@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { GuidedProfileTutorial } from '@/components/guided-profile-tutorial'
 import { BeautifulProfilePage } from '@/components/beautiful-profile-page'
+import { ProfileCompletionIndicator } from '@/components/profile-completion-indicator'
 
 interface ProfileData {
   // Basic Info
@@ -456,6 +457,16 @@ export default function ProfilePage() {
               </svg>
             </button>
           </div>
+        </div>
+      )}
+      
+      {/* Profile Completion Indicator */}
+      {userRole === 'STUDENT' && profileData && (
+        <div className="mb-6">
+          <ProfileCompletionIndicator 
+            profileData={profileData}
+            showApplicationRequirements={actionRequired}
+          />
         </div>
       )}
       
