@@ -29,12 +29,19 @@ export function ProfileCompletionIndicator({
   useEffect(() => {
     if (!profileData) return
 
-    console.log('🔍 Profile Completion Analysis:', {
+    console.log('🔍 Profile Completion Analysis - RAW DATA:', profileData)
+    console.log('🔍 Profile Completion Analysis - SPECIFIC FIELDS:', {
       name: profileData.name,
+      nameType: typeof profileData.name,
       terms: profileData.terms,
+      termsType: typeof profileData.terms,
       education: profileData.education,
+      educationType: typeof profileData.education,
       subjects: profileData.subjects,
+      subjectsType: typeof profileData.subjects,
       interests: profileData.interests,
+      interestsType: typeof profileData.interests,
+      interestsLength: profileData.interests?.length,
       university: profileData.university,
       highSchool: profileData.highSchool,
       major: profileData.major,
