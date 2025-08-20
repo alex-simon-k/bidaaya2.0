@@ -113,16 +113,73 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
     interests: []
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [profileData, setProfileData] = useState<any>(null)
+  const [relevantSteps, setRelevantSteps] = useState<Step[]>([])
 
-
-  const currentStepData = tutorialSteps.find(step => step.id === currentStep)
-  const progress = (currentStep / tutorialSteps.length) * 100
-  const isLastStep = currentStep === tutorialSteps.length
-
+  // Filter steps to only show what's missing
   useEffect(() => {
-    // Load existing data if available
-    // This would come from the profile API
-  }, [])
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const data = await response.json()
+          const profile = data.profile
+          setProfileData(profile)
+          
+          console.log('📋 Profile data for tutorial:', profile)
+          
+          // Determine which steps are needed
+          const neededSteps = tutorialSteps.filter(step => {
+            switch (step.field) {
+              case 'institutions':
+                return !(profile.university?.trim() || profile.highSchool?.trim())
+              case 'subjects':
+                return !profile.subjects?.trim()
+              case 'bio':
+                return !profile.bio?.trim()
+              case 'interests':
+                return !(profile.interests?.length > 0)
+              default:
+                return true
+            }
+          })
+          
+          console.log('🎯 Steps needed:', neededSteps.map(s => s.field))
+          setRelevantSteps(neededSteps)
+          
+          // Pre-fill form with existing data
+          setFormData({
+            highSchool: profile.highSchool || '',
+            university: profile.university || '',
+            subjects: profile.subjects || '',
+            bio: profile.bio || '',
+            interests: profile.interests || []
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error)
+        // Fallback to showing all steps
+        setRelevantSteps(tutorialSteps)
+      }
+    }
+
+    if (isOpen) {
+      fetchProfileData()
+    }
+  }, [isOpen])
+
+  // Use array index for current step since we filtered the steps
+  const currentStepData = relevantSteps[currentStep - 1]
+  const progress = relevantSteps.length > 0 ? (currentStep / relevantSteps.length) * 100 : 100
+  const isLastStep = currentStep === relevantSteps.length
+
+  // If no steps are needed, auto-close the tutorial
+  useEffect(() => {
+    if (relevantSteps.length === 0 && profileData) {
+      console.log('🎉 No missing fields found, closing tutorial')
+      onClose()
+    }
+  }, [relevantSteps, profileData, onClose])
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
