@@ -29,119 +29,122 @@ export function ProfileCompletionIndicator({
   useEffect(() => {
     if (!profileData) return
 
-    const profileFields: ProfileField[] = [
-      {
+    console.log('🔍 Profile Completion Analysis:', {
+      name: profileData.name,
+      terms: profileData.terms,
+      education: profileData.education,
+      subjects: profileData.subjects,
+      interests: profileData.interests,
+      university: profileData.university,
+      highSchool: profileData.highSchool,
+      major: profileData.major,
+      skills: profileData.skills
+    })
+
+    // Build fields based on actual onboarding phases
+    const profileFields: ProfileField[] = []
+
+    // Phase 1 Fields (Setup Profile) - Only show if actually missing
+    if (!profileData.name) {
+      profileFields.push({
         key: 'name',
         label: 'Full Name',
-        description: 'Your full name for identification',
+        description: 'Complete Phase 1: Add your full name',
         required: true,
         requiredFor: 'both',
         value: profileData.name,
-        isCompleted: !!profileData.name
-      },
-      {
+        isCompleted: false
+      })
+    }
+
+    // Check terms properly - could be boolean true or string "true" 
+    const hasTerms = profileData.terms === true || profileData.terms === 'true' || profileData.terms === '1'
+    if (!hasTerms) {
+      profileFields.push({
         key: 'terms',
         label: 'Terms & Conditions',
-        description: 'Accept terms and conditions',
+        description: 'Complete Phase 1: Accept terms and conditions',
         required: true,
         requiredFor: 'both',
         value: profileData.terms,
-        isCompleted: !!profileData.terms
-      },
-      {
+        isCompleted: false
+      })
+    }
+
+    if (!profileData.education) {
+      profileFields.push({
         key: 'education',
         label: 'Education Status',
-        description: 'Your current education level (High School, University, etc.)',
+        description: 'Complete Phase 1: Your current education level',
         required: true,
-        requiredFor: 'profile',
+        requiredFor: 'both',
         value: profileData.education,
-        isCompleted: !!profileData.education
-      },
-      {
-        key: 'university',
-        label: 'University',
-        description: 'Your university name',
-        required: false,
-        requiredFor: 'applications',
-        value: profileData.university,
-        isCompleted: !!profileData.university
-      },
-      {
-        key: 'highSchool',
-        label: 'High School',
-        description: 'Your high school name',
-        required: false,
-        requiredFor: 'applications',
-        value: profileData.highSchool,
-        isCompleted: !!profileData.highSchool
-      },
-      {
-        key: 'major',
-        label: 'Major/Field of Study',
-        description: 'Your area of study or academic focus',
-        required: false,
-        requiredFor: 'applications',
-        value: profileData.major,
-        isCompleted: !!profileData.major
-      },
-      {
+        isCompleted: false
+      })
+    }
+
+    // Phase 2 Fields (Guided Tutorial) - At least one education detail OR interests
+    const hasEducationDetails = !!(profileData.university || profileData.highSchool || profileData.major || profileData.subjects)
+    const hasInterests = !!(profileData.interests?.length > 0)
+    const hasPhase2Complete = hasEducationDetails || hasInterests
+
+    if (!hasPhase2Complete) {
+      // Show one field to represent Phase 2 completion
+      profileFields.push({
         key: 'subjects',
-        label: 'Subjects/Interests',
-        description: 'Your academic subjects or areas of interest',
+        label: 'Educational Background',
+        description: 'Complete Phase 2: Add your university, subjects, or areas of interest',
         required: false,
         requiredFor: 'applications',
-        value: profileData.subjects,
-        isCompleted: !!profileData.subjects
-      },
-      {
+        value: null,
+        isCompleted: false
+      })
+    }
+
+    // Optional enhancement fields - only show if user wants to improve profile
+    if (hasPhase2Complete && !profileData.skills?.length) {
+      profileFields.push({
         key: 'skills',
-        label: 'Skills',
-        description: 'Your technical and soft skills',
+        label: 'Skills (Optional)',
+        description: 'Optional: Add your technical and soft skills to boost your profile',
         required: false,
         requiredFor: 'profile',
         value: profileData.skills?.length > 0 ? profileData.skills : null,
-        isCompleted: !!(profileData.skills?.length > 0)
-      },
-      {
-        key: 'interests',
-        label: 'Interests',
-        description: 'Your interests and areas you want to work in',
-        required: false,
-        requiredFor: 'profile',
-        value: profileData.interests?.length > 0 ? profileData.interests : null,
-        isCompleted: !!(profileData.interests?.length > 0)
-      }
-    ]
+        isCompleted: false
+      })
+    }
 
     setFields(profileFields)
   }, [profileData])
 
-  // Calculate completion status
-  const profileRequiredFields = fields.filter(f => 
-    f.required && (f.requiredFor === 'profile' || f.requiredFor === 'both')
-  )
-  const profileOptionalFields = fields.filter(f => 
-    !f.required && (f.requiredFor === 'profile' || f.requiredFor === 'both')
-  )
+  // Calculate completion status based on actual onboarding flow
+  const hasPhase1Complete = !!(profileData?.name && profileData?.education && 
+    (profileData?.terms === true || profileData?.terms === 'true' || profileData?.terms === '1'))
   
-  const applicationRequiredFields = fields.filter(f => 
-    f.requiredFor === 'applications' || f.requiredFor === 'both'
-  )
+  const hasEducationDetails = !!(profileData?.university || profileData?.highSchool || profileData?.major || profileData?.subjects)
+  const hasInterests = !!(profileData?.interests?.length > 0)
+  const hasPhase2Complete = hasEducationDetails || hasInterests
 
-  // For profile completion: name + (university OR major OR subjects OR skills OR interests OR education) + terms
-  const hasBasicEducationInfo = fields.some(f => 
-    ['university', 'major', 'subjects', 'skills', 'interests', 'education'].includes(f.key) && f.isCompleted
-  )
-  const profileCompleted = profileRequiredFields.every(f => f.isCompleted) && hasBasicEducationInfo
+  const profileCompleted = hasPhase1Complete && hasPhase2Complete
+  const canApply = hasPhase1Complete && hasPhase2Complete // Same logic for now
 
-  // For applications: at least one of university, highSchool, major, subjects
-  const canApply = fields.some(f => 
-    ['university', 'highSchool', 'major', 'subjects'].includes(f.key) && f.isCompleted
-  )
+  console.log('🎯 Completion Status:', {
+    hasPhase1Complete,
+    hasPhase2Complete,
+    profileCompleted,
+    canApply,
+    fieldsShowing: fields.length
+  })
 
-  const profileCompletionPercentage = Math.round(
-    (fields.filter(f => f.isCompleted).length / fields.length) * 100
-  )
+  // Calculate completion percentage based on phases, not individual fields
+  const phase1Weight = 60 // Phase 1 is 60% of completion
+  const phase2Weight = 40 // Phase 2 is 40% of completion
+  
+  let completionPercentage = 0
+  if (hasPhase1Complete) completionPercentage += phase1Weight
+  if (hasPhase2Complete) completionPercentage += phase2Weight
+  
+  const profileCompletionPercentage = completionPercentage
 
   const getFieldIcon = (field: ProfileField) => {
     if (field.isCompleted) {
@@ -263,25 +266,25 @@ export function ProfileCompletionIndicator({
         </div>
       )}
 
-      {/* Action Buttons - Only show if there are incomplete items */}
-      {hasIncompleteFields && (
+      {/* Action Buttons - Context-aware based on which phase is incomplete */}
+      {!profileCompleted && (
         <div className="mt-6 pt-4 border-t">
           <div className="flex flex-col sm:flex-row gap-3">
-            {!profileCompleted && (
+            {!hasPhase1Complete && (
               <button
-                onClick={() => window.location.href = '/dashboard/profile?guided=true'}
+                onClick={() => window.location.href = '/auth/setup-profile'}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Complete Profile
+                Complete Phase 1 Setup
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
-            {!canApply && (
+            {hasPhase1Complete && !hasPhase2Complete && (
               <button
-                onClick={() => window.location.href = '/dashboard/profile?phase=2'}
+                onClick={() => window.location.href = '/dashboard/profile?guided=true'}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Add Education Details
+                Complete Phase 2 Profile
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
