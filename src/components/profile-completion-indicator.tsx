@@ -30,7 +30,11 @@ export function ProfileCompletionIndicator({
     if (!profileData) return
 
     console.log('🔍 Profile Completion Analysis - RAW DATA:', profileData)
+    console.log('🔍 CRITICAL: Current User Email from Profile Data:', profileData.email)
+    console.log('🔍 CRITICAL: Current Session User Email:', session?.user?.email)
     console.log('🔍 Profile Completion Analysis - SPECIFIC FIELDS:', {
+      userEmail: profileData.email,
+      sessionEmail: session?.user?.email,
       name: profileData.name,
       nameType: typeof profileData.name,
       terms: profileData.terms,
@@ -45,7 +49,8 @@ export function ProfileCompletionIndicator({
       university: profileData.university,
       highSchool: profileData.highSchool,
       major: profileData.major,
-      skills: profileData.skills
+      skills: profileData.skills,
+      profileCompleted: profileData.profileCompleted
     })
 
     // Check each field individually and only show what's actually missing
@@ -191,6 +196,12 @@ export function ProfileCompletionIndicator({
     if (field.required) return 'Required'
     if (showApplicationRequirements && field.requiredFor === 'applications') return 'Required for Applications'
     return 'Optional'
+  }
+
+  // CRITICAL FIX: Respect the database profileCompleted flag
+  if (profileData?.profileCompleted === true) {
+    console.log('🎉 Database shows profileCompleted = true, hiding completion indicator')
+    return null
   }
 
   // Don't show the component if everything is complete
