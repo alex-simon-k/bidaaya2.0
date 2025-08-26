@@ -11,6 +11,9 @@ function generateVerificationCode(): string {
 
 export async function POST(req: Request) {
   console.log('📧 ===================== SEND VERIFICATION START =====================');
+  console.log('📧 API Route: POST request received');
+  console.log('📧 Environment: NODE_ENV =', process.env.NODE_ENV);
+  console.log('📧 Resend API Key exists:', !!process.env.RESEND_API_KEY);
   
   try {
     const { email } = await req.json();

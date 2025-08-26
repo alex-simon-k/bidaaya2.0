@@ -207,16 +207,21 @@ export default function VerifyCodePage() {
 
   // Add resend functionality
   const handleResend = async () => {
+    console.log('🔄 Frontend: Resend button clicked');
+    
     if (!session?.user?.email) {
+      console.log('❌ Frontend: No email in session');
       setError('No email address found. Please log in again.');
       return;
     }
 
+    console.log('📧 Frontend: Starting resend for email:', session.user.email);
     setIsResending(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
+      console.log('🚀 Frontend: Making API call to /api/auth/send-verification');
       const response = await fetch('/api/auth/send-verification', {
         method: 'POST',
         headers: {
@@ -225,7 +230,9 @@ export default function VerifyCodePage() {
         body: JSON.stringify({ email: session.user.email }),
       });
 
+      console.log('📨 Frontend: API response status:', response.status);
       const data = await response.json();
+      console.log('📨 Frontend: API response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to resend verification code');
@@ -239,9 +246,10 @@ export default function VerifyCodePage() {
 
       // Clear any existing code
       setCode('');
+      console.log('✅ Frontend: Resend successful');
 
     } catch (error) {
-      console.error('Resend error:', error);
+      console.error('❌ Frontend: Resend error:', error);
       setError(error instanceof Error ? error.message : 'Failed to resend verification code');
     } finally {
       setIsResending(false);
