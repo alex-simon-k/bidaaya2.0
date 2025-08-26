@@ -100,13 +100,13 @@ export async function POST(req: Request) {
       console.log('📧 Calling resend.emails.send with params:', {
         from: 'Bidaaya <noreply@bidaaya.ae>',
         to: [email],
-        subject: 'Bidaaya - Verify Your Email'
+        subject: `Your Bidaaya verification code: ${verificationCode}`
       });
       
       const { data, error } = await resend.emails.send({
         from: 'Bidaaya <noreply@bidaaya.ae>',
         to: [email],
-        subject: 'Bidaaya - Verify Your Email',
+        subject: `Your Bidaaya verification code: ${verificationCode}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
