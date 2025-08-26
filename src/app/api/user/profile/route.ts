@@ -42,7 +42,22 @@ export async function GET(request: NextRequest) {
         mena: true,
         terms: true,
         profileCompleted: true,
-        emailVerified: true
+        emailVerified: true,
+        // Company-specific fields
+        companyName: true,
+        companyRole: true,
+        companySize: true,
+        industry: true,
+        companyOneLiner: true,
+        companyGoals: true,
+        contactPersonName: true,
+        contactPersonType: true,
+        contactEmail: true,
+        contactWhatsapp: true,
+        companyWebsite: true,
+        referralSource: true,
+        referralDetails: true,
+        image: true
       }
     })
 
@@ -100,7 +115,22 @@ export async function PATCH(request: NextRequest) {
       terms,
       discoveryProfile,
       discoveryCompleted,
-      profileCompleted
+      profileCompleted,
+      // Company-specific fields
+      companyName,
+      companyRole,
+      companySize,
+      industry,
+      companyOneLiner,
+      companyGoals,
+      contactPersonName,
+      contactPersonType,
+      contactEmail,
+      contactWhatsapp,
+      companyWebsite,
+      referralSource,
+      referralDetails,
+      image
     } = body
 
     // Build update data object
@@ -139,6 +169,22 @@ export async function PATCH(request: NextRequest) {
     if (mena !== undefined) updateData.mena = mena === 'Yes' || mena === true  // Handle radio button value
     if (terms !== undefined) updateData.terms = terms
     
+    // Company-specific fields
+    if (companyName !== undefined) updateData.companyName = companyName
+    if (companyRole !== undefined) updateData.companyRole = companyRole
+    if (companySize !== undefined) updateData.companySize = companySize
+    if (industry !== undefined) updateData.industry = industry
+    if (companyOneLiner !== undefined) updateData.companyOneLiner = companyOneLiner
+    if (companyGoals !== undefined) updateData.companyGoals = Array.isArray(companyGoals) ? companyGoals : [companyGoals]
+    if (contactPersonName !== undefined) updateData.contactPersonName = contactPersonName
+    if (contactPersonType !== undefined) updateData.contactPersonType = contactPersonType
+    if (contactEmail !== undefined) updateData.contactEmail = contactEmail
+    if (contactWhatsapp !== undefined) updateData.contactWhatsapp = contactWhatsapp
+    if (companyWebsite !== undefined) updateData.companyWebsite = companyWebsite
+    if (referralSource !== undefined) updateData.referralSource = referralSource
+    if (referralDetails !== undefined) updateData.referralDetails = referralDetails
+    if (image !== undefined) updateData.image = image
+    
     console.log('🔍 Final updateData object:', updateData)
     
     // If this is a comprehensive profile update (has key fields), mark profile as completed
@@ -153,8 +199,17 @@ export async function PATCH(request: NextRequest) {
       subjectsValue: subjects
     })
     
-    const hasRequiredFields = name && (university || major || subjects || skills || educationStatus || interests) && terms
-    console.log('🔍 Has required fields for completion:', hasRequiredFields)
+    // Check completion requirements based on user role
+    const currentUserRole = session.user?.role
+    let hasRequiredFields = false
+    
+    if (currentUserRole === 'STUDENT') {
+      hasRequiredFields = name && (university || major || subjects || skills || educationStatus || interests) && terms
+    } else if (currentUserRole === 'COMPANY') {
+      hasRequiredFields = name && companyName && companySize && industry && companyOneLiner
+    }
+    
+    console.log('🔍 Has required fields for completion:', hasRequiredFields, 'Role:', currentUserRole)
     
     // Get current user status BEFORE update to check if this is first-time completion
     const currentUser = await prisma.user.findUnique({

@@ -307,6 +307,20 @@ export default function DashboardLayout({
                 >
                   💼 My Projects
                 </Link>
+                <Link 
+                  href="/dashboard/proposals" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  📧 Proposals Inbox
+                </Link>
+                <Link 
+                  href="/dashboard/company-profile" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  ⚙️ Company Profile
+                </Link>
               </>
             )}
             
