@@ -74,6 +74,7 @@ export async function POST(req: Request) {
       NODE_ENV: process.env.NODE_ENV,
       RESEND_API_KEY_SET: !!process.env.RESEND_API_KEY,
       RESEND_API_KEY_LENGTH: process.env.RESEND_API_KEY?.length || 0,
+      RESEND_API_KEY_PREFIX: process.env.RESEND_API_KEY?.substring(0, 8) || 'NOT_SET',
     });
 
     if (!process.env.RESEND_API_KEY) {
@@ -93,8 +94,15 @@ export async function POST(req: Request) {
 
     // Send verification email using Resend
     console.log('📧 Sending verification email with Resend...');
+    console.log('📧 Resend client initialized with key prefix:', process.env.RESEND_API_KEY?.substring(0, 8));
     
     try {
+      console.log('📧 Calling resend.emails.send with params:', {
+        from: 'Bidaaya <onboarding@resend.dev>',
+        to: [email],
+        subject: 'Bidaaya - Verify Your Email'
+      });
+      
       const { data, error } = await resend.emails.send({
         from: 'Bidaaya <onboarding@resend.dev>',
         to: [email],
@@ -139,8 +147,14 @@ export async function POST(req: Request) {
       });
 
       if (error) {
-        console.log('📧 ❌ Resend error:', error);
-        throw new Error(`Resend failed: ${error.message}`);
+        console.log('📧 ❌ Resend error details:', {
+          error,
+          errorType: typeof error,
+          errorMessage: error?.message,
+          errorName: error?.name,
+          fullError: JSON.stringify(error, null, 2)
+        });
+        throw new Error(`Resend failed: ${error?.message || JSON.stringify(error) || 'Unknown error'}`);
       }
 
       console.log('📧 ✅ Email sent successfully with Resend:', {
