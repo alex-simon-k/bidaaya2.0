@@ -98,13 +98,13 @@ export async function POST(req: Request) {
     
     try {
       console.log('📧 Calling resend.emails.send with params:', {
-        from: 'Bidaaya <onboarding@resend.dev>',
+        from: 'Bidaaya <delivered@resend.dev>',
         to: [email],
         subject: 'Bidaaya - Verify Your Email'
       });
       
       const { data, error } = await resend.emails.send({
-        from: 'Bidaaya <onboarding@resend.dev>',
+        from: 'Bidaaya <delivered@resend.dev>',
         to: [email],
         subject: 'Bidaaya - Verify Your Email',
         html: `
