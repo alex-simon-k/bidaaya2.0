@@ -108,6 +108,9 @@ export async function POST(request: NextRequest) {
           <p><strong>Contact Person:</strong> ${contactPersonName}</p>
           ${company.industry ? `<p><strong>Industry:</strong> ${company.industry}</p>` : ''}
           ${company.companyWebsite ? `<p><strong>Website:</strong> <a href="${company.companyWebsite}" target="_blank">${company.companyWebsite}</a></p>` : ''}
+          ${company.contactEmail ? `<p><strong>Contact Email:</strong> <a href="mailto:${company.contactEmail}">${company.contactEmail}</a></p>` : ''}
+          ${company.contactWhatsapp ? `<p><strong>WhatsApp:</strong> <a href="https://wa.me/${company.contactWhatsapp.replace(/[^0-9]/g, '')}" target="_blank">${company.contactWhatsapp}</a></p>` : ''}
+          ${company.calendlyLink ? `<p><strong>Schedule Meeting:</strong> <a href="${company.calendlyLink}" target="_blank">Book a time slot</a></p>` : ''}
         </div>
         
         <div style="background: #F3F4F6; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -123,10 +126,15 @@ export async function POST(request: NextRequest) {
           </p>
         </div>
         
-        <div style="text-align: center; margin: 30px 0;">
-          <p style="color: #374151; margin-bottom: 15px;">
-            <strong>Reply directly to this email to continue the conversation with ${companyName}.</strong>
-          </p>
+        <div style="background: #E6FFFA; border: 1px solid #81E6D9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h4 style="color: #234E52; margin-top: 0; margin-bottom: 10px;">📞 How to Connect</h4>
+          <div style="color: #234E52; font-size: 14px;">
+            <p style="margin: 0 0 10px 0;"><strong>Option 1:</strong> Reply directly to this email</p>
+            ${company.contactEmail && company.contactEmail !== companyEmail ? `<p style="margin: 0 0 10px 0;"><strong>Option 2:</strong> Email directly at <a href="mailto:${company.contactEmail}">${company.contactEmail}</a></p>` : ''}
+            ${company.contactWhatsapp ? `<p style="margin: 0 0 10px 0;"><strong>Option 3:</strong> WhatsApp at <a href="https://wa.me/${company.contactWhatsapp.replace(/[^0-9]/g, '')}" target="_blank">${company.contactWhatsapp}</a></p>` : ''}
+            ${company.calendlyLink ? `<p style="margin: 0 0 10px 0;"><strong>Option 4:</strong> <a href="${company.calendlyLink}" target="_blank">Schedule a meeting directly</a></p>` : ''}
+            <p style="margin: 10px 0 0 0; font-style: italic;">💡 <strong>Note:</strong> ${contactPersonName} will be copied on any email replies for transparency.</p>
+          </div>
         </div>
         
         <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 30px 0;">

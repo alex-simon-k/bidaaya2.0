@@ -164,12 +164,12 @@ const steps: Step[] = [
   },
   {
     key: 'calendlyLink',
-    label: 'Contact Details for Students (Optional)',
+    label: 'How Should Students Contact You? (Optional)',
     type: 'url',
     required: false,
-    placeholder: 'https://calendly.com/your-username/interview or your contact email',
+    placeholder: 'Calendly link, WhatsApp link, email, or any contact method',
     icon: <Calendar className="w-8 h-8 text-purple-600" />,
-    description: '📅 OPTIONAL: Add your Calendly link, booking URL, or contact details for students to reach you. You can skip this and add it later in your profile.'
+    description: '📞 FLEXIBLE CONTACT: This can be your Calendly link, WhatsApp link, Google Meet link, specific email, SMS number, or any other way you prefer students to reach you. This will be included in emails sent to students when you contact them. You can always update this later in your profile.'
   },
 ]
 

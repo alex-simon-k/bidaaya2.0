@@ -524,7 +524,7 @@ export default function CompanyProfilePage() {
 
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Calendly Link
+                      Preferred Contact Method for Students
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -533,11 +533,11 @@ export default function CompanyProfilePage() {
                         value={profile.calendlyLink}
                         onChange={(e) => handleInputChange('calendlyLink', e.target.value)}
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="https://calendly.com/your-link"
+                        placeholder="https://calendly.com/your-link OR any preferred contact link"
                       />
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
-                      Used for automated interview scheduling (premium feature)
+                      📅 <strong>Flexible Contact Options:</strong> This can be your Calendly link, WhatsApp link, Google Meet link, specific email, or any other contact method you prefer students to use. This link will be included in all emails sent to students when you reach out to them.
                     </p>
                   </div>
                 </div>
