@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
         contactEmail: true,
         contactPersonName: true,
         industry: true,
-        companyWebsite: true
+        companyWebsite: true,
+        contactWhatsapp: true,
+        calendlyLink: true
       }
     })
 
