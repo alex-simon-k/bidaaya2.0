@@ -40,56 +40,87 @@ export default function CompanyProposalsInbox() {
   const [proposals, setProposals] = useState<StudentProposal[]>([])
   const [selectedProposal, setSelectedProposal] = useState<StudentProposal | null>(null)
   const [filter, setFilter] = useState<'all' | 'new' | 'viewed'>('all')
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [contactMessage, setContactMessage] = useState('')
+  const [contactSubject, setContactSubject] = useState('')
+  const [isContacting, setIsContacting] = useState(false)
 
   useEffect(() => {
     loadProposals()
   }, [])
 
   const loadProposals = async () => {
-    // Mock data for now - in production this would be an API call
-    const mockProposals: StudentProposal[] = [
-      {
-        id: '1',
-        studentName: 'Sarah Ahmed',
-        studentEmail: 'sarah.ahmed@student.ac.ae',
-        studentUniversity: 'American University of Dubai',
-        studentMajor: 'Computer Science',
-        proposalContent: {
-          personalIntro: 'I am a passionate Computer Science student with a strong interest in fintech and artificial intelligence. I have been following your company\'s work in payment solutions and am excited about the opportunity to contribute.',
-          proudAchievement: 'I developed a mobile expense tracking app that gained over 2,000 downloads and won the university\'s innovation competition. The app uses machine learning to categorize expenses automatically.',
-          valueProposition: 'I can bring fresh perspectives on user experience design and help develop mobile-first solutions that appeal to younger demographics. My technical skills in React Native and Python would be valuable for your development team.',
-          specificRole: 'Mobile Developer Intern',
-          availability: 'Available immediately for 6-month internship, 40 hours per week',
-          portfolio: 'GitHub: github.com/sarahdev\nPortfolio: sarahahmed.dev'
-        },
-        submittedAt: new Date('2024-08-05'),
-        status: 'new'
-      },
-      {
-        id: '2',
-        studentName: 'Omar Hassan',
-        studentEmail: 'omar.hassan@university.ae',
-        studentUniversity: 'Khalifa University',
-        studentMajor: 'Business Administration',
-        proposalContent: {
-          personalIntro: 'Business Administration student with a focus on digital marketing and strategy. I have been researching fintech trends in the MENA region and am particularly interested in payment innovation.',
-          proudAchievement: 'Led a team of 5 students in developing a comprehensive market analysis for a local startup, which helped them secure their first round of funding. Our recommendations increased their user acquisition by 150%.',
-          valueProposition: 'I can help bridge the gap between technical development and business strategy. My market research skills and understanding of the local business environment would be valuable for expanding your customer base.',
-          specificRole: 'Business Development Intern',
-          availability: 'Part-time during semester (20 hours/week), full-time during summer',
-          portfolio: 'LinkedIn: linkedin.com/in/omar-hassan\nProject portfolio available upon request'
-        },
-        submittedAt: new Date('2024-08-04'),
-        status: 'viewed'
+    try {
+      console.log('📥 Loading company proposals...')
+      const response = await fetch('/api/proposals')
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to load proposals')
       }
-    ]
-    setProposals(mockProposals)
+      
+      const data = await response.json()
+      console.log(`✅ Loaded ${data.proposals.length} proposals`)
+      
+      setProposals(data.proposals || [])
+    } catch (error) {
+      console.error('❌ Error loading proposals:', error)
+      // Show empty state on error
+      setProposals([])
+    }
   }
 
   const markAsViewed = (proposalId: string) => {
     setProposals(prev => prev.map(p => 
       p.id === proposalId ? { ...p, status: 'viewed' } : p
     ))
+  }
+
+  const handleContactStudent = () => {
+    if (!selectedProposal) return
+    setContactSubject(`Regarding your proposal for ${selectedProposal.proposalContent.specificRole}`)
+    setContactMessage('')
+    setShowContactModal(true)
+  }
+
+  const sendContactMessage = async () => {
+    if (!selectedProposal || !contactMessage.trim() || !contactSubject.trim()) return
+
+    setIsContacting(true)
+    try {
+      const response = await fetch('/api/proposals/contact-student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proposalId: selectedProposal.id,
+          message: contactMessage,
+          subject: contactSubject
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to contact student')
+      }
+
+      // Mark proposal as responded
+      setProposals(prev => prev.map(p => 
+        p.id === selectedProposal.id ? { ...p, status: 'responded' } : p
+      ))
+
+      setShowContactModal(false)
+      setContactMessage('')
+      setContactSubject('')
+      
+      // Show success message or notification here
+      alert('Message sent successfully to student!')
+
+    } catch (error) {
+      console.error('Failed to contact student:', error)
+      alert('Failed to send message. Please try again.')
+    } finally {
+      setIsContacting(false)
+    }
   }
 
   const filteredProposals = proposals.filter(p => {
@@ -272,8 +303,16 @@ export default function CompanyProposalsInbox() {
                 {/* Actions */}
                 <div className="border-t border-gray-200 pt-6 mt-6">
                   <div className="flex items-center gap-3">
-                    <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                      Contact Student
+                    <button 
+                      onClick={handleContactStudent}
+                      disabled={selectedProposal?.status === 'responded'}
+                      className={`px-6 py-2 rounded-lg transition-colors ${
+                        selectedProposal?.status === 'responded' 
+                          ? 'bg-gray-400 text-white cursor-not-allowed' 
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      {selectedProposal?.status === 'responded' ? 'Already Contacted' : 'Contact Student'}
                     </button>
                     <button className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
                       Save for Later
@@ -294,6 +333,78 @@ export default function CompanyProposalsInbox() {
           </div>
         </div>
       </div>
+
+      {/* Contact Student Modal */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Contact {selectedProposal?.studentName}
+                </h3>
+                <button 
+                  onClick={() => setShowContactModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={contactSubject}
+                    onChange={(e) => setContactSubject(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter email subject"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    value={contactMessage}
+                    onChange={(e) => setContactMessage(e.target.value)}
+                    rows={6}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Write your message to the student..."
+                  />
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    📧 This message will be sent to <strong>{selectedProposal?.studentEmail}</strong> with you CC'd for transparency.
+                    The student can reply directly to continue the conversation.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={sendContactMessage}
+                  disabled={isContacting || !contactMessage.trim() || !contactSubject.trim()}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isContacting ? 'Sending...' : 'Send Message'}
+                </button>
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

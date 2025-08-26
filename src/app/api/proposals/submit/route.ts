@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
+import { Resend } from 'resend'
 
 const prisma = new PrismaClient()
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,12 +58,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Student profile not found' }, { status: 404 })
     }
 
-    // Create proposal record
-    // For now, we'll simulate storing it - in production you'd have a proposals table
+    // Create proposal record using ChatQuery table as storage
+    // This is a safe approach that doesn't require schema changes
     const proposalData = {
-      id: `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      studentId: session.user.id,
-      companyId,
       studentProfile: {
         name: student.name,
         email: student.email,
@@ -82,38 +81,33 @@ export async function POST(request: NextRequest) {
       },
       status: 'SENT',
       submittedAt: new Date(),
-      creditsCost: 1
+      creditsCost: 1,
+      companyId
     }
 
-    console.log('✅ Proposal created:', proposalData.id)
-
-    // In production, you would:
-    // 1. Store the proposal in database
-    // 2. Send email notification to company
-    // 3. Update student's proposal history
-    // 4. Track analytics
-
-    /*
-    const proposal = await prisma.proposal.create({
+    // Store proposal as a ChatQuery with special type for proposals
+    const proposal = await prisma.chatQuery.create({
       data: {
-        studentId: session.user.id,
-        companyId,
-        content: proposalData.proposalContent,
-        studentProfile: proposalData.studentProfile,
-        status: 'SENT',
-        creditsCost: 1
+        userId: session.user.id,
+        query: `PROPOSAL_TO_${companyId}`,
+        queryType: 'COMPANY_RESEARCH', // Use existing enum value
+        intent: JSON.stringify(proposalData), // Store full proposal data
+        extractedCompanies: [companyId],
+        responseGiven: true,
+        timestamp: new Date()
       }
     })
-    */
 
-    // Send notification email to company (simulated)
-    console.log(`📧 Notification email would be sent to company ${companyId}`)
+    console.log('✅ Proposal stored with ID:', proposal.id)
+
+    // NOTE: No email is sent automatically when proposal is submitted
+    // Companies will see proposals in their inbox and can choose to contact students
 
     return NextResponse.json({
       success: true,
-      proposalId: proposalData.id,
+      proposalId: proposal.id,
       message: 'Proposal submitted successfully',
-      companyNotified: true
+      companyNotified: false
     })
 
   } catch (error) {
