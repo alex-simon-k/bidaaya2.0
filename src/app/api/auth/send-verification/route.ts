@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const prisma = new PrismaClient();
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -65,65 +66,35 @@ export async function POST(req: Request) {
       expires: verificationToken.expires
     });
 
-    // Check if email credentials are configured with detailed logging
+    // Check if Resend API key is configured
     console.log('📧 Environment check:', {
       NODE_ENV: process.env.NODE_ENV,
-      EMAIL_USER_SET: !!process.env.EMAIL_USER,
-      EMAIL_USER_LENGTH: process.env.EMAIL_USER?.length || 0,
-      EMAIL_PASS_SET: !!process.env.EMAIL_PASS,
-      EMAIL_PASS_LENGTH: process.env.EMAIL_PASS?.length || 0,
-      EMAIL_USER_PREVIEW: process.env.EMAIL_USER ? `${process.env.EMAIL_USER.substring(0, 3)}***@${process.env.EMAIL_USER.split('@')[1]}` : 'NOT_SET'
+      RESEND_API_KEY_SET: !!process.env.RESEND_API_KEY,
+      RESEND_API_KEY_LENGTH: process.env.RESEND_API_KEY?.length || 0,
     });
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.log('📧 ⚠️ Email credentials not configured - Using development mode');
+    if (!process.env.RESEND_API_KEY) {
+      console.log('📧 ⚠️ Resend API key not configured - Using development mode');
       console.log('📧 🔑 DEVELOPMENT MODE: Verification code:', verificationCode);
       
-      // In development, return the code in the response for testing
       return NextResponse.json({ 
         success: true, 
-        message: 'Verification code generated (Email service not configured)',
+        message: 'Verification code generated (Resend not configured)',
         developmentMode: true,
         verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
         instructions: process.env.NODE_ENV === 'development' 
           ? 'Use the verification code above to complete verification' 
-          : 'Please configure EMAIL_USER and EMAIL_PASS environment variables',
-        debug: {
-          emailUserSet: !!process.env.EMAIL_USER,
-          emailPassSet: !!process.env.EMAIL_PASS,
-          environment: process.env.NODE_ENV
-        }
+          : 'Please configure RESEND_API_KEY environment variable'
       });
     }
 
-    // Configure email transporter
-    console.log('📧 Configuring email transporter...');
+    // Send verification email using Resend
+    console.log('📧 Sending verification email with Resend...');
     
     try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      console.log('📧 Email configuration:', {
-        service: 'gmail',
-        user: process.env.EMAIL_USER ? 'Set' : 'Not set',
-        pass: process.env.EMAIL_PASS ? 'Set' : 'Not set'
-      });
-
-      // Test the email connection
-      console.log('📧 Testing email connection...');
-      await transporter.verify();
-      console.log('📧 ✅ Email connection verified successfully');
-
-      // Send verification email
-      console.log('📧 Sending verification email...');
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
+      const { data, error } = await resend.emails.send({
+        from: 'Bidaaya <onboarding@resend.dev>',
+        to: [email],
         subject: 'Bidaaya - Verify Your Email',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -162,42 +133,54 @@ export async function POST(req: Request) {
             </div>
           </div>
         `,
-      };
+      });
 
-      const info = await transporter.sendMail(mailOptions);
-      console.log('📧 ✅ Email sent successfully:', {
-        messageId: info.messageId,
-        accepted: info.accepted,
-        rejected: info.rejected
+      if (error) {
+        console.log('📧 ❌ Resend error:', error);
+        throw new Error(`Resend failed: ${error.message}`);
+      }
+
+      console.log('📧 ✅ Email sent successfully with Resend:', {
+        emailId: data?.id,
+        to: email
       });
 
       console.log('📧 ===================== SEND VERIFICATION SUCCESS =====================');
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         message: 'Verification code sent successfully',
         debug: {
           email,
           codeGenerated: true,
           emailSent: true,
-          messageId: info.messageId,
-          emailConfigured: true
-        }
+          emailId: data?.id,
+          service: 'resend'
+        },
+        ...(process.env.NODE_ENV === 'development' && { verificationCode })
       });
 
     } catch (emailError) {
-      console.error('📧 ❌ Email sending failed:', emailError);
+      console.error('📧 ❌ Resend email sending failed:', emailError);
       
-      // Return the verification code in response for debugging (production fallback)
+      // In development, still return success with code for testing
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📧 🔧 Development mode - returning code for testing:', verificationCode);
+        return NextResponse.json({
+          success: true,
+          message: 'Development mode: Verification code generated (email sending failed)',
+          verificationCode,
+          emailError: emailError instanceof Error ? emailError.message : 'Unknown email error',
+          service: 'resend-fallback'
+        });
+      }
+      
       return NextResponse.json({ 
         success: false,
         error: 'Failed to send email',
-        fallbackMode: true,
-        verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
-        message: 'Email service unavailable. Check console for verification code or try again later.',
+        message: 'Email service unavailable. Please try again later.',
         debug: {
           emailError: emailError instanceof Error ? emailError.message : 'Unknown email error',
-          emailConfigured: true,
-          fallback: true
+          service: 'resend'
         }
       }, { status: 503 });
     }
