@@ -74,6 +74,27 @@ export const authOptions: NextAuthOptions = {
             // Check if existing user has verified their email
             if (!existingUser.emailVerified) {
               console.log('⚠️ EXISTING USER - Email NOT verified, will redirect to verification');
+              
+              // Send verification email for existing unverified users too
+              try {
+                console.log('📧 Sending verification email to existing unverified user...');
+                const verificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/send-verification`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: user.email }),
+                });
+                
+                if (verificationResponse.ok) {
+                  console.log('📧 ✅ Verification email sent successfully to existing user:', user.email);
+                } else {
+                  console.log('📧 ❌ Failed to send verification email to existing user. Status:', verificationResponse.status);
+                  const errorText = await verificationResponse.text();
+                  console.log('📧 ❌ Error response:', errorText);
+                }
+              } catch (error) {
+                console.error('❌ Exception while sending verification email to existing user:', error);
+              }
+              
               // Allow sign in but they'll be redirected to verification by the session callback
               return true;
             } else {
