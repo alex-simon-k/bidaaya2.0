@@ -96,7 +96,10 @@ const tutorialSteps: Step[] = [
       'Sales & Business Development',
       'Non-profit & Social Impact',
       'Startups & Entrepreneurship',
-      'Government & Public Sector'
+      'Government & Public Sector',
+      'Law & Legal Services',
+      'Real Estate & Property',
+      'Hospitality & Tourism'
     ]
   }
 ]
@@ -296,6 +299,64 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
     }
   }
 
+  const handleEarlyExit = async () => {
+    setIsLoading(true)
+    try {
+      // Save any data that was entered but don't mark as profileCompleted
+      const partialData = {
+        name: userData.name,
+        highSchool: formData.highSchool || '',
+        university: formData.university || '',
+        subjects: formData.subjects || '',
+        bio: formData.bio || '',
+        interests: formData.interests || [],
+        terms: true,
+        // Important: DO NOT set profileCompleted to true for early exit
+        profileCompleted: false
+      }
+
+      console.log('Saving partial profile data on early exit:', partialData)
+
+      // Save partial data
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(partialData)
+      })
+
+      if (response.ok) {
+        console.log('Partial profile data saved successfully')
+        
+        // Track Phase 2 abandonment for analytics
+        if (session?.user?.id) {
+          try {
+            const { AnalyticsTracker } = await import('@/lib/analytics-tracker')
+            await AnalyticsTracker.trackPhase2Abandoned(session.user.id, currentStep)
+            console.log('📊 Analytics tracked: Phase 2 abandonment at step', currentStep)
+          } catch (error) {
+            console.error('Failed to track Phase 2 abandonment:', error)
+          }
+        }
+        
+        // Close tutorial and allow user to explore platform
+        onClose()
+        
+        // Redirect to projects page but without the completion flags
+        window.location.href = '/dashboard/projects'
+      } else {
+        console.error('Failed to save partial profile:', await response.text())
+        // Even if save fails, allow exit
+        onClose()
+      }
+    } catch (error) {
+      console.error('Failed to save partial profile:', error)
+      // Even if save fails, allow exit
+      onClose()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const renderInput = () => {
     if (!currentStepData) return null
 
@@ -402,10 +463,15 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Profile Setup</h2>
-                <p className="text-sm text-gray-600">Step {currentStep} of {tutorialSteps.length}</p>
+                <p className="text-sm text-gray-600">Step {currentStep} of {relevantSteps.length}</p>
               </div>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button 
+              onClick={handleEarlyExit} 
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              disabled={isLoading}
+              title="Exit and save progress"
+            >
               <X className="h-6 w-6" />
             </button>
           </div>

@@ -52,7 +52,10 @@ const INTEREST_OPTIONS = [
   'Sales & Business Development',
   'Non-profit & Social Impact',
   'Startups & Entrepreneurship',
-  'Government & Public Sector'
+  'Government & Public Sector',
+  'Law & Legal Services',
+  'Real Estate & Property',
+  'Hospitality & Tourism'
 ]
 
 export function BeautifulProfilePage({ profileData, onUpdate }: BeautifulProfilePageProps) {

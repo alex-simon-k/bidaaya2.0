@@ -103,6 +103,28 @@ export class AnalyticsTracker {
   }
 
   /**
+   * Track Phase 2 abandonment (when user exits tutorial early)
+   */
+  static async trackPhase2Abandoned(userId: string, abandonedAtStep: number) {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          onboardingStepsCompleted: {
+            push: `phase_2_abandoned_step_${abandonedAtStep}`
+          },
+          featuresUsed: {
+            push: 'phase_2_early_exit'
+          }
+        }
+      })
+      console.log('⏭️ Tracked Phase 2 abandonment for user:', userId, 'at step:', abandonedAtStep)
+    } catch (error) {
+      console.error('Failed to track Phase 2 abandonment:', error)
+    }
+  }
+
+  /**
    * Track role selection
    */
   static async trackRoleSelected(userId: string, role: string) {
