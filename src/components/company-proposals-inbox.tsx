@@ -14,7 +14,8 @@ import {
   FileText,
   Eye,
   MessageSquare,
-  Filter
+  Filter,
+  X
 } from 'lucide-react'
 
 interface StudentProposal {
