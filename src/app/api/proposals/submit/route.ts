@@ -107,22 +107,28 @@ export async function POST(request: NextRequest) {
     // Get user's subscription plan to determine credit limit
     const userDetails = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { subscriptionPlan: true }
+      select: { subscriptionPlan: true, role: true }
     })
 
-    const CREDIT_LIMITS = {
-      // Student Plans
+    const userPlan = userDetails?.subscriptionPlan || 'FREE'
+    const userRole = userDetails?.role || 'STUDENT'
+    
+    const STUDENT_CREDIT_LIMITS = {
       'FREE': 5,
       'STUDENT_PRO': 20,
-      'STUDENT_PREMIUM': 50,
-      // Company Plans (for receiving proposals)
-      'COMPANY_BASIC': 15,
-      'COMPANY_PREMIUM': 50,
-      'COMPANY_PRO': 100
+      'STUDENT_PREMIUM': 50
     }
-
-    const userPlan = userDetails?.subscriptionPlan || 'FREE'
-    const creditLimit = CREDIT_LIMITS[userPlan as keyof typeof CREDIT_LIMITS] || 5
+    
+    const COMPANY_CREDIT_LIMITS = {
+      'FREE': 10,              // Free Trial: 10 contacts/month
+      'COMPANY_BASIC': 50,     // Company Basic: 50 contacts/month  
+      'COMPANY_PREMIUM': 100,  // HR Booster: 100 contacts/month
+      'COMPANY_PRO': 200       // HR Agent: 200 contacts/month
+    }
+    
+    // Use appropriate credit limits based on user role
+    const creditLimits = userRole === 'COMPANY' ? COMPANY_CREDIT_LIMITS : STUDENT_CREDIT_LIMITS
+    const creditLimit = creditLimits[userPlan as keyof typeof creditLimits] || (userRole === 'COMPANY' ? 10 : 5)
 
     // Check if user has enough credits
     if (proposalsThisMonth >= creditLimit) {
