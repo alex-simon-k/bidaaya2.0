@@ -116,7 +116,9 @@ export default function AdminDashboard() {
       return
     }
     
-    fetchData()
+    // Redirect to new admin panel
+    router.push('/admin-panel')
+    return
   }, [session, router])
 
   const fetchData = async () => {

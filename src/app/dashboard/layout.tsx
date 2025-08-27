@@ -398,7 +398,7 @@ export default function DashboardLayout({
   🔧 Student Processing
                 </Link>
                 <Link 
-                  href="/admin" 
+                  href="/admin-panel" 
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-3 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                 >
