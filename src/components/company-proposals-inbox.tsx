@@ -220,7 +220,7 @@ export default function CompanyProposalsInbox() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>Role: {proposal.proposalContent.specificRole}</span>
-                    <span>{proposal.submittedAt.toLocaleDateString()}</span>
+                    <span>{new Date(proposal.submittedAt).toLocaleDateString()}</span>
                   </div>
                 </motion.div>
               ))
@@ -261,7 +261,7 @@ export default function CompanyProposalsInbox() {
                       <p className="text-sm text-gray-500">Applied for</p>
                       <p className="font-semibold text-gray-900">{selectedProposal.proposalContent.specificRole}</p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {selectedProposal.submittedAt.toLocaleDateString()}
+                        {new Date(selectedProposal.submittedAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

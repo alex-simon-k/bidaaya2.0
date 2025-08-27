@@ -231,7 +231,7 @@ export default function SendProposalPage() {
               value={formData.personalIntro}
               onChange={(e) => handleInputChange('personalIntro', e.target.value)}
               placeholder="Hi! I'm a Computer Science student passionate about fintech and creating innovative solutions..."
-              className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 placeholder-gray-500"
               required
             />
           </div>
@@ -249,7 +249,7 @@ export default function SendProposalPage() {
               value={formData.proudAchievement}
               onChange={(e) => handleInputChange('proudAchievement', e.target.value)}
               placeholder="I built a mobile app that helps students track expenses, gaining 1000+ users and winning our university's innovation award..."
-              className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 placeholder-gray-500"
               required
             />
           </div>
@@ -267,7 +267,7 @@ export default function SendProposalPage() {
               value={formData.valueProposition}
               onChange={(e) => handleInputChange('valueProposition', e.target.value)}
               placeholder="I can contribute fresh perspectives on user experience design and help develop mobile-first solutions that appeal to younger demographics..."
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 placeholder-gray-500"
               required
             />
           </div>
@@ -286,7 +286,7 @@ export default function SendProposalPage() {
               value={formData.specificRole}
               onChange={(e) => handleInputChange('specificRole', e.target.value)}
               placeholder="Frontend Developer Intern, Product Manager, UX Designer..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
               required
             />
           </div>
@@ -305,7 +305,7 @@ export default function SendProposalPage() {
               value={formData.availability}
               onChange={(e) => handleInputChange('availability', e.target.value)}
               placeholder="Available immediately, 20 hours/week, Summer 2024, After graduation..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
               required
             />
           </div>
@@ -325,7 +325,7 @@ export default function SendProposalPage() {
               placeholder="Portfolio: https://myportfolio.com
 GitHub: https://github.com/username
 LinkedIn: https://linkedin.com/in/username"
-              className="w-full h-20 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full h-20 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 placeholder-gray-500"
             />
           </div>
 

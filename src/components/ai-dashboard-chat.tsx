@@ -1128,9 +1128,9 @@ Something went wrong while sending the invitation. Please try again or contact s
                   <Calendar className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-yellow-800">📅 Complete Your Setup</h3>
+                  <h3 className="font-semibold text-yellow-800">📞 Complete Your Setup</h3>
                   <p className="text-sm text-yellow-700">
-                    Add your Calendly link to send interview invitations to candidates
+                    Add your contact link to connect with candidates (Calendly, WhatsApp, or any preferred method)
                   </p>
                 </div>
               </div>
@@ -1139,7 +1139,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                   href="/dashboard/profile"
                   className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-colors"
                 >
-                  Add Calendly Link
+                  Add Contact Link
                 </Link>
                 <button
                   onClick={() => setHasCalendlyLink(null)}
