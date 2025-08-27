@@ -351,17 +351,16 @@ export default function DashboardLayout({
               </>
             )}
             
-            <Link 
-              href="/dashboard/profile" 
-              onClick={() => setIsMenuOpen(false)}
-              className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              👤 Profile
-            </Link>
-            
             {/* Student-only links */}
             {session.user.role === 'STUDENT' && (
               <>
+                <Link 
+                  href="/dashboard/profile" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  👤 Profile
+                </Link>
                 <Link 
                   href="/dashboard/discovery-quiz" 
                   onClick={() => setIsMenuOpen(false)}
