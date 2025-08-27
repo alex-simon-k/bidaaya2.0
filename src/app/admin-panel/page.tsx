@@ -26,6 +26,7 @@ interface Company {
   id: string
   name: string
   email: string
+  role: string
   companyName: string
   companyRole?: string
   industry?: string

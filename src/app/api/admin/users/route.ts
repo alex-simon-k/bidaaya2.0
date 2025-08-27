@@ -1,16 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
-import { authOptions } from "@/lib/auth-config"
 
 const prisma = new PrismaClient()
 
-export async function GET() {
+// GET - Fetch all users for admin
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user?.role?.toUpperCase() !== 'ADMIN') {
-      return new NextResponse('Unauthorized - Admin access required', { status: 401 })
+    // Check admin access
+    if (!session?.user?.id || (session.user as any).role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
     const users = await prisma.user.findMany({
@@ -19,25 +21,23 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
+        createdAt: true,
         emailVerified: true,
         profileCompleted: true,
-        createdAt: true,
-        updatedAt: true,
-        subscriptionPlan: true,
-        subscriptionStatus: true,
-        applicationsThisWeek: true,
+        university: true,
+        major: true,
+        companyName: true,
+        industry: true,
+        lastActiveAt: true
       },
       orderBy: {
-        createdAt: 'desc',
-      },
+        createdAt: 'desc'
+      }
     })
 
-    return NextResponse.json(users)
+    return NextResponse.json({ users })
   } catch (error) {
-    console.error('❌ Error fetching admin users:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    )
+    console.error('Error fetching users:', error)
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
-} 
+}
