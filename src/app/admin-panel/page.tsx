@@ -88,6 +88,10 @@ export default function AdminPanel() {
   const [showCreateCompanyForm, setShowCreateCompanyForm] = useState(false)
   const [isCreatingCompany, setIsCreatingCompany] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null)
+  const [isUpdatingCompany, setIsUpdatingCompany] = useState(false)
+  const [companyActivity, setCompanyActivity] = useState<any>(null)
+  const [loadingActivity, setLoadingActivity] = useState(false)
   const [newCompanyData, setNewCompanyData] = useState({
     name: '',
     email: '',
@@ -206,28 +210,54 @@ export default function AdminPanel() {
     }
   }
 
-  const handleImpersonateUser = async (userId: string, userEmail: string, userName: string) => {
-    if (!confirm(`This will log you in as ${userName} (${userEmail}). Continue?`)) return
-    
+  const loadCompanyActivity = async (companyId: string) => {
+    setLoadingActivity(true)
     try {
-      // For now, open in new tab since session switching is complex
-      const newWindow = window.open('/dashboard', '_blank')
-      if (newWindow) {
-        // Store impersonation data in localStorage for the new window
-        localStorage.setItem('adminImpersonating', JSON.stringify({
-          adminId: session?.user?.id,
-          adminEmail: session?.user?.email,
-          targetUserId: userId,
-          targetUserEmail: userEmail,
-          targetUserName: userName,
-          timestamp: Date.now()
-        }))
-        
-        alert(`🔄 Opening ${userName}'s dashboard in new tab...`)
+      const response = await fetch(`/api/admin/company-activity/${companyId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setCompanyActivity(data)
+      } else {
+        console.error('Failed to load company activity')
       }
     } catch (error) {
-      console.error('Error impersonating user:', error)
-      alert('❌ Failed to impersonate user')
+      console.error('Error loading company activity:', error)
+    } finally {
+      setLoadingActivity(false)
+    }
+  }
+
+  const handleEditCompany = (company: Company) => {
+    setEditingCompany({...company})
+    loadCompanyActivity(company.id)
+  }
+
+  const handleUpdateCompany = async () => {
+    if (!editingCompany) return
+    
+    setIsUpdatingCompany(true)
+    try {
+      const response = await fetch(`/api/admin/companies/${editingCompany.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingCompany)
+      })
+
+      if (response.ok) {
+        const updatedCompany = await response.json()
+        setCompanies(companies.map(c => c.id === editingCompany.id ? updatedCompany.company : c))
+        setSelectedCompany(updatedCompany.company)
+        setEditingCompany(null)
+        alert('✅ Company updated successfully!')
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Error updating company: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Error updating company:', error)
+      alert('❌ Failed to update company')
+    } finally {
+      setIsUpdatingCompany(false)
     }
   }
 
@@ -782,19 +812,302 @@ export default function AdminPanel() {
                   
                   <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700">
                     <button
-                      onClick={() => handleImpersonateUser(selectedCompany.id, selectedCompany.email, selectedCompany.name)}
-                      className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
-                    >
-                      <LogIn className="h-4 w-4" />
-                      Login As This Company
-                    </button>
-                    <button
-                      onClick={() => window.open(`/dashboard/company-profile`, '_blank')}
+                      onClick={() => handleEditCompany(selectedCompany)}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
                     >
-                      <ExternalLink className="h-4 w-4" />
-                      View Company Dashboard
+                      <Edit3 className="h-4 w-4" />
+                      Edit Company Data
                     </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCompany(null)
+                        loadCompanyActivity(selectedCompany.id)
+                      }}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      View Activity & Analytics
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Company Edit Modal */}
+            {editingCompany && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-gray-800 rounded-lg border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="text-xl font-semibold text-white">Edit Company: {editingCompany.companyName}</h3>
+                        <p className="text-gray-400">Update company information and view activity</p>
+                      </div>
+                      <button
+                        onClick={() => setEditingCompany(null)}
+                        className="text-gray-400 hover:text-white text-xl"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Edit Form */}
+                      <div>
+                        <h4 className="text-lg font-medium text-white mb-4">Company Information</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Company Name</label>
+                            <input
+                              type="text"
+                              value={editingCompany.companyName || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, companyName: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Contact Person</label>
+                            <input
+                              type="text"
+                              value={editingCompany.name || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, name: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                            <input
+                              type="email"
+                              value={editingCompany.email || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, email: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Job Title</label>
+                            <input
+                              type="text"
+                              value={editingCompany.companyRole || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, companyRole: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Industry</label>
+                            <select
+                              value={editingCompany.industry || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, industry: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                            >
+                              <option value="">Select industry</option>
+                              <option value="Technology">Technology</option>
+                              <option value="Finance">Finance</option>
+                              <option value="Healthcare">Healthcare</option>
+                              <option value="Education">Education</option>
+                              <option value="Retail">Retail</option>
+                              <option value="Manufacturing">Manufacturing</option>
+                              <option value="Consulting">Consulting</option>
+                              <option value="Media">Media</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Company Size</label>
+                            <select
+                              value={editingCompany.companySize || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, companySize: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                            >
+                              <option value="">Select size</option>
+                              <option value="1–10">1–10 employees</option>
+                              <option value="11–50">11–50 employees</option>
+                              <option value="51–200">51–200 employees</option>
+                              <option value="201–500">201–500 employees</option>
+                              <option value="501–1,000">501–1,000 employees</option>
+                              <option value="1,001+">1,001+ employees</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Website</label>
+                            <input
+                              type="text"
+                              value={editingCompany.companyWebsite || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, companyWebsite: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Contact WhatsApp</label>
+                            <input
+                              type="tel"
+                              value={editingCompany.contactWhatsapp || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, contactWhatsapp: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Contact Email</label>
+                            <input
+                              type="email"
+                              value={editingCompany.contactEmail || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, contactEmail: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Company Description</label>
+                            <textarea
+                              value={editingCompany.companyOneLiner || ''}
+                              onChange={(e) => setEditingCompany({...editingCompany, companyOneLiner: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Company Activity Dashboard */}
+                      <div>
+                        <h4 className="text-lg font-medium text-white mb-4">Company Activity & Analytics</h4>
+                        {loadingActivity ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            <span className="ml-3 text-gray-400">Loading activity...</span>
+                          </div>
+                        ) : companyActivity ? (
+                          <div className="space-y-6">
+                            {/* Credit Usage */}
+                            <div className="bg-gray-700 rounded-lg p-4">
+                              <h5 className="font-medium text-white mb-3 flex items-center gap-2">
+                                <Crown className="h-4 w-4 text-yellow-500" />
+                                Credit Usage
+                              </h5>
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <p className="text-gray-400">Credits Used</p>
+                                  <p className="text-white font-semibold">{companyActivity.creditsUsed || 0}</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-400">Credits Remaining</p>
+                                  <p className="text-white font-semibold">{companyActivity.creditsRemaining || 0}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Projects */}
+                            <div className="bg-gray-700 rounded-lg p-4">
+                              <h5 className="font-medium text-white mb-3 flex items-center gap-2">
+                                <Briefcase className="h-4 w-4 text-blue-500" />
+                                Projects
+                              </h5>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Draft Projects</span>
+                                  <span className="text-white">{companyActivity.projects?.draft || 0}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Live Projects</span>
+                                  <span className="text-white">{companyActivity.projects?.live || 0}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Total Applications</span>
+                                  <span className="text-white">{companyActivity.projects?.totalApplications || 0}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* AI Usage */}
+                            <div className="bg-gray-700 rounded-lg p-4">
+                              <h5 className="font-medium text-white mb-3 flex items-center gap-2">
+                                <Activity className="h-4 w-4 text-green-500" />
+                                AI Prompting
+                              </h5>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Total Queries</span>
+                                  <span className="text-white">{companyActivity.aiQueries || 0}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">This Month</span>
+                                  <span className="text-white">{companyActivity.aiQueriesThisMonth || 0}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Student Contacts */}
+                            <div className="bg-gray-700 rounded-lg p-4">
+                              <h5 className="font-medium text-white mb-3 flex items-center gap-2">
+                                <Users className="h-4 w-4 text-purple-500" />
+                                Student Contacts
+                              </h5>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Students Contacted</span>
+                                  <span className="text-white">{companyActivity.studentsContacted || 0}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-400">Proposals Received</span>
+                                  <span className="text-white">{companyActivity.proposalsReceived || 0}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Recent Activity */}
+                            {companyActivity.recentActivity && companyActivity.recentActivity.length > 0 && (
+                              <div className="bg-gray-700 rounded-lg p-4">
+                                <h5 className="font-medium text-white mb-3">Recent Activity</h5>
+                                <div className="space-y-2 text-sm max-h-40 overflow-y-auto">
+                                  {companyActivity.recentActivity.map((activity: any, index: number) => (
+                                    <div key={index} className="text-gray-300">
+                                      <span className="text-gray-400">{new Date(activity.timestamp).toLocaleDateString()}:</span> {activity.description}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-400">
+                            <p>No activity data available</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-8 pt-6 border-t border-gray-700">
+                      <button
+                        onClick={handleUpdateCompany}
+                        disabled={isUpdatingCompany}
+                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {isUpdatingCompany ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-4 w-4" />
+                            Save Changes
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setEditingCompany(null)}
+                        className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
