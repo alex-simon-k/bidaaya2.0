@@ -98,10 +98,7 @@ export async function POST(request: NextRequest) {
         category: category || 'Other',
         deliverables: deliverables || [],
         applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
-        status: 'PENDING_APPROVAL', // Admin-created projects need approval
-        createdBy: session.user.id, // Track admin who created it
-        createdAt: new Date(),
-        updatedAt: new Date()
+        status: 'PENDING_APPROVAL' // Admin-created projects need approval
       },
       include: {
         company: {

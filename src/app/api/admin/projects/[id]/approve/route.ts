@@ -45,10 +45,7 @@ export async function POST(
     const updatedProject = await prisma.project.update({
       where: { id: projectId },
       data: {
-        status: 'LIVE',
-        approvedAt: new Date(),
-        approvedBy: session.user.id,
-        updatedAt: new Date()
+        status: 'LIVE'
       },
       include: {
         company: {
