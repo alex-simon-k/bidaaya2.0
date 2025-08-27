@@ -19,6 +19,12 @@ export default function DashboardLayout({
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [hasCheckedRouting, setHasCheckedRouting] = useState(false)
+  const [creditInfo, setCreditInfo] = useState<{
+    used: number
+    remaining: number
+    limit: number
+    plan: string
+  } | null>(null)
 
   // Only log in development
   if (process.env.NODE_ENV === 'development') {
@@ -173,6 +179,30 @@ export default function DashboardLayout({
     handleRouting();
   }, [session, status, router, hasCheckedRouting])
 
+  // Fetch credit information for companies
+  useEffect(() => {
+    const fetchCreditInfo = async () => {
+      if (session?.user?.role === 'COMPANY') {
+        try {
+          const response = await fetch('/api/company/credits')
+          if (response.ok) {
+            const data = await response.json()
+            setCreditInfo(data)
+          }
+        } catch (error) {
+          console.error('Failed to fetch credit info:', error)
+        }
+      }
+    }
+
+    if (session?.user?.role === 'COMPANY') {
+      fetchCreditInfo()
+      // Refresh credit info every 30 seconds
+      const interval = setInterval(fetchCreditInfo, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [session])
+
   // Show loading state
   if (status === 'loading' || !hasCheckedRouting) {
     return (
@@ -227,6 +257,28 @@ export default function DashboardLayout({
                 </h1>
               </div>
               <div className="flex items-center space-x-2 sm:space-x-4">
+                {/* Credit Counter for Companies */}
+                {session?.user?.role === 'COMPANY' && creditInfo && (
+                  <div className="hidden sm:flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                    <div className="text-center">
+                      <div className="text-xs text-blue-600 font-medium">Credits</div>
+                      <div className="text-sm font-bold text-blue-800">
+                        {creditInfo.remaining}/{creditInfo.limit}
+                      </div>
+                      <div className="text-xs text-blue-500">{creditInfo.plan}</div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Mobile Credit Counter */}
+                {session?.user?.role === 'COMPANY' && creditInfo && (
+                  <div className="sm:hidden flex items-center bg-blue-50 border border-blue-200 rounded-lg px-2 py-1">
+                    <div className="text-xs text-blue-800 font-bold">
+                      {creditInfo.remaining}/{creditInfo.limit}
+                    </div>
+                  </div>
+                )}
+                
                 {/* User Profile Button */}
                 <div className="relative">
                   <button

@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
         calendlyLink: true,
         referralSource: true,
         referralDetails: true,
+        subscriptionPlan: true,
         lastActiveAt: true
       },
       orderBy: {

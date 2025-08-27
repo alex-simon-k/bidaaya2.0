@@ -42,6 +42,7 @@ interface Company {
   calendlyLink?: string
   referralSource?: string
   referralDetails?: string
+  subscriptionPlan?: string
   createdAt: string
   lastActiveAt?: string
   emailVerified: boolean
@@ -117,6 +118,22 @@ export default function AdminPanel() {
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [userFilter, setUserFilter] = useState('all') // all, students, companies
   
+  // Project management states
+  const [projects, setProjects] = useState<any[]>([])
+  const [showCreateProjectForm, setShowCreateProjectForm] = useState(false)
+  const [isCreatingProject, setIsCreatingProject] = useState(false)
+  const [newProjectData, setNewProjectData] = useState({
+    title: '',
+    description: '',
+    companyId: '',
+    compensation: '',
+    duration: '',
+    experienceLevel: 'High School',
+    category: '',
+    deliverables: [] as string[],
+    applicationDeadline: ''
+  })
+  
   // Auth check
   useEffect(() => {
     if (status === 'loading') return
@@ -132,10 +149,11 @@ export default function AdminPanel() {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true)
-      const [companiesRes, usersRes, statsRes] = await Promise.all([
+      const [companiesRes, usersRes, statsRes, projectsRes] = await Promise.all([
         fetch('/api/admin/companies'),
         fetch('/api/admin/users'),
-        fetch('/api/admin/stats')
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/projects')
       ])
 
       if (companiesRes.ok) {
@@ -151,6 +169,11 @@ export default function AdminPanel() {
       if (statsRes.ok) {
         const statsData = await statsRes.json()
         setStats(statsData)
+      }
+
+      if (projectsRes.ok) {
+        const projectsData = await projectsRes.json()
+        setProjects(projectsData.projects || [])
       }
     } catch (error) {
       console.error('Failed to load admin data:', error)
@@ -262,6 +285,70 @@ export default function AdminPanel() {
     }
   }
 
+  const handleCreateProject = async () => {
+    if (!newProjectData.title || !newProjectData.description || !newProjectData.companyId) {
+      alert('Please fill in required fields: Title, Description, and Company')
+      return
+    }
+
+    setIsCreatingProject(true)
+    try {
+      const response = await fetch('/api/admin/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProjectData)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert('✅ Project created successfully!')
+        setShowCreateProjectForm(false)
+        setNewProjectData({
+          title: '',
+          description: '',
+          companyId: '',
+          compensation: '',
+          duration: '',
+          experienceLevel: 'High School',
+          category: '',
+          deliverables: [],
+          applicationDeadline: ''
+        })
+        loadDashboardData()
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Error creating project: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Error creating project:', error)
+      alert('❌ Failed to create project')
+    } finally {
+      setIsCreatingProject(false)
+    }
+  }
+
+  const handleApproveProject = async (projectId: string) => {
+    if (!confirm('Approve this project and make it live?')) return
+
+    try {
+      const response = await fetch(`/api/admin/projects/${projectId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (response.ok) {
+        alert('✅ Project approved and is now live!')
+        loadDashboardData()
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Error approving project: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Error approving project:', error)
+      alert('❌ Failed to approve project')
+    }
+  }
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) || 
                          user.email.toLowerCase().includes(userSearchTerm.toLowerCase())
@@ -347,6 +434,17 @@ export default function AdminPanel() {
             >
               <Users className="inline-block w-4 h-4 mr-2" />
               User Management ({stats.totalUsers})
+            </button>
+            <button
+              onClick={() => setActiveTab('projects')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'projects'
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              <Briefcase className="inline-block w-4 h-4 mr-2" />
+              Project Management
             </button>
             <button
               onClick={() => setActiveTab('system')}
@@ -973,6 +1071,20 @@ export default function AdminPanel() {
                               rows={3}
                             />
                           </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Subscription Plan</label>
+                            <select
+                              value={editingCompany.subscriptionPlan || 'FREE'}
+                              onChange={(e) => setEditingCompany({...editingCompany, subscriptionPlan: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                            >
+                              <option value="FREE">Free Trial (10 contacts/month)</option>
+                              <option value="COMPANY_BASIC">Company Basic (50 contacts/month)</option>
+                              <option value="COMPANY_PREMIUM">HR Booster (100 contacts/month)</option>
+                              <option value="COMPANY_PRO">HR Agent (200 contacts/month)</option>
+                            </select>
+                          </div>
                         </div>
                       </div>
 
@@ -1266,6 +1378,217 @@ export default function AdminPanel() {
                     ))
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Project Management Tab */}
+        {activeTab === 'projects' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">Project Management</h2>
+                <p className="text-gray-400">Create and manage projects on behalf of companies</p>
+              </div>
+              <button
+                onClick={() => setShowCreateProjectForm(!showCreateProjectForm)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Project
+              </button>
+            </div>
+
+            {/* Create Project Form */}
+            {showCreateProjectForm && (
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-4">Create Project on Behalf of Company</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Company *</label>
+                    <select
+                      value={newProjectData.companyId}
+                      onChange={(e) => setNewProjectData({...newProjectData, companyId: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="">Select company</option>
+                      {companies.map((company) => (
+                        <option key={company.id} value={company.id}>
+                          {company.companyName || company.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Project Title *</label>
+                    <input
+                      type="text"
+                      value={newProjectData.title}
+                      onChange={(e) => setNewProjectData({...newProjectData, title: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                      placeholder="e.g. Frontend Developer Intern"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Project Description *</label>
+                    <textarea
+                      value={newProjectData.description}
+                      onChange={(e) => setNewProjectData({...newProjectData, description: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                      rows={4}
+                      placeholder="Describe the project requirements, responsibilities, and expectations..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Compensation</label>
+                    <input
+                      type="text"
+                      value={newProjectData.compensation}
+                      onChange={(e) => setNewProjectData({...newProjectData, compensation: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                      placeholder="e.g. £500/month, Unpaid, £2000 total"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Duration</label>
+                    <input
+                      type="text"
+                      value={newProjectData.duration}
+                      onChange={(e) => setNewProjectData({...newProjectData, duration: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                      placeholder="e.g. 3 months, Summer 2024, 6 weeks"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Experience Level</label>
+                    <select
+                      value={newProjectData.experienceLevel}
+                      onChange={(e) => setNewProjectData({...newProjectData, experienceLevel: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="High School">High School</option>
+                      <option value="University">University</option>
+                      <option value="Graduate">Graduate</option>
+                      <option value="Any">Any Level</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Application Deadline</label>
+                    <input
+                      type="date"
+                      value={newProjectData.applicationDeadline}
+                      onChange={(e) => setNewProjectData({...newProjectData, applicationDeadline: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleCreateProject}
+                    disabled={isCreatingProject}
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isCreatingProject ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" />
+                        Create Project
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowCreateProjectForm(false)}
+                    className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Projects List */}
+            <div className="bg-gray-800 rounded-lg border border-gray-700">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">All Projects ({projects.length})</h3>
+                {projects.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Briefcase className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">No projects found</p>
+                    <p className="text-gray-500 text-sm">Create a project to get started</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {projects.map((project) => (
+                      <motion.div
+                        key={project.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gray-700 rounded-lg p-4 border border-gray-600"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="font-semibold text-white">{project.title}</h4>
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                project.status === 'LIVE' ? 'bg-green-600 text-white' :
+                                project.status === 'PENDING_APPROVAL' ? 'bg-yellow-600 text-white' :
+                                project.status === 'DRAFT' ? 'bg-blue-600 text-white' :
+                                'bg-gray-600 text-white'
+                              }`}>
+                                {project.status}
+                              </span>
+                              {project.currentApplications > 0 && (
+                                <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded">
+                                  {project.currentApplications} applications
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-300 mb-1">🏢 {project.company?.companyName || project.company?.name}</p>
+                            <p className="text-sm text-gray-300 mb-1">💰 {project.compensation || 'Not specified'}</p>
+                            <p className="text-sm text-gray-400 mb-1">⏱️ {project.duration || 'Duration not specified'}</p>
+                            <p className="text-xs text-gray-400">
+                              Created: {new Date(project.createdAt).toLocaleDateString()}
+                              {project.applicationDeadline && (
+                                <span className="ml-4">
+                                  Deadline: {new Date(project.applicationDeadline).toLocaleDateString()}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            {project.status === 'PENDING_APPROVAL' && (
+                              <button
+                                onClick={() => handleApproveProject(project.id)}
+                                className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
+                              >
+                                <Eye className="h-4 w-4" />
+                                Approve & Go Live
+                              </button>
+                            )}
+                            <button
+                              onClick={() => window.open(`/dashboard/company-projects/${project.id}`, '_blank')}
+                              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              View
+                            </button>
+                          </div>
+                        </div>
+                        {project.description && (
+                          <div className="mt-3 pt-3 border-t border-gray-600">
+                            <p className="text-sm text-gray-300 line-clamp-2">{project.description}</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

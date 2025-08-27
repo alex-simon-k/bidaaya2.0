@@ -35,7 +35,8 @@ export async function PUT(
       companyWebsite,
       calendlyLink,
       referralSource,
-      referralDetails
+      referralDetails,
+      subscriptionPlan
     } = body
 
     // Update the company
@@ -58,6 +59,7 @@ export async function PUT(
         calendlyLink,
         referralSource,
         referralDetails,
+        subscriptionPlan,
         updatedAt: new Date()
       },
       select: {
@@ -82,6 +84,7 @@ export async function PUT(
         calendlyLink: true,
         referralSource: true,
         referralDetails: true,
+        subscriptionPlan: true,
         lastActiveAt: true
       }
     })

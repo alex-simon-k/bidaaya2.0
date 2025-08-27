@@ -65,12 +65,55 @@ export async function POST(request: NextRequest) {
         industry: true,
         companyWebsite: true,
         contactWhatsapp: true,
-        calendlyLink: true
+        calendlyLink: true,
+        subscriptionPlan: true,
+        role: true
       }
     })
 
     if (!company) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
+    }
+
+    // Check and deduct company credits before sending contact
+    const currentDate = new Date()
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+
+    // Count contacts made this month
+    const contactsThisMonth = await prisma.chatQuery.count({
+      where: {
+        userId: session.user.id,
+        query: {
+          startsWith: 'CONTACT_STUDENT_'
+        },
+        timestamp: {
+          gte: monthStart,
+          lte: monthEnd
+        }
+      }
+    })
+
+    // Define company credit limits (matching pricing page)
+    const COMPANY_CREDIT_LIMITS = {
+      'FREE': 10,              // Free Trial: 10 contacts/month
+      'COMPANY_BASIC': 50,     // Company Basic: 50 contacts/month  
+      'COMPANY_PREMIUM': 100,  // HR Booster: 100 contacts/month
+      'COMPANY_PRO': 200       // HR Agent: 200 contacts/month
+    }
+
+    const userPlan = company.subscriptionPlan || 'FREE'
+    const creditLimit = COMPANY_CREDIT_LIMITS[userPlan as keyof typeof COMPANY_CREDIT_LIMITS] || 10
+
+    // Check if company has enough credits
+    if (contactsThisMonth >= creditLimit) {
+      return NextResponse.json({
+        error: 'You have reached your monthly contact limit',
+        remainingCredits: 0,
+        usedCredits: contactsThisMonth,
+        creditLimit,
+        plan: userPlan
+      }, { status: 402 })
     }
 
     const student = proposal.user
@@ -166,13 +209,41 @@ export async function POST(request: NextRequest) {
 
       console.log('✅ Proposal response email sent successfully:', emailResult.data?.id)
 
+      // Deduct credit by creating a contact record
+      try {
+        await prisma.chatQuery.create({
+          data: {
+            userId: session.user.id,
+            query: `CONTACT_STUDENT_${student.id}`,
+            queryType: 'COMPANY_RESEARCH',
+            intent: JSON.stringify({
+              action: 'contact_student',
+              studentId: student.id,
+              proposalId: proposalId,
+              subject: subject,
+              creditsUsed: 1
+            }),
+            extractedCompanies: [session.user.id],
+            timestamp: new Date()
+          }
+        })
+        console.log('✅ Credit deducted for contacting student')
+      } catch (creditError) {
+        console.error('⚠️ Failed to record credit usage:', creditError)
+        // Don't fail the request if this fails
+      }
+
       // Update proposal status to mark as contacted
       try {
         await prisma.chatQuery.update({
           where: { id: proposalId },
           data: {
-            // We can store contact status in a field or use the existing structure
-            // For now, we'll just log it as the system doesn't have a specific field for this
+            // Mark as contacted by adding to the intent
+            intent: JSON.stringify({
+              ...proposalData,
+              contactedAt: new Date().toISOString(),
+              contactedBy: session.user.id
+            })
           }
         })
       } catch (updateError) {
@@ -183,7 +254,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Student contacted successfully',
-        emailId: emailResult.data?.id
+        emailId: emailResult.data?.id,
+        creditsUsed: contactsThisMonth + 1,
+        creditsRemaining: creditLimit - (contactsThisMonth + 1),
+        creditLimit: creditLimit,
+        plan: userPlan
       })
 
     } catch (emailError) {

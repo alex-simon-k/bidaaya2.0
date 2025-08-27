@@ -20,10 +20,15 @@ import {
 
 interface StudentProposal {
   id: string
+  studentId: string
   studentName: string
   studentEmail: string
   studentUniversity: string
   studentMajor: string
+  studentGraduationYear?: number
+  studentSkills?: string[]
+  studentLinkedIn?: string
+  studentGitHub?: string
   proposalContent: {
     personalIntro: string
     proudAchievement: string
@@ -34,6 +39,7 @@ interface StudentProposal {
   }
   submittedAt: Date
   status: 'new' | 'viewed' | 'responded'
+  contactedAt?: Date
 }
 
 export default function CompanyProposalsInbox() {
@@ -45,10 +51,29 @@ export default function CompanyProposalsInbox() {
   const [contactMessage, setContactMessage] = useState('')
   const [contactSubject, setContactSubject] = useState('')
   const [isContacting, setIsContacting] = useState(false)
+  const [creditInfo, setCreditInfo] = useState<{
+    used: number
+    remaining: number
+    limit: number
+    plan: string
+  } | null>(null)
 
   useEffect(() => {
     loadProposals()
+    loadCreditInfo()
   }, [])
+
+  const loadCreditInfo = async () => {
+    try {
+      const response = await fetch('/api/company/credits')
+      if (response.ok) {
+        const data = await response.json()
+        setCreditInfo(data)
+      }
+    } catch (error) {
+      console.error('Failed to load credit info:', error)
+    }
+  }
 
   const loadProposals = async () => {
     try {
@@ -113,8 +138,11 @@ export default function CompanyProposalsInbox() {
       setContactMessage('')
       setContactSubject('')
       
+      // Refresh credit info
+      loadCreditInfo()
+      
       // Show success message or notification here
-      alert('Message sent successfully to student!')
+      alert('Message sent successfully to student! Credit deducted.')
 
     } catch (error) {
       console.error('Failed to contact student:', error)
@@ -245,15 +273,66 @@ export default function CompanyProposalsInbox() {
                       <div>
                         <h2 className="text-xl font-bold text-gray-900">{selectedProposal.studentName}</h2>
                         <p className="text-gray-600">{selectedProposal.studentEmail}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <GraduationCap className="h-4 w-4" />
-                            {selectedProposal.studentUniversity}
+                        <div className="mt-2 space-y-1">
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <GraduationCap className="h-4 w-4" />
+                              {selectedProposal.studentUniversity}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <FileText className="h-4 w-4" />
+                              {selectedProposal.studentMajor}
+                            </div>
+                            {selectedProposal.studentGraduationYear && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                Class of {selectedProposal.studentGraduationYear}
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <FileText className="h-4 w-4" />
-                            {selectedProposal.studentMajor}
-                          </div>
+                          {(selectedProposal.studentLinkedIn || selectedProposal.studentGitHub) && (
+                            <div className="flex items-center gap-3 text-sm">
+                              {selectedProposal.studentLinkedIn && (
+                                <a 
+                                  href={selectedProposal.studentLinkedIn} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  LinkedIn
+                                </a>
+                              )}
+                              {selectedProposal.studentGitHub && (
+                                <a 
+                                  href={selectedProposal.studentGitHub} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  GitHub
+                                </a>
+                              )}
+                            </div>
+                          )}
+                          {selectedProposal.studentSkills && selectedProposal.studentSkills.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {selectedProposal.studentSkills.slice(0, 5).map((skill, index) => (
+                                <span 
+                                  key={index}
+                                  className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                              {selectedProposal.studentSkills.length > 5 && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                  +{selectedProposal.studentSkills.length - 5} more
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -303,17 +382,47 @@ export default function CompanyProposalsInbox() {
 
                 {/* Actions */}
                 <div className="border-t border-gray-200 pt-6 mt-6">
+                  {creditInfo && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-medium text-blue-800">Credits Remaining</p>
+                          <p className="text-xs text-blue-600">{creditInfo.plan} Plan</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-blue-800">{creditInfo.remaining}/{creditInfo.limit}</p>
+                          <p className="text-xs text-blue-600">This month</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={handleContactStudent}
-                      disabled={selectedProposal?.status === 'responded'}
-                      className={`px-6 py-2 rounded-lg transition-colors ${
+                      disabled={
+                        selectedProposal?.status === 'responded' || 
+                        !!(creditInfo && creditInfo.remaining <= 0)
+                      }
+                      className={`px-6 py-2 rounded-lg transition-colors flex items-center gap-2 ${
                         selectedProposal?.status === 'responded' 
                           ? 'bg-gray-400 text-white cursor-not-allowed' 
+                          : (creditInfo && creditInfo.remaining <= 0)
+                          ? 'bg-red-400 text-white cursor-not-allowed'
                           : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
                     >
-                      {selectedProposal?.status === 'responded' ? 'Already Contacted' : 'Contact Student'}
+                      {selectedProposal?.status === 'responded' 
+                        ? 'Already Contacted' 
+                        : (creditInfo && creditInfo.remaining <= 0)
+                        ? 'No Credits Remaining'
+                        : (
+                          <>
+                            <MessageSquare className="h-4 w-4" />
+                            Contact Student (Use 1 Credit)
+                          </>
+                        )
+                      }
                     </button>
                     <button className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
                       Save for Later
