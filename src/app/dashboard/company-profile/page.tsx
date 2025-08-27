@@ -327,7 +327,7 @@ export default function CompanyProfilePage() {
                       type="text"
                       value={profile.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -343,7 +343,7 @@ export default function CompanyProfilePage() {
                       type="text"
                       value={profile.companyRole}
                       onChange={(e) => handleInputChange('companyRole', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       placeholder="e.g. CEO, CTO, HR Manager"
                     />
                   </div>
@@ -359,7 +359,7 @@ export default function CompanyProfilePage() {
                       type="text"
                       value={profile.companyName}
                       onChange={(e) => handleInputChange('companyName', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       placeholder="Legal name of your organization"
                     />
                   </div>
@@ -374,7 +374,7 @@ export default function CompanyProfilePage() {
                     <select
                       value={profile.companySize}
                       onChange={(e) => handleInputChange('companySize', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                       <option value="">Select company size</option>
                       {COMPANY_SIZES.map(size => (
@@ -393,7 +393,7 @@ export default function CompanyProfilePage() {
                     <select
                       value={profile.industry}
                       onChange={(e) => handleInputChange('industry', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                       <option value="">Select industry</option>
                       {INDUSTRIES.map(industry => (
@@ -413,7 +413,7 @@ export default function CompanyProfilePage() {
                       type="url"
                       value={profile.companyWebsite}
                       onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                       placeholder="https://example.com"
                     />
                   </div>
@@ -429,7 +429,7 @@ export default function CompanyProfilePage() {
                   value={profile.companyOneLiner}
                   onChange={(e) => handleInputChange('companyOneLiner', e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                   placeholder="Brief description of what your company does..."
                 />
               </div>
@@ -468,7 +468,7 @@ export default function CompanyProfilePage() {
                         type="text"
                         value={profile.contactPersonName}
                         onChange={(e) => handleInputChange('contactPersonName', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         placeholder="Primary contact person"
                       />
                     </div>
@@ -481,7 +481,7 @@ export default function CompanyProfilePage() {
                     <select
                       value={profile.contactPersonType}
                       onChange={(e) => handleInputChange('contactPersonType', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                       <option value="">Select type</option>
                       {CONTACT_TYPES.map(type => (
@@ -500,7 +500,7 @@ export default function CompanyProfilePage() {
                         type="email"
                         value={profile.contactEmail}
                         onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         placeholder="contact@company.com"
                       />
                     </div>
@@ -516,7 +516,7 @@ export default function CompanyProfilePage() {
                         type="tel"
                         value={profile.contactWhatsapp}
                         onChange={(e) => handleInputChange('contactWhatsapp', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         placeholder="+971 50 123 4567"
                       />
                     </div>
@@ -532,7 +532,7 @@ export default function CompanyProfilePage() {
                         type="url"
                         value={profile.calendlyLink}
                         onChange={(e) => handleInputChange('calendlyLink', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                         placeholder="https://calendly.com/your-link OR any preferred contact link"
                       />
                     </div>
