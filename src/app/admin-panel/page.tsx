@@ -32,7 +32,7 @@ interface Company {
   industry?: string
   companySize?: string
   companyOneLiner?: string
-  goals?: string[]
+      goal?: string[]
   contactPersonType?: string
   contactPersonName?: string
   contactEmail?: string
@@ -767,11 +767,11 @@ export default function AdminPanel() {
                     </div>
                   )}
                   
-                  {selectedCompany.goals && selectedCompany.goals.length > 0 && (
+                  {selectedCompany.goal && selectedCompany.goal.length > 0 && (
                     <div className="mt-6">
                       <h4 className="font-medium text-white mb-2">🎯 Goals</h4>
                       <div className="flex flex-wrap gap-2">
-                        {selectedCompany.goals.map((goal, index) => (
+                        {selectedCompany.goal.map((goal, index) => (
                           <span key={index} className="text-xs bg-purple-600 text-white px-2 py-1 rounded">
                             {goal}
                           </span>
