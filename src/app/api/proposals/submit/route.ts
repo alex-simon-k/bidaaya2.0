@@ -85,6 +85,50 @@ export async function POST(request: NextRequest) {
       companyId
     }
 
+    // Check current credit usage this month
+    const currentDate = new Date()
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+
+    // Count proposals submitted this month (credits used)
+    const proposalsThisMonth = await prisma.chatQuery.count({
+      where: {
+        userId: session.user.id,
+        query: {
+          startsWith: 'PROPOSAL_TO_'
+        },
+        timestamp: {
+          gte: monthStart,
+          lte: monthEnd
+        }
+      }
+    })
+
+    // Get user's subscription plan to determine credit limit
+    const userDetails = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { subscriptionPlan: true }
+    })
+
+    const CREDIT_LIMITS = {
+      'FREE': 5,
+      'STUDENT_PRO': 20,
+      'STUDENT_PREMIUM': 50
+    }
+
+    const userPlan = userDetails?.subscriptionPlan || 'FREE'
+    const creditLimit = CREDIT_LIMITS[userPlan as keyof typeof CREDIT_LIMITS] || 5
+
+    // Check if user has enough credits
+    if (proposalsThisMonth >= creditLimit) {
+      return NextResponse.json({ 
+        error: 'You have reached your monthly proposal limit',
+        remainingCredits: 0,
+        usedCredits: proposalsThisMonth,
+        creditLimit
+      }, { status: 402 })
+    }
+
     // Store proposal as a ChatQuery with special type for proposals
     const proposal = await prisma.chatQuery.create({
       data: {

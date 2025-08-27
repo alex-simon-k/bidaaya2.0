@@ -41,17 +41,26 @@ export async function GET(request: NextRequest) {
 
     const currentDate = new Date()
     const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
     
     // Get user's plan - default to FREE for students
     const userPlan = user.subscriptionPlan || 'FREE'
     const totalCredits = STUDENT_CREDIT_ALLOWANCES[userPlan as keyof typeof STUDENT_CREDIT_ALLOWANCES] || 5
 
-    // For now, we'll track credits in a simple way
-    // In production, you'd want a proper credits table
-    let usedCredits = 0
-    
-    // Check if user has used any credits this month
-    // This is a simplified approach - in production you'd have a credits_usage table
+    // Count actual proposals submitted this month
+    const usedCredits = await prisma.chatQuery.count({
+      where: {
+        userId: session.user.id,
+        query: {
+          startsWith: 'PROPOSAL_TO_'
+        },
+        timestamp: {
+          gte: monthStart,
+          lte: monthEnd
+        }
+      }
+    })
     
     const remainingCredits = Math.max(0, totalCredits - usedCredits)
 
@@ -98,8 +107,23 @@ export async function POST(request: NextRequest) {
       const userPlan = user.subscriptionPlan || 'FREE'
       const totalCredits = STUDENT_CREDIT_ALLOWANCES[userPlan as keyof typeof STUDENT_CREDIT_ALLOWANCES] || 5
 
-      // Simple credit tracking - in production you'd use a proper table
-      let usedCredits = 0 // This would come from database
+      // Count current proposals this month
+      const currentDate = new Date()
+      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+      const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+
+      const usedCredits = await prisma.chatQuery.count({
+        where: {
+          userId: session.user.id,
+          query: {
+            startsWith: 'PROPOSAL_TO_'
+          },
+          timestamp: {
+            gte: monthStart,
+            lte: monthEnd
+          }
+        }
+      })
       
       if (usedCredits + amount > totalCredits) {
         return NextResponse.json({ 
@@ -108,9 +132,6 @@ export async function POST(request: NextRequest) {
           required: amount
         }, { status: 402 })
       }
-
-      // In production, you'd record the credit usage here
-      // await prisma.creditUsage.create({...})
 
       const newRemaining = totalCredits - (usedCredits + amount)
 

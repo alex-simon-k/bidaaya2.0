@@ -361,7 +361,7 @@ export default function CompanyProposalsInbox() {
                     type="text"
                     value={contactSubject}
                     onChange={(e) => setContactSubject(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                     placeholder="Enter email subject"
                   />
                 </div>
@@ -374,7 +374,7 @@ export default function CompanyProposalsInbox() {
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
                     rows={6}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                     placeholder="Write your message to the student..."
                   />
                 </div>
