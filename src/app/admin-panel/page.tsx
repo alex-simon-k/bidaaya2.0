@@ -31,6 +31,16 @@ interface Company {
   companyRole?: string
   industry?: string
   companySize?: string
+  companyOneLiner?: string
+  goals?: string[]
+  contactPersonType?: string
+  contactPersonName?: string
+  contactEmail?: string
+  contactWhatsapp?: string
+  companyWebsite?: string
+  calendlyLink?: string
+  referralSource?: string
+  referralDetails?: string
   createdAt: string
   lastActiveAt?: string
   emailVerified: boolean
@@ -77,6 +87,7 @@ export default function AdminPanel() {
   const [companies, setCompanies] = useState<Company[]>([])
   const [showCreateCompanyForm, setShowCreateCompanyForm] = useState(false)
   const [isCreatingCompany, setIsCreatingCompany] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [newCompanyData, setNewCompanyData] = useState({
     name: '',
     email: '',
@@ -85,9 +96,15 @@ export default function AdminPanel() {
     industry: '',
     companySize: '',
     companyOneLiner: '',
-    contactEmail: '',
+    goals: [] as string[],
+    contactPersonType: 'me',
     contactPersonName: '',
-    companyWebsite: ''
+    contactEmail: '',
+    contactWhatsapp: '',
+    companyWebsite: '',
+    calendlyLink: '',
+    referralSource: '',
+    referralDetails: ''
   })
   
   // User management states
@@ -166,9 +183,15 @@ export default function AdminPanel() {
           industry: '',
           companySize: '',
           companyOneLiner: '',
-          contactEmail: '',
+          goals: [],
+          contactPersonType: 'me',
           contactPersonName: '',
-          companyWebsite: ''
+          contactEmail: '',
+          contactWhatsapp: '',
+          companyWebsite: '',
+          calendlyLink: '',
+          referralSource: '',
+          referralDetails: ''
         })
         loadDashboardData()
       } else {
@@ -183,21 +206,24 @@ export default function AdminPanel() {
     }
   }
 
-  const handleImpersonateUser = async (userId: string) => {
-    if (!confirm('This will log you in as this user. Continue?')) return
+  const handleImpersonateUser = async (userId: string, userEmail: string, userName: string) => {
+    if (!confirm(`This will log you in as ${userName} (${userEmail}). Continue?`)) return
     
     try {
-      const response = await fetch('/api/admin/impersonate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      })
-
-      if (response.ok) {
-        window.location.href = '/dashboard'
-      } else {
-        const errorData = await response.json()
-        alert(`❌ Error: ${errorData.error}`)
+      // For now, open in new tab since session switching is complex
+      const newWindow = window.open('/dashboard', '_blank')
+      if (newWindow) {
+        // Store impersonation data in localStorage for the new window
+        localStorage.setItem('adminImpersonating', JSON.stringify({
+          adminId: session?.user?.id,
+          adminEmail: session?.user?.email,
+          targetUserId: userId,
+          targetUserEmail: userEmail,
+          targetUserName: userName,
+          timestamp: Date.now()
+        }))
+        
+        alert(`🔄 Opening ${userName}'s dashboard in new tab...`)
       }
     } catch (error) {
       console.error('Error impersonating user:', error)
@@ -429,102 +455,242 @@ export default function AdminPanel() {
             {showCreateCompanyForm && (
               <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4">Create New Company Account</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p className="text-gray-400 mb-6">Complete company onboarding - all fields from the full onboarding process</p>
+                
+                <div className="space-y-6">
+                  {/* Basic Info */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Contact Person Name *</label>
-                    <input
-                      type="text"
-                      value={newCompanyData.name}
-                      onChange={(e) => setNewCompanyData({...newCompanyData, name: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="John Smith"
-                    />
+                    <h4 className="text-md font-medium text-white mb-3">👤 Contact Person</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.name}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, name: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="John Smith"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Job Title/Role *</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.companyRole}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, companyRole: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="CEO, CTO, HR Manager, Recruiter"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                        <input
+                          type="email"
+                          value={newCompanyData.email}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, email: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="john@company.com"
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Company Details */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
-                    <input
-                      type="email"
-                      value={newCompanyData.email}
-                      onChange={(e) => setNewCompanyData({...newCompanyData, email: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="john@company.com"
-                    />
+                    <h4 className="text-md font-medium text-white mb-3">🏢 Company Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Company Name *</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.companyName}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, companyName: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="Legal company name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Company Website *</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.companyWebsite}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, companyWebsite: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="https://www.company.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Industry *</label>
+                        <select
+                          value={newCompanyData.industry}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, industry: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                        >
+                          <option value="">Select industry</option>
+                          <option value="Technology">Technology</option>
+                          <option value="Finance">Finance</option>
+                          <option value="Healthcare">Healthcare</option>
+                          <option value="Education">Education</option>
+                          <option value="Retail">Retail</option>
+                          <option value="Manufacturing">Manufacturing</option>
+                          <option value="Consulting">Consulting</option>
+                          <option value="Media">Media</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Company Size *</label>
+                        <select
+                          value={newCompanyData.companySize}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, companySize: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                        >
+                          <option value="">Select size</option>
+                          <option value="1–10">1–10 employees</option>
+                          <option value="11–50">11–50 employees</option>
+                          <option value="51–200">51–200 employees</option>
+                          <option value="201–500">201–500 employees</option>
+                          <option value="501–1,000">501–1,000 employees</option>
+                          <option value="1,001+">1,001+ employees</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Company One-Liner *</label>
+                      <textarea
+                        value={newCompanyData.companyOneLiner}
+                        onChange={(e) => setNewCompanyData({...newCompanyData, companyOneLiner: e.target.value})}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                        placeholder="e.g. 'We're a fintech startup building AI-powered payment tools for small businesses.'"
+                        rows={3}
+                        maxLength={200}
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">What are you here for? *</label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {['Growing our team', 'Exploring extra hands / contractors', 'Generating new ideas / innovation support', 'Actively hiring right now'].map((goal) => (
+                          <label key={goal} className="flex items-center space-x-2 text-gray-300">
+                            <input
+                              type="checkbox"
+                              checked={newCompanyData.goals.includes(goal)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewCompanyData({...newCompanyData, goals: [...newCompanyData.goals, goal]})
+                                } else {
+                                  setNewCompanyData({...newCompanyData, goals: newCompanyData.goals.filter(g => g !== goal)})
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm">{goal}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Contact Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Company Name *</label>
-                    <input
-                      type="text"
-                      value={newCompanyData.companyName}
-                      onChange={(e) => setNewCompanyData({...newCompanyData, companyName: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="Acme Corporation"
-                    />
+                    <h4 className="text-md font-medium text-white mb-3">📞 Contact Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Contact Email *</label>
+                        <input
+                          type="email"
+                          value={newCompanyData.contactEmail}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, contactEmail: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="contact@company.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">WhatsApp Number *</label>
+                        <input
+                          type="tel"
+                          value={newCompanyData.contactWhatsapp}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, contactWhatsapp: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="+971 50 123 4567"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Contact Person Name</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.contactPersonName}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, contactPersonName: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="Leave empty if same as above"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Calendar/Meeting Link</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.calendlyLink}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, calendlyLink: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="https://calendly.com/yourname"
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Optional Fields */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Role/Title</label>
-                    <input
-                      type="text"
-                      value={newCompanyData.companyRole}
-                      onChange={(e) => setNewCompanyData({...newCompanyData, companyRole: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="CEO, HR Manager, etc."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Industry</label>
-                    <select
-                      value={newCompanyData.industry}
-                      onChange={(e) => setNewCompanyData({...newCompanyData, industry: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="">Select industry</option>
-                      <option value="Technology">Technology</option>
-                      <option value="Finance">Finance</option>
-                      <option value="Healthcare">Healthcare</option>
-                      <option value="Education">Education</option>
-                      <option value="Retail">Retail</option>
-                      <option value="Manufacturing">Manufacturing</option>
-                      <option value="Consulting">Consulting</option>
-                      <option value="Media">Media</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Company Size</label>
-                    <select
-                      value={newCompanyData.companySize}
-                      onChange={(e) => setNewCompanyData({...newCompanyData, companySize: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="">Select size</option>
-                      <option value="1–10">1–10 employees</option>
-                      <option value="11–50">11–50 employees</option>
-                      <option value="51–200">51–200 employees</option>
-                      <option value="201–500">201–500 employees</option>
-                      <option value="501–1,000">501–1,000 employees</option>
-                      <option value="1,001+">1,001+ employees</option>
-                    </select>
+                    <h4 className="text-md font-medium text-white mb-3">📈 Optional Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Referral Source</label>
+                        <select
+                          value={newCompanyData.referralSource}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, referralSource: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                        >
+                          <option value="">How did they find us?</option>
+                          <option value="Personal referral">Personal referral</option>
+                          <option value="LinkedIn">LinkedIn</option>
+                          <option value="Google Search">Google Search</option>
+                          <option value="Social Media">Social Media</option>
+                          <option value="Industry event">Industry event</option>
+                          <option value="Partner/Accelerator">Partner/Accelerator</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Referral Details</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.referralDetails}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, referralDetails: e.target.value})}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                          placeholder="Any additional details..."
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Company Description</label>
-                  <textarea
-                    value={newCompanyData.companyOneLiner}
-                    onChange={(e) => setNewCompanyData({...newCompanyData, companyOneLiner: e.target.value})}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                    placeholder="Brief description of what the company does..."
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="flex gap-3 mt-6">
+                <div className="flex gap-3 mt-8 pt-6 border-t border-gray-700">
                   <button
                     onClick={handleCreateCompany}
                     disabled={isCreatingCompany}
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    {isCreatingCompany ? 'Creating...' : 'Create Company Account'}
+                    {isCreatingCompany ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" />
+                        Create Complete Company Account
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => setShowCreateCompanyForm(false)}
@@ -536,64 +702,157 @@ export default function AdminPanel() {
               </div>
             )}
 
-            {/* Companies List */}
+            {/* Company Detail View */}
+            {selectedCompany && (
+              <div className="bg-gray-800 rounded-lg border border-gray-700 mb-6">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-white">📄 {selectedCompany.companyName || selectedCompany.name}</h3>
+                      <p className="text-gray-400">Admin viewing company details</p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCompany(null)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="font-medium text-white mb-3">👤 Contact Person</h4>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-gray-300"><span className="text-gray-400">Name:</span> {selectedCompany.name}</p>
+                        <p className="text-gray-300"><span className="text-gray-400">Role:</span> {selectedCompany.companyRole || 'Not specified'}</p>
+                        <p className="text-gray-300"><span className="text-gray-400">Email:</span> {selectedCompany.email}</p>
+                        <p className="text-gray-300"><span className="text-gray-400">Contact Email:</span> {selectedCompany.contactEmail || 'Not specified'}</p>
+                        <p className="text-gray-300"><span className="text-gray-400">WhatsApp:</span> {selectedCompany.contactWhatsapp || 'Not specified'}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-white mb-3">🏢 Company Info</h4>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-gray-300"><span className="text-gray-400">Industry:</span> {selectedCompany.industry || 'Not specified'}</p>
+                        <p className="text-gray-300"><span className="text-gray-400">Size:</span> {selectedCompany.companySize || 'Not specified'}</p>
+                        <p className="text-gray-300"><span className="text-gray-400">Website:</span> {selectedCompany.companyWebsite || 'Not specified'}</p>
+                        <p className="text-gray-300"><span className="text-gray-400">Calendar:</span> {selectedCompany.calendlyLink || 'Not specified'}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-white mb-3">📊 Account Status</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex gap-2">
+                          <span className={`text-xs px-2 py-1 rounded ${selectedCompany.emailVerified ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                            {selectedCompany.emailVerified ? 'Email Verified' : 'Email Not Verified'}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded ${selectedCompany.profileCompleted ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}`}>
+                            {selectedCompany.profileCompleted ? 'Profile Complete' : 'Profile Incomplete'}
+                          </span>
+                        </div>
+                        <p className="text-gray-300"><span className="text-gray-400">Created:</span> {new Date(selectedCompany.createdAt).toLocaleDateString()}</p>
+                        {selectedCompany.lastActiveAt && (
+                          <p className="text-gray-300"><span className="text-gray-400">Last Active:</span> {new Date(selectedCompany.lastActiveAt).toLocaleDateString()}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {selectedCompany.companyOneLiner && (
+                    <div className="mt-6">
+                      <h4 className="font-medium text-white mb-2">💼 Company Description</h4>
+                      <p className="text-gray-300 text-sm bg-gray-700 p-3 rounded-lg">{selectedCompany.companyOneLiner}</p>
+                    </div>
+                  )}
+                  
+                  {selectedCompany.goals && selectedCompany.goals.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-medium text-white mb-2">🎯 Goals</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedCompany.goals.map((goal, index) => (
+                          <span key={index} className="text-xs bg-purple-600 text-white px-2 py-1 rounded">
+                            {goal}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700">
+                    <button
+                      onClick={() => handleImpersonateUser(selectedCompany.id, selectedCompany.email, selectedCompany.name)}
+                      className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Login As This Company
+                    </button>
+                    <button
+                      onClick={() => window.open(`/dashboard/company-profile`, '_blank')}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      View Company Dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Companies Grid */}
             <div className="bg-gray-800 rounded-lg border border-gray-700">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">All Companies</h3>
-                <div className="space-y-4">
-                  {companies.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">No companies found</p>
-                  ) : (
-                    companies.map((company) => (
-                      <div key={company.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-                        <div className="flex justify-between items-start">
+                <h3 className="text-lg font-semibold text-white mb-4">All Companies ({companies.length})</h3>
+                {companies.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Building2 className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">No companies found</p>
+                    <p className="text-gray-500 text-sm">Create a company account to get started</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {companies.map((company) => (
+                      <motion.div
+                        key={company.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-blue-500 transition-colors cursor-pointer"
+                        onClick={() => setSelectedCompany(company)}
+                      >
+                        <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-semibold text-white">{company.companyName || company.name}</h4>
-                              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                                {company.role}
-                              </span>
-                              {company.emailVerified && (
-                                <span className="text-xs bg-green-600 text-white px-2 py-1 rounded">
-                                  Verified
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-300 mb-1">📧 {company.email}</p>
-                            <p className="text-sm text-gray-300 mb-1">👤 {company.name}</p>
-                            {company.industry && (
-                              <p className="text-sm text-gray-400 mb-1">🏢 {company.industry}</p>
-                            )}
-                            <p className="text-xs text-gray-400">
-                              Created: {new Date(company.createdAt).toLocaleDateString()}
-                              {company.lastActiveAt && (
-                                <span className="ml-4">
-                                  Last active: {new Date(company.lastActiveAt).toLocaleDateString()}
-                                </span>
-                              )}
-                            </p>
+                            <h4 className="font-semibold text-white text-sm mb-1">{company.companyName || company.name}</h4>
+                            <p className="text-xs text-gray-400">{company.industry || 'No industry'}</p>
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleImpersonateUser(company.id)}
-                              className="bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-1 text-sm"
-                            >
-                              <LogIn className="h-4 w-4" />
-                              Login As
-                            </button>
-                            <button
-                              onClick={() => window.open(`/dashboard/company-profile`, '_blank')}
-                              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              View
-                            </button>
+                          <div className="flex gap-1 flex-col">
+                            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                              {company.role}
+                            </span>
+                            {company.emailVerified && (
+                              <span className="text-xs bg-green-600 text-white px-2 py-1 rounded">
+                                ✓ Verified
+                              </span>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                        
+                        <div className="space-y-1 mb-3">
+                          <p className="text-xs text-gray-300">👤 {company.name}</p>
+                          <p className="text-xs text-gray-300">📧 {company.email}</p>
+                          {company.companySize && (
+                            <p className="text-xs text-gray-400">👥 {company.companySize} employees</p>
+                          )}
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-xs text-gray-400">
+                          <span>Created {new Date(company.createdAt).toLocaleDateString()}</span>
+                          <span className="text-blue-400 hover:text-blue-300">Click to view →</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -672,13 +931,15 @@ export default function AdminPanel() {
                             </p>
                           </div>
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => handleImpersonateUser(user.id)}
-                              className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 flex items-center gap-1"
-                            >
-                              <LogIn className="h-3 w-3" />
-                              Login As
-                            </button>
+                            {user.role === 'COMPANY' && (
+                              <button
+                                onClick={() => handleImpersonateUser(user.id, user.email, user.name)}
+                                className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 flex items-center gap-1"
+                              >
+                                <LogIn className="h-3 w-3" />
+                                Login As
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

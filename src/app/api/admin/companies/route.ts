@@ -33,9 +33,15 @@ export async function GET(request: NextRequest) {
         industry: true,
         companySize: true,
         companyOneLiner: true,
-        contactEmail: true,
+        goals: true,
+        contactPersonType: true,
         contactPersonName: true,
+        contactEmail: true,
+        contactWhatsapp: true,
         companyWebsite: true,
+        calendlyLink: true,
+        referralSource: true,
+        referralDetails: true,
         lastActiveAt: true
       },
       orderBy: {
@@ -69,9 +75,15 @@ export async function POST(request: NextRequest) {
       industry,
       companySize,
       companyOneLiner,
-      contactEmail,
+      goals,
+      contactPersonType,
       contactPersonName,
-      companyWebsite
+      contactEmail,
+      contactWhatsapp,
+      companyWebsite,
+      calendlyLink,
+      referralSource,
+      referralDetails
     } = body
 
     // Validate required fields
@@ -109,9 +121,15 @@ export async function POST(request: NextRequest) {
         industry,
         companySize,
         companyOneLiner,
-        contactEmail: contactEmail || email,
+        goals: goals || [],
+        contactPersonType: contactPersonType || 'me',
         contactPersonName: contactPersonName || name,
+        contactEmail: contactEmail || email,
+        contactWhatsapp,
         companyWebsite,
+        calendlyLink,
+        referralSource,
+        referralDetails,
         profileCompleted: true,
         emailVerified: new Date(),
         // Set up basic timestamps
