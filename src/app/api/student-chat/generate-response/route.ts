@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { enhancedStudentAI } from '@/lib/enhanced-student-ai'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 // Enhanced DeepSeek AI for better platform understanding
 export async function POST(request: NextRequest) {
@@ -16,6 +19,29 @@ export async function POST(request: NextRequest) {
     // Detect intent from user query
     const intent = detectIntent(userQuery)
     console.log(`🤖 AI API call for: ${userQuery}, detected intent: ${intent}`)
+
+    // Record the query in ChatQuery table for analytics
+    try {
+      await prisma.chatQuery.create({
+        data: {
+          userId: session.user.id,
+          query: userQuery.trim(),
+          queryType: intent === 'find_companies' ? 'COMPANY_RESEARCH' : 
+                    intent === 'general_search' ? 'ROLE_SEARCH' : 
+                    intent === 'send_proposal' ? 'CAREER_GUIDANCE' : 'GENERAL',
+          intent: intent,
+          extractedSkills: [], // Could be enhanced later with AI extraction
+          extractedRoles: [],
+          extractedCompanies: [],
+          responseGiven: true,
+          timestamp: new Date()
+        }
+      })
+      console.log('✅ Student query recorded in ChatQuery table')
+    } catch (queryError) {
+      console.error('⚠️ Failed to record student query:', queryError)
+      // Don't fail the request if query recording fails
+    }
 
     // Use enhanced student AI service
     const ai = await enhancedStudentAI.generateStudentResponse(userQuery, {
