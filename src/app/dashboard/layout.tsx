@@ -215,8 +215,12 @@ export default function DashboardLayout({
               <div className="flex items-center">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                   <Link href="/dashboard" className="flex items-center gap-2">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm sm:text-base">B</span>
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg overflow-hidden">
+                      <img 
+                        src="/android-chrome-512x512.png" 
+                        alt="Bidaaya Logo" 
+                        className="h-full w-full object-contain"
+                      />
                     </div>
                     <span className="hidden sm:inline">Bidaaya</span>
                   </Link>
