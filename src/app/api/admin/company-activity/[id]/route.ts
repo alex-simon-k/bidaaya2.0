@@ -48,7 +48,7 @@ export async function GET(
     ] = await Promise.all([
       // Projects data
       prisma.project.findMany({
-        where: { userId: id },
+        where: { companyId: id },
         select: {
           id: true,
           title: true,
@@ -126,7 +126,7 @@ export async function GET(
       prisma.application.findMany({
         where: {
           project: {
-            userId: id
+            companyId: id
           }
         },
         select: {
