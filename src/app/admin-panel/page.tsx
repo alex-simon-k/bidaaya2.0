@@ -19,7 +19,8 @@ import {
   Edit3,
   Trash2,
   Crown,
-  Activity
+  Activity,
+  Briefcase
 } from 'lucide-react'
 
 interface Company {
