@@ -17,7 +17,13 @@ import {
   Filter,
   Search,
   BarChart3,
-  Settings
+  Settings,
+  Plus,
+  UserPlus,
+  LogIn,
+  Edit3,
+  Trash2,
+  ExternalLink
 } from 'lucide-react'
 import EnhancedAdminProjectManagement from '@/components/enhanced-admin-project-management'
 import OnboardingAnalyticsDashboard from '@/components/onboarding-analytics-dashboard'
@@ -80,6 +86,23 @@ export default function AdminDashboard() {
   const [isGeneratingProjects, setIsGeneratingProjects] = useState(false)
   const [isSlackEnabled, setIsSlackEnabled] = useState(false)
   const [showTools, setShowTools] = useState(false)
+  
+  // Company management states
+  const [companies, setCompanies] = useState<User[]>([])
+  const [showCreateCompanyForm, setShowCreateCompanyForm] = useState(false)
+  const [isCreatingCompany, setIsCreatingCompany] = useState(false)
+  const [newCompanyData, setNewCompanyData] = useState({
+    name: '',
+    email: '',
+    companyName: '',
+    companyRole: '',
+    industry: '',
+    companySize: '',
+    companyOneLiner: '',
+    contactEmail: '',
+    contactPersonName: '',
+    companyWebsite: ''
+  })
 
   useEffect(() => {
     if (!session?.user?.role) {
@@ -99,9 +122,10 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       setIsLoading(true)
-      const [projectsRes, usersRes] = await Promise.all([
+      const [projectsRes, usersRes, companiesRes] = await Promise.all([
         fetch('/api/admin/projects'),
-        fetch('/api/admin/users')
+        fetch('/api/admin/users'),
+        fetch('/api/admin/companies')
       ])
 
       if (projectsRes.ok) {
@@ -114,6 +138,11 @@ export default function AdminDashboard() {
         const usersData = await usersRes.json()
         // Handle both object and array responses
         setUsers(Array.isArray(usersData) ? usersData : usersData.users || [])
+      }
+
+      if (companiesRes.ok) {
+        const companiesData = await companiesRes.json()
+        setCompanies(Array.isArray(companiesData) ? companiesData : companiesData.companies || [])
       }
     } catch (error) {
       console.error('Failed to fetch admin data:', error)
@@ -154,6 +183,76 @@ export default function AdminDashboard() {
       console.error('Error updating project:', error)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Company management functions
+  const handleCreateCompany = async () => {
+    if (!newCompanyData.name || !newCompanyData.email || !newCompanyData.companyName) {
+      alert('Please fill in required fields: Name, Email, and Company Name')
+      return
+    }
+
+    setIsCreatingCompany(true)
+    try {
+      const response = await fetch('/api/admin/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newCompanyData,
+          role: 'COMPANY'
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(`✅ Company created successfully!\nLogin details sent to: ${newCompanyData.email}`)
+        setShowCreateCompanyForm(false)
+        setNewCompanyData({
+          name: '',
+          email: '',
+          companyName: '',
+          companyRole: '',
+          industry: '',
+          companySize: '',
+          companyOneLiner: '',
+          contactEmail: '',
+          contactPersonName: '',
+          companyWebsite: ''
+        })
+        fetchData() // Refresh data
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Error creating company: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Error creating company:', error)
+      alert('❌ Failed to create company')
+    } finally {
+      setIsCreatingCompany(false)
+    }
+  }
+
+  const handleImpersonateCompany = async (companyId: string) => {
+    if (!confirm('This will log you in as this company. Continue?')) return
+    
+    try {
+      const response = await fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: companyId })
+      })
+
+      if (response.ok) {
+        // Reload the page to apply the new session
+        window.location.href = '/dashboard'
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Error: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Error impersonating company:', error)
+      alert('❌ Failed to impersonate company')
     }
   }
 
@@ -373,6 +472,17 @@ export default function AdminDashboard() {
                 Admin Tools
               </button>
               <button
+                onClick={() => setActiveTab('companies')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'companies'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Building className="inline-block w-4 h-4 mr-2" />
+                Company Management
+              </button>
+              <button
                 onClick={() => setActiveTab('onboarding')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'onboarding'
@@ -386,6 +496,182 @@ export default function AdminDashboard() {
             </nav>
           </div>
         </div>
+
+        {/* Company Management Tab Content */}
+        {activeTab === 'companies' && (
+          <div className="space-y-6">
+            {/* Header with Create Button */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Company Management</h3>
+                    <p className="mt-1 text-sm text-gray-500">Create and manage company accounts directly</p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateCompanyForm(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Company
+                  </button>
+                </div>
+
+                {/* Create Company Form */}
+                {showCreateCompanyForm && (
+                  <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Create New Company</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.name}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, name: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                          placeholder="Contact person name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input
+                          type="email"
+                          value={newCompanyData.email}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, email: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                          placeholder="company@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.companyName}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, companyName: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                          placeholder="Company Ltd."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Role/Title</label>
+                        <input
+                          type="text"
+                          value={newCompanyData.companyRole}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, companyRole: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                          placeholder="CEO, HR Manager, etc."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                        <select
+                          value={newCompanyData.industry}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, industry: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                        >
+                          <option value="">Select industry</option>
+                          <option value="Technology">Technology</option>
+                          <option value="Finance">Finance</option>
+                          <option value="Healthcare">Healthcare</option>
+                          <option value="Education">Education</option>
+                          <option value="Retail">Retail</option>
+                          <option value="Manufacturing">Manufacturing</option>
+                          <option value="Consulting">Consulting</option>
+                          <option value="Media">Media</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Size</label>
+                        <select
+                          value={newCompanyData.companySize}
+                          onChange={(e) => setNewCompanyData({...newCompanyData, companySize: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                        >
+                          <option value="">Select size</option>
+                          <option value="1–10">1–10 employees</option>
+                          <option value="11–50">11–50 employees</option>
+                          <option value="51–200">51–200 employees</option>
+                          <option value="201–500">201–500 employees</option>
+                          <option value="501–1,000">501–1,000 employees</option>
+                          <option value="1,001+">1,001+ employees</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company Description</label>
+                      <textarea
+                        value={newCompanyData.companyOneLiner}
+                        onChange={(e) => setNewCompanyData({...newCompanyData, companyOneLiner: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                        placeholder="Brief description of what the company does..."
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        onClick={handleCreateCompany}
+                        disabled={isCreatingCompany}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {isCreatingCompany ? 'Creating...' : 'Create Company'}
+                      </button>
+                      <button
+                        onClick={() => setShowCreateCompanyForm(false)}
+                        className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Companies List */}
+                <div className="space-y-4">
+                  {companies.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No companies found</p>
+                  ) : (
+                    companies.map((company) => (
+                      <div key={company.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold text-gray-900">{company.name}</h4>
+                              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                {company.role}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-1">📧 {company.email}</p>
+                            <p className="text-sm text-gray-500">
+                              Created: {new Date(company.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleImpersonateCompany(company.id)}
+                              className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 flex items-center gap-1"
+                            >
+                              <LogIn className="h-3 w-3" />
+                              Login As
+                            </button>
+                            <a
+                              href={`/dashboard/company-profile?companyId=${company.id}`}
+                              target="_blank"
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center gap-1"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              View Profile
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Onboarding Analytics Tab Content */}
         {activeTab === 'onboarding' && (
