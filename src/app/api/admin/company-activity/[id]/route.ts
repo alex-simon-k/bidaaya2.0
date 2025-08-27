@@ -164,7 +164,7 @@ export async function GET(
     // Process projects by status
     const projectStats = {
       draft: projects.filter(p => p.status === 'DRAFT').length,
-      live: projects.filter(p => p.status === 'LIVE' || p.status === 'ACTIVE').length,
+      live: projects.filter(p => p.status === 'LIVE').length,
       totalApplications: projects.reduce((total, p) => total + p._count.applications, 0)
     }
 
