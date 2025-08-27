@@ -116,7 +116,8 @@ export async function GET(
           id: true,
           query: true,
           timestamp: true,
-          responseLength: true
+          queryType: true,
+          intent: true
         },
         orderBy: { timestamp: 'desc' },
         take: 10
@@ -187,7 +188,7 @@ export async function GET(
         id: query.id,
         description,
         timestamp: query.timestamp,
-        details: query.responseLength ? `Response: ${query.responseLength} chars` : ''
+        details: query.queryType ? `Type: ${query.queryType}` : (query.intent ? `Intent: ${query.intent}` : '')
       }
     })
 
