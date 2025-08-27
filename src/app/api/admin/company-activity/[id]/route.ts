@@ -153,9 +153,14 @@ export async function GET(
 
     // Calculate credit limits based on subscription plan
     const CREDIT_LIMITS = {
+      // Student Plans
       'FREE': 5,
       'STUDENT_PRO': 20,
-      'STUDENT_PREMIUM': 50
+      'STUDENT_PREMIUM': 50,
+      // Company Plans (for receiving proposals)
+      'COMPANY_BASIC': 15,
+      'COMPANY_PREMIUM': 50,
+      'COMPANY_PRO': 100
     }
 
     const creditLimit = CREDIT_LIMITS[company.subscriptionPlan as keyof typeof CREDIT_LIMITS] || 5
