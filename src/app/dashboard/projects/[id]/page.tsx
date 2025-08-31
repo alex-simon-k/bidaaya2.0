@@ -22,7 +22,8 @@ import {
   Target,
   Star,
   Eye,
-  UserCheck
+  UserCheck,
+  Crown
 } from 'lucide-react'
 import { StudentApplicationModal } from '@/components/student-application-modal'
 import { ProfileRequirementsModal } from '@/components/profile-requirements-modal'
@@ -192,6 +193,10 @@ export default function ProjectDetailPage() {
     return project.status === 'REJECTED'
   }
 
+  const isAdmin = () => {
+    return session?.user?.role === 'ADMIN'
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -265,6 +270,18 @@ export default function ProjectDetailPage() {
                   <Send className="h-4 w-4 mr-2" />
                   Apply Now
                 </button>
+              )}
+              
+              {isAdmin() && (
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <Crown className="h-3 w-3 mr-1" />
+                    Admin View
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {project?.applications?.length || 0} applications
+                  </span>
+                </div>
               )}
               
               {/* Show message when apply is blocked due to incomplete Phase 2 */}
@@ -570,6 +587,61 @@ export default function ProjectDetailPage() {
                 )}
               </div>
             </motion.div>
+
+            {/* Admin Applications Section */}
+            {isAdmin() && project?.applications && project.applications.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Applications ({project.applications.length})
+                </h3>
+                <div className="space-y-4">
+                  {project.applications.map((application: any, index: number) => (
+                    <div key={application.id} className="border-l-4 border-blue-500 pl-4 py-3 bg-gray-50 rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{application.user.name}</h4>
+                          <p className="text-sm text-gray-600">{application.user.email}</p>
+                          {application.user.university && (
+                            <p className="text-sm text-gray-500">{application.user.university} - {application.user.major}</p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">
+                            Applied: {new Date(application.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            application.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                            application.status === 'SHORTLISTED' ? 'bg-green-100 text-green-800' :
+                            application.status === 'INTERVIEWED' ? 'bg-blue-100 text-blue-800' :
+                            application.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {application.status}
+                          </span>
+                          <button
+                            onClick={() => window.open(`mailto:${application.user.email}`, '_blank')}
+                            className="p-1 text-gray-400 hover:text-blue-600"
+                            title="Send Email"
+                          >
+                            <Send className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      {application.whyInterested && (
+                        <div className="mt-2 p-2 bg-white rounded text-sm">
+                          <strong>Why interested:</strong> {application.whyInterested}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>

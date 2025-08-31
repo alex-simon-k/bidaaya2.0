@@ -9,16 +9,24 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id || session.user?.role !== 'STUDENT') {
+    if (!session?.user?.id || (session.user?.role !== 'STUDENT' && session.user?.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Count total applications for this user
-    const count = await prisma.application.count({
-      where: {
-        userId: session.user?.id
-      }
-    })
+    // Count total applications
+    let count = 0
+    
+    if (session.user?.role === 'STUDENT') {
+      // Count applications for this student
+      count = await prisma.application.count({
+        where: {
+          userId: session.user?.id
+        }
+      })
+    } else if (session.user?.role === 'ADMIN') {
+      // For admins, return 0 (they don't have personal applications)
+      count = 0
+    }
 
     return NextResponse.json({ count })
 
