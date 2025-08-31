@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
 
     // Log the search for analytics
     console.log(`🔍 Vector search completed for company ${session.user.id}: "${searchQuery}"`)
-    console.log(`📊 Results: ${result.vectorMatches?.length || result.hybridMatches?.length || 0} matches`)
+    const resultCount = (result as any).vectorMatches?.length || (result as any).hybridMatches?.length || (result as any).matches?.length || 0
+    console.log(`📊 Results: ${resultCount} matches`)
 
     return NextResponse.json({
       success: true,

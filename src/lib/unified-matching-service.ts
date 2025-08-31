@@ -1,4 +1,5 @@
-import { VectorEmbeddingService, VectorMatchingService } from './vector-matching-service'
+import { VectorEmbeddingService } from './vector-embedding-service'
+import { VectorMatchingService } from './vector-matching-service'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -494,17 +495,17 @@ export class UnifiedMatchingService {
     skills: number
     project: number
   } {
-    const searchTerms = context.enhancedPrompt.toLowerCase().split(/\s+/)
+    const searchTerms: string[] = context.enhancedPrompt.toLowerCase().split(/\s+/)
     
     // Profile matching
     const profileText = `${candidate.bio || ''} ${candidate.university || ''} ${candidate.major || ''}`.toLowerCase()
-    const profileMatches = searchTerms.filter(term => profileText.includes(term)).length
+    const profileMatches = searchTerms.filter((term: string) => profileText.includes(term)).length
     const profileScore = Math.min(100, (profileMatches / searchTerms.length) * 100 + 20)
 
     // Skills matching
     const candidateSkills = (candidate.skills || []).map((s: string) => s.toLowerCase())
-    const skillMatches = searchTerms.filter(term => 
-      candidateSkills.some(skill => skill.includes(term) || term.includes(skill))
+    const skillMatches = searchTerms.filter((term: string) => 
+      candidateSkills.some((skill: string) => skill.includes(term) || term.includes(skill))
     ).length
     const skillsScore = Math.min(100, (skillMatches / Math.max(searchTerms.length * 0.3, 1)) * 100 + 10)
 
@@ -512,8 +513,8 @@ export class UnifiedMatchingService {
     let projectScore = 70 // Default
     if (context.projectContext) {
       const projectSkills = (context.projectContext.skillsRequired || []).map((s: string) => s.toLowerCase())
-      const projectSkillMatches = projectSkills.filter(projSkill =>
-        candidateSkills.some(candSkill => 
+      const projectSkillMatches = projectSkills.filter((projSkill: string) =>
+        candidateSkills.some((candSkill: string) => 
           candSkill.includes(projSkill) || projSkill.includes(candSkill)
         )
       ).length

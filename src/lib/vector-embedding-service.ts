@@ -2,9 +2,14 @@ import OpenAI from 'openai'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+
+// Initialize OpenAI only if API key is available
+let openai: OpenAI | null = null
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+}
 
 export interface StudentVector {
   userId: string
@@ -246,6 +251,10 @@ export class VectorEmbeddingService {
    * Generate OpenAI embedding for text
    */
   private static async generateEmbedding(text: string): Promise<number[]> {
+    if (!openai) {
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.')
+    }
+
     try {
       // Truncate text if too long
       const truncatedText = text.length > this.MAX_TOKENS * 4 
@@ -296,7 +305,7 @@ export class VectorEmbeddingService {
     
     // Application history context
     if (student.applications && student.applications.length > 0) {
-      const projectTypes = student.applications.map(app => 
+      const projectTypes = student.applications.map((app: any) => 
         `${app.project.title} (${app.project.category})`
       ).join(', ')
       parts.push(`Previously Applied To: ${projectTypes}`)
