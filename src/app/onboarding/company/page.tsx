@@ -349,39 +349,63 @@ export default function CompanyOnboardingPage() {
 
   const handleSubmit = async () => {
     console.log('🚀 Company onboarding handleSubmit called');
-    if (!validateStep()) return
+    console.log('📝 Form data at submit:', formData);
+    
+    // Final comprehensive validation before submit
+    const requiredFields = ['fullName', 'jobTitle', 'companyName', 'companySize', 'industry', 'companyOneLiner', 'contactPersonType', 'contactEmail', 'contactWhatsapp', 'companyWebsite'];
+    const missingFields = requiredFields.filter(field => !formData[field] || formData[field].toString().trim() === '');
+    
+    if (formData.goals.length === 0) {
+      missingFields.push('goals');
+    }
+    
+    if (missingFields.length > 0) {
+      console.log('❌ Missing required fields:', missingFields);
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+    
+    if (!validateStep()) {
+      console.log('❌ Final step validation failed');
+      return;
+    }
     setIsLoading(true)
     try {
       console.log('🔐 Company setup - Submitting with email:', session?.user?.email);
       
+      const submitPayload = {
+        companyName: formData.companyName,
+        companySize: formData.companySize,
+        industry: formData.industry,
+        role: formData.jobTitle,
+        firstName: formData.fullName.split(' ')[0],
+        lastName: formData.fullName.split(' ').slice(1).join(' '),
+        companyOneLiner: formData.companyOneLiner,
+        goals: formData.goals,
+        contactPersonType: formData.contactPersonType,
+        contactPersonName: formData.contactPersonType === 'me' 
+          ? formData.fullName 
+          : formData.contactPersonName,
+        contactEmail: formData.contactEmail,
+        contactWhatsapp: formData.contactWhatsapp,
+        companyWebsite: formData.companyWebsite,
+        calendlyLink: formData.calendlyLink,
+        referralSource: formData.referralSource,
+        referralDetails: formData.referralDetails,
+        email: session?.user?.email, // Add email to request body
+      };
+      
+      console.log('📤 Submit payload:', submitPayload);
+      
       const response = await fetch('/api/user/convert-to-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          companyName: formData.companyName,
-          companySize: formData.companySize,
-          industry: formData.industry,
-          role: formData.jobTitle,
-          firstName: formData.fullName.split(' ')[0],
-          lastName: formData.fullName.split(' ').slice(1).join(' '),
-          companyOneLiner: formData.companyOneLiner,
-          goals: formData.goals,
-          contactPersonType: formData.contactPersonType,
-          contactPersonName: formData.contactPersonType === 'me' 
-            ? formData.fullName 
-            : formData.contactPersonName,
-          contactEmail: formData.contactEmail,
-          contactWhatsapp: formData.contactWhatsapp,
-          companyWebsite: formData.companyWebsite,
-          calendlyLink: formData.calendlyLink,
-          referralSource: formData.referralSource,
-          referralDetails: formData.referralDetails,
-          email: session?.user?.email, // Add email to request body
-        }),
+        body: JSON.stringify(submitPayload),
       });
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('❌ Server error response:', errorData);
         throw new Error(errorData.message || 'Failed to complete company setup');
       }
       

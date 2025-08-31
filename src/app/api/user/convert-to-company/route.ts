@@ -9,7 +9,7 @@ const prisma = new PrismaClient()
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { 
+    let { 
       companyName, 
       companySize, 
       industry, 
@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
       email, 
       companyName, 
       companySize, 
-      industry 
+      industry,
+      role,
+      firstName,
+      lastName
     });
 
     if (!email) {
@@ -54,11 +57,23 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Authentication successful for: ${email}, role: ${user.role}`)
 
-    // Validate required fields
-    if (!companyName || !companySize || !industry || !role || !firstName || !lastName) {
+    // Validate required fields with detailed logging
+    const missingFields = [];
+    if (!companyName || companyName.trim() === '') missingFields.push('companyName');
+    if (!companySize || companySize.trim() === '') missingFields.push('companySize');
+    if (!industry || industry.trim() === '') missingFields.push('industry');
+    if (!role || role.trim() === '') missingFields.push('role');
+    if (!firstName || firstName.trim() === '') missingFields.push('firstName');
+    // lastName can be empty if user only provided a first name
+    if (!lastName) lastName = ''; // Set empty string instead of undefined
+
+    if (missingFields.length > 0) {
+      console.log('❌ Missing required fields:', missingFields);
+      console.log('📝 Field values:', { companyName, companySize, industry, role, firstName, lastName });
       return NextResponse.json({ 
         error: 'Missing required fields',
-        message: 'Company name, size, industry, role, and name are required' 
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        missingFields 
       }, { status: 400 })
     }
 

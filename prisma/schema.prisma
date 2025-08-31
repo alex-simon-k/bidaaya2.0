@@ -97,6 +97,7 @@ model User {
   sessions                 Session[]
   userSessions             UserSession[]
   studentTags              StudentTag[]
+  studentVector            StudentVector?
 }
 
 model UserSession {
@@ -602,4 +603,37 @@ model AnalysisRun {
   @@index([runBy])
   @@index([status])
   @@index([startedAt])
+}
+
+// Vector Embeddings for AI Matching
+model StudentVector {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  profileVector   Json     // Main profile embedding as JSON array
+  skillsVector    Json     // Skills-focused embedding 
+  academicVector  Json     // Academic background embedding
+  vectorVersion   String   @default("v1.0")
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([vectorVersion])
+  @@index([lastUpdated])
+}
+
+model SearchVector {
+  id            String   @id @default(cuid())
+  companyId     String
+  searchQuery   String
+  queryVector   Json     // Search query embedding as JSON array
+  resultsCount  Int      @default(0)
+  searchType    String   @default("hybrid") // "vector", "hybrid", "rule-based"
+  threshold     Float    @default(0.6)
+  createdAt     DateTime @default(now())
+  
+  @@index([companyId])
+  @@index([searchType])
+  @@index([createdAt])
 }
