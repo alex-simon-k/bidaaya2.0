@@ -1572,7 +1572,7 @@ export default function AdminPanel() {
                               </button>
                             )}
                             <button
-                              onClick={() => window.open(`/dashboard/company-projects/${project.id}`, '_blank')}
+                              onClick={() => window.open(`/dashboard/projects/${project.id}`, '_blank')}
                               className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
                             >
                               <ExternalLink className="h-4 w-4" />
