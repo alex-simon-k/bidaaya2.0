@@ -201,15 +201,24 @@ export async function PATCH(request: NextRequest) {
     
     // Check completion requirements based on user role
     const currentUserRole = session.user?.role
-    let hasRequiredFields = false
     
+    // PHASE 1 COMPLETION: Basic profile setup (5 initial questions)
+    let hasPhase1Requirements = false
     if (currentUserRole === 'STUDENT') {
-      hasRequiredFields = name && (university || major || subjects || skills || educationStatus || interests) && terms
+      hasPhase1Requirements = name && (university || major || subjects || skills || educationStatus || interests) && terms
     } else if (currentUserRole === 'COMPANY') {
-      hasRequiredFields = name && companyName && companySize && industry && companyOneLiner
+      hasPhase1Requirements = name && companyName && companySize && industry && companyOneLiner
     }
     
-    console.log('🔍 Has required fields for completion:', hasRequiredFields, 'Role:', currentUserRole)
+    // PHASE 2 COMPLETION: Detailed profile (guided tutorial - educational details)
+    const isPhase2Update = !!(university || highSchool || major || subjects || bio || (interests && interests.length > 0))
+    
+    console.log('🔍 Profile completion analysis:', {
+      hasPhase1Requirements,
+      isPhase2Update,
+      role: currentUserRole,
+      explicitFlag: profileCompleted
+    })
     
     // Get current user status BEFORE update to check if this is first-time completion
     const currentUser = await prisma.user.findUnique({
@@ -221,22 +230,24 @@ export async function PATCH(request: NextRequest) {
     })
     
     const wasAlreadyCompleted = currentUser?.profileCompleted === true
-    const isFirstTimeCompletion = hasRequiredFields && !wasAlreadyCompleted
+    const isFirstTimeCompletion = hasPhase1Requirements && !wasAlreadyCompleted
     
-    // Handle explicit profileCompleted flag (from guided tutorial)
-    if (profileCompleted !== undefined) {
-      updateData.profileCompleted = profileCompleted
-      console.log('🎯 EXPLICIT profileCompleted flag received:', profileCompleted)
-    } else if (hasRequiredFields) {
+    // CRITICAL FIX: Only mark profileCompleted=true after Phase 1, not Phase 2
+    if (profileCompleted !== undefined && profileCompleted === false) {
+      // Explicit false from guided tutorial early exit - respect it
+      updateData.profileCompleted = false
+      console.log('🎯 EXPLICIT profileCompleted=false received (early exit)')
+    } else if (hasPhase1Requirements) {
+      // Phase 1 completion = true profile completion
       updateData.profileCompleted = true
-      console.log('✅ Marking profile as completed in database - profileCompleted will be set to TRUE')
+      console.log('✅ PHASE 1 COMPLETED - Marking profile as completed in database')
       if (isFirstTimeCompletion) {
-        console.log('🎉 FIRST TIME COMPLETION - will send Slack notification')
+        console.log('🎉 FIRST TIME PHASE 1 COMPLETION - will send Slack notification')
       } else {
-        console.log('🔄 Profile already completed - NO Slack notification')
+        console.log('🔄 Phase 1 already completed - NO Slack notification')
       }
     } else {
-      console.log('❌ NOT marking profile as completed - missing required fields')
+      console.log('❌ NOT marking profile as completed - missing Phase 1 requirements')
     }
     
     // Store discovery quiz data in bio field temporarily

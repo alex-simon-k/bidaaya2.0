@@ -1205,7 +1205,7 @@ Something went wrong while sending the invitation. Please try again or contact s
               ))}
             </AnimatePresence>
 
-            {/* Loading indicator */}
+            {/* Enhanced Loading indicator with progress bar */}
             {isLoading && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -1217,13 +1217,34 @@ Something went wrong while sending the invitation. Please try again or contact s
                     <Brain className="h-4 w-4 text-blue-600" />
                   </div>
                   <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                        <span className="text-sm text-gray-500">Analyzing your request...</span>
                       </div>
-                      <span className="text-sm text-gray-500">Thinking...</span>
+                      
+                      {/* Animated Progress Bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-out"
+                          style={{
+                            width: '0%',
+                            animation: 'progress 3s ease-in-out infinite'
+                          }}
+                        />
+                      </div>
+                      
+                      <style jsx>{`
+                        @keyframes progress {
+                          0% { width: 0%; }
+                          50% { width: 70%; }
+                          100% { width: 95%; }
+                        }
+                      `}</style>
                     </div>
                   </div>
                 </div>

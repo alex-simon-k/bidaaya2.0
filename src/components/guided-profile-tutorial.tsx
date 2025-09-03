@@ -241,6 +241,8 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
     setIsLoading(true)
     try {
       // Prepare data in the correct format for the API
+      // IMPORTANT: Phase 2 completion should NOT override profileCompleted
+      // profileCompleted should only be set to true during Phase 1 (initial 5 questions)
       const profileData = {
         name: userData.name, // Include name for hasRequiredFields check
         highSchool: formData.highSchool || '',
@@ -249,7 +251,7 @@ export function GuidedProfileTutorial({ isOpen, onClose, userData }: GuidedProfi
         bio: formData.bio || '',
         interests: formData.interests || [],
         terms: true, // Include terms for hasRequiredFields check  
-        profileCompleted: true
+        // DO NOT set profileCompleted: true here - this is Phase 2, not Phase 1
       }
 
       console.log('Saving profile data:', profileData)

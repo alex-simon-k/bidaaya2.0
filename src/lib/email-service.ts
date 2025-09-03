@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-// Create a transporter using Gmail
+// DEPRECATED: Old Gmail transporter (keeping for fallback)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -8,6 +9,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+
+// NEW: Resend API client for professional email sending [[memory:5774388]]
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Feature flag: control whether admin signup notification emails are sent
 // Default: enabled (unless explicitly set to 'false')
@@ -279,15 +283,21 @@ export async function sendStudentWelcomeEmail(data: StudentWelcomeData): Promise
   try {
     const template = emailTemplates.studentWelcome(data);
     
-    await transporter.sendMail({
-      from: `"Bidaaya Team" <${process.env.EMAIL_USER}>`,
-      to: data.email,
+    // FIXED: Use Resend API instead of Gmail SMTP [[memory:5774388]]
+    const emailResult = await resend.emails.send({
+      from: 'Bidaaya <noreply@bidaaya.ae>',
+      to: [data.email],
+      cc: ['alex.simon@bidaaya.ae'], // CC admin as requested
       subject: template.subject,
-      html: template.html,
-      text: template.text,
+      html: template.html
     });
 
-    console.log(`✅ Welcome email sent to: ${data.email}`);
+    if (emailResult.error) {
+      console.error('❌ Resend API error sending welcome email:', emailResult.error);
+      return false;
+    }
+
+    console.log(`✅ Welcome email sent via Resend to: ${data.email} (ID: ${emailResult.data?.id})`);
     return true;
   } catch (error) {
     console.error('❌ Error sending welcome email:', error);
@@ -304,18 +314,20 @@ export async function sendAdminNotificationEmail(data: AdminNotificationData): P
 
     const template = emailTemplates.adminNotification(data);
     
-    // Send to admin email (you)
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
-    
-    await transporter.sendMail({
-      from: `"Bidaaya System" <${process.env.EMAIL_USER}>`,
-      to: adminEmail,
+    // FIXED: Use Resend API instead of Gmail SMTP [[memory:5774388]]
+    const emailResult = await resend.emails.send({
+      from: 'Bidaaya <noreply@bidaaya.ae>',
+      to: ['alex.simon@bidaaya.ae'], // Direct to admin email
       subject: template.subject,
-      html: template.html,
-      text: template.text,
+      html: template.html
     });
 
-    console.log(`✅ Admin notification sent to: ${adminEmail}`);
+    if (emailResult.error) {
+      console.error('❌ Resend API error sending admin notification:', emailResult.error);
+      return false;
+    }
+
+    console.log(`✅ Admin notification sent via Resend to alex.simon@bidaaya.ae (ID: ${emailResult.data?.id})`);
     return true;
   } catch (error) {
     console.error('❌ Error sending admin notification:', error);
