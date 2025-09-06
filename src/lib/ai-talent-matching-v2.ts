@@ -329,57 +329,71 @@ export class NextGenAITalentMatcher {
   private static async getStrictlyFilteredCandidatePool(intent: any): Promise<TalentProfile[]> {
     console.log('🔍 Applying STRICT filters:', intent.strictFilters)
     
-    // Build strict WHERE conditions
+    // Build strict WHERE conditions - RELAXED profile requirements
     const whereConditions: any = {
       role: 'STUDENT',
-      // Require profile completion for better data quality
-      profileCompleted: true,
-      // Require basic profile data
-      AND: [
-        {
-          OR: [
-            { university: { not: null } },
-            { major: { not: null } },
-            { bio: { not: null } }
-          ]
-        }
+      // Don't require profile completion - too restrictive
+      // Just require SOME basic data
+      OR: [
+        { university: { not: null } },
+        { major: { not: null } },
+        { bio: { not: null } },
+        { skills: { not: { equals: [] } } },
+        { interests: { not: { equals: [] } } }
       ]
     }
 
-    // 🎯 STRICT UNIVERSITY FILTERING
+    // 🎯 STRICT UNIVERSITY FILTERING - Only apply if specific universities mentioned
     if (intent.strictFilters?.universities?.length > 0) {
       console.log('🏛️ Applying university filter:', intent.strictFilters.universities)
-      whereConditions.university = {
-        in: intent.strictFilters.universities,
-        mode: 'insensitive'
-      }
+      // Add university filter to AND conditions instead of replacing OR
+      whereConditions.AND = whereConditions.AND || []
+      whereConditions.AND.push({
+        university: {
+          in: intent.strictFilters.universities,
+          mode: 'insensitive'
+        }
+      })
     }
 
-    // 🎯 STRICT MAJOR/FIELD FILTERING  
+    // 🎯 STRICT MAJOR/FIELD FILTERING - Only apply if specific majors mentioned
     if (intent.strictFilters?.majors?.length > 0) {
       console.log('📚 Applying major filter:', intent.strictFilters.majors)
-      whereConditions.major = {
-        in: intent.strictFilters.majors,
-        mode: 'insensitive'
-      }
+      whereConditions.AND = whereConditions.AND || []
+      whereConditions.AND.push({
+        major: {
+          in: intent.strictFilters.majors,
+          mode: 'insensitive'
+        }
+      })
     }
 
-    // 🎯 STRICT SKILLS/INTERESTS FILTERING
+    // 🎯 SKILLS/INTERESTS FILTERING - More flexible
     if (intent.strictFilters?.skills?.length > 0) {
       console.log('🛠️ Applying skills filter:', intent.strictFilters.skills)
-      whereConditions.OR = intent.strictFilters.skills.map((skill: string) => ({
-        OR: [
-          { interests: { hasSome: [skill] } },
-          { goal: { hasSome: [skill] } },
-          { bio: { contains: skill, mode: 'insensitive' } }
-        ]
-      }))
+      whereConditions.AND = whereConditions.AND || []
+      whereConditions.AND.push({
+        OR: intent.strictFilters.skills.map((skill: string) => ({
+          OR: [
+            { skills: { hasSome: [skill] } },
+            { interests: { hasSome: [skill] } },
+            { goal: { hasSome: [skill] } },
+            { bio: { contains: skill, mode: 'insensitive' } },
+            { major: { contains: skill, mode: 'insensitive' } }
+          ]
+        }))
+      })
+    } else {
+      // If no specific skills mentioned, don't filter by skills at all
+      console.log('ℹ️ No specific skills in query, searching all students with basic data')
     }
 
     // Get strictly filtered candidates
+    console.log('🗃️ Database query conditions:', JSON.stringify(whereConditions, null, 2))
+    
     const candidates = await prisma.user.findMany({
       where: whereConditions,
-             select: {
+      select: {
          id: true,
          name: true,
          email: true,
