@@ -1,5 +1,11 @@
 const { PrismaClient } = require('@prisma/client');
-const { VectorEmbeddingService } = require('../src/lib/vector-embedding-service');
+const path = require('path');
+
+// Import the VectorEmbeddingService using dynamic import
+async function getVectorService() {
+  const modulePath = path.join(__dirname, '../src/lib/vector-embedding-service.ts');
+  return await import(modulePath);
+}
 
 const prisma = new PrismaClient();
 
@@ -61,6 +67,7 @@ async function generateVectorsForCompletedProfiles() {
         try {
           console.log(`  🎓 ${student.name} (${student.email})`);
           
+          const { VectorEmbeddingService } = await getVectorService();
           const vector = await VectorEmbeddingService.generateStudentEmbeddings(student.id);
           
           if (vector) {

@@ -116,9 +116,16 @@ export class NextGenAITalentMatcher {
           
           // 🚨 EMERGENCY FALLBACK: If even relaxed filtering fails, get any active students
           if (candidates.length === 0) {
-            console.log('⚠️ Even relaxed filtering returned 0 results, getting any active students...')
-            candidates = await this.getEmergencyFallbackCandidates()
-            console.log(`👥 Emergency fallback found ${candidates.length} candidates`)
+            console.log('⚠️ Even relaxed filtering returned 0 results, trying keyword-specific search...')
+            candidates = await this.getKeywordSpecificCandidates(params.prompt)
+            console.log(`👥 Keyword-specific search found ${candidates.length} candidates`)
+            
+            // Final fallback: Get any active students
+            if (candidates.length === 0) {
+              console.log('⚠️ Keyword search failed, getting any active students...')
+              candidates = await this.getEmergencyFallbackCandidates()
+              console.log(`👥 Emergency fallback found ${candidates.length} candidates`)
+            }
           }
         }
       } else {
@@ -242,6 +249,80 @@ export class NextGenAITalentMatcher {
   }
 
   /**
+   * KEYWORD-SPECIFIC SEARCH - Direct search for common keywords
+   */
+  private static async getKeywordSpecificCandidates(prompt: string): Promise<TalentProfile[]> {
+    console.log('🔍 Trying keyword-specific search...')
+    
+    const lowerPrompt = prompt.toLowerCase()
+    let whereConditions: any = {
+      role: 'STUDENT',
+      profileCompleted: true
+    }
+    
+    // Direct keyword matching for common search terms
+    if (lowerPrompt.includes('marketing')) {
+      whereConditions.OR = [
+        { major: { contains: 'marketing', mode: 'insensitive' } },
+        { major: { contains: 'business', mode: 'insensitive' } },
+        { bio: { contains: 'marketing', mode: 'insensitive' } },
+        { interests: { hasSome: ['Marketing & Digital Media'] } }
+      ]
+    } else if (lowerPrompt.includes('computer') || lowerPrompt.includes('programming') || lowerPrompt.includes('tech')) {
+      whereConditions.OR = [
+        { major: { contains: 'computer', mode: 'insensitive' } },
+        { major: { contains: 'software', mode: 'insensitive' } },
+        { major: { contains: 'engineering', mode: 'insensitive' } },
+        { interests: { hasSome: ['Technology & Software Development'] } }
+      ]
+    } else if (lowerPrompt.includes('business')) {
+      whereConditions.OR = [
+        { major: { contains: 'business', mode: 'insensitive' } },
+        { major: { contains: 'management', mode: 'insensitive' } },
+        { interests: { hasSome: ['Sales & Business Development', 'Consulting & Strategy'] } }
+      ]
+    } else {
+      // Generic search - just get students with any useful data
+      whereConditions.OR = [
+        { bio: { not: null } },
+        { interests: { not: { equals: [] } } },
+        { major: { not: null } }
+      ]
+    }
+    
+    const candidates = await prisma.user.findMany({
+      where: whereConditions,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        university: true,
+        major: true,
+        bio: true,
+        skills: true,
+        interests: true,
+        goal: true,
+        location: true,
+        graduationYear: true,
+        applicationsThisMonth: true,
+        lastActiveAt: true,
+        profileCompletedAt: true,
+        updatedAt: true,
+        applications: {
+          select: { createdAt: true },
+          take: 5
+        }
+      },
+      take: 30,
+      orderBy: [
+        { updatedAt: 'desc' }
+      ]
+    })
+    
+    return candidates.map(candidate => this.transformToTalentProfile(candidate))
+  }
+
+  /**
    * EMERGENCY FALLBACK - Get any active students when all filtering fails
    */
   private static async getEmergencyFallbackCandidates(): Promise<TalentProfile[]> {
@@ -251,10 +332,12 @@ export class NextGenAITalentMatcher {
     const candidates = await prisma.user.findMany({
       where: {
         role: 'STUDENT',
+        profileCompleted: true, // Base requirement
         OR: [
           { lastActiveAt: { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } }, // Active in last 90 days
           { applicationsThisMonth: { gt: 0 } }, // Has applications this month
-          { profileCompleted: true } // Has completed profile
+          { updatedAt: { gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) } }, // Updated in last 180 days
+          { createdAt: { gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) } } // Created in last year (very lenient)
         ]
       },
       select: {
@@ -278,7 +361,7 @@ export class NextGenAITalentMatcher {
           take: 5
         }
       },
-      take: 20, // Smaller emergency pool
+      take: 50, // Larger emergency pool to ensure results
       orderBy: [
         { lastActiveAt: 'desc' },
         { applicationsThisMonth: 'desc' },
