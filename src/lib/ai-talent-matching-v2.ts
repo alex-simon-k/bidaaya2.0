@@ -95,8 +95,22 @@ export class NextGenAITalentMatcher {
       console.log('🎯 Parsed search intent with filters:', searchIntent)
       
       // 3. Get STRICTLY FILTERED candidate pool (hard filtering first!)
-      const candidates = await this.getStrictlyFilteredCandidatePool(searchIntent)
+      let candidates = await this.getStrictlyFilteredCandidatePool(searchIntent)
       console.log(`👥 Found ${candidates.length} FILTERED candidates (after hard filtering)`)
+      
+      // 🚨 FALLBACK: If strict filtering returns 0 results, use relaxed filtering
+      if (candidates.length === 0) {
+        console.log('⚠️ Strict filtering returned 0 results, applying relaxed filtering...')
+        candidates = await this.getRelaxedCandidatePool(searchIntent)
+        console.log(`👥 Found ${candidates.length} candidates with relaxed filtering`)
+        
+        // 🚨 EMERGENCY FALLBACK: If even relaxed filtering fails, get any active students
+        if (candidates.length === 0) {
+          console.log('⚠️ Even relaxed filtering returned 0 results, getting any active students...')
+          candidates = await this.getEmergencyFallbackCandidates()
+          console.log(`👥 Emergency fallback found ${candidates.length} candidates`)
+        }
+      }
       
       // 4. AI-powered scoring and matching (now relevance-first)
       const matches = await this.performRelevanceFirstMatching(candidates, searchIntent, params)
@@ -121,8 +135,158 @@ export class NextGenAITalentMatcher {
       
     } catch (error) {
       console.error('❌ AI Search Error:', error)
-      throw error
+      
+      // Don't throw error - return empty results with helpful suggestions
+      return {
+        matches: [],
+        searchMetadata: {
+          searchIntent: { originalPrompt: params.prompt, keywords: [], role: null, experience: null },
+          candidatesEvaluated: 0,
+          strictFiltersApplied: [],
+          processingTime: Date.now() - startTime,
+          timestamp: new Date(),
+          error: (error as Error).message
+        },
+        creditInfo: await this.getCreditStatus(params.companyId, params.tier),
+        suggestions: [
+          'Try using broader search terms',
+          'Remove specific university requirements',
+          'Search for general skills instead of specific technologies',
+          'Try searching for "business students" or "computer science students"'
+        ]
+      }
     }
+  }
+
+  /**
+   * EMERGENCY FALLBACK - Get any active students when all filtering fails
+   */
+  private static async getEmergencyFallbackCandidates(): Promise<TalentProfile[]> {
+    console.log('🆘 Emergency fallback: Getting any active students...')
+    
+    // Get any students with basic profile data, ordered by activity
+    const candidates = await prisma.user.findMany({
+      where: {
+        role: 'STUDENT',
+        OR: [
+          { lastActiveAt: { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } }, // Active in last 90 days
+          { applicationsThisMonth: { gt: 0 } }, // Has applications this month
+          { profileCompleted: true } // Has completed profile
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        university: true,
+        major: true,
+        bio: true,
+        skills: true,
+        interests: true,
+        goal: true,
+        location: true,
+        graduationYear: true,
+        applicationsThisMonth: true,
+        lastActiveAt: true,
+        profileCompletedAt: true,
+        updatedAt: true,
+        applications: {
+          select: { createdAt: true },
+          take: 5
+        }
+      },
+      take: 20, // Smaller emergency pool
+      orderBy: [
+        { lastActiveAt: 'desc' },
+        { applicationsThisMonth: 'desc' },
+        { updatedAt: 'desc' }
+      ]
+    })
+
+    return candidates.map(this.transformToTalentProfile)
+  }
+
+  /**
+   * RELAXED FILTERING - When strict filtering returns 0 results
+   */
+  private static async getRelaxedCandidatePool(intent: any): Promise<TalentProfile[]> {
+    console.log('🔄 Applying RELAXED filters for broader search...')
+    
+    // Much more relaxed WHERE conditions
+    const whereConditions: any = {
+      role: 'STUDENT',
+      // Don't require profile completion for relaxed search
+      OR: [
+        { university: { not: null } },
+        { major: { not: null } },
+        { bio: { not: null } },
+        { skills: { not: { equals: [] } } },
+        { interests: { not: { equals: [] } } }
+      ]
+    }
+
+    // Only apply university filter if specific ones mentioned
+    if (intent.strictFilters?.universities?.length > 0) {
+      whereConditions.OR.push({
+        university: {
+          in: intent.strictFilters.universities,
+          mode: 'insensitive'
+        }
+      })
+    }
+
+    // More flexible major matching
+    if (intent.strictFilters?.majors?.length > 0) {
+      whereConditions.OR.push({
+        major: {
+          in: intent.strictFilters.majors,
+          mode: 'insensitive'
+        }
+      })
+    }
+
+    // Skills can match interests too in relaxed mode
+    if (intent.strictFilters?.skills?.length > 0) {
+      whereConditions.OR.push({
+        OR: [
+          { skills: { hasSome: intent.strictFilters.skills } },
+          { interests: { hasSome: intent.strictFilters.skills } }
+        ]
+      })
+    }
+
+    // Get relaxed candidates with basic selection
+    const candidates = await prisma.user.findMany({
+      where: whereConditions,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        university: true,
+        major: true,
+        bio: true,
+        skills: true,
+        interests: true,
+        goal: true,
+        location: true,
+        graduationYear: true,
+        applicationsThisMonth: true,
+        lastActiveAt: true,
+        profileCompletedAt: true,
+        updatedAt: true,
+        applications: {
+          select: { createdAt: true },
+          take: 5
+        }
+      },
+      take: 100, // Larger pool for relaxed search
+      orderBy: [
+        { lastActiveAt: 'desc' },
+        { updatedAt: 'desc' }
+      ]
+    })
+
+    return candidates.map(this.transformToTalentProfile)
   }
 
   /**
