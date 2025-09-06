@@ -39,12 +39,24 @@ export async function POST(request: NextRequest) {
     console.log(`🎯 Company tier: ${tier}`)
 
     // Perform next-gen AI search
+    console.log(`🔍 Starting NextGenAITalentMatcher.searchTalent...`)
     const searchResults = await NextGenAITalentMatcher.searchTalent({
       prompt: prompt.trim(),
       companyId: session.user.id,
       tier: tier as any,
       maxResults
     })
+    
+    console.log(`✅ Search completed:`, {
+      matchesFound: searchResults.matches?.length || 0,
+      candidatesEvaluated: searchResults.searchMetadata?.candidatesEvaluated || 0,
+      processingTime: searchResults.searchMetadata?.processingTime || 0,
+      hasError: !!searchResults.searchMetadata?.error
+    })
+    
+    if (searchResults.searchMetadata?.error) {
+      console.error(`❌ Search metadata error:`, searchResults.searchMetadata.error)
+    }
 
     // Return modern AI search results
     return NextResponse.json({

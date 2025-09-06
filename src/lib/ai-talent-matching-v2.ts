@@ -204,12 +204,25 @@ export class NextGenAITalentMatcher {
         return []
       }
       
+      // Check if OpenAI API key is configured (required for search embeddings)
+      if (!process.env.OPENAI_API_KEY) {
+        console.log('⚠️ OpenAI API key not configured, skipping vector search')
+        return []
+      }
+      
       // Perform vector search
+      console.log('🔍 Calling VectorMatchingService.searchTalentWithVectors...')
       const vectorResult = await VectorMatchingService.searchTalentWithVectors({
         searchQuery: prompt,
         companyId: companyId,
         limit: 50, // Get more results from vector search
         threshold: 0.5 // Lower threshold for more results
+      })
+      
+      console.log(`📊 Vector search result:`, {
+        matchesFound: vectorResult.vectorMatches?.length || 0,
+        fallbackUsed: vectorResult.fallbackUsed,
+        hasError: !vectorResult.vectorMatches
       })
       
       if (vectorResult.vectorMatches.length > 0) {
@@ -238,12 +251,15 @@ export class NextGenAITalentMatcher {
           engagementLevel: match.vectorSimilarity > 0.8 ? 'HIGH' : 
                           match.vectorSimilarity > 0.6 ? 'MEDIUM' : 'LOW'
         }))
+      } else {
+        console.log('🔮 Vector search returned 0 matches, proceeding to fallbacks')
       }
       
       return []
       
     } catch (error) {
-      console.error('❌ Error in vector search:', error)
+      console.error('❌ Error in vector search:', error.message)
+      console.log('🔄 Continuing to keyword-based fallbacks...')
       return []
     }
   }
