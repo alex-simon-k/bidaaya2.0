@@ -85,7 +85,7 @@ const AI_RESPONSE_RULES = {
     actionOriented: true
   },
   dataAccuracy: {
-    studentCount: "6000+", // Override any AI hallucinations
+    studentCount: "dynamic", // Will be replaced with actual count
     alwaysUseProvidedData: true,
     neverHallucinate: true
   }
@@ -494,7 +494,7 @@ Trending Skills: ${context.platformData.trendingSkills.slice(0, 5).join(', ')}`
       ])
 
       return {
-        totalStudents: Math.max(studentCount, 6000), // Use actual count or marketing number, whichever is higher
+        totalStudents: Math.max(studentCount, 7000), // Use actual count or marketing number, whichever is higher
         totalCompanies: companyCount,
         recentProjects: recentProjects.map(p => ({
           id: p.id,

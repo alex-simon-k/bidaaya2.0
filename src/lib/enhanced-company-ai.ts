@@ -78,7 +78,7 @@ export class EnhancedCompanyAI extends DynamicAIService {
       return await this.formatForCompanyChat(response, context)
     } catch (error) {
       console.error('Enhanced Company AI error:', error)
-      return this.getCompanyFallback(query, context)
+      return await this.getCompanyFallback(query, context)
     }
   }
 
@@ -230,7 +230,7 @@ export class EnhancedCompanyAI extends DynamicAIService {
     return cleaned
   }
 
-  private getCompanyFallback(query: string, context: CompanyChatContext): EnhancedCompanyResponse {
+  private async getCompanyFallback(query: string, context: CompanyChatContext): Promise<EnhancedCompanyResponse> {
     const queryLower = query.toLowerCase()
     
     // Enhanced project creation detection for fallback
@@ -248,8 +248,11 @@ export class EnhancedCompanyAI extends DynamicAIService {
     }
     
     if (queryLower.includes('find') || queryLower.includes('search') || queryLower.includes('talent')) {
+      const { UserCountService } = await import('./user-count-service')
+      const userCount = await UserCountService.getMarketingUserCount()
+      
       return {
-        content: `I'll help you find talent from our 6000+ students. What type of skills are you looking for?`,
+        content: `I'll help you find talent from our ${userCount} students. What type of skills are you looking for?`,
         actionType: 'search',
         data: { searchQuery: query }
       }

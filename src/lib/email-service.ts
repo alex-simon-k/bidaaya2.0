@@ -287,7 +287,7 @@ export async function sendStudentWelcomeEmail(data: StudentWelcomeData): Promise
     const emailResult = await resend.emails.send({
       from: 'Bidaaya <noreply@bidaaya.ae>',
       to: [data.email],
-      cc: ['alex.simon@bidaaya.ae'], // CC admin as requested
+      // Removed CC as per user request - no longer CC'ing alex.simon@bidaaya.ae on welcome emails
       subject: template.subject,
       html: template.html
     });
