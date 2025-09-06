@@ -226,7 +226,7 @@ export class NextGenAITalentMatcher {
           totalApplications: 0,
           profileCompletedAt: new Date(),
           firstApplicationAt: null,
-          activityScore: match.activityScore || 50,
+          activityScore: Math.round(match.overallScore), // Use overallScore as activity
           responseRate: 0,
           engagementLevel: match.vectorSimilarity > 0.8 ? 'HIGH' : 
                           match.vectorSimilarity > 0.6 ? 'MEDIUM' : 'LOW'
