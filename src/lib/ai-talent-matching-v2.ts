@@ -90,32 +90,53 @@ export class NextGenAITalentMatcher {
       // 1. Get company credit status
       const creditInfo = await this.getCreditStatus(params.companyId, params.tier)
       
-      // 2. Parse search intent using AI (enhanced with strict filtering)
-      const searchIntent = await this.parseModernSearchIntent(params.prompt)
+      // 2. TRY VECTOR SEARCH FIRST (if vectors available)
+      console.log('🔮 Attempting vector-based search...')
+      let candidates = await this.tryVectorSearch(params.prompt, params.companyId)
+      
+      // Initialize search intent variable
+      let searchIntent: any = null
+      
+      if (candidates.length === 0) {
+        console.log('⚠️ Vector search found no results, falling back to keyword search...')
+        
+        // 3. Parse search intent using AI (enhanced with strict filtering)
+        searchIntent = await this.parseModernSearchIntent(params.prompt)
       console.log('🎯 Parsed search intent with filters:', searchIntent)
       
-      // 3. Get STRICTLY FILTERED candidate pool (hard filtering first!)
-      let candidates = await this.getStrictlyFilteredCandidatePool(searchIntent)
+        // 4. Get STRICTLY FILTERED candidate pool (hard filtering first!)
+        candidates = await this.getStrictlyFilteredCandidatePool(searchIntent)
       console.log(`👥 Found ${candidates.length} FILTERED candidates (after hard filtering)`)
       
-      // 🚨 FALLBACK: If strict filtering returns 0 results, use relaxed filtering
-      if (candidates.length === 0) {
-        console.log('⚠️ Strict filtering returned 0 results, applying relaxed filtering...')
-        candidates = await this.getRelaxedCandidatePool(searchIntent)
-        console.log(`👥 Found ${candidates.length} candidates with relaxed filtering`)
-        
-        // 🚨 EMERGENCY FALLBACK: If even relaxed filtering fails, get any active students
+        // 🚨 FALLBACK: If strict filtering returns 0 results, use relaxed filtering
         if (candidates.length === 0) {
-          console.log('⚠️ Even relaxed filtering returned 0 results, getting any active students...')
-          candidates = await this.getEmergencyFallbackCandidates()
-          console.log(`👥 Emergency fallback found ${candidates.length} candidates`)
+          console.log('⚠️ Strict filtering returned 0 results, applying relaxed filtering...')
+          candidates = await this.getRelaxedCandidatePool(searchIntent)
+          console.log(`👥 Found ${candidates.length} candidates with relaxed filtering`)
+          
+          // 🚨 EMERGENCY FALLBACK: If even relaxed filtering fails, get any active students
+          if (candidates.length === 0) {
+            console.log('⚠️ Even relaxed filtering returned 0 results, getting any active students...')
+            candidates = await this.getEmergencyFallbackCandidates()
+            console.log(`👥 Emergency fallback found ${candidates.length} candidates`)
+          }
+        }
+      } else {
+        console.log(`✅ Vector search found ${candidates.length} candidates`)
+        // Create basic search intent for vector results
+        searchIntent = {
+          originalPrompt: params.prompt,
+          keywords: [],
+          role: null,
+          experience: null,
+          strictFilters: { universities: [], majors: [], skills: [] }
         }
       }
       
-      // 4. AI-powered scoring and matching (now relevance-first)
+      // 5. AI-powered scoring and matching (now relevance-first)
       const matches = await this.performRelevanceFirstMatching(candidates, searchIntent, params)
       
-      // 5. Generate search suggestions
+      // 6. Generate search suggestions
       const suggestions = await this.generateSearchSuggestions(params.prompt, matches.length)
       
       const processingTime = Date.now() - startTime
@@ -155,6 +176,68 @@ export class NextGenAITalentMatcher {
           'Try searching for "business students" or "computer science students"'
         ]
       }
+    }
+  }
+
+  /**
+   * TRY VECTOR SEARCH FIRST - Use vector embeddings if available
+   */
+  private static async tryVectorSearch(prompt: string, companyId: string): Promise<TalentProfile[]> {
+    try {
+      const { VectorMatchingService } = await import('./vector-matching-service')
+      
+      console.log('🔮 Attempting vector-based talent search...')
+      
+      // Check if we have student vectors
+      const vectorCount = await prisma.studentVector.count()
+      console.log(`📊 Found ${vectorCount} student vectors in database`)
+      
+      if (vectorCount === 0) {
+        console.log('⚠️ No student vectors available, skipping vector search')
+        return []
+      }
+      
+      // Perform vector search
+      const vectorResult = await VectorMatchingService.searchTalentWithVectors({
+        searchQuery: prompt,
+        companyId: companyId,
+        limit: 50, // Get more results from vector search
+        threshold: 0.5 // Lower threshold for more results
+      })
+      
+      if (vectorResult.vectorMatches.length > 0) {
+        console.log(`🎯 Vector search found ${vectorResult.vectorMatches.length} matches`)
+        
+        // Convert vector matches to TalentProfile format
+        return vectorResult.vectorMatches.map(match => ({
+          id: match.student.id,
+          name: match.student.name,
+          email: match.student.email,
+          university: match.student.university,
+          major: match.student.major,
+          graduationYear: match.student.graduationYear,
+          bio: match.student.bio,
+          location: match.student.location,
+          goal: match.student.goals || [],
+          interests: match.student.interests || [],
+          image: match.student.image,
+          lastActiveAt: new Date(match.student.lastActiveAt || Date.now()),
+          applicationsThisMonth: match.student.applicationsThisMonth || 0,
+          totalApplications: 0,
+          profileCompletedAt: new Date(),
+          firstApplicationAt: null,
+          activityScore: match.activityScore || 50,
+          responseRate: 0,
+          engagementLevel: match.vectorSimilarity > 0.8 ? 'HIGH' : 
+                          match.vectorSimilarity > 0.6 ? 'MEDIUM' : 'LOW'
+        }))
+      }
+      
+      return []
+      
+    } catch (error) {
+      console.error('❌ Error in vector search:', error)
+      return []
     }
   }
 
@@ -334,9 +417,9 @@ export class NextGenAITalentMatcher {
       role: 'STUDENT',
       // Don't require profile completion - too restrictive
       // Just require SOME basic data
-      OR: [
-        { university: { not: null } },
-        { major: { not: null } },
+          OR: [
+            { university: { not: null } },
+            { major: { not: null } },
         { bio: { not: null } },
         { skills: { not: { equals: [] } } },
         { interests: { not: { equals: [] } } }
@@ -350,9 +433,9 @@ export class NextGenAITalentMatcher {
       whereConditions.AND = whereConditions.AND || []
       whereConditions.AND.push({
         university: {
-          in: intent.strictFilters.universities,
-          mode: 'insensitive'
-        }
+        in: intent.strictFilters.universities,
+        mode: 'insensitive'
+      }
       })
     }
 
@@ -362,9 +445,9 @@ export class NextGenAITalentMatcher {
       whereConditions.AND = whereConditions.AND || []
       whereConditions.AND.push({
         major: {
-          in: intent.strictFilters.majors,
-          mode: 'insensitive'
-        }
+        in: intent.strictFilters.majors,
+        mode: 'insensitive'
+      }
       })
     }
 
@@ -374,14 +457,14 @@ export class NextGenAITalentMatcher {
       whereConditions.AND = whereConditions.AND || []
       whereConditions.AND.push({
         OR: intent.strictFilters.skills.map((skill: string) => ({
-          OR: [
+        OR: [
             { skills: { hasSome: [skill] } },
-            { interests: { hasSome: [skill] } },
-            { goal: { hasSome: [skill] } },
+          { interests: { hasSome: [skill] } },
+          { goal: { hasSome: [skill] } },
             { bio: { contains: skill, mode: 'insensitive' } },
             { major: { contains: skill, mode: 'insensitive' } }
-          ]
-        }))
+        ]
+      }))
       })
     } else {
       // If no specific skills mentioned, don't filter by skills at all
@@ -393,7 +476,7 @@ export class NextGenAITalentMatcher {
     
     const candidates = await prisma.user.findMany({
       where: whereConditions,
-      select: {
+             select: {
          id: true,
          name: true,
          email: true,
