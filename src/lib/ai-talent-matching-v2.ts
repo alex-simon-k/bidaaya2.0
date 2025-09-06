@@ -203,7 +203,41 @@ export class NextGenAITalentMatcher {
       ]
     })
 
-    return candidates.map(this.transformToTalentProfile)
+    return candidates.map(candidate => this.transformToTalentProfile(candidate))
+  }
+
+  /**
+   * Transform database user to TalentProfile format
+   */
+  private static transformToTalentProfile(candidate: any): TalentProfile {
+    const totalApplications = candidate.applications?.length || 0
+    const enrichedCandidate: TalentProfile = {
+      id: candidate.id,
+      name: candidate.name || 'Unknown',
+      email: candidate.email,
+      university: candidate.university,
+      major: candidate.major,
+      graduationYear: candidate.graduationYear,
+      bio: candidate.bio,
+      location: candidate.location,
+      goal: candidate.goal,
+      interests: candidate.interests,
+      image: candidate.image,
+      lastActiveAt: candidate.lastActiveAt || candidate.updatedAt,
+      applicationsThisMonth: candidate.applicationsThisMonth,
+      profileCompletedAt: candidate.profileCompletedAt,
+      firstApplicationAt: totalApplications > 0 ? candidate.updatedAt : null,
+      totalApplications,
+      activityScore: 0, // Will be calculated below
+      responseRate: 0, // Will be calculated below
+      engagementLevel: 'LOW' // Will be calculated below
+    }
+    
+    enrichedCandidate.activityScore = this.calculateActivityScore(enrichedCandidate)
+    enrichedCandidate.responseRate = this.calculateResponseRate(enrichedCandidate)
+    enrichedCandidate.engagementLevel = this.getEngagementLevel(enrichedCandidate)
+    
+    return enrichedCandidate
   }
 
   /**
@@ -286,7 +320,7 @@ export class NextGenAITalentMatcher {
       ]
     })
 
-    return candidates.map(this.transformToTalentProfile)
+    return candidates.map(candidate => this.transformToTalentProfile(candidate))
   }
 
   /**
