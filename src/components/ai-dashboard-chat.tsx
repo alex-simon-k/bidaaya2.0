@@ -783,51 +783,59 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
       setIsLoading(true)
       setShowResults(false)
 
-      const response = await fetch('/api/test-search', {
+      console.log(`🔍 Performing talent search for: "${query}"`)
+
+      // Use the actual AI talent search API
+      const response = await fetch('/api/ai-matching/search-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: query,
-          limit: 20
+          prompt: query
         })
       })
 
       if (!response.ok) throw new Error('Search failed')
 
       const data = await response.json()
+      console.log('🎯 Search API response:', data)
       
-      // Transform results to match existing UI structure (what display code expects)
-      const transformedResults = data.results?.map((result: any) => ({
-        candidate: {
-          id: result.student.id,
-          name: result.student.name,
-          email: result.student.email,
-          university: result.student.university,
-          major: result.student.major,
-          skills: Array.isArray(result.student.skills) ? result.student.skills : [result.student.skills].filter(Boolean),
-          location: result.student.location,
-          graduationYear: result.student.graduationYear,
-          interests: result.student.interests || [],
-          goal: result.student.goal || [],
-          bio: result.student.bio || `${result.student.major || 'Student'} at ${result.student.university || 'University'}`,
-          education: result.student.education,
-          subjects: result.student.subjects,
-          dateOfBirth: result.student.dateOfBirth,
-          mena: result.student.mena,
-          lastActiveAt: result.student.lastActiveAt,
-          image: null,
-          engagementLevel: result.student.activityScore > 70 ? 'High' : 
-                          result.student.activityScore > 40 ? 'Medium' : 'Low',
-          applicationsThisMonth: 0
-        },
-        overallScore: result.matching.score,
-        matchScore: result.matching.score,
-        matchReasons: result.matching.reasons,
-        activityScore: result.student.activityScore,
-        overallRating: result.matching.overallRating,
-        contactCredits: 1,
-        aiExplanation: result.matching.reasons.join(', ')
-      })) || []
+      // Check if search was successful and has matches
+      let transformedResults: any[] = []
+      
+      if (data.success && data.data?.matches) {
+        // Transform AI search results to match existing UI structure
+        transformedResults = data.data.matches.map((match: any) => ({
+          candidate: {
+            id: match.profile.id,
+            name: match.profile.name,
+            email: match.profile.email,
+            university: match.profile.university,
+            major: match.profile.major,
+            skills: match.profile.skills || [],
+            location: match.profile.location,
+            graduationYear: match.profile.graduationYear,
+            interests: match.profile.interests || [],
+            goal: match.profile.goal || [],
+            bio: match.profile.bio || `${match.profile.major || 'Student'} at ${match.profile.university || 'University'}`,
+            lastActiveAt: match.profile.lastActiveAt,
+            image: match.profile.image || null,
+            engagementLevel: match.profile.engagementLevel || 'Medium',
+            applicationsThisMonth: match.profile.applicationsThisMonth || 0
+          },
+          overallScore: match.scores.overall,
+          matchScore: match.scores.relevance,
+          matchReasons: match.reasoning.strengths || [],
+          activityScore: match.scores.activity,
+          overallRating: match.scores.overall >= 80 ? 'Excellent' : 
+                        match.scores.overall >= 60 ? 'Good' : 'Fair',
+          contactCredits: 1,
+          aiExplanation: match.reasoning.summary || 'Strong candidate match'
+        }))
+        
+        console.log(`✅ Transformed ${transformedResults.length} search results`)
+      } else {
+        console.log('⚠️ No matches found in search response')
+      }
 
       setSearchResults(transformedResults)
       setShowResults(true)

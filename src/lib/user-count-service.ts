@@ -43,14 +43,15 @@ export class UserCountService {
       
       console.log(`📊 User count updated: ${actualStudentCount} actual + 4500 = ${marketingCount} marketing`)
       
-      return `${marketingCount.toLocaleString()}+`
+      // Return unrounded number to show it's real data
+      return `${marketingCount}+`
       
     } catch (error) {
       console.error('❌ Error getting user count:', error)
       
       // Fallback to cached value or default
       if (this.cache) {
-        return `${this.cache.count.toLocaleString()}+`
+        return `${this.cache.count}+`
       }
       
       // Ultimate fallback

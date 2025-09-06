@@ -27,30 +27,50 @@ export class EnhancedCompanyAI extends DynamicAIService {
   
   async generateCompanyResponse(query: string, context: CompanyChatContext): Promise<EnhancedCompanyResponse> {
     try {
-      // IMMEDIATE project creation check - before any AI processing
       const queryLower = query.toLowerCase()
       
-      // Enhanced detection for exact phrases from your examples
+      // 🎯 PRIORITIZE TALENT SEARCH - Check for talent search intent FIRST
+      const talentSearchKeywords = ['want', 'need', 'looking for', 'find', 'search', 'hire']
+      const talentNouns = ['students', 'interns', 'candidates', 'talent', 'people', 'developers', 'marketers']
+      const skillsKeywords = ['marketing', 'computer science', 'business', 'engineering', 'design', 'finance']
+      const universityKeywords = ['aud', 'aus', 'university', 'college']
+      
+      const hasTalentKeyword = talentSearchKeywords.some(keyword => queryLower.includes(keyword))
+      const hasTalentNoun = talentNouns.some(noun => queryLower.includes(noun))
+      const hasSkill = skillsKeywords.some(skill => queryLower.includes(skill))
+      const hasUniversity = universityKeywords.some(uni => queryLower.includes(uni))
+      
+      // If it's clearly about finding people/talent, treat as search
+      const isTalentSearch = (hasTalentKeyword && (hasTalentNoun || hasSkill)) || 
+                            (hasTalentNoun && hasSkill) ||
+                            hasUniversity
+      
+      if (isTalentSearch) {
+        return {
+          content: `I'll help you find the right talent! Let me search our database for "${query}".`,
+          actionType: 'search',
+          data: { searchQuery: query, useIntelligentMatching: true }
+        }
+      }
+      
+      // 📋 PROJECT CREATION - Only after checking for talent search
       const directProjectPhrases = [
         'want to create a project',
         'create a project',
         'make a project',
-        'marketing project',
-        'how do i make it',
         'post a project',
         'posting a project',
-        'new project'
+        'new project',
+        'publish a project'
       ]
       
       const hasDirectPhrase = directProjectPhrases.some(phrase => queryLower.includes(phrase))
       
-      // Keyword-based detection as backup
-      const projectKeywords = ['create', 'post', 'posting', 'publish', 'new', 'make', 'build']
-      const projectNouns = ['project', 'internship', 'job', 'position', 'opportunity', 'role']
+      // More specific project creation keywords (excluding 'want' and 'need')
+      const projectKeywords = ['create', 'post', 'posting', 'publish', 'make', 'build']
+      const projectNouns = ['project', 'job', 'position', 'opportunity', 'role', 'listing']
       const hasKeywordMatch = projectKeywords.some(keyword => queryLower.includes(keyword)) && 
-                             (projectNouns.some(noun => queryLower.includes(noun)) || 
-                              queryLower.includes('campaign') || 
-                              queryLower.includes('listing'))
+                             (projectNouns.some(noun => queryLower.includes(noun)) || queryLower.includes('campaign'))
       
       const isProjectCreation = hasDirectPhrase || hasKeywordMatch
       
