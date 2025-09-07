@@ -806,30 +806,30 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
         // Transform AI search results to match existing UI structure
         transformedResults = data.data.matches.map((match: any) => ({
           candidate: {
-            id: match.profile.id,
-            name: match.profile.name,
-            email: match.profile.email,
-            university: match.profile.university,
-            major: match.profile.major,
-            skills: match.profile.skills || [],
-            location: match.profile.location,
-            graduationYear: match.profile.graduationYear,
-            interests: match.profile.interests || [],
-            goal: match.profile.goal || [],
-            bio: match.profile.bio || `${match.profile.major || 'Student'} at ${match.profile.university || 'University'}`,
-            lastActiveAt: match.profile.lastActiveAt,
-            image: match.profile.image || null,
-            engagementLevel: match.profile.engagementLevel || 'Medium',
-            applicationsThisMonth: match.profile.applicationsThisMonth || 0
+            id: match.candidate.id,
+            name: match.candidate.name,
+            email: match.candidate.email,
+            university: match.candidate.university,
+            major: match.candidate.major,
+            skills: match.candidate.skills || [],
+            location: match.candidate.location,
+            graduationYear: match.candidate.graduationYear,
+            interests: match.candidate.interests || [],
+            goal: match.candidate.goal || [],
+            bio: match.candidate.bio || `${match.candidate.major || 'Student'} at ${match.candidate.university || 'University'}`,
+            lastActiveAt: match.candidate.lastActiveAt,
+            image: match.candidate.image || null,
+            engagementLevel: match.candidate.engagementLevel || 'MEDIUM',
+            applicationsThisMonth: match.candidate.applicationsThisMonth || 0
           },
-          overallScore: match.scores.overall,
-          matchScore: match.scores.relevance,
-          matchReasons: match.reasoning.strengths || [],
-          activityScore: match.scores.activity,
-          overallRating: match.scores.overall >= 80 ? 'Excellent' : 
-                        match.scores.overall >= 60 ? 'Good' : 'Fair',
-          contactCredits: 1,
-          aiExplanation: match.reasoning.summary || 'Strong candidate match'
+          overallScore: match.overallScore,
+          matchScore: match.relevanceScore,
+          matchReasons: match.strengths || [],
+          activityScore: match.activityScore,
+          overallRating: match.overallScore >= 80 ? 'Excellent' : 
+                        match.overallScore >= 60 ? 'Good' : 'Fair',
+          contactCredits: match.contactCredits || 1,
+          aiExplanation: match.aiExplanation || 'Strong candidate match'
         }))
         
         console.log(`✅ Transformed ${transformedResults.length} search results`)
