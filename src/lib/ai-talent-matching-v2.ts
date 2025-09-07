@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 export interface TalentSearchParams {
   prompt: string
   companyId: string
-  tier: 'FREE' | 'PROFESSIONAL' | 'ENTERPRISE'
+  tier: 'FREE' | 'BASIC' | 'PROFESSIONAL' | 'HR_BOOSTER' | 'HR_AGENT' | 'ENTERPRISE'
   maxResults?: number
 }
 
@@ -70,8 +70,10 @@ export class NextGenAITalentMatcher {
   private static TIER_LIMITS = {
     FREE: { credits: 10, contacts: 10, maxResults: 20 },           // Free Trial: 10 credits, show 20 results
     BASIC: { credits: 50, contacts: 50, maxResults: 20 },          // Company Basic: 50 credits, show 20 results  
+    PROFESSIONAL: { credits: 50, contacts: 50, maxResults: 20 },   // Alias for BASIC
     HR_BOOSTER: { credits: 100, contacts: 100, maxResults: 20 },   // HR Booster: 100 credits, show 20 results
-    HR_AGENT: { credits: 200, contacts: 200, maxResults: 20 }      // HR Agent: 200 credits, show 20 results
+    HR_AGENT: { credits: 200, contacts: 200, maxResults: 20 },     // HR Agent: 200 credits, show 20 results
+    ENTERPRISE: { credits: 200, contacts: 200, maxResults: 20 }    // Alias for HR_AGENT
   }
 
   /**
