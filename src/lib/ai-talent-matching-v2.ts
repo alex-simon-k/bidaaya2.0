@@ -307,6 +307,19 @@ export class NextGenAITalentMatcher {
         { bio: { contains: 'marketing', mode: 'insensitive' } },
         { interests: { hasSome: ['Marketing & Digital Media'] } }
       ]
+    } else if (lowerPrompt.includes('finance') || lowerPrompt.includes('financial') || lowerPrompt.includes('accounting')) {
+      whereConditions.OR = [
+        { major: { contains: 'finance', mode: 'insensitive' } },
+        { major: { contains: 'accounting', mode: 'insensitive' } },
+        { major: { contains: 'business', mode: 'insensitive' } },
+        { major: { contains: 'economics', mode: 'insensitive' } },
+        { major: { contains: 'banking', mode: 'insensitive' } },
+        { bio: { contains: 'finance', mode: 'insensitive' } },
+        { bio: { contains: 'accounting', mode: 'insensitive' } },
+        { bio: { contains: 'financial', mode: 'insensitive' } },
+        { interests: { hasSome: ['Finance & Banking', 'Business & Finance'] } },
+        { skills: { hasSome: ['Finance', 'Accounting', 'Financial Analysis', 'Excel'] } }
+      ]
     } else if (lowerPrompt.includes('computer') || lowerPrompt.includes('programming') || lowerPrompt.includes('tech')) {
       whereConditions.OR = [
         { major: { contains: 'computer', mode: 'insensitive' } },
@@ -347,6 +360,15 @@ export class NextGenAITalentMatcher {
         lastActiveAt: true,
         profileCompletedAt: true,
         updatedAt: true,
+        // Additional comprehensive fields
+        education: true,
+        highSchool: true,
+        subjects: true,
+        dateOfBirth: true,
+        linkedin: true,
+        mena: true,
+        profileCompleted: true,
+        createdAt: true,
         applications: {
           select: { createdAt: true },
           take: 5
@@ -395,6 +417,15 @@ export class NextGenAITalentMatcher {
         lastActiveAt: true,
         profileCompletedAt: true,
         updatedAt: true,
+        // Additional comprehensive fields
+        education: true,
+        highSchool: true,
+        subjects: true,
+        dateOfBirth: true,
+        linkedin: true,
+        mena: true,
+        profileCompleted: true,
+        createdAt: true,
         applications: {
           select: { createdAt: true },
           take: 5
@@ -513,6 +544,15 @@ export class NextGenAITalentMatcher {
         lastActiveAt: true,
         profileCompletedAt: true,
         updatedAt: true,
+        // Additional comprehensive fields
+        education: true,
+        highSchool: true,
+        subjects: true,
+        dateOfBirth: true,
+        linkedin: true,
+        mena: true,
+        profileCompleted: true,
+        createdAt: true,
         applications: {
           select: { createdAt: true },
           take: 5
@@ -598,26 +638,36 @@ export class NextGenAITalentMatcher {
     
     const candidates = await prisma.user.findMany({
       where: whereConditions,
-             select: {
-         id: true,
-         name: true,
-         email: true,
-         university: true,
-         major: true,
-         graduationYear: true,
-         bio: true,
-         location: true,
-         goal: true,
-         interests: true,
-         image: true,
-         applicationsThisMonth: true,
-         profileCompleted: true,
-         createdAt: true,
-         applications: {
-           select: { id: true },
-           take: 100
-         }
-       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        university: true,
+        major: true,
+        graduationYear: true,
+        bio: true,
+        location: true,
+        goal: true,
+        interests: true,
+        image: true,
+        applicationsThisMonth: true,
+        profileCompleted: true,
+        createdAt: true,
+        // Additional comprehensive fields
+        education: true,        // Education status (High School, University, etc.)
+        highSchool: true,       // High school name
+        subjects: true,         // Subjects studied
+        skills: true,           // Skills array
+        dateOfBirth: true,      // For age calculation
+        linkedin: true,         // LinkedIn profile
+        mena: true,            // MENA region indicator
+        lastActiveAt: true,     // Last activity
+        updatedAt: true,        // Profile last updated
+        applications: {
+          select: { id: true },
+          take: 100
+        }
+      },
              // Order by RELEVANCE first, then activity
        orderBy: [
          { profileCompleted: 'desc' },    // Complete profiles first

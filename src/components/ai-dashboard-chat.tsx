@@ -1322,17 +1322,25 @@ Something went wrong while sending the invitation. Please try again or contact s
                                     {/* Education & Institution */}
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
-                                        <p className="font-medium text-gray-900">Education: {result.candidate.education || 'Not specified'}</p>
+                                        <p className="font-medium text-gray-900">
+                                          Major: {result.candidate.major || result.candidate.education || 'Not specified'}
+                                        </p>
                                         {result.candidate.university && (
                                           <p className="text-gray-600 text-xs">Institution: {result.candidate.university}</p>
                                         )}
-                                      </div>
-                                      <div>
+                                        {result.candidate.highSchool && !result.candidate.university && (
+                                          <p className="text-gray-600 text-xs">High School: {result.candidate.highSchool}</p>
+                                        )}
+                                        {result.candidate.graduationYear && (
+                                          <p className="text-gray-600 text-xs">Graduation: {result.candidate.graduationYear}</p>
+                                        )}
                                         {result.candidate.dateOfBirth && (
-                                          <p className="font-medium text-gray-900">
+                                          <p className="text-gray-600 text-xs">
                                             Age: {new Date().getFullYear() - new Date(result.candidate.dateOfBirth).getFullYear()}
                                           </p>
                                         )}
+                                      </div>
+                                      <div>
                                         {result.candidate.mena && (
                                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
                                             🌍 MENA Based
@@ -1341,8 +1349,25 @@ Something went wrong while sending the invitation. Please try again or contact s
                                       </div>
                                     </div>
 
-                                    {/* Studies & Subjects */}
-                                    {(result.candidate.major || result.candidate.subjects) && (
+                                    {/* Skills & Subjects */}
+                                    {(result.candidate.skills?.length > 0) && (
+                                      <div>
+                                        <p className="font-medium text-gray-900 mb-1">Skills:</p>
+                                        <div className="flex flex-wrap gap-1">
+                                          {result.candidate.skills.slice(0, 5).map((skill: string, index: number) => (
+                                            <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                              {skill}
+                                            </span>
+                                          ))}
+                                          {result.candidate.skills.length > 5 && (
+                                            <span className="text-xs text-gray-500">+{result.candidate.skills.length - 5} more</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Subjects & Studies */}
+                                    {(result.candidate.subjects || result.candidate.major || result.candidate.subjects) && (
                                       <div>
                                         <p className="font-medium text-gray-900">Studies:</p>
                                         {result.candidate.major && <p className="text-gray-600 text-sm">Major: {result.candidate.major}</p>}
