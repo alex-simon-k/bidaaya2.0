@@ -62,6 +62,14 @@ export async function POST(request: NextRequest) {
     if (searchResults.searchMetadata?.error) {
       console.error(`❌ Search metadata error:`, searchResults.searchMetadata.error)
     }
+    
+    // Debug: Log actual search results structure
+    console.log('🔍 Backend search results debug:')
+    console.log(`  - matches array length: ${searchResults.matches?.length || 0}`)
+    if (searchResults.matches && searchResults.matches.length > 0) {
+      console.log(`  - first match structure:`, Object.keys(searchResults.matches[0]))
+      console.log(`  - first match candidate structure:`, searchResults.matches[0].candidate ? Object.keys(searchResults.matches[0].candidate) : 'No candidate field')
+    }
 
     // Return modern AI search results
     return NextResponse.json({

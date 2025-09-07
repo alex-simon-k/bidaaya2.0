@@ -798,6 +798,12 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
 
       const data = await response.json()
       console.log('🎯 Search API response:', data)
+      console.log('🔍 Response structure check:')
+      console.log('  - data.success:', data.success)
+      console.log('  - data.data exists:', !!data.data)
+      console.log('  - data.data.matches exists:', !!data.data?.matches)
+      console.log('  - data.data.matches length:', data.data?.matches?.length || 0)
+      console.log('  - data.data.matches[0] structure:', data.data?.matches?.[0] ? Object.keys(data.data.matches[0]) : 'No first match')
       
       // Check if search was successful and has matches
       let transformedResults: any[] = []
