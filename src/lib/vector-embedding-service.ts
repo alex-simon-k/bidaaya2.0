@@ -49,6 +49,7 @@ export class VectorEmbeddingService {
           skills: true,
           university: true,
           major: true,
+          subjects: true,           // CRITICAL MISSING FIELD ADDED!
           interests: true,
           goal: true,
           location: true,
@@ -286,6 +287,7 @@ export class VectorEmbeddingService {
     // Academic background
     if (student.university) parts.push(`University: ${student.university}`)
     if (student.major) parts.push(`Major: ${student.major}`)
+    if (student.subjects) parts.push(`Subjects Studied: ${student.subjects}`)  // CRITICAL MISSING FIELD ADDED!
     if (student.education) parts.push(`Education Level: ${student.education}`)
     if (student.graduationYear) parts.push(`Graduation Year: ${student.graduationYear}`)
     
@@ -355,6 +357,7 @@ export class VectorEmbeddingService {
 
     if (student.university) parts.push(`University: ${student.university}`)
     if (student.major) parts.push(`Field of Study: ${student.major}`)
+    if (student.subjects) parts.push(`Subjects Studied: ${student.subjects}`)  // CRITICAL MISSING FIELD ADDED!
     if (student.education) parts.push(`Education Level: ${student.education}`)
     if (student.highSchool) parts.push(`High School: ${student.highSchool}`)
     if (student.graduationYear) parts.push(`Graduation Year: ${student.graduationYear}`)
