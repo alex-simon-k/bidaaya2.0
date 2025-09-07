@@ -25,46 +25,55 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const { batchSize = 10 } = await request.json().catch(() => ({}))
+    const { batchSize = 10, forceRegenerate = false, offset = 0 } = await request.json().catch(() => ({}))
 
-    // Get students without vectors
-    const studentsWithoutVectors = await prisma.user.findMany({
-      where: {
-        role: 'STUDENT',
-        studentVector: null
-      },
+    // Get students without vectors OR force regenerate all
+    const whereCondition = forceRegenerate ? 
+      { role: 'STUDENT' } : 
+      { role: 'STUDENT', studentVector: null }
+
+    const studentsToProcess = await prisma.user.findMany({
+      where: whereCondition,
       select: {
         id: true,
         name: true,
         email: true
       },
+      skip: offset,
       take: batchSize
     })
 
-    if (studentsWithoutVectors.length === 0) {
+    if (studentsToProcess.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'All students already have vectors!',
+        message: forceRegenerate ? 'All students processed!' : 'All students already have vectors!',
         processed: 0,
         total: 0
       })
     }
 
-    console.log(`📊 Processing ${studentsWithoutVectors.length} students...`)
+    console.log(`📊 Processing ${studentsToProcess.length} students...`)
 
     let successCount = 0
     let failureCount = 0
     const errors: string[] = []
 
     // Process students one by one
-    for (const student of studentsWithoutVectors) {
+    for (const student of studentsToProcess) {
       try {
         console.log(`🎓 Processing: ${student.name}`)
 
         const vector = await VectorEmbeddingService.generateStudentEmbeddings(student.id)
 
         if (vector) {
-          // Store the vector in database
+          // Delete existing vector if regenerating
+          if (forceRegenerate) {
+            await prisma.studentVector.deleteMany({
+              where: { userId: vector.userId }
+            })
+          }
+
+          // Store the new vector in database
           await prisma.studentVector.create({
             data: {
               userId: vector.userId,
@@ -97,10 +106,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Vector generation batch completed',
+      message: forceRegenerate ? 'Vector regeneration batch completed' : 'Vector generation batch completed',
       processed: successCount + failureCount,
-      successful: successCount,
-      failed: failureCount,
+      successCount: successCount,
+      failureCount: failureCount,
       errors: errors,
       summary: {
         totalStudents,
@@ -135,12 +144,10 @@ export async function GET(request: NextRequest) {
     const studentsWithVectors = await prisma.studentVector.count()
 
     return NextResponse.json({
-      status: {
-        totalStudents,
-        studentsWithVectors,
-        studentsRemaining: totalStudents - studentsWithVectors,
-        completionPercentage: Math.round((studentsWithVectors / totalStudents) * 100)
-      },
+      totalStudents,
+      studentsWithVectors,
+      studentsRemaining: totalStudents - studentsWithVectors,
+      completionPercentage: Math.round((studentsWithVectors / totalStudents) * 100),
       configured: {
         openaiApiKey: !!process.env.OPENAI_API_KEY
       }
