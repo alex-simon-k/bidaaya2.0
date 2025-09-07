@@ -7,32 +7,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getContactRevealContent, hasContactFeatureAccess, getLockedFeatures, getCreditAllowance, getContactFeatures } from '@/lib/pricing'
+import { TalentProfile } from '@/lib/ai-talent-matching-v2'
 
-// AI Talent Search Integration
-interface TalentProfile {
-  id: string
-  name: string
-  email: string
-  university?: string | null
-  major?: string | null
-  graduationYear?: number | null
-  bio?: string | null
-  location?: string | null
-  goal?: string[]
-  interests?: string[]
-  image?: string | null
-  activityScore: number
-  responseRate: number
-  engagementLevel: 'HIGH' | 'MEDIUM' | 'LOW'
-  applicationsThisMonth: number
-  totalApplications: number
-  // Key database fields for better matching
-  education?: string | null
-  subjects?: string | null
-  dateOfBirth?: Date | string | null
-  mena?: boolean | null
-  lastActiveAt?: Date | string | null
-}
+// AI Talent Search Integration - Using imported TalentProfile interface
 
 interface AIMatchResult {
   candidate: TalentProfile
