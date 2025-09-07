@@ -68,7 +68,7 @@ export class NextGenAITalentMatcher {
   
   // Tier limits and benefits - INCREASED RESULTS
   private static TIER_LIMITS = {
-    FREE: { credits: 15, contacts: 10, maxResults: 9 },        // Increased from 5 to 9
+    FREE: { credits: 15, contacts: 10, maxResults: 25 },        // Temporarily increased for testing
     PROFESSIONAL: { credits: 30, contacts: 25, maxResults: 15 },
     ENTERPRISE: { credits: 100, contacts: 75, maxResults: 50 }
   }
