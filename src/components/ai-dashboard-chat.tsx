@@ -63,7 +63,7 @@ export default function AIDashboardChat() {
   const [input, setInput] = useState('')
   const [searchResults, setSearchResults] = useState<AIMatchResult[]>([])
   const [showResults, setShowResults] = useState(false)
-  const [credits, setCredits] = useState(15) // Will be updated from user's plan
+  const [credits, setCredits] = useState({ remaining: 10, limit: 10, plan: 'FREE', refreshesIn: 0 }) // Will be updated from API
   const [isAnimatingInput, setIsAnimatingInput] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -425,29 +425,36 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
     }
   }, [messages, session?.user?.id])
 
-  // Load user's credit allowance based on their subscription plan
+  // Load user's credit allowance from the same API as dashboard
   useEffect(() => {
-    if (session?.user) {
-      // Get the user's current subscription plan
-      const userPlan = (session.user as any).subscriptionPlan || 'FREE'
-      const allowance = getCreditAllowance(userPlan)
-      
-      // Check if we have stored credit usage for this month
-      const currentDate = new Date()
-      const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
-      const storageKey = `bidaaya_credits_${session.user.id}_${monthKey}`
-      
-      try {
-        const storedUsage = localStorage.getItem(storageKey)
-        const usedCredits = storedUsage ? parseInt(storedUsage) : 0
-        const remainingCredits = Math.max(0, allowance - usedCredits)
-        
-        setCredits(remainingCredits)
-      } catch (error) {
-        console.error('Failed to load credit usage:', error)
-        setCredits(allowance)
+    const fetchCredits = async () => {
+      if (session?.user?.role === 'COMPANY') {
+        try {
+          const response = await fetch('/api/company/credits')
+          if (response.ok) {
+            const data = await response.json()
+            setCredits({ 
+              remaining: data.remaining, 
+              limit: data.limit, 
+              plan: data.plan,
+              refreshesIn: data.refreshesIn || 0
+            }) // Use full credit info from API
+          } else {
+            // Fallback to default
+            setCredits({ remaining: 10, limit: 10, plan: 'FREE', refreshesIn: 0 })
+          }
+        } catch (error) {
+          console.error('Failed to fetch credit info:', error)
+          setCredits({ remaining: 10, limit: 10, plan: 'FREE', refreshesIn: 0 }) // Fallback to default
+        }
       }
     }
+
+    fetchCredits()
+    
+    // Refresh credits every 30 seconds to stay in sync with dashboard
+    const interval = setInterval(fetchCredits, 30000)
+    return () => clearInterval(interval)
   }, [session?.user])
 
   // Function to check if company has contact details set up
@@ -852,7 +859,7 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
       const resultsMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'ai',
-        content: `${transformedResults.length} matches found. ${credits} credits left.`,
+        content: `${transformedResults.length} matches found. ${credits.remaining}/${credits.limit} credits remaining.`,
         timestamp: new Date(),
         actionType: 'guidance'
       }
@@ -1118,9 +1125,16 @@ Something went wrong while sending the invitation. Please try again or contact s
               <div className="px-2 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200/50">
                 <div className="flex items-center gap-1 sm:gap-2">
                   <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">
-                    {credits} credits
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">
+                      {credits.remaining}/{credits.limit} credits
+                    </span>
+                    {credits.refreshesIn > 0 && (
+                      <span className="text-xs text-gray-500">
+                        Refills in {credits.refreshesIn}d
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

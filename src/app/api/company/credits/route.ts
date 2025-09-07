@@ -51,13 +51,18 @@ export async function GET(request: NextRequest) {
 
     const remainingCredits = Math.max(0, creditLimit - contactsThisMonth)
 
+    // Calculate next refresh date (first day of next month)
+    const nextRefresh = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    
     return NextResponse.json({
       used: contactsThisMonth,
       remaining: remainingCredits,
       limit: creditLimit,
       plan: userPlan,
       monthStart: monthStart.toISOString(),
-      monthEnd: monthEnd.toISOString()
+      monthEnd: monthEnd.toISOString(),
+      nextRefresh: nextRefresh.toISOString(),
+      refreshesIn: Math.ceil((nextRefresh.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) // Days until refresh
     })
 
   } catch (error) {

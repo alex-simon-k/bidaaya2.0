@@ -24,6 +24,7 @@ export default function DashboardLayout({
     remaining: number
     limit: number
     plan: string
+    refreshesIn?: number
   } | null>(null)
 
   // Only log in development
@@ -265,7 +266,14 @@ export default function DashboardLayout({
                       <div className="text-sm font-bold text-blue-800">
                         {creditInfo.remaining}/{creditInfo.limit}
                       </div>
-                      <div className="text-xs text-blue-500">{creditInfo.plan}</div>
+                      <div className="text-xs text-blue-500">
+                        {creditInfo.plan}
+                        {creditInfo.refreshesIn && (
+                          <div className="text-xs text-blue-400 mt-0.5">
+                            Refills in {creditInfo.refreshesIn}d
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
