@@ -1327,7 +1327,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                                     </div>
 
                                     {/* Skills & Subjects */}
-                                    {(result.candidate.skills?.length > 0) && (
+                                    {(result.candidate.skills && result.candidate.skills.length > 0) && (
                                       <div>
                                         <p className="font-medium text-gray-900 mb-1">Skills:</p>
                                         <div className="flex flex-wrap gap-1">
