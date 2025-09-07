@@ -11,6 +11,40 @@ import { TalentProfile } from '@/lib/ai-talent-matching-v2'
 
 // AI Talent Search Integration - Using imported TalentProfile interface
 
+// Helper function to infer major from interests when major field is empty
+function inferMajorFromInterests(interests?: string[]): string | null {
+  if (!interests || interests.length === 0) return null
+  
+  const interestsText = interests.join(' ').toLowerCase()
+  
+  // Marketing indicators
+  if (interestsText.includes('marketing') || interestsText.includes('digital media')) {
+    return 'Marketing/Business (inferred from interests)'
+  }
+  
+  // Finance indicators  
+  if (interestsText.includes('finance') || interestsText.includes('banking')) {
+    return 'Finance/Business (inferred from interests)'
+  }
+  
+  // Business indicators
+  if (interestsText.includes('business development') || interestsText.includes('sales') || interestsText.includes('entrepreneurship')) {
+    return 'Business Administration (inferred from interests)'
+  }
+  
+  // Tech indicators
+  if (interestsText.includes('technology') || interestsText.includes('software') || interestsText.includes('computer')) {
+    return 'Computer Science/Technology (inferred from interests)'
+  }
+  
+  // Design indicators
+  if (interestsText.includes('design') || interestsText.includes('creative')) {
+    return 'Design/Creative Arts (inferred from interests)'
+  }
+  
+  return null
+}
+
 interface AIMatchResult {
   candidate: TalentProfile
   aiScore: number
@@ -1300,7 +1334,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <p className="font-medium text-gray-900">
-                                          Major: {result.candidate.major || result.candidate.subjects || result.candidate.education || 'Not specified'}
+                                          Major: {result.candidate.major || result.candidate.subjects || result.candidate.education || inferMajorFromInterests(result.candidate.interests) || 'Not specified'}
                                         </p>
                                         {result.candidate.university && (
                                           <p className="text-gray-600 text-xs">Institution: {result.candidate.university}</p>
