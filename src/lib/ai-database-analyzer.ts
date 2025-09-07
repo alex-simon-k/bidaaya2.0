@@ -59,6 +59,7 @@ export class AIDatabaseAnalyzer {
         id: true,
         university: true,
         major: true,
+        subjects: true,      // MISSING FIELD ADDED!
         skills: true,
         goal: true,
         location: true,
@@ -74,7 +75,7 @@ export class AIDatabaseAnalyzer {
     // Analyze each field
     const insights: DatabaseInsight[] = []
     const fieldsToAnalyze = [
-      'university', 'major', 'skills', 'goal', 
+      'university', 'major', 'subjects', 'skills', 'goal', 
       'location', 'graduationYear', 'education', 'interests'
     ]
 
@@ -554,6 +555,7 @@ Example: ["university:dubai", "major:computer_science", "location:uae", "skills:
            OR: [
              { skills: { has: criterion } },
              { major: { contains: criterion, mode: 'insensitive' } },
+             { subjects: { contains: criterion, mode: 'insensitive' } },  // MISSING FIELD ADDED!
              { university: { contains: criterion, mode: 'insensitive' } },
              { bio: { contains: criterion, mode: 'insensitive' } },
              { interests: { has: criterion } },
@@ -577,6 +579,7 @@ Example: ["university:dubai", "major:computer_science", "location:uae", "skills:
         email: true,
         university: true,
         major: true,
+        subjects: true,    // MISSING FIELD ADDED!
         skills: true,
         location: true,
         graduationYear: true,

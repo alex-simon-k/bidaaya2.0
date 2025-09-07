@@ -315,6 +315,8 @@ export class NextGenAITalentMatcher {
       whereConditions.OR = [
         { major: { contains: 'marketing', mode: 'insensitive' } },
         { major: { contains: 'business', mode: 'insensitive' } },
+        { subjects: { contains: 'marketing', mode: 'insensitive' } },  // MISSING FIELD ADDED!
+        { subjects: { contains: 'business', mode: 'insensitive' } },   // MISSING FIELD ADDED!
         { bio: { contains: 'marketing', mode: 'insensitive' } },
         { interests: { hasSome: ['Marketing & Digital Media'] } }
       ]
@@ -325,6 +327,10 @@ export class NextGenAITalentMatcher {
         { major: { contains: 'business', mode: 'insensitive' } },
         { major: { contains: 'economics', mode: 'insensitive' } },
         { major: { contains: 'banking', mode: 'insensitive' } },
+        { subjects: { contains: 'finance', mode: 'insensitive' } },      // MISSING FIELD ADDED!
+        { subjects: { contains: 'accounting', mode: 'insensitive' } },   // MISSING FIELD ADDED!
+        { subjects: { contains: 'business', mode: 'insensitive' } },     // MISSING FIELD ADDED!
+        { subjects: { contains: 'economics', mode: 'insensitive' } },    // MISSING FIELD ADDED!
         { bio: { contains: 'finance', mode: 'insensitive' } },
         { bio: { contains: 'accounting', mode: 'insensitive' } },
         { bio: { contains: 'financial', mode: 'insensitive' } },
@@ -336,12 +342,17 @@ export class NextGenAITalentMatcher {
         { major: { contains: 'computer', mode: 'insensitive' } },
         { major: { contains: 'software', mode: 'insensitive' } },
         { major: { contains: 'engineering', mode: 'insensitive' } },
+        { subjects: { contains: 'computer', mode: 'insensitive' } },      // MISSING FIELD ADDED!
+        { subjects: { contains: 'software', mode: 'insensitive' } },      // MISSING FIELD ADDED!
+        { subjects: { contains: 'engineering', mode: 'insensitive' } },   // MISSING FIELD ADDED!
         { interests: { hasSome: ['Technology & Software Development'] } }
       ]
     } else if (lowerPrompt.includes('business')) {
       whereConditions.OR = [
         { major: { contains: 'business', mode: 'insensitive' } },
         { major: { contains: 'management', mode: 'insensitive' } },
+        { subjects: { contains: 'business', mode: 'insensitive' } },      // MISSING FIELD ADDED!
+        { subjects: { contains: 'management', mode: 'insensitive' } },    // MISSING FIELD ADDED!
         { interests: { hasSome: ['Sales & Business Development', 'Consulting & Strategy'] } }
       ]
     } else {
@@ -349,7 +360,8 @@ export class NextGenAITalentMatcher {
       whereConditions.OR = [
         { bio: { not: null } },
         { interests: { isEmpty: false } },  // Fixed: Use isEmpty instead of not.equals
-        { major: { not: null } }
+        { major: { not: null } },
+        { subjects: { not: null } }  // MISSING FIELD ADDED!
       ]
     }
     
