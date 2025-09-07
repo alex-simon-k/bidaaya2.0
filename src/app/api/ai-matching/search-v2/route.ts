@@ -28,16 +28,18 @@ export async function POST(request: NextRequest) {
     console.log(`   OpenAI API Key: ${process.env.OPENAI_API_KEY ? '✅ Configured' : '❌ Missing'}`)
     console.log(`   DeepSeek API Key: ${process.env.DEEPSEEK_API_KEY ? '✅ Configured' : '❌ Missing'}`)
 
-    // Get user's subscription tier
+    // Get user's subscription tier - CORRECTED TO MATCH ACTUAL SUBSCRIPTION NAMES
     const user = session.user as any
     let tier = 'FREE'
     
     if (user.subscriptionPlan) {
-      const subscription = user.subscriptionPlan
-      if (subscription.includes('PROFESSIONAL') || subscription.includes('PRO')) {
-        tier = 'PROFESSIONAL'
-      } else if (subscription.includes('ENTERPRISE') || subscription.includes('AGENT')) {
-        tier = 'ENTERPRISE'
+      const subscription = user.subscriptionPlan.toUpperCase()
+      if (subscription.includes('BASIC') || subscription.includes('COMPANY_BASIC')) {
+        tier = 'BASIC'
+      } else if (subscription.includes('BOOSTER') || subscription.includes('HR_BOOSTER')) {
+        tier = 'HR_BOOSTER'
+      } else if (subscription.includes('AGENT') || subscription.includes('HR_AGENT')) {
+        tier = 'HR_AGENT'
       }
     }
 
@@ -80,10 +82,10 @@ export async function POST(request: NextRequest) {
         credits: searchResults.creditInfo,
         suggestions: searchResults.suggestions,
         upgradeInfo: tier === 'FREE' ? {
-          currentPlan: 'FREE',
+          currentPlan: 'Free Trial',
           upgrade: {
-            plan: 'PROFESSIONAL',
-            benefits: ['30 credits/month', '25 contacts', '15 results', 'Internal outreach system']
+            plan: 'Company Basic',
+            benefits: ['50 contact credits/month', 'Active projects', 'AI shortlisting', 'Interview tools']
           }
         } : null
       },

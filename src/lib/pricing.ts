@@ -71,14 +71,30 @@ export const PRICING_PLANS = {
     badge: 'Early Access'
   },
 
-  // Company Plans
+  // Company Plans - CORRECTED TO MATCH SUBSCRIPTION PAGE
+  COMPANY_FREE: {
+    id: 'company_free',
+    name: 'Free Trial',
+    price: 0,
+    interval: 'month' as const,
+    description: 'Test the platform',
+    contacts: 10, // 10 contact credits per month
+    features: [
+      '10 contact credits per month',
+      'Create draft projects',
+      'Browse student profiles',
+      'Basic platform access',
+      'Email notifications',
+      'Community support'
+    ]
+  },
   COMPANY_BASIC: {
     id: 'company_basic',
     name: 'Company Basic',
     price: 20,
     interval: 'month' as const, 
     description: 'Perfect for small teams getting started',
-    credits: 50,
+    contacts: 50, // 50 contact credits per month
     contactFeatures: ['calendly', 'linkedin'],
     features: [
       '50 contact credits per month',
@@ -117,6 +133,45 @@ export const PRICING_PLANS = {
       'Candidate communication tools',
       'Advanced analytics dashboard',
       'Priority email support',
+    ]
+  },
+  COMPANY_HR_BOOSTER: {
+    id: 'company_hr_booster',
+    name: 'HR Booster',
+    price: 75,
+    interval: 'month' as const,
+    description: 'Enhanced hiring with multiple projects',
+    contacts: 100, // 100 contact credits per month
+    contactFeatures: ['calendly', 'linkedin', 'whatsapp'],
+    features: [
+      '100 contact credits per month',
+      'Up to 5 simultaneous projects',
+      'Full applicant pool visibility',
+      'Custom project creation',
+      'Interview scheduling & management',
+      'Advanced analytics dashboard',
+      'Candidate communication tools',
+      'Priority email support'
+    ],
+    popular: true
+  },
+  COMPANY_HR_AGENT: {
+    id: 'company_hr_agent',
+    name: 'HR Agent',
+    price: 175,
+    interval: 'month' as const,
+    description: 'Complete HR solution with dedicated support',
+    contacts: 200, // 200 contact credits per month
+    contactFeatures: ['calendly', 'linkedin', 'whatsapp', 'phone', 'interview_transcripts'],
+    features: [
+      '200 contact credits per month',
+      'Unlimited simultaneous projects',
+      'Complete applicant transparency',
+      'We conduct interviews for you',
+      'Interview transcript analysis',
+      'Team recommendations delivered',
+      'Dedicated account manager',
+      'White-label options'
     ]
   },
   COMPANY_PRO: {
@@ -219,10 +274,12 @@ export const getCreditAllowance = (planId: string): number => {
   
   // Convert database format to pricing format
   const planMapping: Record<string, string> = {
-    'FREE': 'student_free', // Both students and companies start with FREE
+    'FREE': 'company_free', // Companies start with FREE -> company_free
     'COMPANY_BASIC': 'company_basic',
-    'COMPANY_PREMIUM': 'company_premium', 
-    'COMPANY_PRO': 'company_pro',
+    'COMPANY_PREMIUM': 'company_hr_booster', // Updated mapping
+    'COMPANY_PRO': 'company_hr_agent', // Updated mapping
+    'HR_BOOSTER': 'company_hr_booster',
+    'HR_AGENT': 'company_hr_agent',
     'STUDENT_FREE': 'student_free',
     'STUDENT_PREMIUM': 'student_premium',
     'STUDENT_PRO': 'student_pro'
@@ -233,7 +290,8 @@ export const getCreditAllowance = (planId: string): number => {
   }
   
   const plan = getPlanById(normalizedPlanId)
-  return (plan as any)?.credits || 0
+  // Use 'contacts' for company plans, 'credits' for student plans
+  return (plan as any)?.contacts || (plan as any)?.credits || 10 // Default to 10 for FREE
 }
 
 export const getContactFeatures = (planId: string): string[] => {

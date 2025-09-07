@@ -66,11 +66,12 @@ export class NextGenAITalentMatcher {
     BASIC_QUALITY: 1    // Bottom 20% candidates
   }
   
-  // Tier limits and benefits - INCREASED RESULTS
+  // Tier limits and benefits - CORRECTED TO MATCH SUBSCRIPTION PAGE
   private static TIER_LIMITS = {
-    FREE: { credits: 15, contacts: 10, maxResults: 25 },        // Temporarily increased for testing
-    PROFESSIONAL: { credits: 30, contacts: 25, maxResults: 15 },
-    ENTERPRISE: { credits: 100, contacts: 75, maxResults: 50 }
+    FREE: { credits: 10, contacts: 10, maxResults: 20 },           // Free Trial: 10 credits, show 20 results
+    BASIC: { credits: 50, contacts: 50, maxResults: 20 },          // Company Basic: 50 credits, show 20 results  
+    HR_BOOSTER: { credits: 100, contacts: 100, maxResults: 20 },   // HR Booster: 100 credits, show 20 results
+    HR_AGENT: { credits: 200, contacts: 200, maxResults: 20 }      // HR Agent: 200 credits, show 20 results
   }
 
   /**
