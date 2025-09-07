@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: userId,
         query: `CONTACT_STUDENT_${candidateId}`,
-        response: `Contact revealed for candidate: ${candidate.name}`,
+        queryType: 'GENERAL',
         timestamp: new Date()
       }
     })
