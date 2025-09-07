@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
 
     // Get students without vectors OR force regenerate all
     const whereCondition = forceRegenerate ? 
-      { role: 'STUDENT' } : 
-      { role: 'STUDENT', studentVector: null }
+      { role: 'STUDENT' as const } : 
+      { role: 'STUDENT' as const, studentVector: null }
 
     const studentsToProcess = await prisma.user.findMany({
       where: whereCondition,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get total counts for summary
-    const totalStudents = await prisma.user.count({ where: { role: 'STUDENT' } })
+    const totalStudents = await prisma.user.count({ where: { role: 'STUDENT' as const } })
     const studentsWithVectors = await prisma.studentVector.count()
 
     return NextResponse.json({
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get vector generation status
-    const totalStudents = await prisma.user.count({ where: { role: 'STUDENT' } })
+    const totalStudents = await prisma.user.count({ where: { role: 'STUDENT' as const } })
     const studentsWithVectors = await prisma.studentVector.count()
 
     return NextResponse.json({
