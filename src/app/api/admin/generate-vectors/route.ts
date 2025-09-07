@@ -28,8 +28,19 @@ export async function POST(request: NextRequest) {
     const { batchSize = 10, forceRegenerate = false, offset = 0 } = await request.json().catch(() => ({}))
 
     // Get students without vectors OR force regenerate all
+    // When force regenerating, only target students without current vector version
     const whereCondition = forceRegenerate ? 
-      { role: 'STUDENT' as const } : 
+      { 
+        role: 'STUDENT' as const,
+        OR: [
+          { studentVector: null },                    // No vector at all
+          { 
+            studentVector: { 
+              vectorVersion: { not: 'v1.1-subjects' }  // Old vector version
+            }
+          }
+        ]
+      } : 
       { role: 'STUDENT' as const, studentVector: null }
 
     const studentsToProcess = await prisma.user.findMany({
@@ -39,7 +50,6 @@ export async function POST(request: NextRequest) {
         name: true,
         email: true
       },
-      skip: offset,
       take: batchSize
     })
 

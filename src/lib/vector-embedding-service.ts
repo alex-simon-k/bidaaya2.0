@@ -29,7 +29,7 @@ export interface SearchVector {
 
 export class VectorEmbeddingService {
   private static readonly EMBEDDING_MODEL = 'text-embedding-3-small'
-  private static readonly VECTOR_VERSION = 'v1.0'
+  private static readonly VECTOR_VERSION = 'v1.1-subjects'
   private static readonly MAX_TOKENS = 8000
 
   /**
