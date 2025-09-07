@@ -22,6 +22,11 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`🚀 Next-Gen AI Search by ${session.user.id}: "${prompt}"`)
+    
+    // Check API connectivity
+    console.log('🔧 API Configuration Check:')
+    console.log(`   OpenAI API Key: ${process.env.OPENAI_API_KEY ? '✅ Configured' : '❌ Missing'}`)
+    console.log(`   DeepSeek API Key: ${process.env.DEEPSEEK_API_KEY ? '✅ Configured' : '❌ Missing'}`)
 
     // Get user's subscription tier
     const user = session.user as any

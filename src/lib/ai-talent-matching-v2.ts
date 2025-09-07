@@ -86,13 +86,18 @@ export class NextGenAITalentMatcher {
     
     try {
       console.log(`🤖 Next-Gen AI Search: "${params.prompt}"`)
+      console.log('⏱️ Performance Tracking Started')
       
       // 1. Get company credit status
+      const creditStart = Date.now()
       const creditInfo = await this.getCreditStatus(params.companyId, params.tier)
+      console.log(`💳 Credit check: ${Date.now() - creditStart}ms`)
       
       // 2. TRY VECTOR SEARCH FIRST (if vectors available)
+      const vectorStart = Date.now()
       console.log('🔮 Attempting vector-based search...')
       let candidates = await this.tryVectorSearch(params.prompt, params.companyId)
+      console.log(`🔮 Vector search: ${Date.now() - vectorStart}ms`)
       
       // Initialize search intent variable
       let searchIntent: any = null
@@ -101,11 +106,15 @@ export class NextGenAITalentMatcher {
         console.log('⚠️ Vector search found no results, falling back to keyword search...')
         
         // 3. Parse search intent using AI (enhanced with strict filtering)
+        const intentStart = Date.now()
         searchIntent = await this.parseModernSearchIntent(params.prompt)
+        console.log(`🎯 Intent parsing: ${Date.now() - intentStart}ms`)
       console.log('🎯 Parsed search intent with filters:', searchIntent)
       
         // 4. Get STRICTLY FILTERED candidate pool (hard filtering first!)
+        const strictStart = Date.now()
         candidates = await this.getStrictlyFilteredCandidatePool(searchIntent)
+        console.log(`👥 Strict filtering: ${Date.now() - strictStart}ms`)
       console.log(`👥 Found ${candidates.length} FILTERED candidates (after hard filtering)`)
       
         // 🚨 FALLBACK: If strict filtering returns 0 results, use relaxed filtering
@@ -116,14 +125,18 @@ export class NextGenAITalentMatcher {
           
           // 🚨 EMERGENCY FALLBACK: If even relaxed filtering fails, get any active students
           if (candidates.length === 0) {
+            const keywordStart = Date.now()
             console.log('⚠️ Even relaxed filtering returned 0 results, trying keyword-specific search...')
             candidates = await this.getKeywordSpecificCandidates(params.prompt)
+            console.log(`🔍 Keyword search: ${Date.now() - keywordStart}ms`)
             console.log(`👥 Keyword-specific search found ${candidates.length} candidates`)
             
             // Final fallback: Get any active students
             if (candidates.length === 0) {
+              const emergencyStart = Date.now()
               console.log('⚠️ Keyword search failed, getting any active students...')
               candidates = await this.getEmergencyFallbackCandidates()
+              console.log(`🆘 Emergency fallback: ${Date.now() - emergencyStart}ms`)
               console.log(`👥 Emergency fallback found ${candidates.length} candidates`)
             }
           }
@@ -141,12 +154,19 @@ export class NextGenAITalentMatcher {
       }
       
       // 5. AI-powered scoring and matching (now relevance-first)
+      const matchingStart = Date.now()
       const matches = await this.performRelevanceFirstMatching(candidates, searchIntent, params)
+      console.log(`🎯 Relevance matching: ${Date.now() - matchingStart}ms`)
       
       // 6. Generate search suggestions
+      const suggestionsStart = Date.now()
       const suggestions = await this.generateSearchSuggestions(params.prompt, matches.length)
+      console.log(`💡 Suggestions generation: ${Date.now() - suggestionsStart}ms`)
       
       const processingTime = Date.now() - startTime
+      
+      console.log(`🏁 Total search time: ${processingTime}ms`)
+      console.log(`📊 Final result: ${matches.length} matches (showing ${Math.min(matches.length, this.TIER_LIMITS[params.tier].maxResults)})`)
       
       return {
         matches: matches.slice(0, this.TIER_LIMITS[params.tier].maxResults), // Now shows 9 for FREE
@@ -258,7 +278,7 @@ export class NextGenAITalentMatcher {
       return []
       
     } catch (error) {
-      console.error('❌ Error in vector search:', error.message)
+      console.error('❌ Error in vector search:', (error as Error).message)
       console.log('🔄 Continuing to keyword-based fallbacks...')
       return []
     }
