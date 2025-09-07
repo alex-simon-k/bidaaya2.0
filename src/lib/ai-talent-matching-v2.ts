@@ -321,7 +321,7 @@ export class NextGenAITalentMatcher {
       // Generic search - just get students with any useful data
       whereConditions.OR = [
         { bio: { not: null } },
-        { interests: { not: { equals: [] } } },
+        { interests: { isEmpty: false } },  // Fixed: Use isEmpty instead of not.equals
         { major: { not: null } }
       ]
     }
@@ -456,8 +456,8 @@ export class NextGenAITalentMatcher {
         { university: { not: null } },
         { major: { not: null } },
         { bio: { not: null } },
-        { skills: { not: { equals: [] } } },
-        { interests: { not: { equals: [] } } }
+        { skills: { isEmpty: false } },  // Fixed: Use isEmpty instead of not.equals
+        { interests: { isEmpty: false } }  // Fixed: Use isEmpty instead of not.equals
       ]
     }
 
@@ -540,8 +540,8 @@ export class NextGenAITalentMatcher {
             { university: { not: null } },
             { major: { not: null } },
         { bio: { not: null } },
-        { skills: { not: { equals: [] } } },
-        { interests: { not: { equals: [] } } }
+        { skills: { isEmpty: false } },  // Fixed: Use isEmpty instead of not.equals
+        { interests: { isEmpty: false } }  // Fixed: Use isEmpty instead of not.equals
       ]
     }
 
