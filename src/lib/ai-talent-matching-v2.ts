@@ -16,13 +16,24 @@ export interface TalentProfile {
   email: string
   university?: string | null
   major?: string | null
-  subjects?: string | null  // Add subjects field
+  subjects?: string | null
   graduationYear?: number | null
   bio?: string | null
   location?: string | null
   goal?: string[]
   interests?: string[]
   image?: string | null
+  
+  // Additional comprehensive fields
+  education?: string | null       // Education status (High School, University, etc.)
+  highSchool?: string | null      // High school name
+  skills?: string[]               // Skills array
+  dateOfBirth?: Date | null       // For age calculation
+  linkedin?: string | null        // LinkedIn profile
+  mena?: boolean | null           // MENA region indicator
+  createdAt?: Date | null         // Account creation date
+  updatedAt?: Date | null         // Profile last updated
+  profileCompleted?: boolean      // Profile completion status
   
   // Activity Metrics
   lastActiveAt?: Date | null
@@ -453,12 +464,25 @@ export class NextGenAITalentMatcher {
       email: candidate.email,
       university: candidate.university,
       major: candidate.major,
+      subjects: candidate.subjects,
       graduationYear: candidate.graduationYear,
       bio: candidate.bio,
       location: candidate.location,
       goal: candidate.goal,
       interests: candidate.interests,
       image: candidate.image,
+      
+      // Additional comprehensive fields
+      education: candidate.education,
+      highSchool: candidate.highSchool,
+      skills: candidate.skills,
+      dateOfBirth: candidate.dateOfBirth,
+      linkedin: candidate.linkedin,
+      mena: candidate.mena,
+      createdAt: candidate.createdAt,
+      updatedAt: candidate.updatedAt,
+      profileCompleted: candidate.profileCompleted,
+      
       lastActiveAt: candidate.lastActiveAt || candidate.updatedAt,
       applicationsThisMonth: candidate.applicationsThisMonth,
       profileCompletedAt: candidate.profileCompletedAt,
@@ -638,21 +662,21 @@ export class NextGenAITalentMatcher {
     
     const candidates = await prisma.user.findMany({
       where: whereConditions,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        university: true,
-        major: true,
-        graduationYear: true,
-        bio: true,
-        location: true,
-        goal: true,
-        interests: true,
-        image: true,
-        applicationsThisMonth: true,
-        profileCompleted: true,
-        createdAt: true,
+             select: {
+         id: true,
+         name: true,
+         email: true,
+         university: true,
+         major: true,
+         graduationYear: true,
+         bio: true,
+         location: true,
+         goal: true,
+         interests: true,
+         image: true,
+         applicationsThisMonth: true,
+         profileCompleted: true,
+         createdAt: true,
         // Additional comprehensive fields
         education: true,        // Education status (High School, University, etc.)
         highSchool: true,       // High school name
@@ -663,11 +687,11 @@ export class NextGenAITalentMatcher {
         mena: true,            // MENA region indicator
         lastActiveAt: true,     // Last activity
         updatedAt: true,        // Profile last updated
-        applications: {
-          select: { id: true },
-          take: 100
-        }
-      },
+         applications: {
+           select: { id: true },
+           take: 100
+         }
+       },
              // Order by RELEVANCE first, then activity
        orderBy: [
          { profileCompleted: 'desc' },    // Complete profiles first
