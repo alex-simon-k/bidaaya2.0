@@ -28,46 +28,26 @@ export async function POST(request: NextRequest) {
     // Get user's credit allowance and current usage
     const maxCredits = getCreditAllowance(userPlan)
     
-    // For now, we'll use a simple approach with session storage
-    // In production, you'd want to track this in the database
-    // Get the user's current credit usage (this would be stored in DB)
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { 
-        id: true, 
-        // Add a credits field to track usage if it doesn't exist
-        // For now, we'll simulate this
+    // Get actual credit usage from database (same method as /api/company/credits)
+    const currentDate = new Date()
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+
+    // Count contacts made this month (same logic as company/credits endpoint)
+    const contactsThisMonth = await prisma.chatQuery.count({
+      where: {
+        userId: userId,
+        query: {
+          startsWith: 'CONTACT_STUDENT_'
+        },
+        timestamp: {
+          gte: monthStart,
+          lte: monthEnd
+        }
       }
     })
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // For this implementation, we'll use a simple counter approach
-    // In a real app, you'd track monthly credit usage in the database
-    const currentDate = new Date()
-    const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
-    
-    // Get current month's usage using a simple user-based approach
-    // This would normally be stored in the database
-    // For now, we'll check if they've used any credits this month
-    
-    // Simple credit tracking: each user gets their monthly allowance
-    // We'll track usage by creating simple records (this is a temporary solution)
-    let usedCredits = 0
-    
-    // In a real implementation, you'd query a credits_usage table:
-    // const usage = await prisma.creditUsage.aggregate({
-    //   where: { 
-    //     userId,
-    //     month: monthKey
-    //   },
-    //   _sum: { amount: true }
-    // })
-    // usedCredits = usage._sum.amount || 0
-
-    const remainingCredits = maxCredits - usedCredits
+    const remainingCredits = Math.max(0, maxCredits - contactsThisMonth)
 
     if (remainingCredits < (creditsToSpend || 1)) {
       return NextResponse.json({ 
@@ -97,18 +77,16 @@ export async function POST(request: NextRequest) {
     // Get tier-appropriate contact information
     const revealedContent = getContactRevealContent(userPlan, candidate)
 
-    // In a real app, you'd increment the credit usage here
-    // await prisma.creditUsage.create({
-    //   data: {
-    //     userId,
-    //     amount: creditsToSpend || 1,
-    //     type: 'CONTACT_REVEAL',
-    //     candidateId,
-    //     month: monthKey
-    //   }
-    // })
+    // Record credit usage in database (same method as other credit tracking)
+    await prisma.chatQuery.create({
+      data: {
+        userId: userId,
+        query: `CONTACT_STUDENT_${candidateId}`,
+        response: `Contact revealed for candidate: ${candidate.name}`,
+        timestamp: new Date()
+      }
+    })
 
-    // For now, we'll simulate the credit deduction
     const newRemainingCredits = remainingCredits - (creditsToSpend || 1)
 
     return NextResponse.json({

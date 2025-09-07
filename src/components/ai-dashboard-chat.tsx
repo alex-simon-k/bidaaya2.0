@@ -1300,7 +1300,7 @@ Something went wrong while sending the invitation. Please try again or contact s
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <p className="font-medium text-gray-900">
-                                          Major: {result.candidate.major || result.candidate.education || 'Not specified'}
+                                          Major: {result.candidate.major || result.candidate.subjects || result.candidate.education || 'Not specified'}
                                         </p>
                                         {result.candidate.university && (
                                           <p className="text-gray-600 text-xs">Institution: {result.candidate.university}</p>
