@@ -880,7 +880,7 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
   }
 
   const revealContact = async (candidateId: string, cost: number) => {
-    if (credits < cost) {
+    if (credits.remaining < cost) {
       alert('Insufficient credits. Please upgrade your plan.')
       return
     }
@@ -903,7 +903,10 @@ If you'd like, I can also walk you through setting it up step-by-step. Just say 
       trackCreditUsage(cost)
       
       // Update local credits display
-      setCredits(prev => Math.max(0, prev - cost))
+      setCredits(prev => ({ 
+        ...prev, 
+        remaining: Math.max(0, prev.remaining - cost) 
+      }))
       
       // Update the search results to show revealed contact
       setSearchResults(prev => prev.map(result => 
