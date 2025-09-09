@@ -360,7 +360,7 @@ export default function CompanyProfilePage() {
                       value={profile.companyName}
                       onChange={(e) => handleInputChange('companyName', e.target.value)}
                       placeholder="Company Name"
-                      className="text-3xl font-bold text-gray-900 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500 mb-2"
+                      className="text-3xl font-bold text-gray-900 border-b-2 border-gray-300 bg-white px-3 py-2 w-full focus:outline-none focus:border-blue-500 focus:bg-white rounded-t mb-2"
                     />
                   ) : (
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">{profile.companyName || 'Company Name'}</h1>
@@ -372,7 +372,7 @@ export default function CompanyProfilePage() {
                       value={profile.companyOneLiner}
                       onChange={(e) => handleInputChange('companyOneLiner', e.target.value)}
                       placeholder="Company tagline or description"
-                      className="text-lg text-gray-600 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500"
+                      className="text-lg text-gray-800 border-b-2 border-gray-300 bg-white px-3 py-2 w-full focus:outline-none focus:border-blue-500 focus:bg-white rounded-t"
                     />
                   ) : (
                     <p className="text-lg text-gray-600">
@@ -389,7 +389,7 @@ export default function CompanyProfilePage() {
                       <select
                         value={profile.companySize}
                         onChange={(e) => handleInputChange('companySize', e.target.value)}
-                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
+                        className="text-gray-900 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
                       >
                         <option value="">Select size</option>
                         {COMPANY_SIZES.map(size => (
@@ -407,7 +407,7 @@ export default function CompanyProfilePage() {
                       <select
                         value={profile.industry}
                         onChange={(e) => handleInputChange('industry', e.target.value)}
-                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
+                        className="text-gray-900 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
                       >
                         <option value="">Select industry</option>
                         {INDUSTRIES.map(industry => (
@@ -427,7 +427,7 @@ export default function CompanyProfilePage() {
                         value={profile.companyWebsite}
                         onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
                         placeholder="company.com"
-                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
+                        className="text-gray-900 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
                       />
                     ) : (
                       <span>{profile.companyWebsite || 'Company website'}</span>
@@ -447,7 +447,7 @@ export default function CompanyProfilePage() {
                           value={profile.contactPersonName}
                           onChange={(e) => handleInputChange('contactPersonName', e.target.value)}
                           placeholder="Contact person name"
-                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                          className="text-gray-900 bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 w-full"
                         />
                       ) : (
                         <span className="text-gray-700">{profile.contactPersonName || 'Contact person name'}</span>
@@ -462,7 +462,7 @@ export default function CompanyProfilePage() {
                           value={profile.contactEmail}
                           onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                           placeholder="contact@company.com"
-                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                          className="text-gray-900 bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 w-full"
                         />
                       ) : (
                         <span className="text-gray-700">{profile.contactEmail || 'contact@company.com'}</span>
@@ -477,7 +477,7 @@ export default function CompanyProfilePage() {
                           value={profile.contactWhatsapp}
                           onChange={(e) => handleInputChange('contactWhatsapp', e.target.value)}
                           placeholder="+1234567890"
-                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                          className="text-gray-900 bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 w-full"
                         />
                       ) : (
                         <span className="text-gray-700">{profile.contactWhatsapp || 'Phone number'}</span>
@@ -492,7 +492,7 @@ export default function CompanyProfilePage() {
                           value={profile.calendlyLink}
                           onChange={(e) => handleInputChange('calendlyLink', e.target.value)}
                           placeholder="calendly.com/yourlink"
-                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                          className="text-gray-900 bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 w-full"
                         />
                       ) : (
                         <span className="text-gray-700">{profile.calendlyLink || 'Calendly link'}</span>
@@ -516,7 +516,7 @@ export default function CompanyProfilePage() {
                           value={profile.companyRole}
                           onChange={(e) => handleInputChange('companyRole', e.target.value)}
                           placeholder="CEO, CTO, HR Manager..."
-                          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                         />
                       ) : (
                         <p className="text-gray-600">{profile.companyRole || 'Your role'}</p>
