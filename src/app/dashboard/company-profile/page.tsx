@@ -19,7 +19,9 @@ import {
   Camera,
   ArrowLeft,
   Check,
-  X
+  X,
+  Edit2,
+  MapPin
 } from 'lucide-react'
 
 interface CompanyProfile {
@@ -78,6 +80,7 @@ export default function CompanyProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
 
   // Redirect if not company
@@ -146,31 +149,30 @@ export default function CompanyProfilePage() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
       setMessage({ type: 'error', text: 'Image size must be less than 5MB' })
       return
     }
 
     setIsUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
+      const formData = new FormData()
+      formData.append('file', file)
+
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData
+        body: formData,
       })
 
       if (response.ok) {
         const data = await response.json()
         setProfile(prev => ({ ...prev, image: data.url }))
-        setMessage({ type: 'success', text: 'Profile picture updated successfully' })
       } else {
         throw new Error('Failed to upload image')
       }
     } catch (error) {
-      console.error('Image upload error:', error)
-      setMessage({ type: 'error', text: 'Failed to upload image' })
+      console.error('Upload error:', error)
+      setMessage({ type: 'error', text: 'Failed to upload image. Please try again.' })
     } finally {
       setIsUploading(false)
     }
@@ -206,6 +208,7 @@ export default function CompanyProfilePage() {
         // Update session
         await update()
         setMessage({ type: 'success', text: 'Profile updated successfully!' })
+        setIsEditing(false) // Exit edit mode after successful save
         
         // Clear message after 3 seconds
         setTimeout(() => setMessage(null), 3000)
@@ -237,8 +240,8 @@ export default function CompanyProfilePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
             <button
               onClick={() => router.push('/dashboard')}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -246,11 +249,46 @@ export default function CompanyProfilePage() {
               <ArrowLeft className="h-5 w-5" />
               Back to Dashboard
             </button>
+            
+            {/* Edit/Save/Cancel buttons */}
+            <div className="flex gap-2">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveProfile}
+                    disabled={isSaving}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isSaving ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    {isSaving ? 'Saving...' : 'Save Profile'}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  Edit Profile
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Success/Error Messages */}
         {message && (
           <motion.div
@@ -265,307 +303,257 @@ export default function CompanyProfilePage() {
           </motion.div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-8">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-white" />
+        {/* Company Profile Card */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* Company Cover Image */}
+          <div className="h-48 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 relative">
+            {isEditing && (
+              <button className="absolute top-4 right-4 bg-black/20 text-white p-2 rounded-full hover:bg-black/40">
+                <Camera className="h-4 w-4" />
+              </button>
+            )}
+            
+            {/* Company Logo */}
+            <div className="absolute -bottom-16 left-8">
+              <div className="w-32 h-32 bg-white rounded-2xl p-4 shadow-lg border-4 border-white">
+                {profile.image ? (
+                  <img
+                    src={profile.image}
+                    alt="Company logo"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center text-white text-3xl font-bold">
+                    {profile.companyName?.charAt(0).toUpperCase() || profile.name?.charAt(0).toUpperCase() || 'C'}
+                  </div>
+                )}
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Company Profile</h1>
-                <p className="text-gray-600">Manage your company information and settings</p>
-              </div>
+              {isEditing && (
+                <label className="absolute bottom-2 right-2 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                  {isUploading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                </label>
+              )}
             </div>
+          </div>
 
-            <div className="space-y-8">
-              {/* Profile Picture Section */}
-              <div className="flex items-center gap-6">
-                <div className="relative">
-                  <div className="h-24 w-24 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
-                    {profile.image ? (
-                      <img
-                        src={profile.image}
-                        alt="Company logo"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                        <Building2 className="h-8 w-8 text-white" />
-                      </div>
-                    )}
-                  </div>
-                  <label className="absolute bottom-0 right-0 h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      disabled={isUploading}
-                    />
-                    {isUploading ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    ) : (
-                      <Camera className="h-4 w-4 text-white" />
-                    )}
-                  </label>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Company Logo</h3>
-                  <p className="text-sm text-gray-600">Upload a logo for your company. Max size: 5MB</p>
-                </div>
-              </div>
-
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Full Name *
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={profile.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Role/Job Title *
-                  </label>
-                  <div className="relative">
-                    <Briefcase className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={profile.companyRole}
-                      onChange={(e) => handleInputChange('companyRole', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      placeholder="e.g. CEO, CTO, HR Manager"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Company Name *
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+          {/* Company Profile Content */}
+          <div className="relative px-8 pb-8 pt-20">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Main Company Info */}
+              <div className="lg:col-span-2">
+                {/* Company Name & Role */}
+                <div className="mb-6">
+                  {isEditing ? (
                     <input
                       type="text"
                       value={profile.companyName}
                       onChange={(e) => handleInputChange('companyName', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      placeholder="Legal name of your organization"
+                      placeholder="Company Name"
+                      className="text-3xl font-bold text-gray-900 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500 mb-2"
                     />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Company Size *
-                  </label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <select
-                      value={profile.companySize}
-                      onChange={(e) => handleInputChange('companySize', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    >
-                      <option value="">Select company size</option>
-                      {COMPANY_SIZES.map(size => (
-                        <option key={size} value={size}>{size} employees</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Industry *
-                  </label>
-                  <div className="relative">
-                    <Target className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <select
-                      value={profile.industry}
-                      onChange={(e) => handleInputChange('industry', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    >
-                      <option value="">Select industry</option>
-                      {INDUSTRIES.map(industry => (
-                        <option key={industry} value={industry}>{industry}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Company Website
-                  </label>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  ) : (
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{profile.companyName || 'Company Name'}</h1>
+                  )}
+                  
+                  {isEditing ? (
                     <input
-                      type="url"
-                      value={profile.companyWebsite}
-                      onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                      placeholder="https://example.com"
+                      type="text"
+                      value={profile.companyOneLiner}
+                      onChange={(e) => handleInputChange('companyOneLiner', e.target.value)}
+                      placeholder="Company tagline or description"
+                      className="text-lg text-gray-600 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500"
                     />
-                  </div>
+                  ) : (
+                    <p className="text-lg text-gray-600">
+                      {profile.companyOneLiner || 'Company tagline or description'}
+                    </p>
+                  )}
                 </div>
-              </div>
 
-              {/* Company Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Company One-Liner *
-                </label>
-                <textarea
-                  value={profile.companyOneLiner}
-                  onChange={(e) => handleInputChange('companyOneLiner', e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                  placeholder="Brief description of what your company does..."
-                />
-              </div>
-
-              {/* Company Goals */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What are you looking to achieve with interns? *
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {GOAL_OPTIONS.map(goal => (
-                    <label key={goal} className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={profile.companyGoals.includes(goal)}
-                        onChange={() => handleGoalToggle(goal)}
-                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <span className="text-sm text-gray-700">{goal}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="border-t border-gray-200 pt-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Contact Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Contact Person Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                      <input
-                        type="text"
-                        value={profile.contactPersonName}
-                        onChange={(e) => handleInputChange('contactPersonName', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                        placeholder="Primary contact person"
-                      />
-                    </div>
+                {/* Company Meta Info */}
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    {isEditing ? (
+                      <select
+                        value={profile.companySize}
+                        onChange={(e) => handleInputChange('companySize', e.target.value)}
+                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="">Select size</option>
+                        {COMPANY_SIZES.map(size => (
+                          <option key={size} value={size}>{size} employees</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span>{profile.companySize ? `${profile.companySize} employees` : 'Company size'}</span>
+                    )}
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Contact Person Type
-                    </label>
-                    <select
-                      value={profile.contactPersonType}
-                      onChange={(e) => handleInputChange('contactPersonType', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    >
-                      <option value="">Select type</option>
-                      {CONTACT_TYPES.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+                  
+                  <div className="flex items-center gap-1">
+                    <Briefcase className="h-4 w-4" />
+                    {isEditing ? (
+                      <select
+                        value={profile.industry}
+                        onChange={(e) => handleInputChange('industry', e.target.value)}
+                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="">Select industry</option>
+                        {INDUSTRIES.map(industry => (
+                          <option key={industry} value={industry}>{industry}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span>{profile.industry || 'Industry'}</span>
+                    )}
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Contact Email
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                      <input
-                        type="email"
-                        value={profile.contactEmail}
-                        onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                        placeholder="contact@company.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      WhatsApp Number
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                      <input
-                        type="tel"
-                        value={profile.contactWhatsapp}
-                        onChange={(e) => handleInputChange('contactWhatsapp', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                        placeholder="+971 50 123 4567"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Preferred Contact Method for Students
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  
+                  <div className="flex items-center gap-1">
+                    <Globe className="h-4 w-4" />
+                    {isEditing ? (
                       <input
                         type="url"
-                        value={profile.calendlyLink}
-                        onChange={(e) => handleInputChange('calendlyLink', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                        placeholder="https://calendly.com/your-link OR any preferred contact link"
+                        value={profile.companyWebsite}
+                        onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
+                        placeholder="company.com"
+                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
                       />
+                    ) : (
+                      <span>{profile.companyWebsite || 'Company website'}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Contact Information Section */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">Contact Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-400" />
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={profile.contactPersonName}
+                          onChange={(e) => handleInputChange('contactPersonName', e.target.value)}
+                          placeholder="Contact person name"
+                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                        />
+                      ) : (
+                        <span className="text-gray-700">{profile.contactPersonName || 'Contact person name'}</span>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      📅 <strong>Flexible Contact Options:</strong> This can be your Calendly link, WhatsApp link, Google Meet link, specific email, or any other contact method you prefer students to use. This link will be included in all emails sent to students when you reach out to them.
-                    </p>
+                    
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      {isEditing ? (
+                        <input
+                          type="email"
+                          value={profile.contactEmail}
+                          onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+                          placeholder="contact@company.com"
+                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                        />
+                      ) : (
+                        <span className="text-gray-700">{profile.contactEmail || 'contact@company.com'}</span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      {isEditing ? (
+                        <input
+                          type="tel"
+                          value={profile.contactWhatsapp}
+                          onChange={(e) => handleInputChange('contactWhatsapp', e.target.value)}
+                          placeholder="+1234567890"
+                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                        />
+                      ) : (
+                        <span className="text-gray-700">{profile.contactWhatsapp || 'Phone number'}</span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      {isEditing ? (
+                        <input
+                          type="url"
+                          value={profile.calendlyLink}
+                          onChange={(e) => handleInputChange('calendlyLink', e.target.value)}
+                          placeholder="calendly.com/yourlink"
+                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500 w-full"
+                        />
+                      ) : (
+                        <span className="text-gray-700">{profile.calendlyLink || 'Calendly link'}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Save Button */}
-              <div className="border-t border-gray-200 pt-8">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={saveProfile}
-                    disabled={isSaving}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                  >
-                    {isSaving ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-5 w-5" />
-                        Save Profile
-                      </>
-                    )}
-                  </button>
-                  <p className="text-sm text-gray-500">
-                    All changes are saved automatically when you click Save Profile
-                  </p>
+              {/* Sidebar Info */}
+              <div className="lg:col-span-1">
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">Quick Info</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Your Role</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={profile.companyRole}
+                          onChange={(e) => handleInputChange('companyRole', e.target.value)}
+                          placeholder="CEO, CTO, HR Manager..."
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      ) : (
+                        <p className="text-gray-600">{profile.companyRole || 'Your role'}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Company Goals</label>
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          {GOAL_OPTIONS.map(goal => (
+                            <label key={goal} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={profile.companyGoals.includes(goal)}
+                                onChange={() => handleGoalToggle(goal)}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">{goal}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {profile.companyGoals.length > 0 ? (
+                            profile.companyGoals.map(goal => (
+                              <span key={goal} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                {goal}
+                              </span>
+                            ))
+                          ) : (
+                            <p className="text-gray-500 text-sm">No goals selected</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
