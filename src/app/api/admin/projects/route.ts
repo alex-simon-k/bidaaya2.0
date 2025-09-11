@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         compensation: compensation || null,
         duration: duration || null,
         experienceLevel: experienceLevel || 'High School',
-        category: category || 'MARKETING',
+        category: category === 'CUSTOM' ? 'MARKETING' : (category || 'MARKETING'),
         subcategory: subcategory || '',
         teamSize: teamSize || 1,
         durationMonths: durationMonths || 3,

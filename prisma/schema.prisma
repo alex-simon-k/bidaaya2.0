@@ -444,6 +444,7 @@ enum ProjectCategory {
   COMPUTER_SCIENCE
   FINANCE
   PSYCHOLOGY
+  CUSTOM
 }
 
 enum UserRole {
