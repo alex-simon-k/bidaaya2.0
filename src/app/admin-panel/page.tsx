@@ -1470,18 +1470,33 @@ export default function AdminPanel() {
                       <option value="COMPUTER_SCIENCE">Computer Science</option>
                       <option value="FINANCE">Finance</option>
                       <option value="PSYCHOLOGY">Psychology</option>
+                      <option value="CUSTOM">Custom Category</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Subcategory</label>
-                    <input
-                      type="text"
-                      value={newProjectData.subcategory}
-                      onChange={(e) => setNewProjectData({...newProjectData, subcategory: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="e.g. Social Media, Web Development"
-                    />
-                  </div>
+                  {newProjectData.category === 'CUSTOM' ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Custom Category *</label>
+                      <input
+                        type="text"
+                        value={newProjectData.subcategory}
+                        onChange={(e) => setNewProjectData({...newProjectData, subcategory: e.target.value})}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                        placeholder="e.g. Real Estate, Healthcare, Education, Legal"
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Subcategory</label>
+                      <input
+                        type="text"
+                        value={newProjectData.subcategory}
+                        onChange={(e) => setNewProjectData({...newProjectData, subcategory: e.target.value})}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                        placeholder="e.g. Social Media, Web Development"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Experience Level *</label>
                     <select
@@ -1649,7 +1664,7 @@ Adobe Creative Suite"
                 <div className="flex gap-3 pt-4 border-t border-gray-600">
                   <button
                     onClick={handleCreateProject}
-                    disabled={isCreatingProject || !newProjectData.companyId || !newProjectData.title || !newProjectData.description}
+                    disabled={isCreatingProject || !newProjectData.companyId || !newProjectData.title || !newProjectData.description || (newProjectData.category === 'CUSTOM' && !newProjectData.subcategory)}
                     className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {isCreatingProject ? (
