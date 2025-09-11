@@ -180,6 +180,7 @@ model Project {
   approvedAt          DateTime?
   approvedBy          String?
   category            ProjectCategory?
+  customCategory      String?              // For custom category names when category is CUSTOM
   compensation        String?
   paymentAmount       Float?
   currentApplications Int?                 @default(0)

@@ -37,6 +37,7 @@ interface Project {
   approvedAt?: string
   approvedBy?: string
   category?: string
+  customCategory?: string
   teamSize?: number
   durationMonths?: number
   experienceLevel?: string
@@ -211,9 +212,9 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
                 </div>
 
                 <div className="space-y-2 mb-3">
-                  {project.category && (
+                  {(project.category || project.customCategory) && (
                     <span className="inline-block text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                      {project.category}
+                      {project.category === 'CUSTOM' ? project.customCategory : project.category}
                     </span>
                   )}
                   
@@ -424,7 +425,7 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
                   <strong>Experience:</strong> {selectedProject.experienceLevel || 'Not specified'}
                 </div>
                 <div>
-                  <strong>Category:</strong> {selectedProject.category || 'Not specified'}
+                  <strong>Category:</strong> {selectedProject.category === 'CUSTOM' ? selectedProject.customCategory : selectedProject.category || 'Not specified'}
                 </div>
               </div>
 
