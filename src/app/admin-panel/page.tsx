@@ -1419,17 +1419,20 @@ export default function AdminPanel() {
               </button>
             </div>
 
-            {/* Create Project Form */}
+            {/* Create Project Form - COMPREHENSIVE VERSION */}
             {showCreateProjectForm && (
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <h3 className="text-lg font-semibold text-white mb-4">Create Project on Behalf of Company</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 max-h-[80vh] overflow-y-auto">
+                <h3 className="text-lg font-semibold text-white mb-6">Create Project on Behalf of Company</h3>
+                
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Company *</label>
                     <select
                       value={newProjectData.companyId}
                       onChange={(e) => setNewProjectData({...newProjectData, companyId: e.target.value})}
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      required
                     >
                       <option value="">Select company</option>
                       {companies.map((company) => (
@@ -1446,41 +1449,41 @@ export default function AdminPanel() {
                       value={newProjectData.title}
                       onChange={(e) => setNewProjectData({...newProjectData, title: e.target.value})}
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="e.g. Frontend Developer Intern"
+                      placeholder="e.g. Social Media Campaign for Product Launch"
+                      required
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Project Description *</label>
-                    <textarea
-                      value={newProjectData.description}
-                      onChange={(e) => setNewProjectData({...newProjectData, description: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      rows={4}
-                      placeholder="Describe the project requirements, responsibilities, and expectations..."
-                    />
+                </div>
+
+                {/* Category & Details */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
+                    <select
+                      value={newProjectData.category}
+                      onChange={(e) => setNewProjectData({...newProjectData, category: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      required
+                    >
+                      <option value="MARKETING">Marketing</option>
+                      <option value="BUSINESS_DEVELOPMENT">Business Development</option>
+                      <option value="COMPUTER_SCIENCE">Computer Science</option>
+                      <option value="FINANCE">Finance</option>
+                      <option value="PSYCHOLOGY">Psychology</option>
+                    </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Compensation</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Subcategory</label>
                     <input
                       type="text"
-                      value={newProjectData.compensation}
-                      onChange={(e) => setNewProjectData({...newProjectData, compensation: e.target.value})}
+                      value={newProjectData.subcategory}
+                      onChange={(e) => setNewProjectData({...newProjectData, subcategory: e.target.value})}
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="e.g. £500/month, Unpaid, £2000 total"
+                      placeholder="e.g. Social Media, Web Development"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Duration</label>
-                    <input
-                      type="text"
-                      value={newProjectData.duration}
-                      onChange={(e) => setNewProjectData({...newProjectData, duration: e.target.value})}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-                      placeholder="e.g. 3 months, Summer 2024, 6 weeks"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Experience Level</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Experience Level *</label>
                     <select
                       value={newProjectData.experienceLevel}
                       onChange={(e) => setNewProjectData({...newProjectData, experienceLevel: e.target.value})}
@@ -1489,24 +1492,164 @@ export default function AdminPanel() {
                       <option value="High School">High School</option>
                       <option value="University">University</option>
                       <option value="Graduate">Graduate</option>
-                      <option value="Any">Any Level</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Work Type & Timing */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Location Type *</label>
+                    <select
+                      value={newProjectData.remote ? 'Remote' : 'On-site'}
+                      onChange={(e) => setNewProjectData({...newProjectData, location: e.target.value, remote: e.target.value === 'Remote'})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="Remote">Remote</option>
+                      <option value="On-site">On-site</option>
+                      <option value="Hybrid">Hybrid</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Application Deadline</label>
-                    <input
-                      type="date"
-                      value={newProjectData.applicationDeadline}
-                      onChange={(e) => setNewProjectData({...newProjectData, applicationDeadline: e.target.value})}
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Team Size</label>
+                    <select
+                      value={newProjectData.teamSize}
+                      onChange={(e) => setNewProjectData({...newProjectData, teamSize: parseInt(e.target.value)})}
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value={1}>1 Person</option>
+                      <option value={2}>2 People</option>
+                      <option value={3}>3 People</option>
+                      <option value={4}>4 People</option>
+                      <option value={5}>5+ People</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Duration (Months)</label>
+                    <select
+                      value={newProjectData.durationMonths}
+                      onChange={(e) => setNewProjectData({...newProjectData, durationMonths: parseInt(e.target.value)})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value={1}>1 Month</option>
+                      <option value={2}>2 Months</option>
+                      <option value={3}>3 Months</option>
+                      <option value={6}>6 Months</option>
+                      <option value={12}>12 Months</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Time Commitment</label>
+                    <select
+                      value={newProjectData.timeCommitment}
+                      onChange={(e) => setNewProjectData({...newProjectData, timeCommitment: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="Part-time">Part-time</option>
+                      <option value="Full-time">Full-time</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Compensation */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Compensation Type</label>
+                    <input
+                      type="text"
+                      value={newProjectData.compensation}
+                      onChange={(e) => setNewProjectData({...newProjectData, compensation: e.target.value})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                      placeholder="e.g. Paid, Unpaid, Performance-based"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Payment Amount (AED)</label>
+                    <input
+                      type="number"
+                      value={newProjectData.paymentAmount || ''}
+                      onChange={(e) => setNewProjectData({...newProjectData, paymentAmount: e.target.value ? parseFloat(e.target.value) : null})}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                      placeholder="e.g. 2000, 500 (leave empty if unpaid)"
                     />
                   </div>
                 </div>
+
+                {/* Project Description */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Project Description *</label>
+                  <textarea
+                    value={newProjectData.description}
+                    onChange={(e) => setNewProjectData({...newProjectData, description: e.target.value})}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                    rows={4}
+                    placeholder="Describe the project problem, solution approach, and what the intern will accomplish..."
+                    required
+                  />
+                </div>
+
+                {/* Requirements */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Requirements (one per line)</label>
+                  <textarea
+                    value={newProjectData.requirements.join('\n')}
+                    onChange={(e) => setNewProjectData({...newProjectData, requirements: e.target.value.split('\n').map(r => r.trim()).filter(r => r)})}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                    rows={3}
+                    placeholder="Strong communication skills
+Knowledge of social media platforms
+Experience with design tools
+Analytical thinking abilities"
+                  />
+                </div>
+
+                {/* Deliverables */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Deliverables (one per line)</label>
+                  <textarea
+                    value={newProjectData.deliverables.join('\n')}
+                    onChange={(e) => setNewProjectData({...newProjectData, deliverables: e.target.value.split('\n').map(d => d.trim()).filter(d => d)})}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                    rows={3}
+                    placeholder="Marketing strategy document
+Content calendar for 3 months
+Campaign performance report
+Brand awareness analysis"
+                  />
+                </div>
+
+                {/* Skills Required */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Skills Required (one per line)</label>
+                  <textarea
+                    value={newProjectData.skillsRequired.join('\n')}
+                    onChange={(e) => setNewProjectData({...newProjectData, skillsRequired: e.target.value.split('\n').map(s => s.trim()).filter(s => s)})}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                    rows={3}
+                    placeholder="Marketing Strategy
+Content Creation
+Social Media Management
+Analytics
+Adobe Creative Suite"
+                  />
+                </div>
+
+                {/* Application Deadline */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Application Deadline</label>
+                  <input
+                    type="date"
+                    value={newProjectData.applicationDeadline}
+                    onChange={(e) => setNewProjectData({...newProjectData, applicationDeadline: e.target.value})}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
                 
-                <div className="flex gap-3 mt-6">
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-600">
                   <button
                     onClick={handleCreateProject}
-                    disabled={isCreatingProject}
+                    disabled={isCreatingProject || !newProjectData.companyId || !newProjectData.title || !newProjectData.description}
                     className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {isCreatingProject ? (
