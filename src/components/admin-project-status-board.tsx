@@ -105,8 +105,6 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-  const [actionType, setActionType] = useState<'approve' | 'reject' | 'close' | null>(null)
-  const [feedback, setFeedback] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
@@ -158,8 +156,6 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
       if (response.ok) {
         await fetchProjects()
         setSelectedProject(null)
-        setActionType(null)
-        setFeedback('')
         if (onStatusChange) {
           onStatusChange(project.id, newStatus, feedback)
         }
@@ -175,104 +171,7 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
     }
   }
 
-  const getStatusActions = (status: string) => {
-    switch (status) {
-      case 'DRAFT':
-        return [
-          { label: 'Move to Review', action: 'PENDING_APPROVAL', icon: ArrowRight, color: 'yellow' }
-        ]
-      case 'PENDING_APPROVAL':
-        return [
-          { label: 'Approve', action: 'LIVE', icon: CheckCircle, color: 'green' },
-          { label: 'Request Changes', action: 'REJECTED', icon: XCircle, color: 'red' }
-        ]
-      case 'LIVE':
-        return [
-          { label: 'Close Project', action: 'CLOSED', icon: Archive, color: 'slate' }
-        ]
-      case 'REJECTED':
-        return [
-          { label: 'Move to Review', action: 'PENDING_APPROVAL', icon: RotateCcw, color: 'yellow' }
-        ]
-      case 'CLOSED':
-        return [
-          { label: 'Reopen', action: 'LIVE', icon: RotateCcw, color: 'green' }
-        ]
-      default:
-        return []
-    }
-  }
 
-  const ProjectCard = ({ project }: { project: Project }) => {
-    const statusConfig = STATUS_CONFIG[project.status]
-    const Icon = statusConfig.icon
-
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-        onClick={() => {
-          setSelectedProject(project)
-          if (onProjectClick) onProjectClick(project)
-        }}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
-              {project.title}
-            </h3>
-            <p className="text-xs text-gray-600 mb-2">
-              {project.company.companyName || project.company.name}
-            </p>
-          </div>
-          <div className="ml-2">
-            <Icon className={`h-4 w-4 ${statusConfig.textColor}`} />
-          </div>
-        </div>
-
-        <div className="space-y-2 mb-3">
-          {project.category && (
-            <span className="inline-block text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-              {project.category}
-            </span>
-          )}
-          
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            {project.teamSize && (
-              <div className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                {project.teamSize}
-              </div>
-            )}
-            {project.durationMonths && (
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {project.durationMonths}m
-              </div>
-            )}
-            {project.compensation && (
-              <div className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3" />
-                {project.compensation}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>{formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })}</span>
-          {project.status === 'LIVE' && (
-            <span className="text-green-600 font-medium">
-              {project.currentApplications}/{project.maxApplications} applications
-            </span>
-          )}
-        </div>
-      </motion.div>
-    )
-  }
 
   const StatusColumn = ({ status, projects }: { status: string, projects: Project[] }) => {
     const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]
@@ -299,7 +198,122 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
         <div className="space-y-3">
           <AnimatePresence>
             {projects.map(project => (
-              <ProjectCard key={project.id} project={project} />
+              <div key={project.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
+                      {project.title}
+                    </h3>
+                    <p className="text-xs text-gray-600 mb-2">
+                      {project.company.companyName || project.company.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-3">
+                  {project.category && (
+                    <span className="inline-block text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      {project.category}
+                    </span>
+                  )}
+                  
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    {project.teamSize && (
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {project.teamSize}
+                      </div>
+                    )}
+                    {project.durationMonths && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {project.durationMonths}m
+                      </div>
+                    )}
+                    {project.compensation && (
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" />
+                        {project.compensation}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Action Buttons */}
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {status === 'DRAFT' && (
+                    <button
+                      onClick={() => handleStatusChange(project, 'PENDING_APPROVAL')}
+                      className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200"
+                    >
+                      → Review
+                    </button>
+                  )}
+                  {status === 'PENDING_APPROVAL' && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(project, 'LIVE')}
+                        className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200"
+                      >
+                        ✓ Approve
+                      </button>
+                      <button
+                        onClick={() => {
+                          const feedback = prompt('Provide feedback for rejection:')
+                          if (feedback) handleStatusChange(project, 'REJECTED', feedback)
+                        }}
+                        className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200"
+                      >
+                        ✗ Reject
+                      </button>
+                    </>
+                  )}
+                  {status === 'LIVE' && (
+                    <button
+                      onClick={() => handleStatusChange(project, 'CLOSED')}
+                      className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded hover:bg-gray-200"
+                    >
+                      → Close
+                    </button>
+                  )}
+                  {status === 'REJECTED' && (
+                    <button
+                      onClick={() => handleStatusChange(project, 'PENDING_APPROVAL')}
+                      className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200"
+                    >
+                      → Review Again
+                    </button>
+                  )}
+                  {status === 'CLOSED' && (
+                    <button
+                      onClick={() => handleStatusChange(project, 'LIVE')}
+                      className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200"
+                    >
+                      → Reopen
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>{formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })}</span>
+                  {project.status === 'LIVE' && (
+                    <span className="text-green-600 font-medium">
+                      {project.currentApplications}/{project.maxApplications} applications
+                    </span>
+                  )}
+                </div>
+
+                {/* View/Edit Button */}
+                <button
+                  onClick={() => {
+                    setSelectedProject(project)
+                    if (onProjectClick) onProjectClick(project)
+                  }}
+                  className="w-full mt-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
+                >
+                  View Details
+                </button>
+              </div>
             ))}
           </AnimatePresence>
         </div>
@@ -355,14 +369,10 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
         </div>
       )}
 
-      {/* Project Action Modal */}
+      {/* Simple Project Details Modal */}
       {selectedProject && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-1">
@@ -374,13 +384,13 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
               </div>
               <button
                 onClick={() => setSelectedProject(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 text-2xl"
               >
                 ×
               </button>
             </div>
 
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4">
               <div>
                 <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${STATUS_CONFIG[selectedProject.status].badgeColor}`}>
                   {STATUS_CONFIG[selectedProject.status].label}
@@ -402,69 +412,38 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
                   </p>
                 </div>
               )}
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {getStatusActions(selectedProject.status).map((action) => {
-                const Icon = action.icon
-                return (
-                  <button
-                    key={action.action}
-                    onClick={() => {
-                      if (action.action === 'REJECTED') {
-                        setActionType('reject')
-                      } else if (action.action === 'CLOSED') {
-                        setActionType('close')
-                      } else if (action.action === 'LIVE') {
-                        handleStatusChange(selectedProject, action.action)
-                      } else {
-                        handleStatusChange(selectedProject, action.action)
-                      }
-                    }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      action.color === 'green' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
-                      action.color === 'red' ? 'bg-red-100 text-red-800 hover:bg-red-200' :
-                      action.color === 'yellow' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
-                      'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {action.label}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Feedback Input for Rejection */}
-            {actionType === 'reject' && (
-              <div className="mt-4 p-4 bg-red-50 rounded-lg">
-                <h3 className="font-semibold text-red-900 mb-2">Provide Feedback</h3>
-                <textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Explain what needs to be changed..."
-                  rows={3}
-                  className="w-full p-3 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                />
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => handleStatusChange(selectedProject, 'REJECTED', feedback)}
-                    disabled={isProcessing || !feedback.trim()}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isProcessing ? 'Processing...' : 'Send Feedback'}
-                  </button>
-                  <button
-                    onClick={() => setActionType(null)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong>Team Size:</strong> {selectedProject.teamSize || 'Not specified'}
+                </div>
+                <div>
+                  <strong>Duration:</strong> {selectedProject.durationMonths || 'Not specified'} months
+                </div>
+                <div>
+                  <strong>Experience:</strong> {selectedProject.experienceLevel || 'Not specified'}
+                </div>
+                <div>
+                  <strong>Category:</strong> {selectedProject.category || 'Not specified'}
                 </div>
               </div>
-            )}
-          </motion.div>
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  onClick={() => window.open(`/dashboard/projects/${selectedProject.id}`, '_blank')}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Open Project Page
+                </button>
+                <button
+                  onClick={() => setSelectedProject(null)}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
