@@ -68,7 +68,7 @@ export function MembershipSelectionPopup({
     },
     {
       id: 'student_premium_monthly',
-      name: 'Student Premium',
+      name: 'Career Builder',
       price: 5,
       currency: '£',
       period: 'month', 
@@ -87,8 +87,8 @@ export function MembershipSelectionPopup({
     },
     {
       id: 'student_pro_monthly',
-      name: 'Student Pro',
-      price: 10,
+      name: 'Career Accelerator',
+      price: 15,
       currency: '£',
       period: 'month',
       proposals: 50,
@@ -110,7 +110,7 @@ export function MembershipSelectionPopup({
     {
       id: 'company_basic_monthly',
       name: 'Company Basic',
-      price: 17, // £200/12 = ~£17/month for yearly
+      price: 20,
       currency: '£',
       period: 'month',
       contacts: 50,
@@ -129,7 +129,7 @@ export function MembershipSelectionPopup({
     {
       id: 'company_hr_booster_monthly',
       name: 'HR Booster',
-      price: 63, // £750/12 = ~£63/month for yearly
+      price: 75,
       currency: '£',
       period: 'month',
       contacts: 100,
@@ -149,7 +149,7 @@ export function MembershipSelectionPopup({
     {
       id: 'company_hr_agent_monthly',
       name: 'HR Agent',
-      price: 146, // £1750/12 = ~£146/month for yearly
+      price: 175,
       currency: '£',
       period: 'month',
       contacts: 200,
@@ -259,9 +259,7 @@ export function MembershipSelectionPopup({
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                     <div className="text-3xl font-bold text-gray-900">
-                      {plan.currency}{plan.price > 0 && userRole === 'STUDENT' ? 
-                        (plan.name === 'Student Premium' ? '4' : plan.name === 'Student Pro' ? '8' : plan.price) 
-                        : plan.price}
+                      {plan.currency}{plan.price}
                       <span className="text-lg text-gray-600">/{plan.period}</span>
                     </div>
                     {userRole === 'STUDENT' ? (

@@ -61,38 +61,38 @@ export function SubscriptionStatus() {
     switch (plan) {
       case 'STUDENT_PREMIUM':
         return {
-          name: 'Premium',
+          name: 'Career Builder',
           color: 'bg-emerald-100 text-emerald-800',
           icon: <Zap className="w-4 h-4" />,
-          price: '$5/month'
+          price: '£5/month'
         }
       case 'STUDENT_PRO':
         return {
-          name: 'Pro',
+          name: 'Career Accelerator',
           color: 'bg-purple-100 text-purple-800',
           icon: <Crown className="w-4 h-4" />,
-          price: '$15/month'
+          price: '£15/month'
         }
       case 'COMPANY_BASIC':
         return {
           name: 'Company Basic',
           color: 'bg-blue-100 text-blue-800',
           icon: <Zap className="w-4 h-4" />,
-          price: '$49/month'
+          price: '£20/month'
         }
       case 'COMPANY_PREMIUM':
         return {
-          name: 'Company Premium',
+          name: 'HR Booster',
           color: 'bg-purple-100 text-purple-800',
           icon: <Crown className="w-4 h-4" />,
-          price: '$149/month'
+          price: '£75/month'
         }
       case 'COMPANY_PRO':
         return {
-          name: 'Company Pro',
+          name: 'HR Agent',
           color: 'bg-gold-100 text-gold-800',
           icon: <Crown className="w-4 h-4" />,
-          price: '$299/month'
+          price: '£175/month'
         }
       default:
         return {
