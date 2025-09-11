@@ -719,7 +719,7 @@ export default function EnhancedApplicationManagement() {
                  {/* Upgrade Benefits */}
                  <div className="space-y-4 mb-6">
                    <div className="bg-blue-50 rounded-lg p-4 text-left">
-                     <h4 className="font-semibold text-blue-900 mb-2">🚀 HR Booster ($75/month):</h4>
+                     <h4 className="font-semibold text-blue-900 mb-2">🚀 HR Booster (£75/month):</h4>
                      <div className="space-y-1 text-sm text-blue-800">
                        <div>• Complete candidate profiles & portfolios</div>
                        <div>• AI compatibility scores & detailed analytics</div>
@@ -730,7 +730,7 @@ export default function EnhancedApplicationManagement() {
                    </div>
 
                    <div className="bg-purple-50 rounded-lg p-4 text-left">
-                     <h4 className="font-semibold text-purple-900 mb-2">👑 HR Agent ($175/month):</h4>
+                     <h4 className="font-semibold text-purple-900 mb-2">👑 HR Agent (£175/month):</h4>
                      <div className="space-y-1 text-sm text-purple-800">
                        <div>• Everything in HR Booster PLUS:</div>
                        <div>• We conduct interviews for you</div>

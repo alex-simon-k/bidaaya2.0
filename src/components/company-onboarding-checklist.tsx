@@ -479,7 +479,7 @@ export default function CompanyOnboardingChecklist({
                {activePhase === 'phase2' ? 'Upgrade to Pro' : 'Upgrade to Premium'}
              </button>
              <span className="text-xs text-purple-600">
-               {activePhase === 'phase2' ? 'Starting at $99/month' : 'Starting at $299/month'}
+               {activePhase === 'phase2' ? 'Starting at £75/month' : 'Starting at £175/month'}
              </span>
            </div>
         </motion.div>

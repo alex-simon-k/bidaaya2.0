@@ -305,7 +305,7 @@ function getUpgradePromptForVisibility(currentPlan: string, visibilityLevel: str
         '🔗 LinkedIn profile access',
         '📊 Enhanced candidate analytics'
       ],
-      nextTier: 'Pro ($149/month)'
+      nextTier: 'HR Booster (£75/month)'
     }
   }
 
@@ -319,7 +319,7 @@ function getUpgradePromptForVisibility(currentPlan: string, visibilityLevel: str
       '📋 Interview transcript analysis',
       '⭐ Priority candidate selection'
     ],
-    nextTier: 'Premium ($299/month)'
+    nextTier: 'HR Agent (£175/month)'
         }
       }
 

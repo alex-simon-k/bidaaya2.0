@@ -337,7 +337,7 @@ export function canCompanyGetProjectApproved(user: any): { canApprove: boolean, 
   if (unpaidTiers.includes(subscriptionPlan)) {
     return { 
       canApprove: false, 
-      reason: '💳 This company needs to upgrade to a paid plan before projects can be approved. They can upgrade to Basic ($49/month), Pro ($149/month), or Premium ($299/month).',
+      reason: '💳 This company needs to upgrade to a paid plan before projects can be approved. They can upgrade to Basic (£20/month), HR Booster (£75/month), or HR Agent (£175/month).',
       upgradeRequired: 'COMPANY_BASIC'
     }
   }
@@ -412,7 +412,7 @@ export function getCompanyProjectLimitUpgradePrompt(user: any): CompanyUpgradePr
     ],
     currentPlan,
     recommendedPlan: nextTier,
-    ctaText: `Upgrade to ${nextTier.name} - $${nextTier.price}/month`,
+    ctaText: `Upgrade to ${nextTier.name} - £${nextTier.price}/month`,
     urgency: "Scale your hiring without limits"
   }
 }
