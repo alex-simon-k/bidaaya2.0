@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { OnboardingSessionManager } from '@/lib/onboarding-session-manager'
 import { ChevronDown } from 'lucide-react'
+import { StudentBottomNav } from '@/components/student-bottom-nav'
 
 
 
@@ -485,9 +486,12 @@ export default function DashboardLayout({
       )}
 
       {/* Main content - Mobile Optimized */}
-      <main className={`${session?.user?.role === 'COMPANY' ? 'py-4 px-4 sm:py-6 sm:px-6 lg:px-8 bg-white' : 'max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8'}`}>
+      <main className={`${session?.user?.role === 'COMPANY' ? 'py-4 px-4 sm:py-6 sm:px-6 lg:px-8 bg-white' : 'max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8'} ${session?.user?.role === 'STUDENT' ? 'pb-20 sm:pb-6' : ''}`}>
         {children}
       </main>
+
+      {/* Student Bottom Navigation - Mobile Only */}
+      {session?.user?.role === 'STUDENT' && <StudentBottomNav />}
     </div>
   )
 } 

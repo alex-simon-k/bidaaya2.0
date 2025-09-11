@@ -15,18 +15,29 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { projectId, action, feedback } = body
+    const { projectId, action, feedback, newStatus } = body
 
-    if (!projectId || !action) {
+    if (!projectId || (!action && !newStatus)) {
       return NextResponse.json(
-        { error: 'Project ID and action are required' },
+        { error: 'Project ID and action/newStatus are required' },
         { status: 400 }
       )
     }
 
-    if (!['approve', 'reject'].includes(action)) {
+    // Support both legacy action format and new direct status updates
+    const validActions = ['approve', 'reject', 'update']
+    const validStatuses = ['DRAFT', 'PENDING_APPROVAL', 'LIVE', 'REJECTED', 'CLOSED']
+    
+    if (action && !validActions.includes(action)) {
       return NextResponse.json(
-        { error: 'Action must be either "approve" or "reject"' },
+        { error: `Action must be one of: ${validActions.join(', ')}` },
+        { status: 400 }
+      )
+    }
+
+    if (newStatus && !validStatuses.includes(newStatus)) {
+      return NextResponse.json(
+        { error: `Status must be one of: ${validStatuses.join(', ')}` },
         { status: 400 }
       )
     }
@@ -55,8 +66,16 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if we're trying to approve and if company has paid subscription
+    // Determine the target status
+    let targetStatus = newStatus
     if (action === 'approve') {
+      targetStatus = 'LIVE'
+    } else if (action === 'reject') {
+      targetStatus = 'REJECTED'
+    }
+
+    // Check if we're trying to approve and if company has paid subscription
+    if (targetStatus === 'LIVE') {
       const approvalCheck = canCompanyGetProjectApproved(project.company)
       if (!approvalCheck.canApprove) {
         return NextResponse.json({ 
@@ -67,44 +86,47 @@ export async function POST(request: Request) {
         }, { status: 402 }) // 402 Payment Required
       }
     }
-
-    // Update project status
-    const newStatus = action === 'approve' ? 'LIVE' : 'REJECTED'
     
     const updatedProject = await prisma.project.update({
       where: { id: projectId },
       data: {
-        status: newStatus,
+        status: targetStatus,
         adminFeedback: feedback || null,
-        approvedAt: action === 'approve' ? new Date() : null,
-        approvedBy: session.user?.id,
+        ...(targetStatus === 'LIVE' && {
+          approvedAt: new Date(),
+          approvedBy: session.user?.id
+        }),
         updatedAt: new Date(),
       },
       include: {
         company: {
           select: {
+            id: true,
             name: true,
+            companyName: true,
             email: true,
           },
         },
       },
     })
 
-    console.log(`✅ Project ${action}d by admin:`, {
+    console.log(`✅ Project status updated by admin:`, {
       projectId,
       title: project.title,
       company: project.company.name,
-      action,
+      oldStatus: project.status,
+      newStatus: targetStatus,
+      action: action || 'update',
       adminId: session.user?.id
     })
 
-    // TODO: Send notification email to company about approval/rejection
+    // TODO: Send notification email to company about status changes
     // This would be implemented later with an email service
 
     return NextResponse.json({
       success: true,
       project: updatedProject,
-      message: `Project ${action}d successfully`
+      message: `Project status updated to ${targetStatus.toLowerCase().replace('_', ' ')} successfully`
     })
   } catch (error) {
     console.error('❌ Error updating project status:', error)

@@ -67,7 +67,16 @@ export async function POST(request: NextRequest) {
       duration,
       experienceLevel,
       category,
+      subcategory,
+      teamSize,
+      durationMonths,
+      timeCommitment,
+      requirements,
       deliverables,
+      skillsRequired,
+      paymentAmount,
+      location,
+      remote,
       applicationDeadline
     } = body
 
@@ -86,7 +95,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
     }
 
-    // Create project
+    // Create project with all fields
     const project = await prisma.project.create({
       data: {
         title,
@@ -94,9 +103,18 @@ export async function POST(request: NextRequest) {
         companyId,
         compensation: compensation || null,
         duration: duration || null,
-        experienceLevel: experienceLevel || 'University',
-        category: category || 'Other',
+        experienceLevel: experienceLevel || 'High School',
+        category: category || 'MARKETING',
+        subcategory: subcategory || '',
+        teamSize: teamSize || 1,
+        durationMonths: durationMonths || 3,
+        timeCommitment: timeCommitment || 'Part-time',
+        requirements: requirements || [],
         deliverables: deliverables || [],
+        skillsRequired: skillsRequired || [],
+        paymentAmount: paymentAmount || null,
+        location: location || 'Remote',
+        remote: remote !== undefined ? remote : true,
         applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
         status: 'PENDING_APPROVAL' // Admin-created projects need approval
       },

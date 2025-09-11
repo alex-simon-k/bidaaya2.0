@@ -22,6 +22,7 @@ import {
   Activity,
   Briefcase
 } from 'lucide-react'
+import { AdminProjectStatusBoard } from '@/components/admin-project-status-board'
 
 interface Company {
   id: string
@@ -129,8 +130,17 @@ export default function AdminPanel() {
     compensation: '',
     duration: '',
     experienceLevel: 'High School',
-    category: '',
+    category: 'MARKETING',
+    subcategory: '',
+    teamSize: 1,
+    durationMonths: 3,
+    timeCommitment: 'Part-time',
+    requirements: [] as string[],
     deliverables: [] as string[],
+    skillsRequired: [] as string[],
+    paymentAmount: null as number | null,
+    location: 'Remote',
+    remote: true,
     applicationDeadline: ''
   })
   
@@ -310,8 +320,17 @@ export default function AdminPanel() {
           compensation: '',
           duration: '',
           experienceLevel: 'High School',
-          category: '',
-          deliverables: [],
+          category: 'MARKETING',
+          subcategory: '',
+          teamSize: 1,
+          durationMonths: 3,
+          timeCommitment: 'Part-time',
+          requirements: [] as string[],
+          deliverables: [] as string[],
+          skillsRequired: [] as string[],
+          paymentAmount: null as number | null,
+          location: 'Remote',
+          remote: true,
           applicationDeadline: ''
         })
         loadDashboardData()
@@ -1389,7 +1408,7 @@ export default function AdminPanel() {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Project Management</h2>
-                <p className="text-gray-400">Create and manage projects on behalf of companies</p>
+                <p className="text-gray-400">Manage project workflow: Draft → Review → Live → Closed</p>
               </div>
               <button
                 onClick={() => setShowCreateProjectForm(!showCreateProjectForm)}
@@ -1512,84 +1531,18 @@ export default function AdminPanel() {
               </div>
             )}
 
-            {/* Projects List */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">All Projects ({projects.length})</h3>
-                {projects.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Briefcase className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400">No projects found</p>
-                    <p className="text-gray-500 text-sm">Create a project to get started</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {projects.map((project) => (
-                      <motion.div
-                        key={project.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gray-700 rounded-lg p-4 border border-gray-600"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-semibold text-white">{project.title}</h4>
-                              <span className={`text-xs px-2 py-1 rounded ${
-                                project.status === 'LIVE' ? 'bg-green-600 text-white' :
-                                project.status === 'PENDING_APPROVAL' ? 'bg-yellow-600 text-white' :
-                                project.status === 'DRAFT' ? 'bg-blue-600 text-white' :
-                                'bg-gray-600 text-white'
-                              }`}>
-                                {project.status}
-                              </span>
-                              {project.currentApplications > 0 && (
-                                <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded">
-                                  {project.currentApplications} applications
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-300 mb-1">🏢 {project.company?.companyName || project.company?.name}</p>
-                            <p className="text-sm text-gray-300 mb-1">💰 {project.compensation || 'Not specified'}</p>
-                            <p className="text-sm text-gray-400 mb-1">⏱️ {project.duration || 'Duration not specified'}</p>
-                            <p className="text-xs text-gray-400">
-                              Created: {new Date(project.createdAt).toLocaleDateString()}
-                              {project.applicationDeadline && (
-                                <span className="ml-4">
-                                  Deadline: {new Date(project.applicationDeadline).toLocaleDateString()}
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            {project.status === 'PENDING_APPROVAL' && (
-                              <button
-                                onClick={() => handleApproveProject(project.id)}
-                                className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
-                              >
-                                <Eye className="h-4 w-4" />
-                                Approve & Go Live
-                              </button>
-                            )}
-                            <button
-                              onClick={() => window.open(`/dashboard/projects/${project.id}`, '_blank')}
-                              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-1 text-sm"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              View
-                            </button>
-                          </div>
-                        </div>
-                        {project.description && (
-                          <div className="mt-3 pt-3 border-t border-gray-600">
-                            <p className="text-sm text-gray-300 line-clamp-2">{project.description}</p>
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {/* Project Status Board */}
+            <div className="bg-white rounded-lg p-6">
+              <AdminProjectStatusBoard 
+                onProjectClick={(project) => {
+                  // Open project in new tab
+                  window.open(`/dashboard/projects/${project.id}`, '_blank')
+                }}
+                onStatusChange={(projectId, newStatus, feedback) => {
+                  // Refresh projects data after status change
+                  loadDashboardData()
+                }}
+              />
             </div>
           </div>
         )}
