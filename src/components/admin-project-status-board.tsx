@@ -412,8 +412,13 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
                   <button
                     key={action.action}
                     onClick={() => {
-                      setActionType(action.action as any)
-                      if (action.action === 'LIVE') {
+                      if (action.action === 'REJECTED') {
+                        setActionType('reject')
+                      } else if (action.action === 'CLOSED') {
+                        setActionType('close')
+                      } else if (action.action === 'LIVE') {
+                        handleStatusChange(selectedProject, action.action)
+                      } else {
                         handleStatusChange(selectedProject, action.action)
                       }
                     }}
@@ -432,7 +437,7 @@ export function AdminProjectStatusBoard({ onProjectClick, onStatusChange }: Admi
             </div>
 
             {/* Feedback Input for Rejection */}
-            {actionType === 'REJECTED' && (
+            {actionType === 'reject' && (
               <div className="mt-4 p-4 bg-red-50 rounded-lg">
                 <h3 className="font-semibold text-red-900 mb-2">Provide Feedback</h3>
                 <textarea
