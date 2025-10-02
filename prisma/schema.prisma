@@ -98,7 +98,7 @@ model User {
   userSessions             UserSession[]
   studentTags              StudentTag[]
   studentVector            StudentVector?
-  externalOpportunities    ExternalOpportunity[]
+  externalOpportunitiesCreated ExternalOpportunity[] @relation("ExternalOpportunitiesCreated")
   externalOpportunityApps  ExternalOpportunityApplication[]
 }
 
