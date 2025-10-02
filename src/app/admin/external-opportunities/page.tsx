@@ -359,22 +359,67 @@ export default function AdminExternalOpportunitiesPage() {
 
           {/* Bulk Actions */}
           {selectedOpportunities.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {selectedOpportunities.length} selected
-              </span>
-              <button
-                onClick={handleBulkDelete}
-                className="text-sm text-red-600 hover:text-red-700 font-medium"
-              >
-                Delete Selected
-              </button>
-              <button
-                onClick={() => setSelectedOpportunities([])}
-                className="text-sm text-gray-600 hover:text-gray-700"
-              >
-                Clear Selection
-              </button>
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="text-sm font-medium text-gray-700">
+                  {selectedOpportunities.length} selected
+                </span>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/admin/external-opportunities/bulk', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ids: selectedOpportunities, action: 'activate' })
+                      })
+                      if (response.ok) {
+                        fetchOpportunities()
+                        setSelectedOpportunities([])
+                      }
+                    } catch (error) {
+                      console.error('Error activating:', error)
+                    }
+                  }}
+                  className="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
+                >
+                  <Eye className="w-4 h-4" />
+                  Show Selected
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/admin/external-opportunities/bulk', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ids: selectedOpportunities, action: 'deactivate' })
+                      })
+                      if (response.ok) {
+                        fetchOpportunities()
+                        setSelectedOpportunities([])
+                      }
+                    } catch (error) {
+                      console.error('Error deactivating:', error)
+                    }
+                  }}
+                  className="text-sm text-yellow-600 hover:text-yellow-700 font-medium flex items-center gap-1"
+                >
+                  <EyeOff className="w-4 h-4" />
+                  Hide Selected
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Selected
+                </button>
+                <button
+                  onClick={() => setSelectedOpportunities([])}
+                  className="text-sm text-gray-600 hover:text-gray-700"
+                >
+                  Clear Selection
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -455,13 +500,29 @@ export default function AdminExternalOpportunitiesPage() {
                   {/* Content */}
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {opp.title}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {opp.title}
+                          </h3>
                           {opp.isPremium && (
-                            <Crown className="inline-block ml-2 w-4 h-4 text-purple-600" />
+                            <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                              <Crown className="inline-block w-3 h-3 mr-1" />
+                              Premium
+                            </span>
                           )}
-                        </h3>
+                          {opp.isActive ? (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded flex items-center gap-1">
+                              <Eye className="w-3 h-3" />
+                              Live
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded flex items-center gap-1">
+                              <EyeOff className="w-3 h-3" />
+                              Hidden
+                            </span>
+                          )}
+                        </div>
                         <p className="text-gray-600 flex items-center gap-2">
                           <Building2 className="w-4 h-4" />
                           {opp.company}
@@ -470,20 +531,32 @@ export default function AdminExternalOpportunitiesPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleToggleActive(opp.id, opp.isActive)}
-                          className={`p-2 rounded-lg transition-colors ${
+                          className={`px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
                             opp.isActive 
-                              ? 'bg-green-100 text-green-600 hover:bg-green-200' 
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
                           }`}
-                          title={opp.isActive ? 'Deactivate' : 'Activate'}
+                          title={opp.isActive ? 'Hide from students' : 'Show to students'}
                         >
-                          {opp.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          {opp.isActive ? (
+                            <>
+                              <EyeOff className="w-4 h-4" />
+                              <span className="text-sm">Hide</span>
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="w-4 h-4" />
+                              <span className="text-sm">Show</span>
+                            </>
+                          )}
                         </button>
                         <button
                           onClick={() => handleDelete(opp.id)}
-                          className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                          className="px-3 py-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center gap-2"
+                          title="Delete permanently"
                         >
                           <Trash2 className="w-4 h-4" />
+                          <span className="text-sm">Delete</span>
                         </button>
                       </div>
                     </div>
