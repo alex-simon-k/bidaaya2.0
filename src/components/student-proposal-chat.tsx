@@ -330,16 +330,18 @@ export default function StudentProposalChat() {
                 </div>
                 
                 <div className="space-y-3">
-                  {/* Applications Progress */}
+                  {/* Applications Progress - BIDAAYA PROJECTS ONLY */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Applications</span>
-                      <span className="text-xs font-medium text-gray-900">{applications.used}/{applications.limit}</span>
+                      <span className="text-xs text-gray-600">Bidaaya Applications</span>
+                      <span className="text-xs font-medium text-gray-900">
+                        {applications.used}/{applications.limit === -1 ? '∞' : applications.limit}
+                      </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((applications.used / applications.limit) * 100, 100)}%` }}
+                        style={{ width: applications.limit === -1 ? '0%' : `${Math.min((applications.used / applications.limit) * 100, 100)}%` }}
                       ></div>
                     </div>
                   </div>
