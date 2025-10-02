@@ -26,7 +26,7 @@ const navItems: BottomNavItem[] = [
   },
   {
     label: 'Internships',
-    href: '/dashboard/browse-opportunities',
+    href: '/dashboard/projects',
     icon: '/icons/internships.png', 
     activeIcon: '/icons/internships-active.png'
   }

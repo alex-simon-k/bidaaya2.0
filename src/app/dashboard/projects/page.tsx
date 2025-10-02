@@ -27,6 +27,7 @@ import {
   CheckCircle
 } from 'lucide-react'
 import { CompanyPaywallModal } from '@/components/company-paywall-modal'
+import { ExternalOpportunitiesList } from '@/components/external-opportunities-list'
 import { 
   canCompanyActivateProject,
   getCompanyActivationUpgradePrompt,
@@ -553,6 +554,26 @@ export default function ProjectsPage() {
               </motion.div>
             )
           })}
+        </div>
+      )}
+
+      {/* External Opportunities Section - Only for Students */}
+      {!isCompany && (
+        <div className="mt-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              External Opportunities
+            </h2>
+            <p className="text-gray-600">
+              Internships and jobs from companies across the UAE and beyond - apply with no credit limits!
+            </p>
+          </div>
+          
+          <ExternalOpportunitiesList
+            searchTerm={searchTerm}
+            categoryFilter={selectedCategory}
+            remoteFilter={false}
+          />
         </div>
       )}
 
