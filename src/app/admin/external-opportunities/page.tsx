@@ -685,7 +685,7 @@ export default function AdminExternalOpportunitiesPage() {
                       required
                       value={formData.applicationUrl}
                       onChange={(e) => setFormData({...formData, applicationUrl: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                       placeholder="https://company.com/careers/job-123"
                     />
                   </div>
@@ -698,7 +698,7 @@ export default function AdminExternalOpportunitiesPage() {
                       value={formData.description}
                       onChange={(e) => setFormData({...formData, description: e.target.value})}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                       placeholder="Brief description of the opportunity..."
                     />
                   </div>
@@ -721,18 +721,29 @@ export default function AdminExternalOpportunitiesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Category
                       </label>
-                      <select
+                      <input
+                        type="text"
                         value={formData.category}
                         onChange={(e) => setFormData({...formData, category: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
-                      >
-                        <option value="">Select category</option>
-                        <option value="MARKETING">Marketing</option>
-                        <option value="BUSINESS_DEVELOPMENT">Business Development</option>
-                        <option value="COMPUTER_SCIENCE">Computer Science</option>
-                        <option value="FINANCE">Finance</option>
-                        <option value="PSYCHOLOGY">Psychology</option>
-                      </select>
+                        placeholder="e.g., Design, HR, Operations, Sales..."
+                        list="category-suggestions"
+                      />
+                      <datalist id="category-suggestions">
+                        <option value="Marketing" />
+                        <option value="Business Development" />
+                        <option value="Computer Science" />
+                        <option value="Finance" />
+                        <option value="Psychology" />
+                        <option value="Design" />
+                        <option value="Human Resources" />
+                        <option value="Operations" />
+                        <option value="Sales" />
+                        <option value="Engineering" />
+                        <option value="Data Science" />
+                        <option value="Product Management" />
+                      </datalist>
+                      <p className="text-xs text-gray-500 mt-1">Type any category - not limited to suggestions</p>
                     </div>
                   </div>
 
@@ -823,7 +834,7 @@ export default function AdminExternalOpportunitiesPage() {
                       value={formData.adminNotes}
                       onChange={(e) => setFormData({...formData, adminNotes: e.target.value})}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                       placeholder="Internal notes about this opportunity..."
                     />
                   </div>
@@ -882,7 +893,7 @@ export default function AdminExternalOpportunitiesPage() {
                     value={bulkData}
                     onChange={(e) => setBulkData(e.target.value)}
                     rows={12}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm text-gray-900 placeholder:text-gray-400"
                     placeholder={`[\n  {\n    "title": "Marketing Intern",\n    "company": "Tech Corp",\n    "applicationUrl": "https://...",\n    "location": "Dubai",\n    "category": "MARKETING",\n    "remote": true\n  }\n]`}
                   />
 
