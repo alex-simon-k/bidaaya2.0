@@ -87,12 +87,22 @@ export function ExternalOpportunitiesList({
     }
   }
 
-  const handleApply = async (opportunity: ExternalOpportunity) => {
+  const handleVisitWebsite = async (opportunity: ExternalOpportunity) => {
+    // Track view only (not application)
+    fetch(`/api/external-opportunities/${opportunity.id}/track-view`, {
+      method: 'POST'
+    }).catch(() => {})
+    
+    // Open external link in new tab
+    window.open(opportunity.applicationUrl, '_blank')
+  }
+
+  const handleMarkAsApplied = async (opportunity: ExternalOpportunity) => {
     setSelectedOpportunity(opportunity)
     setShowModal(true)
   }
 
-  const confirmApply = async () => {
+  const confirmMarkAsApplied = async () => {
     if (!selectedOpportunity) return
 
     setIsApplying(true)
@@ -106,25 +116,17 @@ export function ExternalOpportunitiesList({
       const data = await response.json()
 
       if (response.ok) {
-        // Track view
-        fetch(`/api/external-opportunities/${selectedOpportunity.id}/track-view`, {
-          method: 'POST'
-        }).catch(() => {})
-
-        // Open external link in new tab
-        window.open(selectedOpportunity.applicationUrl, '_blank')
-        
         // Refresh opportunities to update hasApplied status
         fetchOpportunities()
         
         setShowModal(false)
         setApplyNotes('')
-        alert('✅ Application tracked! Opening company website...')
+        alert('✅ Marked as applied! You can track this in your applications.')
       } else {
-        alert(data.error || 'Failed to track application')
+        alert(data.error || 'Failed to mark as applied')
       }
     } catch (error) {
-      alert('Failed to process application')
+      alert('Failed to process request')
     } finally {
       setIsApplying(false)
     }
@@ -260,33 +262,29 @@ export function ExternalOpportunitiesList({
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <div className="text-xs text-gray-500">
-                {opp.applicationCount > 0 && (
-                  <span>{opp.applicationCount} student{opp.applicationCount !== 1 ? 's' : ''} applied</span>
-                )}
-              </div>
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100 gap-3">
               <button
-                onClick={() => handleApply(opp)}
-                disabled={opp.hasApplied}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  opp.hasApplied
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
+                onClick={() => handleVisitWebsite(opp)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
               >
-                {opp.hasApplied ? (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Already Applied
-                  </>
-                ) : (
-                  <>
-                    Apply Now
-                    <ExternalLink className="w-4 h-4" />
-                  </>
-                )}
+                Visit Website
+                <ExternalLink className="w-4 h-4" />
               </button>
+              
+              {!opp.hasApplied ? (
+                <button
+                  onClick={() => handleMarkAsApplied(opp)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Mark as Applied
+                </button>
+              ) : (
+                <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium cursor-default">
+                  <CheckCircle className="w-4 h-4" />
+                  Applied ✓
+                </div>
+              )}
             </div>
           </motion.div>
         ))}
@@ -311,16 +309,16 @@ export function ExternalOpportunitiesList({
             >
               <div className="p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Apply to {selectedOpportunity.company}
+                  Mark as Applied
                 </h2>
                 <p className="text-gray-600 mb-4">
-                  {selectedOpportunity.title}
+                  <strong>{selectedOpportunity.company}</strong> - {selectedOpportunity.title}
                 </p>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-blue-900">
-                    <strong>Note:</strong> This is an external opportunity. You'll be redirected to the company's 
-                    website to complete your application. We'll track that you applied for your records.
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-green-900">
+                    <strong>Track your application:</strong> Use this to keep a personal record that you've applied 
+                    to this opportunity. This helps you stay organized and track your application journey.
                   </p>
                 </div>
 
@@ -332,8 +330,8 @@ export function ExternalOpportunitiesList({
                     value={applyNotes}
                     onChange={(e) => setApplyNotes(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Add any notes about this application..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    placeholder="E.g., 'Applied via their careers page on Jan 15th' or 'Sent resume to recruiter@company.com'"
                   />
                 </div>
 
@@ -348,16 +346,16 @@ export function ExternalOpportunitiesList({
                     Cancel
                   </button>
                   <button
-                    onClick={confirmApply}
+                    onClick={confirmMarkAsApplied}
                     disabled={isApplying}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isApplying ? (
-                      'Processing...'
+                      'Saving...'
                     ) : (
                       <>
-                        Continue to Apply
-                        <ExternalLink className="w-4 h-4" />
+                        <CheckCircle className="w-4 h-4" />
+                        Mark as Applied
                       </>
                     )}
                   </button>
