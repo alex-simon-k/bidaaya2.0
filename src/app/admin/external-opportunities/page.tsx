@@ -308,7 +308,7 @@ export default function AdminExternalOpportunitiesPage() {
                   placeholder="Search opportunities..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 
@@ -316,7 +316,7 @@ export default function AdminExternalOpportunitiesPage() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
                 <option value="all">All Categories</option>
                 <option value="MARKETING">Marketing</option>
@@ -330,7 +330,7 @@ export default function AdminExternalOpportunitiesPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
                 <option value="all">All Status</option>
                 <option value="true">Active</option>
@@ -583,7 +583,7 @@ export default function AdminExternalOpportunitiesPage() {
                         required
                         value={formData.title}
                         onChange={(e) => setFormData({...formData, title: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                         placeholder="e.g., Marketing Intern"
                       />
                     </div>
@@ -597,7 +597,7 @@ export default function AdminExternalOpportunitiesPage() {
                         required
                         value={formData.company}
                         onChange={(e) => setFormData({...formData, company: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                         placeholder="e.g., Tech Corp"
                       />
                     </div>
@@ -639,7 +639,7 @@ export default function AdminExternalOpportunitiesPage() {
                         type="text"
                         value={formData.location}
                         onChange={(e) => setFormData({...formData, location: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                         placeholder="e.g., Dubai, UAE"
                       />
                     </div>
@@ -651,7 +651,7 @@ export default function AdminExternalOpportunitiesPage() {
                       <select
                         value={formData.category}
                         onChange={(e) => setFormData({...formData, category: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                       >
                         <option value="">Select category</option>
                         <option value="MARKETING">Marketing</option>
@@ -672,7 +672,7 @@ export default function AdminExternalOpportunitiesPage() {
                         type="text"
                         value={formData.experienceLevel}
                         onChange={(e) => setFormData({...formData, experienceLevel: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                         placeholder="e.g., Entry Level, Internship"
                       />
                     </div>
@@ -685,7 +685,7 @@ export default function AdminExternalOpportunitiesPage() {
                         type="text"
                         value={formData.salary}
                         onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                         placeholder="e.g., AED 3000/month"
                       />
                     </div>
@@ -700,7 +700,7 @@ export default function AdminExternalOpportunitiesPage() {
                         type="date"
                         value={formData.deadline}
                         onChange={(e) => setFormData({...formData, deadline: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                       />
                     </div>
 
@@ -712,7 +712,7 @@ export default function AdminExternalOpportunitiesPage() {
                         type="text"
                         value={formData.source}
                         onChange={(e) => setFormData({...formData, source: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                         placeholder="e.g., LinkedIn, Company Website"
                       />
                     </div>

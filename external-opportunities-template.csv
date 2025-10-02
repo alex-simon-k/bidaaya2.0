@@ -1,0 +1,7 @@
+title,company,applicationUrl,location,category,experienceLevel,remote,salary,deadline,isPremium,description,source,adminNotes
+Marketing Intern,Google,https://careers.google.com/jobs/123456,Dubai UAE,MARKETING,Entry Level,FALSE,AED 4000/month,2025-12-31,FALSE,"Join Google's marketing team in Dubai. Work on campaigns for MENA region.",LinkedIn Jobs,Found on LinkedIn - looks promising
+Software Engineering Intern,Amazon,https://amazon.jobs/en/jobs/234567,Remote,COMPUTER_SCIENCE,Internship,TRUE,AED 5000/month,2025-11-30,TRUE,"Remote software engineering internship with Amazon Web Services team.",Company Website,Premium opportunity - early access
+Business Development Intern,Careem,https://www.careem.com/careers/bd-intern,Dubai UAE,BUSINESS_DEVELOPMENT,Entry Level,FALSE,AED 3500/month,2025-10-15,FALSE,"Help expand Careem's services across the UAE market.",Careem Careers,Local UAE company
+Finance Analyst Intern,Emirates NBD,https://emiratesnbd.com/careers/finance-123,Dubai UAE,FINANCE,Internship,FALSE,AED 3000/month,2025-12-01,FALSE,"Financial analysis and reporting role in corporate finance division.",Bank Website,Top UAE bank
+UX Research Intern,Noon,https://careers.noon.com/ux-research,Abu Dhabi UAE,PSYCHOLOGY,Entry Level,FALSE,AED 3800/month,2025-11-15,FALSE,"Conduct user research for e-commerce platform improvements.",Noon Careers,E-commerce leader
+
