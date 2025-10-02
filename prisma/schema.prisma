@@ -98,6 +98,8 @@ model User {
   userSessions             UserSession[]
   studentTags              StudentTag[]
   studentVector            StudentVector?
+  externalOpportunities    ExternalOpportunity[]
+  externalOpportunityApps  ExternalOpportunityApplication[]
 }
 
 model UserSession {
@@ -638,4 +640,58 @@ model SearchVector {
   @@index([companyId])
   @@index([searchType])
   @@index([createdAt])
+}
+
+// External Opportunities (Admin-curated opportunities from external companies)
+model ExternalOpportunity {
+  id              String   @id @default(cuid())
+  title           String
+  company         String
+  description     String?
+  location        String?
+  applicationUrl  String   // External website link where students apply
+  source          String?  // Where admin found it (LinkedIn, company website, etc.)
+  category        String?  // Similar to project categories
+  experienceLevel String?
+  remote          Boolean  @default(false)
+  salary          String?
+  deadline        DateTime?
+  isActive        Boolean  @default(true)
+  isPremium       Boolean  @default(false) // For early access feature (STUDENT_PRO gets early access)
+  
+  // Admin fields
+  addedBy         String   // Admin user ID
+  addedAt         DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  adminNotes      String?
+  
+  // Analytics
+  viewCount       Int      @default(0)
+  clickCount      Int      @default(0)
+  
+  // Relations
+  applications    ExternalOpportunityApplication[]
+  admin           User     @relation("ExternalOpportunitiesCreated", fields: [addedBy], references: [id])
+  
+  @@index([isActive, isPremium])
+  @@index([category])
+  @@index([addedAt])
+  @@index([deadline])
+}
+
+// Track when students click through to apply to external opportunities
+model ExternalOpportunityApplication {
+  id                    String   @id @default(cuid())
+  userId                String
+  externalOpportunityId String
+  appliedAt             DateTime @default(now())
+  notes                 String?  // Optional student notes
+  
+  user                  User                @relation(fields: [userId], references: [id])
+  opportunity           ExternalOpportunity @relation(fields: [externalOpportunityId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, externalOpportunityId])
+  @@index([userId])
+  @@index([externalOpportunityId])
+  @@index([appliedAt])
 }
