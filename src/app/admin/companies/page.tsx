@@ -64,8 +64,21 @@ export default function AdminCompaniesPage() {
     companyWebsite: '',
     location: '',
     companyOneLiner: '',
+    companyRole: '',
+    companyGoals: [] as string[],
+    contactPersonName: '',
+    contactPersonType: '',
+    contactEmail: '',
+    contactWhatsapp: '',
+    calendlyLink: '',
+    referralSource: '',
+    referralDetails: '',
+    bio: '',
     image: ''
   })
+  
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>('')
   
   const [bulkUploadData, setBulkUploadData] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -130,15 +143,50 @@ export default function AdminCompaniesPage() {
     }
   }
 
+  const handleLogoUpload = async (): Promise<string | null> => {
+    if (!logoFile) return formData.image || null
+
+    const uploadFormData = new FormData()
+    uploadFormData.append('file', logoFile)
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData
+      })
+
+      const data = await response.json()
+      if (data.url) {
+        return data.url
+      }
+      return null
+    } catch (error) {
+      console.error('Error uploading logo:', error)
+      return null
+    }
+  }
+
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault()
     setUploading(true)
 
     try {
+      // Upload logo first if there's a file
+      let logoUrl = formData.image
+      if (logoFile) {
+        const uploadedUrl = await handleLogoUpload()
+        if (uploadedUrl) {
+          logoUrl = uploadedUrl
+        }
+      }
+
       const response = await fetch('/api/admin/companies/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          image: logoUrl
+        })
       })
 
       const data = await response.json()
@@ -166,10 +214,22 @@ export default function AdminCompaniesPage() {
     setUploading(true)
 
     try {
+      // Upload logo first if there's a new file
+      let logoUrl = formData.image
+      if (logoFile) {
+        const uploadedUrl = await handleLogoUpload()
+        if (uploadedUrl) {
+          logoUrl = uploadedUrl
+        }
+      }
+
       const response = await fetch(`/api/admin/companies/${selectedCompany.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          image: logoUrl
+        })
       })
 
       const data = await response.json()
@@ -245,18 +305,63 @@ export default function AdminCompaniesPage() {
     }
   }
 
-  const openEditModal = (company: Company) => {
+  const openEditModal = async (company: Company) => {
     setSelectedCompany(company)
-    setFormData({
-      companyName: company.companyName || '',
-      email: company.email || '',
-      industry: company.industry || '',
-      companySize: company.companySize || '',
-      companyWebsite: company.companyWebsite || '',
-      location: company.location || '',
-      companyOneLiner: '',
-      image: company.image || ''
-    })
+    
+    // Fetch full company details to get all fields
+    try {
+      const response = await fetch(`/api/admin/companies/${company.id}`)
+      const data = await response.json()
+      
+      if (data.company) {
+        const fullCompany = data.company
+        setFormData({
+          companyName: fullCompany.companyName || '',
+          email: fullCompany.email || '',
+          industry: fullCompany.industry || '',
+          companySize: fullCompany.companySize || '',
+          companyWebsite: fullCompany.companyWebsite || '',
+          location: fullCompany.location || '',
+          companyOneLiner: fullCompany.companyOneLiner || '',
+          companyRole: fullCompany.companyRole || '',
+          companyGoals: fullCompany.companyGoals || [],
+          contactPersonName: fullCompany.contactPersonName || '',
+          contactPersonType: fullCompany.contactPersonType || '',
+          contactEmail: fullCompany.contactEmail || '',
+          contactWhatsapp: fullCompany.contactWhatsapp || '',
+          calendlyLink: fullCompany.calendlyLink || '',
+          referralSource: fullCompany.referralSource || '',
+          referralDetails: fullCompany.referralDetails || '',
+          bio: fullCompany.bio || '',
+          image: fullCompany.image || ''
+        })
+        setLogoPreview(fullCompany.image || '')
+      }
+    } catch (error) {
+      console.error('Error fetching company details:', error)
+      // Fallback to basic company data
+      setFormData({
+        companyName: company.companyName || '',
+        email: company.email || '',
+        industry: company.industry || '',
+        companySize: company.companySize || '',
+        companyWebsite: company.companyWebsite || '',
+        location: company.location || '',
+        companyOneLiner: '',
+        companyRole: '',
+        companyGoals: [],
+        contactPersonName: '',
+        contactPersonType: '',
+        contactEmail: '',
+        contactWhatsapp: '',
+        calendlyLink: '',
+        referralSource: '',
+        referralDetails: '',
+        bio: '',
+        image: company.image || ''
+      })
+    }
+    
     setShowEditModal(true)
   }
 
@@ -269,8 +374,20 @@ export default function AdminCompaniesPage() {
       companyWebsite: '',
       location: '',
       companyOneLiner: '',
+      companyRole: '',
+      companyGoals: [],
+      contactPersonName: '',
+      contactPersonType: '',
+      contactEmail: '',
+      contactWhatsapp: '',
+      calendlyLink: '',
+      referralSource: '',
+      referralDetails: '',
+      bio: '',
       image: ''
     })
+    setLogoFile(null)
+    setLogoPreview('')
   }
 
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -570,15 +687,149 @@ export default function AdminCompaniesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
                     <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          setLogoFile(file)
+                          setLogoPreview(URL.createObjectURL(file))
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="https://logo.clearbit.com/company.com"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Tip: Try https://logo.clearbit.com/[domain]</p>
+                    {logoPreview && (
+                      <div className="mt-2">
+                        <img src={logoPreview} alt="Logo preview" className="h-20 w-20 object-cover rounded-lg border" />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, or WebP (max 5MB)</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">One-liner Description</label>
+                    <input
+                      type="text"
+                      value={formData.companyOneLiner}
+                      onChange={(e) => setFormData({ ...formData, companyOneLiner: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Brief description of the company"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Bio</label>
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Detailed company description..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Your Role</label>
+                      <input
+                        type="text"
+                        value={formData.companyRole}
+                        onChange={(e) => setFormData({ ...formData, companyRole: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="e.g., CEO, HR Manager"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Calendly Link</label>
+                      <input
+                        type="url"
+                        value={formData.calendlyLink}
+                        onChange={(e) => setFormData({ ...formData, calendlyLink: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="https://calendly.com/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h3 className="font-medium text-gray-900 mb-3">Contact Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person Name</label>
+                        <input
+                          type="text"
+                          value={formData.contactPersonName}
+                          onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person Type</label>
+                        <select
+                          value={formData.contactPersonType}
+                          onChange={(e) => setFormData({ ...formData, contactPersonType: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        >
+                          <option value="">Select Type</option>
+                          <option value="CEO">CEO</option>
+                          <option value="CTO">CTO</option>
+                          <option value="HR Manager">HR Manager</option>
+                          <option value="Recruiter">Recruiter</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
+                        <input
+                          type="email"
+                          value={formData.contactEmail}
+                          onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact WhatsApp</label>
+                        <input
+                          type="tel"
+                          value={formData.contactWhatsapp}
+                          onChange={(e) => setFormData({ ...formData, contactWhatsapp: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          placeholder="+971..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h3 className="font-medium text-gray-900 mb-3">Referral Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Referral Source</label>
+                        <input
+                          type="text"
+                          value={formData.referralSource}
+                          onChange={(e) => setFormData({ ...formData, referralSource: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          placeholder="How did they find us?"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Referral Details</label>
+                        <input
+                          type="text"
+                          value={formData.referralDetails}
+                          onChange={(e) => setFormData({ ...formData, referralDetails: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex gap-3 pt-4">
@@ -616,7 +867,6 @@ export default function AdminCompaniesPage() {
                 </div>
 
                 <form onSubmit={handleUpdateCompany} className="space-y-4">
-                  {/* Same form fields as Add modal */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
                     <input
@@ -698,13 +948,149 @@ export default function AdminCompaniesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
                     <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          setLogoFile(file)
+                          setLogoPreview(URL.createObjectURL(file))
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     />
+                    {logoPreview && (
+                      <div className="mt-2">
+                        <img src={logoPreview} alt="Logo preview" className="h-20 w-20 object-cover rounded-lg border" />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, or WebP (max 5MB). Upload new to replace.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">One-liner Description</label>
+                    <input
+                      type="text"
+                      value={formData.companyOneLiner}
+                      onChange={(e) => setFormData({ ...formData, companyOneLiner: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Brief description of the company"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Bio</label>
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Detailed company description..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Your Role</label>
+                      <input
+                        type="text"
+                        value={formData.companyRole}
+                        onChange={(e) => setFormData({ ...formData, companyRole: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="e.g., CEO, HR Manager"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Calendly Link</label>
+                      <input
+                        type="url"
+                        value={formData.calendlyLink}
+                        onChange={(e) => setFormData({ ...formData, calendlyLink: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="https://calendly.com/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h3 className="font-medium text-gray-900 mb-3">Contact Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person Name</label>
+                        <input
+                          type="text"
+                          value={formData.contactPersonName}
+                          onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person Type</label>
+                        <select
+                          value={formData.contactPersonType}
+                          onChange={(e) => setFormData({ ...formData, contactPersonType: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        >
+                          <option value="">Select Type</option>
+                          <option value="CEO">CEO</option>
+                          <option value="CTO">CTO</option>
+                          <option value="HR Manager">HR Manager</option>
+                          <option value="Recruiter">Recruiter</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
+                        <input
+                          type="email"
+                          value={formData.contactEmail}
+                          onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Contact WhatsApp</label>
+                        <input
+                          type="tel"
+                          value={formData.contactWhatsapp}
+                          onChange={(e) => setFormData({ ...formData, contactWhatsapp: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          placeholder="+971..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h3 className="font-medium text-gray-900 mb-3">Referral Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Referral Source</label>
+                        <input
+                          type="text"
+                          value={formData.referralSource}
+                          onChange={(e) => setFormData({ ...formData, referralSource: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          placeholder="How did they find us?"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Referral Details</label>
+                        <input
+                          type="text"
+                          value={formData.referralDetails}
+                          onChange={(e) => setFormData({ ...formData, referralDetails: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex gap-3 pt-4">

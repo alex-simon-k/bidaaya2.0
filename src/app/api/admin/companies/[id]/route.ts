@@ -87,12 +87,16 @@ export async function PUT(
       companyWebsite,
       location,
       companyOneLiner,
+      companyRole,
       companyGoals,
       contactPersonName,
       contactPersonType,
       contactEmail,
       contactWhatsapp,
       calendlyLink,
+      referralSource,
+      referralDetails,
+      bio,
       image,
       isExternalCompany,
       companySource
@@ -135,12 +139,16 @@ export async function PUT(
     if (companyWebsite !== undefined) updateData.companyWebsite = companyWebsite
     if (location !== undefined) updateData.location = location
     if (companyOneLiner !== undefined) updateData.companyOneLiner = companyOneLiner
+    if (companyRole !== undefined) updateData.companyRole = companyRole
     if (companyGoals !== undefined) updateData.companyGoals = companyGoals
     if (contactPersonName !== undefined) updateData.contactPersonName = contactPersonName
     if (contactPersonType !== undefined) updateData.contactPersonType = contactPersonType
     if (contactEmail !== undefined) updateData.contactEmail = contactEmail
     if (contactWhatsapp !== undefined) updateData.contactWhatsapp = contactWhatsapp
     if (calendlyLink !== undefined) updateData.calendlyLink = calendlyLink
+    if (referralSource !== undefined) updateData.referralSource = referralSource
+    if (referralDetails !== undefined) updateData.referralDetails = referralDetails
+    if (bio !== undefined) updateData.bio = bio
     if (image !== undefined) updateData.image = image
     if (isExternalCompany !== undefined) updateData.isExternalCompany = isExternalCompany
     if (companySource !== undefined) updateData.companySource = companySource
