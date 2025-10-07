@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
-// GET - Fetch all companies for admin
+// GET - Fetch all companies with filters
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -16,145 +15,113 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
+    // Get query parameters for filtering
+    const { searchParams } = new URL(request.url)
+    const filter = searchParams.get('filter') // 'all', 'self-serve', 'external', 'external-active', 'external-inactive'
+    const search = searchParams.get('search') // Search by name, email
+    const industry = searchParams.get('industry') // Filter by industry
+
+    // Build where clause
+    const where: any = {
+      role: 'COMPANY'
+    }
+
+    // Apply filter
+    if (filter === 'self-serve') {
+      where.isExternalCompany = false
+    } else if (filter === 'external') {
+      where.isExternalCompany = true
+    } else if (filter === 'external-active') {
+      where.isExternalCompany = true
+      where.profileCompleted = true
+    } else if (filter === 'external-inactive') {
+      where.isExternalCompany = true
+      where.profileCompleted = false
+    }
+
+    // Apply search
+    if (search) {
+      where.OR = [
+        { companyName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    // Apply industry filter
+    if (industry && industry !== 'all') {
+      where.industry = industry
+    }
+
+    // Fetch companies
     const companies = await prisma.user.findMany({
-      where: {
-        role: 'COMPANY'
-      },
+      where,
       select: {
         id: true,
-        name: true,
         email: true,
-        role: true,
-        createdAt: true,
-        emailVerified: true,
-        profileCompleted: true,
+        name: true,
         companyName: true,
-        companyRole: true,
         industry: true,
         companySize: true,
-        companyOneLiner: true,
-        goal: true,
-        contactPersonType: true,
-        contactPersonName: true,
-        contactEmail: true,
-        contactWhatsapp: true,
         companyWebsite: true,
-        calendlyLink: true,
-        referralSource: true,
-        referralDetails: true,
+        location: true,
+        companyOneLiner: true,
+        image: true,
+        isExternalCompany: true,
+        companySource: true,
+        profileCompleted: true,
+        createdAt: true,
+        updatedAt: true,
+        lastActiveAt: true,
         subscriptionPlan: true,
-        lastActiveAt: true
+        _count: {
+          select: {
+            projects: true,
+            externalOpportunities: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc'
       }
     })
 
-    return NextResponse.json({ companies })
-  } catch (error) {
-    console.error('Error fetching companies:', error)
-    return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 })
-  }
-}
-
-// POST - Create new company account
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-
-    // Check admin access
-    if (!session?.user?.id || (session.user as any).role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
-
-    const body = await request.json()
-    const {
-      name,
-      email,
-      companyName,
-      companyRole,
-      industry,
-      companySize,
-      companyOneLiner,
-      goals,
-      contactPersonType,
-      contactPersonName,
-      contactEmail,
-      contactWhatsapp,
-      companyWebsite,
-      calendlyLink,
-      referralSource,
-      referralDetails
-    } = body
-
-    // Validate required fields
-    if (!name || !email || !companyName) {
-      return NextResponse.json({ 
-        error: 'Required fields missing: name, email, companyName' 
-      }, { status: 400 })
-    }
-
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
-
-    if (existingUser) {
-      return NextResponse.json({ 
-        error: 'A user with this email already exists' 
-      }, { status: 409 })
-    }
-
-    // Generate a temporary password
-    const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
-    const hashedPassword = await bcrypt.hash(tempPassword, 12)
-
-    // Create the company user
-    const newCompany = await prisma.user.create({
-      data: {
-        name,
-        email: email.toLowerCase(),
-        role: 'COMPANY',
-        // Note: In a real app, you'd want to integrate with your auth provider
-        // For now, we'll create a basic record
-        companyName,
-        companyRole,
-        industry,
-        companySize,
-        companyOneLiner,
-        goal: Array.isArray(goals) ? goals : [],
-        contactPersonType: contactPersonType || 'me',
-        contactPersonName: contactPersonName || name,
-        contactEmail: contactEmail || email,
-        contactWhatsapp,
-        companyWebsite,
-        calendlyLink,
-        referralSource,
-        referralDetails,
-        profileCompleted: true,
-        emailVerified: new Date(),
-        // Set up basic timestamps
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    })
-
-    // In a real implementation, you'd send a welcome email with login instructions
-    console.log(`Company created: ${email} with temp password: ${tempPassword}`)
+    // Format response
+    const formattedCompanies = companies.map(company => ({
+      id: company.id,
+      email: company.email,
+      name: company.name,
+      companyName: company.companyName,
+      industry: company.industry,
+      companySize: company.companySize,
+      companyWebsite: company.companyWebsite,
+      location: company.location,
+      companyOneLiner: company.companyOneLiner,
+      image: company.image,
+      isExternalCompany: company.isExternalCompany,
+      companySource: company.companySource,
+      profileCompleted: company.profileCompleted,
+      createdAt: company.createdAt,
+      updatedAt: company.updatedAt,
+      lastActiveAt: company.lastActiveAt,
+      subscriptionPlan: company.subscriptionPlan,
+      projectsCount: company._count.projects,
+      opportunitiesCount: company._count.externalOpportunities,
+      // Status for UI
+      status: company.isExternalCompany 
+        ? (company.profileCompleted ? 'external-active' : 'external-inactive')
+        : 'self-serve'
+    }))
 
     return NextResponse.json({
-      success: true,
-      company: {
-        id: newCompany.id,
-        name: newCompany.name,
-        email: newCompany.email,
-        companyName: newCompany.companyName
-      },
-      tempPassword // In production, this would be sent via email instead
+      companies: formattedCompanies,
+      total: formattedCompanies.length
     })
 
   } catch (error) {
-    console.error('Error creating company:', error)
-    return NextResponse.json({ error: 'Failed to create company' }, { status: 500 })
+    console.error('Error fetching companies:', error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch companies' 
+    }, { status: 500 })
   }
 }

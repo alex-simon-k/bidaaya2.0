@@ -55,10 +55,18 @@ interface ExternalOpportunity {
   }
 }
 
+interface Company {
+  id: string
+  companyName: string
+  image: string | null
+  industry: string | null
+}
+
 export default function AdminExternalOpportunitiesPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [opportunities, setOpportunities] = useState<ExternalOpportunity[]>([])
+  const [companies, setCompanies] = useState<Company[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -73,6 +81,7 @@ export default function AdminExternalOpportunitiesPage() {
   const [formData, setFormData] = useState({
     title: '',
     company: '',
+    companyId: '',
     description: '',
     location: '',
     applicationUrl: '',
@@ -99,6 +108,7 @@ export default function AdminExternalOpportunitiesPage() {
     }
     
     fetchOpportunities()
+    fetchCompanies()
   }, [session, categoryFilter, statusFilter])
 
   const fetchOpportunities = async () => {
@@ -124,6 +134,18 @@ export default function AdminExternalOpportunitiesPage() {
       setOpportunities([])
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch('/api/admin/companies')
+      const data = await response.json()
+      if (data.companies) {
+        setCompanies(data.companies)
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error)
     }
   }
 
@@ -256,6 +278,7 @@ export default function AdminExternalOpportunitiesPage() {
     setFormData({
       title: '',
       company: '',
+      companyId: '',
       description: '',
       location: '',
       applicationUrl: '',
@@ -663,16 +686,40 @@ export default function AdminExternalOpportunitiesPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Company *
+                        Company * {companies.length > 0 && `(${companies.length} available)`}
                       </label>
-                      <input
-                        type="text"
+                      <select
                         required
-                        value={formData.company}
-                        onChange={(e) => setFormData({...formData, company: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
-                        placeholder="e.g., Tech Corp"
-                      />
+                        value={formData.companyId}
+                        onChange={(e) => {
+                          const selectedCompany = companies.find(c => c.id === e.target.value)
+                          setFormData({
+                            ...formData, 
+                            companyId: e.target.value,
+                            company: selectedCompany?.companyName || ''
+                          })
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      >
+                        <option value="">Select a company or type new...</option>
+                        {companies.map((company) => (
+                          <option key={company.id} value={company.id}>
+                            {company.companyName} {company.industry && `(${company.industry})`}
+                          </option>
+                        ))}
+                      </select>
+                      {formData.companyId === '' && (
+                        <input
+                          type="text"
+                          value={formData.company}
+                          onChange={(e) => setFormData({...formData, company: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400 mt-2"
+                          placeholder="Or type new company name..."
+                        />
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formData.companyId ? 'Linked to existing company' : 'Will create new company if not selected'}
+                      </p>
                     </div>
                   </div>
 

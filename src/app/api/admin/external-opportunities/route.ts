@@ -49,6 +49,15 @@ export async function GET(request: NextRequest) {
               email: true
             }
           },
+          companyUser: {
+            select: {
+              id: true,
+              companyName: true,
+              image: true,
+              industry: true,
+              companyWebsite: true
+            }
+          },
           _count: {
             select: {
               applications: true
@@ -91,6 +100,9 @@ export async function POST(request: NextRequest) {
     const {
       title,
       company,
+      companyId,
+      createNewCompany, // If true, create company inline
+      newCompanyData, // Data for new company if creating inline
       description,
       location,
       applicationUrl,
@@ -120,10 +132,63 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    let finalCompanyId = companyId
+
+    // Create new company if requested
+    if (createNewCompany && newCompanyData) {
+      const { companyName, email, industry, companyWebsite, image } = newCompanyData
+
+      // Generate placeholder email if not provided
+      const companyEmail = email || 
+        `external+${companyName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}@bidaaya.ae`
+
+      // Check if email already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email: companyEmail }
+      })
+
+      if (existingUser) {
+        // Use existing company
+        finalCompanyId = existingUser.id
+      } else {
+        // Create new company
+        const newCompany = await prisma.user.create({
+          data: {
+            email: companyEmail,
+            name: companyName,
+            companyName: companyName,
+            role: 'COMPANY',
+            industry: industry || null,
+            companyWebsite: companyWebsite || null,
+            image: image || null,
+            isExternalCompany: true,
+            companySource: 'admin_created',
+            profileCompleted: false
+          }
+        })
+        finalCompanyId = newCompany.id
+        console.log(`✅ Created new company inline: ${companyName} (${newCompany.id})`)
+      }
+    }
+
+    // Verify companyId exists if provided
+    if (finalCompanyId) {
+      const companyExists = await prisma.user.findUnique({
+        where: { id: finalCompanyId, role: 'COMPANY' }
+      })
+
+      if (!companyExists) {
+        return NextResponse.json({ 
+          error: 'Invalid company ID provided' 
+        }, { status: 400 })
+      }
+    }
+
     const opportunity = await prisma.externalOpportunity.create({
       data: {
         title: title.trim(),
         company: company.trim(),
+        companyId: finalCompanyId || null,
         description: description?.trim() || null,
         location: location?.trim() || null,
         applicationUrl: applicationUrl.trim(),
@@ -143,6 +208,14 @@ export async function POST(request: NextRequest) {
           select: {
             name: true,
             email: true
+          }
+        },
+        companyUser: {
+          select: {
+            id: true,
+            companyName: true,
+            image: true,
+            industry: true
           }
         }
       }

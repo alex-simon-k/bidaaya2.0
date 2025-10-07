@@ -82,6 +82,8 @@ model User {
   stripeSubscriptionId     String?                @unique
   subscriptionPlan         SubscriptionPlan       @default(FREE)
   subscriptionStatus       SubscriptionStatus     @default(ACTIVE)
+  isExternalCompany        Boolean                @default(false)
+  companySource            String?                // "signup", "admin_created", "bulk_upload"
   aiMatches                AIMatch[]
   accounts                 Account[]
   applications             Application[]
@@ -99,6 +101,7 @@ model User {
   studentTags              StudentTag[]
   studentVector            StudentVector?
   externalOpportunitiesCreated ExternalOpportunity[] @relation("ExternalOpportunitiesCreated")
+  externalOpportunities    ExternalOpportunity[] @relation("CompanyExternalOpportunities")
   externalOpportunityApps  ExternalOpportunityApplication[]
 }
 
@@ -646,7 +649,8 @@ model SearchVector {
 model ExternalOpportunity {
   id              String   @id @default(cuid())
   title           String
-  company         String
+  company         String   // Display name (keep for backward compatibility)
+  companyId       String?  // Link to User table (Company)
   description     String?
   location        String?
   applicationUrl  String   // External website link where students apply
@@ -672,11 +676,13 @@ model ExternalOpportunity {
   // Relations
   applications    ExternalOpportunityApplication[]
   admin           User     @relation("ExternalOpportunitiesCreated", fields: [addedBy], references: [id])
+  companyUser     User?    @relation("CompanyExternalOpportunities", fields: [companyId], references: [id])
   
   @@index([isActive, isPremium])
   @@index([category])
   @@index([addedAt])
   @@index([deadline])
+  @@index([companyId])
 }
 
 // Track when students click through to apply to external opportunities
