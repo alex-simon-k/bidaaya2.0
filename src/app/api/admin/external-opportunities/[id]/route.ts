@@ -70,6 +70,7 @@ export async function PATCH(
     const {
       title,
       company,
+      companyId,
       description,
       location,
       applicationUrl,
@@ -98,6 +99,7 @@ export async function PATCH(
     const updateData: any = {}
     if (title !== undefined) updateData.title = title.trim()
     if (company !== undefined) updateData.company = company.trim()
+    if (companyId !== undefined) updateData.companyId = companyId || null
     if (description !== undefined) updateData.description = description?.trim() || null
     if (location !== undefined) updateData.location = location?.trim() || null
     if (applicationUrl !== undefined) updateData.applicationUrl = applicationUrl.trim()

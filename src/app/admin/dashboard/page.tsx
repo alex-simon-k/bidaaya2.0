@@ -24,23 +24,27 @@ import {
   Crown
 } from 'lucide-react'
 
-interface ExternalOpportunity {
+interface UnifiedOpportunity {
   id: string
+  type: 'internal' | 'external'
   title: string
   company: string
   companyId: string | null
-  applicationUrl: string
-  description?: string
-  location?: string
-  category?: string
-  isActive: boolean
-  isPremium: boolean
-  addedAt: string
-  companyUser?: {
+  companyData?: {
     id: string
     companyName: string
     image: string | null
+    industry?: string | null
   } | null
+  description?: string
+  location?: string | null
+  url: string
+  category?: string | null
+  isActive: boolean
+  isPremium?: boolean
+  addedAt: string
+  applicationCount?: number
+  status?: string
 }
 
 interface Company {
@@ -57,9 +61,12 @@ interface Company {
 }
 
 interface Stats {
-  totalOpportunities: number
-  activeOpportunities: number
-  unlinkedOpportunities: number
+  total: number
+  internal: number
+  external: number
+  active: number
+  unlinked: number
+  totalApplications: number
   totalCompanies: number
   externalCompanies: number
   selfServeCompanies: number
@@ -69,12 +76,15 @@ export default function UnifiedAdminDashboard() {
   const { data: session } = useSession()
   const router = useRouter()
   
-  const [opportunities, setOpportunities] = useState<ExternalOpportunity[]>([])
+  const [opportunities, setOpportunities] = useState<UnifiedOpportunity[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [stats, setStats] = useState<Stats>({
-    totalOpportunities: 0,
-    activeOpportunities: 0,
-    unlinkedOpportunities: 0,
+    total: 0,
+    internal: 0,
+    external: 0,
+    active: 0,
+    unlinked: 0,
+    totalApplications: 0,
     totalCompanies: 0,
     externalCompanies: 0,
     selfServeCompanies: 0
@@ -88,7 +98,7 @@ export default function UnifiedAdminDashboard() {
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [showCreateCompanyModal, setShowCreateCompanyModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
-  const [selectedOpportunity, setSelectedOpportunity] = useState<ExternalOpportunity | null>(null)
+  const [selectedOpportunity, setSelectedOpportunity] = useState<UnifiedOpportunity | null>(null)
   
   // Forms
   const [selectedCompanyId, setSelectedCompanyId] = useState('')
@@ -111,25 +121,26 @@ export default function UnifiedAdminDashboard() {
     setIsLoading(true)
     try {
       const [oppsRes, companiesRes] = await Promise.all([
-        fetch('/api/admin/external-opportunities'),
+        fetch('/api/admin/all-opportunities'), // NEW: Fetch both internal & external
         fetch('/api/admin/companies')
       ])
 
       if (oppsRes.ok) {
-        const oppsData = await oppsRes.json()
-        const allOpps = oppsData.opportunities || []
-        setOpportunities(allOpps)
+        const data = await oppsRes.json()
+        setOpportunities(data.opportunities || [])
         
-        // Calculate stats
-        const unlinked = allOpps.filter((o: ExternalOpportunity) => !o.companyId).length
-        const active = allOpps.filter((o: ExternalOpportunity) => o.isActive).length
-        
-        setStats(prev => ({
-          ...prev,
-          totalOpportunities: allOpps.length,
-          activeOpportunities: active,
-          unlinkedOpportunities: unlinked
-        }))
+        // Use stats from API
+        if (data.stats) {
+          setStats(prev => ({
+            ...prev,
+            total: data.stats.total,
+            internal: data.stats.internal,
+            external: data.stats.external,
+            active: data.stats.active,
+            unlinked: data.stats.unlinked,
+            totalApplications: data.stats.totalApplications
+          }))
+        }
       }
 
       if (companiesRes.ok) {
@@ -154,7 +165,7 @@ export default function UnifiedAdminDashboard() {
     }
   }
 
-  const openLinkModal = (opp: ExternalOpportunity) => {
+  const openLinkModal = (opp: UnifiedOpportunity) => {
     setSelectedOpportunity(opp)
     setSelectedCompanyId('')
     setShowLinkModal(true)
@@ -280,8 +291,9 @@ export default function UnifiedAdminDashboard() {
 
   const filteredOpportunities = opportunities
     .filter(opp => {
-      if (viewFilter === 'unlinked') return !opp.companyId
-      if (viewFilter === 'linked') return !!opp.companyId
+      // Unlinked filter only applies to external opportunities
+      if (viewFilter === 'unlinked') return opp.type === 'external' && !opp.companyId
+      if (viewFilter === 'linked') return opp.companyId !== null
       return true
     })
     .filter(opp => {
@@ -315,8 +327,8 @@ export default function UnifiedAdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Opportunities</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOpportunities}</p>
-                <p className="text-xs text-green-600 mt-1">{stats.activeOpportunities} active</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-xs text-gray-500 mt-1">{stats.internal} internal • {stats.external} external</p>
               </div>
               <Briefcase className="h-8 w-8 text-blue-600" />
             </div>
@@ -330,8 +342,8 @@ export default function UnifiedAdminDashboard() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Unlinked Opportunities</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.unlinkedOpportunities}</p>
+                <p className="text-sm text-gray-600">Unlinked External Opps</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.unlinked}</p>
                 <p className="text-xs text-gray-500 mt-1">Need company assignment</p>
               </div>
               <AlertCircle className="h-8 w-8 text-orange-600" />
@@ -469,6 +481,14 @@ export default function UnifiedAdminDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">{opp.title}</h3>
+                      {/* Type Badge */}
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${
+                        opp.type === 'internal' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-indigo-100 text-indigo-700'
+                      }`}>
+                        {opp.type === 'internal' ? '🏢 Bidaaya' : '🌐 External'}
+                      </span>
                       {opp.isPremium && (
                         <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
                           <Crown className="inline w-3 h-3" />
@@ -480,7 +500,7 @@ export default function UnifiedAdminDashboard() {
                         </span>
                       ) : (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                          Hidden
+                          {opp.status || 'Hidden'}
                         </span>
                       )}
                     </div>
@@ -488,7 +508,7 @@ export default function UnifiedAdminDashboard() {
                     <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
                       <span className="flex items-center gap-1">
                         <Building2 className="w-4 h-4" />
-                        {opp.companyUser?.companyName || opp.company}
+                        {opp.companyData?.companyName || opp.company}
                       </span>
                       {opp.location && (
                         <span className="text-gray-500">• {opp.location}</span>
@@ -496,6 +516,11 @@ export default function UnifiedAdminDashboard() {
                       {opp.category && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
                           {opp.category}
+                        </span>
+                      )}
+                      {opp.applicationCount !== undefined && opp.applicationCount > 0 && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                          {opp.applicationCount} apps
                         </span>
                       )}
                     </div>
@@ -511,7 +536,8 @@ export default function UnifiedAdminDashboard() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    {!opp.companyId ? (
+                    {/* Company link button - only for external opps without company */}
+                    {opp.type === 'external' && !opp.companyId ? (
                       <button
                         onClick={() => openLinkModal(opp)}
                         className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 text-sm"
@@ -519,7 +545,7 @@ export default function UnifiedAdminDashboard() {
                         <LinkIcon className="w-4 h-4" />
                         Link Company
                       </button>
-                    ) : (
+                    ) : opp.companyId ? (
                       <button
                         onClick={() => router.push(`/admin/companies/${opp.companyId}`)}
                         className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2 text-sm"
@@ -527,28 +553,32 @@ export default function UnifiedAdminDashboard() {
                         <CheckCircle className="w-4 h-4" />
                         View Company
                       </button>
+                    ) : null}
+
+                    {/* Toggle visibility - only for external */}
+                    {opp.type === 'external' && (
+                      <button
+                        onClick={() => handleToggleActive(opp.id, opp.isActive)}
+                        className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+                          opp.isActive
+                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {opp.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {opp.isActive ? 'Hide' : 'Show'}
+                      </button>
                     )}
 
-                    <button
-                      onClick={() => handleToggleActive(opp.id, opp.isActive)}
-                      className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${
-                        opp.isActive
-                          ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {opp.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      {opp.isActive ? 'Hide' : 'Show'}
-                    </button>
-
+                    {/* View link */}
                     <a
-                      href={opp.applicationUrl}
+                      href={opp.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      View
+                      {opp.type === 'internal' ? 'View Project' : 'View Link'}
                     </a>
                   </div>
                 </div>
