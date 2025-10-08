@@ -5,6 +5,9 @@ import { authOptions } from "@/lib/auth-config"
 
 const prisma = new PrismaClient()
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)

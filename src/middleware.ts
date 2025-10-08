@@ -43,6 +43,21 @@ export default withAuth(
       return NextResponse.next();
     }
     
+    // Handle admin routes separately
+    if (pathname.startsWith("/admin")) {
+      console.log('🛡️ Admin route detected:', pathname);
+      if (!token) {
+        console.log('🛡️ ❌ No token for admin route, redirecting to login');
+        return NextResponse.redirect(new URL("/auth/login", req.url));
+      }
+      if (token.role !== 'ADMIN') {
+        console.log('🛡️ ❌ Non-admin user trying to access admin route, redirecting to dashboard');
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+      console.log('🛡️ ✅ Admin user, allowing access to admin route');
+      return NextResponse.next();
+    }
+    
     // Allow public pages
     if (pathname === "/" || pathname.startsWith("/pricing")) {
       console.log('🛡️ Public page - allowing access to:', pathname);
@@ -155,6 +170,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
+    "/admin/:path*",
     "/dashboard/:path*",
     "/onboarding/:path*",
     "/auth/role-selection",

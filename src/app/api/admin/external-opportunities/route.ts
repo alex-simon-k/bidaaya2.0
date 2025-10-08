@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = 'force-dynamic'
+
 // GET - List all external opportunities with filters
 export async function GET(request: NextRequest) {
   try {
