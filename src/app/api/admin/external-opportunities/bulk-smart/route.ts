@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
                 name: opp.company,
                 companyName: opp.company,
                 role: 'COMPANY',
-                emailVerified: false,
+                emailVerified: null,
                 profileCompleted: false,
                 isExternalCompany: true,
                 companySource: 'bulk_upload',
