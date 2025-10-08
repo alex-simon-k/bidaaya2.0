@@ -423,7 +423,7 @@ export default function UnifiedAdminDashboard() {
                   }`}
                 >
                   <AlertCircle className="inline w-4 h-4 mr-1" />
-                  Unlinked ({stats.unlinkedOpportunities})
+                  Unlinked ({stats.unlinked})
                 </button>
                 <button
                   onClick={() => setViewFilter('linked')}
