@@ -109,6 +109,26 @@ export default function UnifiedAdminDashboard() {
   const [bulkData, setBulkData] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const cleanJSON = () => {
+    try {
+      // Replace curly quotes with straight quotes
+      let cleaned = bulkData
+        .replace(/[\u201C\u201D]/g, '"')  // Replace " and "
+        .replace(/[\u2018\u2019]/g, "'")  // Replace ' and '
+        .replace(/\u2013/g, '-')           // Replace en-dash
+        .replace(/\u2014/g, '--')          // Replace em-dash
+        .trim()
+      
+      // Try to parse and re-stringify for proper formatting
+      const parsed = JSON.parse(cleaned)
+      const formatted = JSON.stringify(parsed, null, 2)
+      setBulkData(formatted)
+      alert('✅ JSON cleaned and formatted!')
+    } catch (error) {
+      alert(`❌ Could not clean JSON: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
   useEffect(() => {
     if (session?.user?.role !== 'ADMIN') {
       router.push('/dashboard')
@@ -247,30 +267,62 @@ export default function UnifiedAdminDashboard() {
 
   const handleBulkUpload = async () => {
     setIsSubmitting(true)
+    
+    // Step 1: Validate JSON
+    let opportunitiesData
     try {
-      const opportunitiesData = JSON.parse(bulkData)
-      
-      if (!Array.isArray(opportunitiesData)) {
-        alert('Data must be an array')
-        setIsSubmitting(false)
-        return
-      }
+      opportunitiesData = JSON.parse(bulkData)
+    } catch (jsonError) {
+      alert(`❌ Invalid JSON format!\n\nError: ${jsonError instanceof Error ? jsonError.message : 'Parse error'}\n\nTip: Check for:\n- Missing quotes\n- Trailing commas\n- Curly quotes (use straight quotes)`)
+      setIsSubmitting(false)
+      return
+    }
+    
+    // Step 2: Validate array
+    if (!Array.isArray(opportunitiesData)) {
+      alert('❌ Data must be a JSON array [ ]')
+      setIsSubmitting(false)
+      return
+    }
 
+    // Step 3: Validate required fields
+    const missing = []
+    for (let i = 0; i < Math.min(5, opportunitiesData.length); i++) {
+      const opp = opportunitiesData[i]
+      if (!opp.title || !opp.company || !opp.applicationUrl) {
+        missing.push(`Row ${i + 1}: Missing ${!opp.title ? 'title' : !opp.company ? 'company' : 'applicationUrl'}`)
+      }
+    }
+    
+    if (missing.length > 0) {
+      alert(`❌ Missing required fields:\n\n${missing.join('\n')}\n\nEach opportunity needs:\n- title\n- company\n- applicationUrl`)
+      setIsSubmitting(false)
+      return
+    }
+
+    // Step 4: Upload
+    try {
+      console.log(`Uploading ${opportunitiesData.length} opportunities...`)
+      
       const response = await fetch('/api/admin/external-opportunities/bulk-smart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ opportunities: opportunitiesData })
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        const data = await response.json()
         setShowBulkUploadModal(false)
         setBulkData('')
         fetchAllData()
-        alert(`✅ Bulk upload complete!\nCreated: ${data.created}\nAuto-linked: ${data.autoLinked}\nNew companies: ${data.newCompanies}`)
+        alert(`✅ Bulk upload complete!\n\nCreated: ${data.created}\nAuto-linked: ${data.autoLinked}\nNew companies: ${data.newCompanies}\nFailed: ${data.failed || 0}`)
+      } else {
+        alert(`❌ Upload failed!\n\n${data.error || 'Unknown error'}\n\nServer response: ${response.status}`)
       }
     } catch (error) {
-      alert('❌ Invalid JSON or upload failed')
+      console.error('Upload error:', error)
+      alert(`❌ Network error during upload!\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nTry:\n1. Smaller batches (50 at a time)\n2. Check your internet connection`)
     } finally {
       setIsSubmitting(false)
     }
@@ -761,9 +813,16 @@ export default function UnifiedAdminDashboard() {
                     setShowBulkUploadModal(false)
                     setBulkData('')
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
+                </button>
+                <button
+                  onClick={cleanJSON}
+                  disabled={!bulkData}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🧹 Clean JSON
                 </button>
                 <button
                   onClick={handleBulkUpload}
