@@ -448,7 +448,7 @@ export default function AdminCompaniesPage() {
                 placeholder="Search companies..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
               />
             </div>
 
@@ -456,7 +456,7 @@ export default function AdminCompaniesPage() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
             >
               <option value="all">All Types</option>
               <option value="self-serve">Self-Serve Only</option>
@@ -468,7 +468,7 @@ export default function AdminCompaniesPage() {
             <select
               value={industryFilter}
               onChange={(e) => setIndustryFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
             >
               <option value="all">All Industries</option>
               {industries.map(industry => (
@@ -609,7 +609,7 @@ export default function AdminCompaniesPage() {
                       required
                       value={formData.companyName}
                       onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="e.g. Microsoft"
                     />
                   </div>
@@ -620,7 +620,7 @@ export default function AdminCompaniesPage() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="contact@company.com (optional - auto-generated if empty)"
                     />
                   </div>
@@ -631,7 +631,7 @@ export default function AdminCompaniesPage() {
                       <select
                         value={formData.industry}
                         onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       >
                         <option value="">Select Industry</option>
                         <option value="Technology">Technology</option>
@@ -651,7 +651,7 @@ export default function AdminCompaniesPage() {
                       <select
                         value={formData.companySize}
                         onChange={(e) => setFormData({ ...formData, companySize: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       >
                         <option value="">Select Size</option>
                         <option value="1-10">1-10</option>
@@ -670,7 +670,7 @@ export default function AdminCompaniesPage() {
                       type="url"
                       value={formData.companyWebsite}
                       onChange={(e) => setFormData({ ...formData, companyWebsite: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="https://company.com"
                     />
                   </div>
@@ -681,7 +681,7 @@ export default function AdminCompaniesPage() {
                       type="text"
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="Dubai, UAE"
                     />
                   </div>
@@ -698,7 +698,7 @@ export default function AdminCompaniesPage() {
                           setLogoPreview(URL.createObjectURL(file))
                         }
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                     />
                     {logoPreview && (
                       <div className="mt-2">
@@ -714,7 +714,7 @@ export default function AdminCompaniesPage() {
                       type="text"
                       value={formData.companyOneLiner}
                       onChange={(e) => setFormData({ ...formData, companyOneLiner: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="Brief description of the company"
                     />
                   </div>
@@ -725,7 +725,7 @@ export default function AdminCompaniesPage() {
                       value={formData.bio}
                       onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="Detailed company description..."
                     />
                   </div>
@@ -737,7 +737,7 @@ export default function AdminCompaniesPage() {
                         type="text"
                         value={formData.companyRole}
                         onChange={(e) => setFormData({ ...formData, companyRole: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         placeholder="e.g., CEO, HR Manager"
                       />
                     </div>
@@ -748,7 +748,7 @@ export default function AdminCompaniesPage() {
                         type="url"
                         value={formData.calendlyLink}
                         onChange={(e) => setFormData({ ...formData, calendlyLink: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         placeholder="https://calendly.com/..."
                       />
                     </div>
@@ -763,7 +763,7 @@ export default function AdminCompaniesPage() {
                           type="text"
                           value={formData.contactPersonName}
                           onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         />
                       </div>
 
@@ -772,7 +772,7 @@ export default function AdminCompaniesPage() {
                         <select
                           value={formData.contactPersonType}
                           onChange={(e) => setFormData({ ...formData, contactPersonType: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         >
                           <option value="">Select Type</option>
                           <option value="CEO">CEO</option>
@@ -789,7 +789,7 @@ export default function AdminCompaniesPage() {
                           type="email"
                           value={formData.contactEmail}
                           onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         />
                       </div>
 
@@ -799,7 +799,7 @@ export default function AdminCompaniesPage() {
                           type="tel"
                           value={formData.contactWhatsapp}
                           onChange={(e) => setFormData({ ...formData, contactWhatsapp: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                           placeholder="+971..."
                         />
                       </div>
@@ -815,7 +815,7 @@ export default function AdminCompaniesPage() {
                           type="text"
                           value={formData.referralSource}
                           onChange={(e) => setFormData({ ...formData, referralSource: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                           placeholder="How did they find us?"
                         />
                       </div>
@@ -826,7 +826,7 @@ export default function AdminCompaniesPage() {
                           type="text"
                           value={formData.referralDetails}
                           onChange={(e) => setFormData({ ...formData, referralDetails: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         />
                       </div>
                     </div>
@@ -874,7 +874,7 @@ export default function AdminCompaniesPage() {
                       required
                       value={formData.companyName}
                       onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                     />
                   </div>
 
@@ -884,7 +884,7 @@ export default function AdminCompaniesPage() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                     />
                   </div>
 
@@ -894,7 +894,7 @@ export default function AdminCompaniesPage() {
                       <select
                         value={formData.industry}
                         onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       >
                         <option value="">Select Industry</option>
                         <option value="Technology">Technology</option>
@@ -914,7 +914,7 @@ export default function AdminCompaniesPage() {
                       <select
                         value={formData.companySize}
                         onChange={(e) => setFormData({ ...formData, companySize: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       >
                         <option value="">Select Size</option>
                         <option value="1-10">1-10</option>
@@ -933,7 +933,7 @@ export default function AdminCompaniesPage() {
                       type="url"
                       value={formData.companyWebsite}
                       onChange={(e) => setFormData({ ...formData, companyWebsite: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                     />
                   </div>
 
@@ -943,7 +943,7 @@ export default function AdminCompaniesPage() {
                       type="text"
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                     />
                   </div>
 
@@ -959,7 +959,7 @@ export default function AdminCompaniesPage() {
                           setLogoPreview(URL.createObjectURL(file))
                         }
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                     />
                     {logoPreview && (
                       <div className="mt-2">
@@ -975,7 +975,7 @@ export default function AdminCompaniesPage() {
                       type="text"
                       value={formData.companyOneLiner}
                       onChange={(e) => setFormData({ ...formData, companyOneLiner: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="Brief description of the company"
                     />
                   </div>
@@ -986,7 +986,7 @@ export default function AdminCompaniesPage() {
                       value={formData.bio}
                       onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                       placeholder="Detailed company description..."
                     />
                   </div>
@@ -998,7 +998,7 @@ export default function AdminCompaniesPage() {
                         type="text"
                         value={formData.companyRole}
                         onChange={(e) => setFormData({ ...formData, companyRole: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         placeholder="e.g., CEO, HR Manager"
                       />
                     </div>
@@ -1009,7 +1009,7 @@ export default function AdminCompaniesPage() {
                         type="url"
                         value={formData.calendlyLink}
                         onChange={(e) => setFormData({ ...formData, calendlyLink: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         placeholder="https://calendly.com/..."
                       />
                     </div>
@@ -1024,7 +1024,7 @@ export default function AdminCompaniesPage() {
                           type="text"
                           value={formData.contactPersonName}
                           onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         />
                       </div>
 
@@ -1033,7 +1033,7 @@ export default function AdminCompaniesPage() {
                         <select
                           value={formData.contactPersonType}
                           onChange={(e) => setFormData({ ...formData, contactPersonType: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         >
                           <option value="">Select Type</option>
                           <option value="CEO">CEO</option>
@@ -1050,7 +1050,7 @@ export default function AdminCompaniesPage() {
                           type="email"
                           value={formData.contactEmail}
                           onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         />
                       </div>
 
@@ -1060,7 +1060,7 @@ export default function AdminCompaniesPage() {
                           type="tel"
                           value={formData.contactWhatsapp}
                           onChange={(e) => setFormData({ ...formData, contactWhatsapp: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                           placeholder="+971..."
                         />
                       </div>
@@ -1076,7 +1076,7 @@ export default function AdminCompaniesPage() {
                           type="text"
                           value={formData.referralSource}
                           onChange={(e) => setFormData({ ...formData, referralSource: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                           placeholder="How did they find us?"
                         />
                       </div>
@@ -1087,7 +1087,7 @@ export default function AdminCompaniesPage() {
                           type="text"
                           value={formData.referralDetails}
                           onChange={(e) => setFormData({ ...formData, referralDetails: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
                         />
                       </div>
                     </div>
@@ -1144,7 +1144,7 @@ export default function AdminCompaniesPage() {
                   <textarea
                     value={bulkUploadData}
                     onChange={(e) => setBulkUploadData(e.target.value)}
-                    className="w-full h-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full h-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm text-gray-900"
                     placeholder="Paste JSON here..."
                   />
                 </div>
