@@ -116,8 +116,8 @@ export default function AdminDashboard() {
       return
     }
     
-    // Redirect to new admin panel
-    router.push('/admin-panel')
+    // Redirect to unified admin dashboard
+    router.push('/admin/dashboard')
     return
   }, [session, router])
 
