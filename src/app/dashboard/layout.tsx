@@ -108,6 +108,13 @@ export default function DashboardLayout({
           profileCompleted: sessionData.profileCompleted
         });
         
+        // Skip all verification checks for ADMIN users
+        if (session.user.role === 'ADMIN') {
+          console.log('🏠 DashboardLayout - ✅ ADMIN user detected, skipping all verification checks');
+          setHasCheckedRouting(true);
+          return;
+        }
+        
         // Check for corrupted session - user exists but no role data
         if (!session.user.role && sessionData.emailVerified === undefined) {
           console.log('🚨 Detected corrupted session - no role or verification data. Signing out to force fresh session.');
@@ -452,11 +459,25 @@ export default function DashboardLayout({
             {session.user.role === 'ADMIN' && (
               <>
                 <Link 
+                  href="/admin/dashboard" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors font-semibold"
+                >
+                  🎯 Admin Command Center
+                </Link>
+                <Link 
+                  href="/admin/companies" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  🏢 Manage Companies
+                </Link>
+                <Link 
                   href="/dashboard/ai-analysis" 
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-3 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
                 >
-  🔧 Student Processing
+                  🔧 Student Processing
                 </Link>
                 <Link 
                   href="/admin-panel" 
