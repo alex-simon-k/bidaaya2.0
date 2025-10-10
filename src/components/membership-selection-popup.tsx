@@ -30,21 +30,12 @@ export function MembershipSelectionPopup({
   ]
 
   const handleUpgrade = (planId: string) => {
-    // Map plan IDs to env variable names
-    const stripePriceIds: Record<string, string | undefined> = {
-      'student_premium': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_MONTHLY,
-      'student_pro': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_MONTHLY,
-    }
-
-    const stripeLink = stripePriceIds[planId]
-    
-    if (!stripeLink) {
-      // Redirect to pricing page if not configured
-      window.location.href = '/pricing'
-      return
-    }
-    
-    window.location.href = stripeLink
+    // Redirect to subscription page with plan info
+    const params = new URLSearchParams({
+      plan: planId,
+      interval: 'month'
+    })
+    window.location.href = `/subscription?${params.toString()}`
   }
 
   return (

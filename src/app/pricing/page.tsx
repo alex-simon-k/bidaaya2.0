@@ -18,23 +18,13 @@ export default function PricingPage() {
   ]
 
   const handleSubscribe = (planId: string, interval: 'month' | 'year') => {
-    // Map plan IDs to env variable names
-    const stripePriceIds: Record<string, string | undefined> = {
-      'student_premium_monthly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_MONTHLY,
-      'student_premium_yearly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_YEARLY,
-      'student_pro_monthly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_MONTHLY,
-      'student_pro_yearly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_YEARLY,
-    }
-
-    const key = `${planId}_${interval}ly`
-    const stripeLink = stripePriceIds[key]
-    
-    if (!stripeLink) {
-      alert('Payment link not configured yet. Please contact support.')
-      return
-    }
-    
-    window.location.href = stripeLink
+    // Redirect to Stripe checkout with plan info
+    // The subscription page will handle the actual Stripe checkout
+    const params = new URLSearchParams({
+      plan: planId,
+      interval: interval
+    })
+    window.location.href = `/subscription?${params.toString()}`
   }
 
   // Calculate yearly pricing (assume 2 months free = 10 months price)
