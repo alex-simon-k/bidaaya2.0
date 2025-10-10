@@ -245,6 +245,11 @@ export default function DashboardLayout({
     )
   }
 
+  // For STUDENT users, render ONLY the children (AIAssistantCard) with NO layout wrapper
+  if (session?.user?.role === 'STUDENT') {
+    return <>{children}</>;
+  }
+
   return (
     <div className={`min-h-screen ${session?.user?.role === 'COMPANY' ? 'bg-white' : 'bg-gray-50'}`}>
       {/* Header - Mobile Optimized - Now available for all users */}
