@@ -66,8 +66,12 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
           {/* Sidebar Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-bidaaya-accent flex items-center justify-center">
-                <span className="text-white font-bold text-sm">B</span>
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img 
+                  src="/android-chrome-192x192.png" 
+                  alt="Bidaaya Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-bidaaya-light font-semibold">Bidaaya</span>
             </div>
@@ -221,61 +225,33 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
               <h3 className="text-2xl font-bold text-bidaaya-light mb-4">
                 Welcome back! How can I help?
               </h3>
-              <p className="text-sm text-bidaaya-light/60 max-w-md">
-                I'm here to help you find internships, build your career, and create custom CVs. 
-                Choose from the prompts below or just tell me what you need!
-              </p>
             </div>
 
             {/* Quick Action Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mb-8 max-w-lg">
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-8 max-w-lg">
               <Badge
                 variant="secondary"
-                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
-                onClick={() => handleQuickPrompt("Find internships that match my profile")}
+                className="h-10 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-5"
+                onClick={() => handleQuickPrompt("Find opportunities that match my profile")}
               >
                 <Briefcase className="h-4 w-4 text-blue-400" />
-                Find Internships
+                Find Opportunities
               </Badge>
               <Badge
                 variant="secondary"
-                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
-                onClick={() => handleQuickPrompt("Help me build a custom CV")}
+                className="h-10 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-5"
+                onClick={() => handleQuickPrompt("Help me build a custom CV and cover letter")}
               >
                 <FileText className="h-4 w-4 text-green-400" />
-                Build CV
+                Build Custom CV
               </Badge>
               <Badge
                 variant="secondary"
-                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
-                onClick={() => handleQuickPrompt("Create a career development plan")}
+                className="h-10 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-5"
+                onClick={() => handleQuickPrompt("Create my career journey plan")}
               >
                 <MapIcon className="h-4 w-4 text-purple-400" />
-                Career Plan
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
-                onClick={() => handleQuickPrompt("Give me career advice and tips")}
-              >
-                <PenToolIcon className="h-4 w-4 text-yellow-400" />
-                Career Advice
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
-                onClick={() => handleQuickPrompt("Help me with interview preparation")}
-              >
-                <Target className="h-4 w-4 text-red-400" />
-                Interview Prep
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
-                onClick={() => handleQuickPrompt("Show me more options")}
-              >
-                <SparklesIcon className="h-4 w-4 text-pink-400" />
-                More
+                Create Career Journey
               </Badge>
             </div>
 
@@ -302,7 +278,7 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         <div className="px-4 pb-3 safe-bottom bg-bidaaya-dark">
           <div className="max-w-3xl mx-auto">
             <AIInputWithSearch
-              placeholder="Ask me anything about internships, career advice, or CV building..."
+              placeholder="Ask me anything..."
               onSubmit={onSubmit}
               onFileSelect={onFileSelect}
             />

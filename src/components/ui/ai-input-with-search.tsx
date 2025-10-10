@@ -18,7 +18,7 @@ interface AIInputWithSearchProps {
 
 export function AIInputWithSearch({
   id = "ai-input-with-search",
-  placeholder = "Ask me anything about internships...",
+  placeholder = "Ask me anything...",
   minHeight = 44,
   maxHeight = 120,
   onSubmit,
