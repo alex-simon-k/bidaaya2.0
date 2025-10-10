@@ -137,6 +137,15 @@ export default function PricingPage() {
                 <h3 className="text-2xl font-semibold text-gray-900">{plan.name}</h3>
                 <p className="mt-2 text-gray-600">{plan.description}</p>
                 
+                {/* Credits Badge for Student Plans */}
+                {selectedUserType === 'STUDENT' && (plan as any).credits && (
+                  <div className="mt-3">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                      ⚡ {(plan as any).credits} credits/month
+                    </span>
+                  </div>
+                )}
+                
                 {/* Credits Badge for Company Plans */}
                 {selectedUserType === 'COMPANY' && (
                   <div className="mt-3">
@@ -165,6 +174,27 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
+
+                {/* Credit Costs for Student Plans */}
+                {selectedUserType === 'STUDENT' && (
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Credit Costs:</h4>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex justify-between">
+                        <span>Internal applications:</span>
+                        <span className="font-medium">5 credits</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Company proposals:</span>
+                        <span className="font-medium">7 credits</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Custom CV generation:</span>
+                        <span className="font-medium">10 credits</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-6 pt-0">

@@ -46,6 +46,12 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // New Bidaaya dark theme colors
+        'bidaaya': {
+          'light': '#cedde5',      // Light blue-gray text/foreground
+          'dark': '#0a081a',       // Very dark purple/black background
+          'accent': '#3b82f6',     // Blue accent for buttons/links
+        }
       },
       borderRadius: {
         lg: "var(--radius)",

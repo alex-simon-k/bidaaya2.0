@@ -29,6 +29,7 @@ import { StudentApplicationModal } from '@/components/student-application-modal'
 import { ProfileRequirementsModal } from '@/components/profile-requirements-modal'
 import { FirstApplicationSuccessModal } from '@/components/first-application-success-modal'
 import AdminProjectApplications from '@/components/admin-project-applications'
+import CreditActionModal from '@/components/credit-action-modal'
 
 interface Project {
   id: string
@@ -96,6 +97,7 @@ export default function ProjectDetailPage() {
   const [compatibilityScore, setCompatibilityScore] = useState(85)
   const [showRequirementsModal, setShowRequirementsModal] = useState(false)
   const [showAdminApplications, setShowAdminApplications] = useState(false)
+  const [showCreditModal, setShowCreditModal] = useState(false)
 
   useEffect(() => {
     if (projectId) {
@@ -276,11 +278,11 @@ export default function ProjectDetailPage() {
             <div className="flex gap-2 mt-4 sm:mt-0">
               {canApply() && (
                 <button
-                  onClick={() => setShowApplicationModal(true)}
+                  onClick={() => setShowCreditModal(true)}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Apply Now
+                  Apply Now (5 Credits)
                 </button>
               )}
               
@@ -644,6 +646,18 @@ export default function ProjectDetailPage() {
         onClose={() => setShowRequirementsModal(false)}
         userProfile={session?.user}
         type="application"
+      />
+
+      <CreditActionModal
+        isOpen={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        onConfirm={async () => {
+          setShowApplicationModal(true)
+        }}
+        action="internalApplication"
+        title={project?.title || ''}
+        description={`Apply to this Bidaaya project: ${project?.title}`}
+        relatedId={project?.id}
       />
     </div>
   )

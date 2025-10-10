@@ -13,26 +13,28 @@ export interface PricingPlan {
 }
 
 export const PRICING_PLANS = {
-  // Student Plans
+  // Student Plans - Credit-Based System
   STUDENT_FREE: {
     id: 'student_free',
     name: 'Explorer',
     price: 0,
     interval: 'month' as const,
     description: 'Perfect for getting started with internships',
-    credits: 10, // 10 contact credits for companies on FREE plan
+    credits: 20, // 20 credits per month
     features: [
-      '4 Bidaaya applications per month',
-      'No additional documents allowed',
-      'Mentorship available (paid separately)',
+      '20 credits per month',
+      'Internal applications (5 credits each)',
+      'Company proposals (7 credits each)', 
+      'Custom CV generation (10 credits each)',
+      'AI career advisor access',
       'Discovery quiz access',
-      'Bidaaya application tracking',
-      'Gamified experience (XP, badges, basic portfolio)',
+      'Application tracking',
+      'Basic portfolio',
     ],
     limitations: [
-      'Limited to 4 applications per month',
+      'Limited to 20 credits per month',
       'Community support only',
-      'No additional document uploads'
+      'Basic AI features only'
     ]
   },
   STUDENT_PREMIUM: {
@@ -41,14 +43,16 @@ export const PRICING_PLANS = {
     price: 5,
     interval: 'month' as const,
     description: 'For active job seekers expanding opportunities',
+    credits: 100, // 100 credits per month
     features: [
-      '10 Bidaaya applications per month',
-      '1 additional document upload per application',
-      'External job application tracking',
-      'Enhanced profile with portfolio',
-      'Gamified experience (XP, badges, enhanced portfolio)',
-      'Priority in search rankings',
+      '100 credits per month',
+      'All Explorer features',
+      'Enhanced AI career advisor',
+      'Priority application processing',
+      'Advanced portfolio features',
+      'External job tracking',
       'Email support',
+      'Premium profile badge',
     ],
     popular: true
   },
@@ -57,16 +61,17 @@ export const PRICING_PLANS = {
     name: 'Career Accelerator', 
     price: 15,
     interval: 'month' as const,
-    description: 'Complete career development solution with early access',
+    description: 'Complete career development solution with unlimited access',
+    credits: 200, // 200 credits per month
     features: [
-      'Unlimited Bidaaya applications per month',
-      '1 additional document upload per application',
+      '200 credits per month',
+      'All Career Builder features',
       '🔥 EXCLUSIVE: 24-36 hours early access to new projects',
-      'External job application tracking',
-      'Enhanced gamified experience (premium badges, advanced portfolio)',
+      'Unlimited AI interactions',
+      'Advanced career analytics',
       'Priority customer support',
-      'AI-powered career recommendations',
-      'Premium profile badge',
+      'Premium gamification features',
+      'Custom branding options',
     ],
     badge: 'Early Access'
   },

@@ -103,6 +103,12 @@ model User {
   externalOpportunitiesCreated ExternalOpportunity[] @relation("ExternalOpportunitiesCreated")
   externalOpportunities    ExternalOpportunity[] @relation("CompanyExternalOpportunities")
   externalOpportunityApps  ExternalOpportunityApplication[]
+
+  // Credit system
+  credits                  Int                    @default(20)
+  creditsRefreshDate       DateTime?
+  lifetimeCreditsUsed      Int                    @default(0)
+  creditTransactions       CreditTransaction[]
 }
 
 model UserSession {
@@ -322,6 +328,45 @@ model Payment {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   user            User          @relation(fields: [userId], references: [id])
+}
+
+// Credit system models
+model CreditTransaction {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+
+  type           String   // monthly_refresh, purchase, spent, refund
+  action         String?  // internalApplication, companyProposal, customCV
+  amount         Int      // positive for gains, negative for spending
+  balanceBefore  Int
+  balanceAfter   Int
+
+  relatedId      String?  // optional foreign id (application/proposal id)
+  description    String?
+
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Singleton-like config for pricing and monthly allocations
+model CreditPricing {
+  id                     String   @id @default(cuid())
+
+  // Action costs (credits)
+  internalApplication    Int      @default(5)
+  companyProposal        Int      @default(7)
+  customCV               Int      @default(10)
+
+  // Monthly allocations per subscription tier
+  freeMonthlyCredits     Int      @default(20)
+  premiumMonthlyCredits  Int      @default(100)
+  proMonthlyCredits      Int      @default(200)
+
+  updatedAt              DateTime @updatedAt
+  updatedBy              String?
 }
 
 model ChatQuery {

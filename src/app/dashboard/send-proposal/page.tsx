@@ -18,6 +18,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react'
+import CreditActionModal from '@/components/credit-action-modal'
 
 interface ProposalData {
   companyId: string
@@ -46,6 +47,7 @@ export default function SendProposalPage() {
   const [company, setCompany] = useState<CompanyInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [showCreditModal, setShowCreditModal] = useState(false)
   const [formData, setFormData] = useState<ProposalData>({
     companyId: companyId || '',
     personalIntro: '',
@@ -93,26 +95,13 @@ export default function SendProposalPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setShowCreditModal(true)
+  }
+
+  const handleProposalSubmit = async () => {
     setIsLoading(true)
-
     try {
-      // First, spend a credit
-      const creditResponse = await fetch('/api/user/credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'spend',
-          amount: 1,
-          type: 'proposal_submission'
-        })
-      })
-
-      if (!creditResponse.ok) {
-        const creditError = await creditResponse.json()
-        throw new Error(creditError.error || 'Failed to process credits')
-      }
-
-      // Submit the proposal
+      // Submit the proposal (credits already spent by modal)
       const response = await fetch('/api/proposals/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -345,12 +334,22 @@ LinkedIn: https://linkedin.com/in/username"
                   className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Send className="h-4 w-4" />
-                  {isLoading ? 'Sending...' : 'Send Proposal (1 Credit)'}
+                  {isLoading ? 'Sending...' : 'Send Proposal (7 Credits)'}
                 </button>
               </div>
             </div>
           </div>
         </form>
+
+        <CreditActionModal
+          isOpen={showCreditModal}
+          onClose={() => setShowCreditModal(false)}
+          onConfirm={handleProposalSubmit}
+          action="companyProposal"
+          title={company?.name || 'Company Proposal'}
+          description={`Send a direct proposal to ${company?.name || 'this company'}`}
+          relatedId={company?.id}
+        />
       </div>
     </div>
   )

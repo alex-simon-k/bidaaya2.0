@@ -21,6 +21,8 @@ import AIDashboardChat from '@/components/ai-dashboard-chat'
 import StudentProposalChat from '@/components/student-proposal-chat'
 import CompanyProposalsInbox from '@/components/company-proposals-inbox'
 import { MembershipSelectionPopup } from '@/components/membership-selection-popup'
+import CreditBalanceWidget from '@/components/credit-balance-widget'
+import AIChatBot from '@/components/ai-chat-bot'
 
 interface DashboardStats {
   applications: number
@@ -86,13 +88,17 @@ export default function DashboardPage() {
     )
   }
 
-  // Student Dashboard - Chat-based interface
+  // Student Dashboard - New Dark Theme with AI Bot
   if (userRole === 'STUDENT') {
     return (
       <>
-        <div className="min-h-screen bg-gray-50">
-          {/* Main Chat Interface */}
-          <StudentProposalChat />
+        <div className="min-h-screen bg-bidaaya-dark text-bidaaya-light">
+          <div className="max-w-5xl mx-auto px-4 pt-6">
+            <CreditBalanceWidget />
+          </div>
+          
+          {/* AI Bot Center */}
+          <AIChatBot />
         </div>
 
         {/* Membership Popup */}
