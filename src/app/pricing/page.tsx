@@ -1,32 +1,46 @@
 'use client'
 
+import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Check, Zap } from 'lucide-react'
 import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
-import { PRICING_PLANS, getPricingPlans } from '@/lib/pricing'
+import { PRICING_PLANS } from '@/lib/pricing'
 
 export default function PricingPage() {
   const { data: session } = useSession()
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month')
 
-  const handleSubscribe = (planId: string) => {
+  // ONLY student plans
+  const studentPlans = [
+    PRICING_PLANS.STUDENT_FREE,
+    PRICING_PLANS.STUDENT_PREMIUM,
+    PRICING_PLANS.STUDENT_PRO
+  ]
+
+  const handleSubscribe = (planId: string, interval: 'month' | 'year') => {
     // Map plan IDs to env variable names
     const stripePriceIds: Record<string, string | undefined> = {
-      'student_premium': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_MONTHLY,
-      'student_pro': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_MONTHLY,
+      'student_premium_monthly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_MONTHLY,
+      'student_premium_yearly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_YEARLY,
+      'student_pro_monthly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_MONTHLY,
+      'student_pro_yearly': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_YEARLY,
     }
 
-    const stripeLink = stripePriceIds[planId]
+    const key = `${planId}_${interval}ly`
+    const stripeLink = stripePriceIds[key]
     
     if (!stripeLink) {
       alert('Payment link not configured yet. Please contact support.')
       return
     }
     
-    // Redirect to Stripe checkout
     window.location.href = stripeLink
   }
 
-  const studentPlans = getPricingPlans('STUDENT')
+  // Calculate yearly pricing (assume 2 months free = 10 months price)
+  const getYearlyPrice = (monthlyPrice: number) => {
+    return monthlyPrice * 10 // 2 months free
+  }
 
   const content = (
     <div className="w-full pt-16 px-4 pb-8">
@@ -41,10 +55,41 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Pricing Cards - All visible on one screen */}
+        {/* Monthly/Yearly Toggle */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <button
+            onClick={() => setBillingInterval('month')}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+              billingInterval === 'month'
+                ? 'bg-bidaaya-accent text-white'
+                : 'bg-bidaaya-light/10 text-bidaaya-light/60 hover:bg-bidaaya-light/20'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingInterval('year')}
+            className={`px-6 py-2 rounded-lg font-medium transition-all relative ${
+              billingInterval === 'year'
+                ? 'bg-bidaaya-accent text-white'
+                : 'bg-bidaaya-light/10 text-bidaaya-light/60 hover:bg-bidaaya-light/20'
+            }`}
+          >
+            Yearly
+            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+              Save 17%
+            </span>
+          </button>
+        </div>
+
+        {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {studentPlans.map((plan) => {
             const planAny = plan as any
+            const displayPrice = billingInterval === 'year' && plan.price > 0
+              ? getYearlyPrice(plan.price)
+              : plan.price
+            
             return (
             <div
               key={plan.id}
@@ -78,9 +123,12 @@ export default function PricingPage() {
                   </h3>
                 </div>
                 <div className="text-3xl font-bold text-bidaaya-light mb-1">
-                  {plan.price === 0 ? 'Free' : `$${plan.price}`}
+                  {displayPrice === 0 ? 'Free' : `$${displayPrice}`}
                 </div>
                 <p className="text-sm text-bidaaya-light/60">
+                  {billingInterval === 'year' && plan.price > 0 ? 'per year' : 'per month'}
+                </p>
+                <p className="text-xs text-bidaaya-light/50 mt-1">
                   {planAny.credits} credits / month
                 </p>
               </div>
@@ -100,7 +148,7 @@ export default function PricingPage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => handleSubscribe(plan.id)}
+                  onClick={() => handleSubscribe(plan.id, billingInterval)}
                   className={`w-full py-3 rounded-xl font-semibold transition-all ${
                     planAny.popular
                       ? 'bg-bidaaya-accent text-white hover:bg-bidaaya-accent/90'
@@ -143,6 +191,5 @@ export default function PricingPage() {
     return <StudentLayoutWrapper>{content}</StudentLayoutWrapper>
   }
 
-  // Otherwise render directly
   return content
 }
