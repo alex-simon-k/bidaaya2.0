@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AIInputWithSearch } from "@/components/ui/ai-input-with-search";
 import { AIVoiceInput } from "@/components/ui/ai-voice-input";
+import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -194,14 +195,20 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto px-4 pt-16 pb-4 safe-top safe-bottom">
           <div className="max-w-3xl mx-auto flex flex-col items-center justify-center min-h-full py-8">
-            {/* AI Avatar */}
+            {/* AI Avatar - Voice Powered Orb */}
             <div className="relative mb-8">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-bidaaya-accent to-blue-600 flex items-center justify-center shadow-lg">
-                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                  <SparklesIcon className="w-6 h-6 text-white" />
-                </div>
+              <div className="w-32 h-32 rounded-full overflow-hidden shadow-2xl">
+                <VoicePoweredOrb
+                  hue={0}
+                  enableVoiceControl={showVoiceInput}
+                  className="w-full h-full"
+                  onVoiceDetected={(detected) => {
+                    // Could add visual feedback when voice is detected
+                    console.log('Voice detected:', detected);
+                  }}
+                />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-bidaaya-dark flex items-center justify-center">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-bidaaya-dark flex items-center justify-center shadow-lg">
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
             </div>
