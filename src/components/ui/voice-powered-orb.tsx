@@ -318,7 +318,9 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
       while (container.firstChild) {
         container.removeChild(container.firstChild);
       }
-      container.appendChild(glContext.canvas);
+      // Type assertion for canvas element
+      const canvas = glContext.canvas as HTMLCanvasElement;
+      container.appendChild(canvas);
 
       const geometry = new Triangle(glContext);
       program = new Program(glContext, {
@@ -438,8 +440,9 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
         // Clean up canvas safely
         if (container && glContext && glContext.canvas) {
           try {
-            if (container.contains(glContext.canvas)) {
-              container.removeChild(glContext.canvas);
+            const canvas = glContext.canvas as HTMLCanvasElement;
+            if (container.contains(canvas)) {
+              container.removeChild(canvas);
             }
           } catch (error) {
             console.warn("Canvas cleanup error:", error);
