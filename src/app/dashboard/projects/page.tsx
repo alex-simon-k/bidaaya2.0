@@ -181,7 +181,7 @@ export default function ProjectsPage() {
   const isCompany = session.user?.role === 'COMPANY'
 
   return (
-    <div className="min-h-screen w-full bg-bidaaya-dark overflow-y-auto p-6 space-y-6">
+    <div className="w-full pt-16 px-4 pb-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

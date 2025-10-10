@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { OnboardingSessionManager } from '@/lib/onboarding-session-manager'
 import { ChevronDown } from 'lucide-react'
 import { StudentBottomNav } from '@/components/student-bottom-nav'
+import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
 
 
 
@@ -245,9 +246,14 @@ export default function DashboardLayout({
     )
   }
 
-  // For STUDENT users, render ONLY the children (AIAssistantCard) with NO layout wrapper
+  // For STUDENT users, use the StudentLayoutWrapper for all pages except the main dashboard
   if (session?.user?.role === 'STUDENT') {
-    return <>{children}</>;
+    // Main dashboard has its own layout (AIAssistantCard with sidebar)
+    if (pathname === '/dashboard') {
+      return <>{children}</>;
+    }
+    // All other pages use the wrapper with sidebar
+    return <StudentLayoutWrapper>{children}</StudentLayoutWrapper>;
   }
 
   return (

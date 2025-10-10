@@ -916,7 +916,7 @@ export default function ProfilePage() {
 
      function renderStudentProfile() {
   return (
-       <div className="min-h-screen w-full bg-bidaaya-dark overflow-y-auto py-8">
+       <div className="w-full py-8 px-4 pt-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">

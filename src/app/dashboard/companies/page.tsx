@@ -134,9 +134,9 @@ export default function BrowseCompaniesPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-bidaaya-dark overflow-y-auto">
+    <div className="w-full pt-16 px-4">
       {/* Header Section */}
-      <div className="bg-white border-b">
+      <div className="bg-bidaaya-light/5 border-b border-bidaaya-light/10 rounded-t-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
