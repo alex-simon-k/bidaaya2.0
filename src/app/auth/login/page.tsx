@@ -239,7 +239,7 @@ const BidaayaMap = () => {
 
 function LoginPageContent() {
   const searchParams = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingRole, setLoadingRole] = useState<'STUDENT' | 'ENTERPRISE' | null>(null);
   const [isStudentHovered, setIsStudentHovered] = useState(false);
   const [isCompanyHovered, setIsCompanyHovered] = useState(false);
 
@@ -247,7 +247,7 @@ function LoginPageContent() {
     console.log('🎯 ===================== LOGIN BUTTON CLICKED =====================');
     console.log('🎯 Google sign in initiated with role:', role);
     
-    setIsLoading(true);
+    setLoadingRole(role);
     try {
       console.log('🎯 Calling NextAuth signIn with params:', {
         provider: 'google',
@@ -266,7 +266,7 @@ function LoginPageContent() {
     } catch (error) {
       console.error('🎯 ❌ Sign in failed:', error);
       console.error('🎯 ❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
-      setIsLoading(false);
+      setLoadingRole(null);
     }
     console.log('🎯 ===================== LOGIN FUNCTION END =====================');
   };
@@ -337,9 +337,9 @@ function LoginPageContent() {
                     variant="student"
                     className="w-full relative overflow-hidden"
                     onClick={() => handleGoogleSignIn('STUDENT')}
-                    disabled={isLoading}
+                    disabled={loadingRole !== null}
                   >
-                    {isLoading ? (
+                    {loadingRole === 'STUDENT' ? (
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
@@ -419,9 +419,9 @@ function LoginPageContent() {
                     variant="company"
                     className="w-full relative overflow-hidden"
                     onClick={() => handleGoogleSignIn('ENTERPRISE')}
-                    disabled={isLoading}
+                    disabled={loadingRole !== null}
                   >
-                    {isLoading ? (
+                    {loadingRole === 'ENTERPRISE' ? (
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
