@@ -3,64 +3,30 @@
 import { useSession } from 'next-auth/react'
 import { Check, Zap } from 'lucide-react'
 import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
-
-const STUDENT_PLANS = [
-  {
-    name: '20 Credits',
-    credits: 20,
-    price: '$9.99',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_20_CREDITS_PRICE_ID,
-    features: [
-      '20 credits per month',
-      'Apply to internal projects',
-      'Send proposals to companies',
-      'Basic AI CV builder',
-      'Email support'
-    ]
-  },
-  {
-    name: '50 Credits',
-    credits: 50,
-    price: '$19.99',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_50_CREDITS_PRICE_ID,
-    popular: true,
-    features: [
-      '50 credits per month',
-      'Priority application review',
-      'Advanced AI CV builder',
-      'Cover letter generator',
-      'Career coaching access',
-      'Priority support'
-    ]
-  },
-  {
-    name: '100 Credits',
-    credits: 100,
-    price: '$34.99',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_100_CREDITS_PRICE_ID,
-    features: [
-      '100 credits per month',
-      'Unlimited applications',
-      'Premium AI tools',
-      'Interview preparation',
-      '1-on-1 mentorship',
-      'Dedicated support',
-      'Early access to features'
-    ]
-  }
-]
+import { PRICING_PLANS, getPricingPlans } from '@/lib/pricing'
 
 export default function PricingPage() {
   const { data: session } = useSession()
 
-  const handleSubscribe = (priceId: string | undefined) => {
-    if (!priceId) {
-      alert('Payment link not configured yet')
+  const handleSubscribe = (planId: string) => {
+    // Map plan IDs to env variable names
+    const stripePriceIds: Record<string, string | undefined> = {
+      'student_premium': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_MONTHLY,
+      'student_pro': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_MONTHLY,
+    }
+
+    const stripeLink = stripePriceIds[planId]
+    
+    if (!stripeLink) {
+      alert('Payment link not configured yet. Please contact support.')
       return
     }
+    
     // Redirect to Stripe checkout
-    window.location.href = priceId
+    window.location.href = stripeLink
   }
+
+  const studentPlans = getPricingPlans('STUDENT')
 
   const content = (
     <div className="w-full pt-16 px-4 pb-8">
@@ -77,19 +43,29 @@ export default function PricingPage() {
 
         {/* Pricing Cards - All visible on one screen */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {STUDENT_PLANS.map((plan) => (
+          {studentPlans.map((plan) => {
+            const planAny = plan as any
+            return (
             <div
-              key={plan.name}
+              key={plan.id}
               className={`relative bg-bidaaya-light/5 border rounded-2xl p-6 ${
-                plan.popular
+                planAny.popular
                   ? 'border-bidaaya-accent shadow-lg shadow-bidaaya-accent/20'
                   : 'border-bidaaya-light/10'
               }`}
             >
-              {plan.popular && (
+              {planAny.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <span className="bg-bidaaya-accent text-white text-xs font-semibold px-3 py-1 rounded-full">
                     POPULAR
+                  </span>
+                </div>
+              )}
+
+              {planAny.badge && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    {planAny.badge}
                   </span>
                 </div>
               )}
@@ -102,13 +78,15 @@ export default function PricingPage() {
                   </h3>
                 </div>
                 <div className="text-3xl font-bold text-bidaaya-light mb-1">
-                  {plan.price}
+                  {plan.price === 0 ? 'Free' : `$${plan.price}`}
                 </div>
-                <p className="text-sm text-bidaaya-light/60">per month</p>
+                <p className="text-sm text-bidaaya-light/60">
+                  {planAny.credits} credits / month
+                </p>
               </div>
 
               <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, index) => (
+                {plan.features.slice(0, 6).map((feature, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-bidaaya-accent flex-shrink-0 mt-0.5" />
                     <span className="text-sm text-bidaaya-light/80">{feature}</span>
@@ -116,18 +94,24 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <button
-                onClick={() => handleSubscribe(plan.priceId)}
-                className={`w-full py-3 rounded-xl font-semibold transition-all ${
-                  plan.popular
-                    ? 'bg-bidaaya-accent text-white hover:bg-bidaaya-accent/90'
-                    : 'bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20'
-                }`}
-              >
-                Subscribe Now
-              </button>
+              {plan.price === 0 ? (
+                <div className="w-full py-3 rounded-xl font-semibold text-center bg-bidaaya-light/10 text-bidaaya-light/50">
+                  Current Plan
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleSubscribe(plan.id)}
+                  className={`w-full py-3 rounded-xl font-semibold transition-all ${
+                    planAny.popular
+                      ? 'bg-bidaaya-accent text-white hover:bg-bidaaya-accent/90'
+                      : 'bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20'
+                  }`}
+                >
+                  Subscribe Now
+                </button>
+              )}
             </div>
-          ))}
+          )})}
         </div>
 
         {/* Credit Costs Info */}
