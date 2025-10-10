@@ -121,15 +121,12 @@ export default function DashboardPage() {
 
     return (
       <>
-        <div className="flex min-h-screen bg-bidaaya-dark">
+        <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
           <AIAssistantCard 
             onSubmit={handleAISubmit}
             onFileSelect={handleFileSelect}
           />
         </div>
-        
-        {/* Bottom Navigation for Mobile */}
-        <BottomNavigation />
 
         {/* Membership Popup */}
         <MembershipSelectionPopup
