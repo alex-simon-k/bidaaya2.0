@@ -1,11 +1,11 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 
-export default function SubscriptionPage() {
+function SubscriptionPageContent() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -81,5 +81,21 @@ export default function SubscriptionPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SubscriptionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-bidaaya-dark via-bidaaya-dark to-blue-950 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 border-4 border-bidaaya-accent border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-bidaaya-light mb-2">Loading...</h2>
+          <p className="text-bidaaya-light/60">Setting up your subscription</p>
+        </div>
+      </div>
+    }>
+      <SubscriptionPageContent />
+    </Suspense>
   )
 } 

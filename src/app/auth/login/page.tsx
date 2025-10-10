@@ -23,9 +23,9 @@ const Button = ({
   
   const variantStyles = {
     default: "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 focus-visible:ring-blue-500",
-    outline: "border border-gray-200 bg-white hover:bg-gray-50 text-gray-700",
-    student: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 focus-visible:ring-emerald-500 shadow-lg shadow-emerald-200",
-    company: "bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 focus-visible:ring-purple-500 shadow-lg shadow-purple-200"
+    outline: "border border-bidaaya-light/20 bg-bidaaya-light/5 hover:bg-bidaaya-light/10 text-bidaaya-light",
+    student: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 focus-visible:ring-emerald-500 shadow-lg shadow-emerald-500/20",
+    company: "bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 focus-visible:ring-purple-500 shadow-lg shadow-purple-500/20"
   };
   
   return (
@@ -272,11 +272,11 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-bidaaya-dark via-bidaaya-dark to-blue-950">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-teal-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-purple-200/30 to-indigo-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-bidaaya-accent/20 to-bidaaya-light/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-blue-500/20 to-bidaaya-accent/10 rounded-full blur-3xl"></div>
       </div>
 
       <motion.div
@@ -299,10 +299,10 @@ function LoginPageContent() {
               <div className="mb-4">
                 <BidaayaMap />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+              <h1 className="text-3xl sm:text-4xl font-bold text-bidaaya-light mb-3">
                 Welcome to Bidaaya
               </h1>
-              <p className="text-lg text-gray-600 leading-relaxed">
+              <p className="text-lg text-bidaaya-light/70 leading-relaxed">
                 Choose your path to get started
               </p>
             </motion.div>
@@ -314,14 +314,14 @@ function LoginPageContent() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="mb-6"
             >
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100 shadow-sm">
+              <div className="bg-bidaaya-light/5 rounded-2xl p-6 border border-bidaaya-light/10 shadow-sm backdrop-blur-sm">
                 <div className="flex items-start gap-4 mb-6">
                   <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
                     <Users className="text-white h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">For Students</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
+                    <h3 className="text-xl font-bold text-bidaaya-light mb-2">For Students</h3>
+                    <p className="text-sm text-bidaaya-light/70 leading-relaxed">
                       Find internships and career opportunities
                     </p>
                   </div>
@@ -382,10 +382,10 @@ function LoginPageContent() {
             {/* Divider */}
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+                <div className="w-full border-t border-bidaaya-light/20"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 text-gray-500 font-medium">or</span>
+                <span className="px-4 bg-bidaaya-dark text-bidaaya-light/70 font-medium">or</span>
               </div>
             </div>
             
@@ -396,14 +396,14 @@ function LoginPageContent() {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="mb-8"
             >
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-100 shadow-sm">
+              <div className="bg-bidaaya-light/5 rounded-2xl p-6 border border-bidaaya-light/10 shadow-sm backdrop-blur-sm">
                 <div className="flex items-start gap-4 mb-6">
                   <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
                     <Building2 className="text-white h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">For Companies</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
+                    <h3 className="text-xl font-bold text-bidaaya-light mb-2">For Companies</h3>
+                    <p className="text-sm text-bidaaya-light/70 leading-relaxed">
                       Post opportunities and find talent
                     </p>
                   </div>
@@ -468,13 +468,13 @@ function LoginPageContent() {
               transition={{ delay: 0.8, duration: 0.6 }}
               className="text-center mt-8 mb-6"
             >
-              <p className="text-sm text-gray-500 leading-relaxed px-4">
+              <p className="text-sm text-bidaaya-light/60 leading-relaxed px-4">
                 By continuing, you agree to our{" "}
-                <a href="/terms" className="text-blue-600 hover:text-blue-700 font-medium underline">
+                <a href="/terms" className="text-bidaaya-accent hover:text-bidaaya-accent/80 font-medium underline">
                   Terms and Conditions
                 </a>{" "}
                 and{" "}
-                <a href="/privacy" className="text-blue-600 hover:text-blue-700 font-medium underline">
+                <a href="/privacy" className="text-bidaaya-accent hover:text-bidaaya-accent/80 font-medium underline">
                   Privacy Policy
                 </a>
               </p>
@@ -489,10 +489,10 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bidaaya-dark via-bidaaya-dark to-blue-950">
         <div className="text-center">
-          <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-8 h-8 border-3 border-bidaaya-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-bidaaya-light/70">Loading...</p>
         </div>
       </div>
     }>
