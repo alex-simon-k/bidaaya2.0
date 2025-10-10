@@ -296,7 +296,7 @@ export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
     if (!container) return;
 
     let rendererInstance: Renderer | null = null;
-    let glContext: WebGLRenderingContext | WebGL2RenderingContext | null = null;
+    let glContext: any = null;
     let rafId: number;
     let program: Program | null = null;
 
