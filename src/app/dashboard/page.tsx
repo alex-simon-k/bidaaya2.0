@@ -23,6 +23,8 @@ import CompanyProposalsInbox from '@/components/company-proposals-inbox'
 import { MembershipSelectionPopup } from '@/components/membership-selection-popup'
 import CreditBalanceWidget from '@/components/credit-balance-widget'
 import AIChatBot from '@/components/ai-chat-bot'
+import { AIAssistantCard } from '@/components/ui/ai-assistant-card'
+import { BottomNavigation } from '@/components/ui/bottom-navigation'
 
 interface DashboardStats {
   applications: number
@@ -88,18 +90,46 @@ export default function DashboardPage() {
     )
   }
 
-  // Student Dashboard - New Dark Theme with AI Bot
+  // Student Dashboard - ChatGPT-like Interface
   if (userRole === 'STUDENT') {
+    const handleAISubmit = async (message: string, withSearch: boolean) => {
+      try {
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message,
+            conversationHistory: [],
+            withSearch
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('AI Response:', data.message);
+          // TODO: Handle AI response in chat interface
+        }
+      } catch (error) {
+        console.error('AI chat error:', error);
+      }
+    };
+
+    const handleFileSelect = (file: File) => {
+      console.log('File selected:', file.name);
+      // TODO: Handle file upload
+    };
+
     return (
       <>
-        <div className="min-h-screen bg-bidaaya-dark text-bidaaya-light">
-          <div className="max-w-5xl mx-auto px-4 pt-6">
-            <CreditBalanceWidget />
-          </div>
-          
-          {/* AI Bot Center */}
-          <AIChatBot />
+        <div className="flex min-h-screen bg-bidaaya-dark">
+          <AIAssistantCard 
+            onSubmit={handleAISubmit}
+            onFileSelect={handleFileSelect}
+          />
         </div>
+        
+        {/* Bottom Navigation for Mobile */}
+        <BottomNavigation />
 
         {/* Membership Popup */}
         <MembershipSelectionPopup
