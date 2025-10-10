@@ -78,6 +78,29 @@
     height: 100%;
     width: 100%;
   }
+
+  /* iOS safe area support */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Ensure full viewport height including safe areas */
+  .h-screen-safe {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
 }
 
 @theme inline {

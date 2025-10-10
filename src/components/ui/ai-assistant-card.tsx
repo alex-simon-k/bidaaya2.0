@@ -44,21 +44,21 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
   };
 
   return (
-    <>
+    <div className="flex flex-col h-full w-full bg-bidaaya-dark overflow-hidden">
       {/* Sidebar Overlay */}
       {showSidebar && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 z-40"
           onClick={() => setShowSidebar(false)}
         />
       )}
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed top-0 left-0 h-full w-80 bg-bidaaya-dark border-r border-bidaaya-light/10 z-50 transform transition-transform duration-300 ease-in-out",
+        "fixed top-0 left-0 h-full w-80 bg-bidaaya-dark border-r border-bidaaya-light/10 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
         showSidebar ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-4 h-full flex flex-col">
+        <div className="p-4 h-full flex flex-col safe-top">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -138,23 +138,21 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen bg-bidaaya-dark overflow-hidden">
-        {/* Mobile Top Bar - Minimal */}
-        <div className="flex items-center justify-between p-4 md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-bidaaya-light hover:bg-bidaaya-light/10"
-            onClick={() => setShowSidebar(true)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
-          <div className="text-bidaaya-light font-semibold">Bidaaya</div>
-          
-          <div className="w-8 h-8"></div>
-        </div>
+      {/* Top Bar - Integrated into dark background */}
+      <div className="flex items-center justify-between px-4 pt-2 pb-3 bg-bidaaya-dark safe-top">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-bidaaya-light hover:bg-bidaaya-light/10"
+          onClick={() => setShowSidebar(true)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        
+        <div className="text-bidaaya-light font-semibold text-sm">Bidaaya AI</div>
+        
+        <div className="w-10 h-10"></div>
+      </div>
 
         {/* Chat Interface */}
         <div className={cn(
@@ -276,25 +274,23 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
             </div>
           </div>
 
-          {/* Integrated Bottom Navigation */}
-          <div className="bg-bidaaya-dark border-t border-bidaaya-light/10 pb-safe">
-            <div className="flex items-center justify-around py-3 px-4">
-              <button className="flex flex-col items-center justify-center py-2 px-4 rounded-lg text-bidaaya-light/60 hover:text-bidaaya-light hover:bg-bidaaya-light/5 transition-colors">
-                <User className="h-5 w-5 mb-1" />
-                <span className="text-xs font-medium">Profile</span>
-              </button>
-              <button className="flex flex-col items-center justify-center py-2 px-4 rounded-lg text-bidaaya-accent bg-bidaaya-accent/10 transition-colors">
-                <Briefcase className="h-5 w-5 mb-1" />
-                <span className="text-xs font-medium">Internships</span>
-              </button>
-              <button className="flex flex-col items-center justify-center py-2 px-4 rounded-lg text-bidaaya-light/60 hover:text-bidaaya-light hover:bg-bidaaya-light/5 transition-colors">
-                <Target className="h-5 w-5 mb-1" />
-                <span className="text-xs font-medium">Companies</span>
-              </button>
-            </div>
-          </div>
+      {/* Integrated Bottom Navigation - Part of dark interface */}
+      <div className="bg-bidaaya-dark border-t border-bidaaya-light/10 safe-bottom">
+        <div className="flex items-center justify-around py-2 px-4">
+          <button className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-bidaaya-light/60 hover:text-bidaaya-light hover:bg-bidaaya-light/5 transition-colors">
+            <User className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Profile</span>
+          </button>
+          <button className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-bidaaya-accent bg-bidaaya-accent/10 transition-colors">
+            <Briefcase className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Internships</span>
+          </button>
+          <button className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-bidaaya-light/60 hover:text-bidaaya-light hover:bg-bidaaya-light/5 transition-colors">
+            <Target className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Companies</span>
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
