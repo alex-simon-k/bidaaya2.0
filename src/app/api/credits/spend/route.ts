@@ -42,13 +42,13 @@ export async function POST(request: NextRequest) {
 
     const result = await prisma.$transaction(async (tx) => {
       await tx.user.update({
-        where: { id: session.user.id },
+        where: { id: session.user!.id },
         data: { credits: balanceAfter, lifetimeCreditsUsed: (user.lifetimeCreditsUsed || 0) + cost },
       })
 
       await tx.creditTransaction.create({
         data: {
-          userId: session.user.id,
+          userId: session.user!.id,
           type: 'spent',
           action,
           amount: -cost,
