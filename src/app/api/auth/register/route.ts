@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 import { slackAutomation } from '@/lib/slack-service'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function POST(request: Request) {

@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth-config"
 import { VectorEmbeddingService } from '@/lib/vector-embedding-service'
 import { VectorMatchingService } from '@/lib/vector-matching-service'
 
+
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

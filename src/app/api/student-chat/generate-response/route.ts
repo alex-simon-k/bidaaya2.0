@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth-config'
 import { enhancedStudentAI } from '@/lib/enhanced-student-ai'
 import { PrismaClient } from '@prisma/client'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 // Enhanced DeepSeek AI for better platform understanding

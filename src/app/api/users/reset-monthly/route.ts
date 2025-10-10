@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { PrismaClient } from '@prisma/client'
 import { authOptions } from "@/lib/auth-config"
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function POST() {

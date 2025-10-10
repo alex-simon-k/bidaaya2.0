@@ -5,6 +5,9 @@ import { authOptions } from "@/lib/auth-config"
 import { canUserApply } from '@/lib/subscription'
 import { AnalyticsTracker } from '@/lib/analytics-tracker'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function GET(request: Request) {

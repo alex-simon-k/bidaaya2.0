@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { slackService } from '@/lib/slack-service'
 
+
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Verify this is a legitimate cron request (Vercel adds this header)

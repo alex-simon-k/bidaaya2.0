@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth-config';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   console.log('🧪 Testing NextAuth configuration...');
   

@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth-config"
 import { PrismaClient } from '@prisma/client'
 import { hasFeatureAccess } from '@/lib/pricing'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function PATCH(

@@ -4,6 +4,9 @@ import { PrismaClient } from '@prisma/client'
 import { authOptions } from '@/lib/auth-config'
 import { Resend } from 'resend'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 const resend = new Resend(process.env.RESEND_API_KEY)
 

@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth-config";
 import nodemailer from 'nodemailer';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);

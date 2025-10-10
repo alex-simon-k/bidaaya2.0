@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth-config"
 import { headers } from 'next/headers'
 
 // Stripe configuration
+
+export const dynamic = 'force-dynamic';
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 // Stripe Price IDs - Now using environment variables!

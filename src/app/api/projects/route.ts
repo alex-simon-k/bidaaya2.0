@@ -4,6 +4,9 @@ import { PrismaClient, ProjectStatus } from '@prisma/client'
 import { authOptions } from "@/lib/auth-config"
 import { canCompanyCreateProject } from '@/lib/subscription'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function GET(request: Request) {

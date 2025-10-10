@@ -5,6 +5,9 @@ import { authOptions } from "@/lib/auth-config"
 import { deepSeekAI } from '@/lib/deepseek-ai'
 import { hasFeatureAccess } from '@/lib/pricing'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 // POST - Generate AI-powered shortlist using DeepSeek

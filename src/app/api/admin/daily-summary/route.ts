@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DailySummaryService } from '@/lib/daily-summary-service'
 
+
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { test } = await request.json()

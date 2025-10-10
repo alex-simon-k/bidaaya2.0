@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client'
 import nodemailer from 'nodemailer'
 import { SlackService } from '@/lib/slack-service'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {

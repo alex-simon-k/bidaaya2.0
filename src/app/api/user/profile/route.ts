@@ -5,6 +5,9 @@ import { authOptions } from "@/lib/auth-config"
 import { slackAutomation } from '@/lib/slack-service'
 import { AnalyticsTracker } from '@/lib/analytics-tracker'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 // GET - Get user profile data

@@ -8,6 +8,9 @@ import {
   manualShortlist 
 } from '@/lib/ai-recruitment'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 // GET - Get shortlisted candidates or eligibility status

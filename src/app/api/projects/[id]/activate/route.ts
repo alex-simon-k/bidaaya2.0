@@ -4,6 +4,9 @@ import { PrismaClient } from '@prisma/client'
 import { authOptions } from "@/lib/auth-config"
 import { canCompanyActivateProject, getProjectCounts } from '@/lib/subscription'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function POST(

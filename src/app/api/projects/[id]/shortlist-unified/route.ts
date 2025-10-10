@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth-config"
 import { UnifiedMatchingService } from '@/lib/unified-matching-service'
 import { PrismaClient } from '@prisma/client'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function POST(

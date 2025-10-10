@@ -13,6 +13,9 @@ import { calculateCompatibilityScore, updateApplicationScore } from '@/lib/ai-sc
 import { AnalyticsTracker } from '@/lib/analytics-tracker'
 import { slackService } from '@/lib/slack-service'
 
+
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
