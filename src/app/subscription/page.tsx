@@ -12,38 +12,54 @@ function SubscriptionPageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Get Stripe price IDs from environment variables
-  const getStripeLink = (plan: string, interval: string): string | null => {
-    const envKey = `NEXT_PUBLIC_STRIPE_${plan.toUpperCase()}_${interval.toUpperCase()}`
-    
-    // Map the plan names to env variable names
-    const stripeLinks: { [key: string]: string | undefined } = {
-      'NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_MONTHLY': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_MONTHLY,
-      'NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_YEARLY': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PREMIUM_YEARLY,
-      'NEXT_PUBLIC_STRIPE_STUDENT_PRO_MONTHLY': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_MONTHLY,
-      'NEXT_PUBLIC_STRIPE_STUDENT_PRO_YEARLY': process.env.NEXT_PUBLIC_STRIPE_STUDENT_PRO_YEARLY,
+  // Create Stripe checkout session
+  const createCheckoutSession = async (plan: string, interval: string) => {
+    try {
+      // Map plan and interval to planId format
+      const planId = `${plan}_${interval}ly` // e.g., "student_premium_monthly"
+      
+      console.log(`🔄 Creating Stripe checkout session for ${planId}`)
+      
+      const response = await fetch('/api/subscription/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId: planId,
+          successUrl: `${window.location.origin}/dashboard?success=true`,
+          cancelUrl: `${window.location.origin}/pricing?canceled=true`,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create checkout session')
+      }
+
+      const data = await response.json()
+      
+      if (data.url) {
+        console.log(`✅ Got Stripe checkout URL, redirecting...`)
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
+    } catch (err: any) {
+      console.error('❌ Checkout error:', err)
+      setError(err.message || 'Failed to initiate checkout. Please try again.')
+      setIsLoading(false)
     }
-    
-    return stripeLinks[envKey] || null
   }
 
-  // On mount, check if we have plan/interval params and redirect to Stripe
+  // On mount, check if we have plan/interval params and create checkout session
   useEffect(() => {
     const plan = searchParams.get('plan')
     const interval = searchParams.get('interval')
     
     if (plan && interval) {
-      // We have params from pricing page - redirect to Stripe immediately
-      const stripeLink = getStripeLink(plan, interval)
-      
-      if (stripeLink) {
-        console.log(`✅ Redirecting to Stripe for ${plan} (${interval})`)
-        window.location.href = stripeLink
-      } else {
-        console.error(`❌ No Stripe link found for ${plan} (${interval})`)
-        setError(`Payment link not configured for ${plan} (${interval}). Please contact support.`)
-        setIsLoading(false)
-      }
+      // We have params from pricing page - create Stripe checkout session
+      createCheckoutSession(plan, interval)
     } else {
       // No params - redirect back to pricing page
       console.log('❌ No plan/interval params - redirecting to pricing')

@@ -9,25 +9,25 @@ export const dynamic = 'force-dynamic';
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
-// Stripe Price IDs - Now using environment variables!
+// Stripe Price IDs - Updated from your CSV export (September 2025)
 const STRIPE_PRICES = {
   // Student Plans - Monthly
-  student_premium_monthly: process.env.STRIPE_STUDENT_PREMIUM_MONTHLY || 'price_1Rf2hTRoORqpPhxpGi4zduqM',
-  student_pro_monthly: process.env.STRIPE_STUDENT_PRO_MONTHLY || 'price_1Rf2jHRoORqpPhxpzUMN5sNM',
+  student_premium_monthly: process.env.STRIPE_STUDENT_PREMIUM_MONTHLY || 'price_1S68exRoORqpPhxp55mgjKOc', // £5/month
+  student_pro_monthly: process.env.STRIPE_STUDENT_PRO_MONTHLY || 'price_1S68dRRoORqpPhxpd6piOAYP', // £15/month
   
   // Student Plans - Yearly
-  student_premium_yearly: process.env.STRIPE_STUDENT_PREMIUM_YEARLY || 'price_1Rf2hTRoORqpPhxpIeLvOIYB',
-  student_pro_yearly: process.env.STRIPE_STUDENT_PRO_YEARLY || 'price_1Rf2jrRoORqpPhxpMOVmksOY',
+  student_premium_yearly: process.env.STRIPE_STUDENT_PREMIUM_YEARLY || 'price_1S68hsRoORqpPhxpaPWfop0B', // £48/year
+  student_pro_yearly: process.env.STRIPE_STUDENT_PRO_YEARLY || 'price_1Rf2jrRoORqpPhxpMOVmksOY', // £144/year
   
   // Company Plans - Monthly  
-  company_basic_monthly: process.env.STRIPE_COMPANY_BASIC_MONTHLY || 'price_1RoSM6RoORqpPhxproAI4FEc',
-  company_hr_booster_monthly: process.env.STRIPE_COMPANY_PREMIUM_MONTHLY || 'price_1RoSMwRoORqpPhxpmUpAZUza',
-  company_hr_agent_monthly: process.env.STRIPE_COMPANY_PRO_MONTHLY || 'price_1RoSRBRoORqpPhxpXXaZSwJ8',
+  company_basic_monthly: process.env.STRIPE_COMPANY_BASIC_MONTHLY || 'price_1RoSM6RoORqpPhxproAI4FEc', // £20/month
+  company_hr_booster_monthly: process.env.STRIPE_COMPANY_PREMIUM_MONTHLY || 'price_1RoSMwRoORqpPhxpmUpAZUza', // £75/month
+  company_hr_agent_monthly: process.env.STRIPE_COMPANY_PRO_MONTHLY || 'price_1RoSRBRoORqpPhxpXXaZSwJ8', // £175/month
   
   // Company Plans - Yearly
-  company_basic_yearly: process.env.STRIPE_COMPANY_BASIC_YEARLY || 'price_1RoSM6RoORqpPhxpqIfJ2rqY',
-  company_hr_booster_yearly: process.env.STRIPE_COMPANY_PREMIUM_YEARLY || 'price_1RoSPLRoORqpPhxpyJZJM9iK',
-  company_hr_agent_yearly: process.env.STRIPE_COMPANY_PRO_YEARLY || 'price_1RoSRXRoORqpPhxpPpjy7RJQ',
+  company_basic_yearly: process.env.STRIPE_COMPANY_BASIC_YEARLY || 'price_1RoSM6RoORqpPhxpqIfJ2rqY', // £199.99/year
+  company_hr_booster_yearly: process.env.STRIPE_COMPANY_PREMIUM_YEARLY || 'price_1RoSPLRoORqpPhxpyJZJM9iK', // £747/year
+  company_hr_agent_yearly: process.env.STRIPE_COMPANY_PRO_YEARLY || 'price_1RoSRXRoORqpPhxpPpjy7RJQ', // £1745/year
 } as const
 
 // Updated pricing to match documented prices: $5/$15 for students
