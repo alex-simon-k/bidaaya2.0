@@ -919,9 +919,9 @@ export default function ProfilePage() {
        <div className="w-full py-8 px-4 pt-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+        <div className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-2xl shadow-lg overflow-hidden mb-8">
           {/* Cover Image */}
-          <div className="h-48 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 relative">
+          <div className="h-48 bg-gradient-to-r from-bidaaya-dark via-bidaaya-accent to-blue-600 relative">
             {isEditing && (
               <button className="absolute top-4 right-4 bg-black/20 text-white p-2 rounded-full hover:bg-black/40">
                 <Camera className="h-4 w-4" />
@@ -934,8 +934,8 @@ export default function ProfilePage() {
             {/* Profile Picture */}
             <div className="absolute -top-16 left-8">
               <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-white p-2 shadow-lg">
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-4xl font-bold">
+                <div className="w-32 h-32 rounded-full bg-bidaaya-dark p-2 shadow-lg">
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-bidaaya-accent to-blue-600 flex items-center justify-center text-white text-4xl font-bold">
                     {profileData?.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                 </div>
