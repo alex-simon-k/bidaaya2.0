@@ -53,12 +53,12 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Slides from left */}
       <div className={cn(
         "fixed top-0 left-0 h-full w-80 bg-bidaaya-dark border-r border-bidaaya-light/10 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
         showSidebar ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-4 h-full flex flex-col safe-top">
+        <div className="p-6 h-full flex flex-col safe-top overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -138,28 +138,23 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         </div>
       </div>
 
-      {/* Top Bar - Integrated into dark background */}
-      <div className="flex items-center justify-between px-4 pt-2 pb-3 bg-bidaaya-dark safe-top">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-bidaaya-light hover:bg-bidaaya-light/10"
-          onClick={() => setShowSidebar(true)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        
-        <div className="text-bidaaya-light font-semibold text-sm">Bidaaya AI</div>
-        
-        <div className="w-10 h-10"></div>
-      </div>
-
-      {/* Chat Interface */}
+      {/* Main Content - Full dark interface */}
       <div className={cn(
-        "flex-1 flex flex-col bg-bidaaya-dark overflow-hidden",
+        "flex-1 flex flex-col bg-bidaaya-dark overflow-hidden safe-top",
         className
       )}>
         <div className="flex-1 flex flex-col px-4 pb-4 overflow-y-auto">
+          {/* Top-left hamburger menu - Part of dark interface */}
+          <div className="absolute top-4 left-4 z-10 safe-top">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-bidaaya-light hover:bg-bidaaya-light/10 rounded-lg"
+              onClick={() => setShowSidebar(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
           {/* AI Assistant Header */}
           <div className="flex flex-col items-center justify-center space-y-8 flex-1">
             {/* AI Avatar */}
@@ -265,31 +260,13 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
             </div>
 
           {/* Input Area */}
-          <div className="mt-auto pt-4">
+          <div className="mt-auto pt-4 pb-6 safe-bottom">
             <AIInputWithSearch
               placeholder="Ask me anything about internships, career advice, or CV building..."
               onSubmit={onSubmit}
               onFileSelect={onFileSelect}
             />
           </div>
-        </div>
-      </div>
-
-      {/* Integrated Bottom Navigation - Part of dark interface */}
-      <div className="bg-bidaaya-dark border-t border-bidaaya-light/10 safe-bottom">
-        <div className="flex items-center justify-around py-2 px-4">
-          <button className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-bidaaya-light/60 hover:text-bidaaya-light hover:bg-bidaaya-light/5 transition-colors">
-            <User className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Profile</span>
-          </button>
-          <button className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-bidaaya-accent bg-bidaaya-accent/10 transition-colors">
-            <Briefcase className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Internships</span>
-          </button>
-          <button className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-bidaaya-light/60 hover:text-bidaaya-light hover:bg-bidaaya-light/5 transition-colors">
-            <Target className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Companies</span>
-          </button>
         </div>
       </div>
     </div>
