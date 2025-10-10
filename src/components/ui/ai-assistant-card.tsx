@@ -96,26 +96,15 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
             </div>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links - Ordered: Dashboard, Internships, Companies, Profile, Upgrade, Settings */}
           <nav className="flex-1 space-y-1">
             <button 
-              onClick={() => router.push('/dashboard/profile')}
+              onClick={() => router.push('/dashboard')}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5" />
-                <span className="font-medium">Profile</span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
-            </button>
-
-            <button 
-              onClick={() => router.push('/dashboard/companies')}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Building className="h-5 w-5" />
-                <span className="font-medium">Companies</span>
+                <span className="font-medium">Dashboard</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
@@ -132,6 +121,28 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
             </button>
 
             <button 
+              onClick={() => router.push('/dashboard/companies')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Building className="h-5 w-5" />
+                <span className="font-medium">Companies</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => router.push('/dashboard/profile')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5" />
+                <span className="font-medium">Profile</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
               onClick={() => router.push('/pricing')}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
@@ -143,7 +154,7 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
             </button>
 
             <button 
-              onClick={() => router.push('/settings')}
+              onClick={() => router.push('/dashboard/settings')}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
