@@ -13,15 +13,17 @@ import {
   Settings,
   CreditCard,
   LogOut,
+  Building,
+  ChevronRight,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { AIInputWithSearch } from "@/components/ui/ai-input-with-search";
 import { AIVoiceInput } from "@/components/ui/ai-voice-input";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface AIAssistantCardProps {
@@ -32,6 +34,7 @@ interface AIAssistantCardProps {
 
 export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssistantCardProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [showSidebar, setShowSidebar] = useState(false);
   const [showVoiceInput, setShowVoiceInput] = useState(false);
 
@@ -44,7 +47,7 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-bidaaya-dark overflow-hidden">
+    <div className="fixed inset-0 w-full h-full bg-bidaaya-dark overflow-hidden">
       {/* Sidebar Overlay */}
       {showSidebar && (
         <div 
@@ -53,13 +56,13 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         />
       )}
 
-      {/* Sidebar - Slides from left */}
+      {/* Sidebar Panel - Like ChatGPT */}
       <div className={cn(
-        "fixed top-0 left-0 h-full w-80 bg-bidaaya-dark border-r border-bidaaya-light/10 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
+        "fixed top-0 left-0 h-full w-80 bg-bidaaya-dark/95 backdrop-blur-xl border-r border-bidaaya-light/10 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
         showSidebar ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6 h-full flex flex-col safe-top overflow-y-auto">
-          {/* Header */}
+        <div className="p-4 h-full flex flex-col safe-top">
+          {/* Sidebar Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-bidaaya-accent flex items-center justify-center">
@@ -70,48 +73,86 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-bidaaya-light hover:bg-bidaaya-light/10"
+              className="text-bidaaya-light hover:bg-bidaaya-light/10"
               onClick={() => setShowSidebar(false)}
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
 
           {/* Credit Balance */}
-          <div className="bg-bidaaya-light/5 rounded-lg p-3 mb-6">
+          <div className="bg-bidaaya-light/5 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-bidaaya-light/60">Available Credits</p>
-                <p className="text-lg font-bold text-bidaaya-light">20</p>
+                <p className="text-2xl font-bold text-bidaaya-light">20</p>
               </div>
-              <CreditCard className="h-4 w-4 text-bidaaya-accent" />
+              <CreditCard className="h-5 w-5 text-bidaaya-accent" />
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-bidaaya-light hover:bg-bidaaya-light/10">
-              <Briefcase className="h-4 w-4 mr-3" />
-              Internships
-            </Button>
-            <Button variant="ghost" className="w-full justify-start text-bidaaya-light hover:bg-bidaaya-light/10">
-              <Target className="h-4 w-4 mr-3" />
-              Companies
-            </Button>
-            <Button variant="ghost" className="w-full justify-start text-bidaaya-light hover:bg-bidaaya-light/10">
-              <User className="h-4 w-4 mr-3" />
-              Profile
-            </Button>
-            <Button variant="ghost" className="w-full justify-start text-bidaaya-light hover:bg-bidaaya-light/10">
-              <Settings className="h-4 w-4 mr-3" />
-              Settings
-            </Button>
+          {/* Navigation Links */}
+          <nav className="flex-1 space-y-1">
+            <button 
+              onClick={() => router.push('/dashboard/profile')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5" />
+                <span className="font-medium">Profile</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => router.push('/dashboard/companies')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Building className="h-5 w-5" />
+                <span className="font-medium">Companies</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => router.push('/dashboard/projects')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Briefcase className="h-5 w-5" />
+                <span className="font-medium">Internships</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => router.push('/pricing')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-5 w-5" />
+                <span className="font-medium">Upgrade</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => router.push('/settings')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Settings className="h-5 w-5" />
+                <span className="font-medium">Settings</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
           </nav>
 
-          {/* User Profile */}
-          <div className="border-t border-bidaaya-light/10 pt-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-bidaaya-accent flex items-center justify-center">
+          {/* User Profile Footer */}
+          <div className="border-t border-bidaaya-light/10 pt-4 mt-4">
+            <div className="flex items-center gap-3 px-4 py-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-bidaaya-accent flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
                   {session?.user?.name?.charAt(0) || 'U'}
                 </span>
@@ -125,142 +166,134 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-bidaaya-light/80 hover:bg-bidaaya-light/10"
+            <button
               onClick={() => signOut()}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/80 hover:bg-bidaaya-light/10 transition-colors"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign out
-            </Button>
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Sign out</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content - Full dark interface */}
-      <div className={cn(
-        "flex-1 flex flex-col bg-bidaaya-dark overflow-hidden safe-top",
-        className
-      )}>
-        <div className="flex-1 flex flex-col px-4 pb-4 overflow-y-auto">
-          {/* Top-left hamburger menu - Part of dark interface */}
-          <div className="absolute top-4 left-4 z-10 safe-top">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-bidaaya-light hover:bg-bidaaya-light/10 rounded-lg"
-              onClick={() => setShowSidebar(true)}
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </div>
-          {/* AI Assistant Header */}
-          <div className="flex flex-col items-center justify-center space-y-8 flex-1">
+      {/* Main Chat Interface - PURE DARK */}
+      <div className="flex flex-col h-full w-full">
+        {/* Top-left menu button - ChatGPT style */}
+        <div className="absolute top-3 left-3 z-30 safe-top">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-bidaaya-light hover:bg-bidaaya-light/10 rounded-lg h-10 w-10"
+            onClick={() => setShowSidebar(true)}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </div>
+
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto px-4 pt-16 pb-4 safe-top safe-bottom">
+          <div className="max-w-3xl mx-auto flex flex-col items-center justify-center min-h-full py-8">
             {/* AI Avatar */}
-            <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-bidaaya-accent to-blue-600 flex items-center justify-center shadow-lg">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                    <SparklesIcon className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-bidaaya-dark flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+            <div className="relative mb-8">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-bidaaya-accent to-blue-600 flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                  <SparklesIcon className="w-6 h-6 text-white" />
                 </div>
               </div>
-
-              {/* Welcome Message */}
-              <div className="flex flex-col space-y-2.5 text-center max-w-md">
-                <div className="flex flex-col">
-                  <h2 className="text-xl font-medium tracking-tight text-bidaaya-light/80">
-                    Hi {session?.user?.name?.split(' ')[0] || 'there'},
-                  </h2>
-                  <h3 className="text-2xl font-bold tracking-[-0.006em] text-bidaaya-light">
-                    Welcome back! How can I help?
-                  </h3>
-                </div>
-                <p className="text-sm text-bidaaya-light/60">
-                  I'm here to help you find internships, build your career, and create custom CVs. 
-                  Choose from the prompts below or just tell me what you need!
-                </p>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-bidaaya-dark flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
-
-              {/* Quick Action Badges */}
-              <div className="flex flex-wrap items-center justify-center gap-2 max-w-lg">
-                <Badge
-                  variant="secondary"
-                  className="h-8 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20"
-                  onClick={() => handleQuickPrompt("Find internships that match my profile")}
-                >
-                  <Briefcase className="h-4 w-4 text-blue-400" />
-                  Find Internships
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="h-8 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20"
-                  onClick={() => handleQuickPrompt("Help me build a custom CV")}
-                >
-                  <FileText className="h-4 w-4 text-green-400" />
-                  Build CV
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="h-8 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20"
-                  onClick={() => handleQuickPrompt("Create a career development plan")}
-                >
-                  <MapIcon className="h-4 w-4 text-purple-400" />
-                  Career Plan
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="h-8 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20"
-                  onClick={() => handleQuickPrompt("Give me career advice and tips")}
-                >
-                  <PenToolIcon className="h-4 w-4 text-yellow-400" />
-                  Career Advice
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="h-8 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20"
-                  onClick={() => handleQuickPrompt("Help me with interview preparation")}
-                >
-                  <Target className="h-4 w-4 text-red-400" />
-                  Interview Prep
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="h-8 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20"
-                  onClick={() => handleQuickPrompt("Show me more options")}
-                >
-                  <SparklesIcon className="h-4 w-4 text-pink-400" />
-                  More
-                </Badge>
-              </div>
-
-              {/* Voice Input Toggle */}
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleVoiceClick}
-                  className="text-bidaaya-light/60 hover:text-bidaaya-light hover:bg-bidaaya-light/10"
-                >
-                  🎤 {showVoiceInput ? 'Hide Voice' : 'Use Voice'}
-                </Button>
-              </div>
-
-              {/* Voice Input */}
-              {showVoiceInput && (
-                <AIVoiceInput
-                  onStart={() => console.log('Voice recording started')}
-                  onStop={(duration) => console.log('Voice recording stopped, duration:', duration)}
-                  className="w-full"
-                />
-              )}
             </div>
 
-          {/* Input Area */}
-          <div className="mt-auto pt-4 pb-6 safe-bottom">
+            {/* Welcome Message */}
+            <div className="text-center mb-8">
+              <h2 className="text-xl font-medium text-bidaaya-light/80 mb-2">
+                Hi {session?.user?.name?.split(' ')[0] || 'there'},
+              </h2>
+              <h3 className="text-2xl font-bold text-bidaaya-light mb-4">
+                Welcome back! How can I help?
+              </h3>
+              <p className="text-sm text-bidaaya-light/60 max-w-md">
+                I'm here to help you find internships, build your career, and create custom CVs. 
+                Choose from the prompts below or just tell me what you need!
+              </p>
+            </div>
+
+            {/* Quick Action Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-8 max-w-lg">
+              <Badge
+                variant="secondary"
+                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
+                onClick={() => handleQuickPrompt("Find internships that match my profile")}
+              >
+                <Briefcase className="h-4 w-4 text-blue-400" />
+                Find Internships
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
+                onClick={() => handleQuickPrompt("Help me build a custom CV")}
+              >
+                <FileText className="h-4 w-4 text-green-400" />
+                Build CV
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
+                onClick={() => handleQuickPrompt("Create a career development plan")}
+              >
+                <MapIcon className="h-4 w-4 text-purple-400" />
+                Career Plan
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
+                onClick={() => handleQuickPrompt("Give me career advice and tips")}
+              >
+                <PenToolIcon className="h-4 w-4 text-yellow-400" />
+                Career Advice
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
+                onClick={() => handleQuickPrompt("Help me with interview preparation")}
+              >
+                <Target className="h-4 w-4 text-red-400" />
+                Interview Prep
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="h-9 cursor-pointer gap-2 text-sm rounded-full bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20 px-4"
+                onClick={() => handleQuickPrompt("Show me more options")}
+              >
+                <SparklesIcon className="h-4 w-4 text-pink-400" />
+                More
+              </Badge>
+            </div>
+
+            {/* Voice Input Toggle */}
+            <button
+              onClick={handleVoiceClick}
+              className="text-sm text-bidaaya-light/60 hover:text-bidaaya-light mb-4 flex items-center gap-2"
+            >
+              🎤 {showVoiceInput ? 'Hide Voice' : 'Use Voice'}
+            </button>
+
+            {/* Voice Input */}
+            {showVoiceInput && (
+              <AIVoiceInput
+                onStart={() => console.log('Voice recording started')}
+                onStop={(duration) => console.log('Voice recording stopped, duration:', duration)}
+                className="w-full mb-6"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Fixed Input at Bottom */}
+        <div className="px-4 pb-4 safe-bottom bg-bidaaya-dark">
+          <div className="max-w-3xl mx-auto">
             <AIInputWithSearch
               placeholder="Ask me anything about internships, career advice, or CV building..."
               onSubmit={onSubmit}
