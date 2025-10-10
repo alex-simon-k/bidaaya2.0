@@ -12,13 +12,6 @@ export const metadata: Metadata = {
   authors: [{ name: "Bidaaya Team" }],
   creator: "Bidaaya",
   publisher: "Bidaaya",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  
   // Favicon and icons
   icons: {
     icon: [
@@ -63,7 +56,12 @@ export const metadata: Metadata = {
   },
   
   // Additional metadata
-  viewport: 'width=device-width, initial-scale=1',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
   robots: 'index, follow',
   manifest: '/manifest.json',
 };
