@@ -154,16 +154,16 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         <div className="w-10 h-10"></div>
       </div>
 
-        {/* Chat Interface */}
-        <div className={cn(
-          "flex-1 flex flex-col bg-bidaaya-dark overflow-hidden",
-          className
-        )}>
-          <div className="flex-1 flex flex-col px-4 pb-4 overflow-y-auto">
-            {/* AI Assistant Header */}
-            <div className="flex flex-col items-center justify-center space-y-8 flex-1">
-              {/* AI Avatar */}
-              <div className="relative">
+      {/* Chat Interface */}
+      <div className={cn(
+        "flex-1 flex flex-col bg-bidaaya-dark overflow-hidden",
+        className
+      )}>
+        <div className="flex-1 flex flex-col px-4 pb-4 overflow-y-auto">
+          {/* AI Assistant Header */}
+          <div className="flex flex-col items-center justify-center space-y-8 flex-1">
+            {/* AI Avatar */}
+            <div className="relative">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-bidaaya-accent to-blue-600 flex items-center justify-center shadow-lg">
                   <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
                     <SparklesIcon className="w-6 h-6 text-white" />
@@ -264,15 +264,16 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
               )}
             </div>
 
-            {/* Input Area */}
-            <div className="mt-auto pt-4">
-              <AIInputWithSearch
-                placeholder="Ask me anything about internships, career advice, or CV building..."
-                onSubmit={onSubmit}
-                onFileSelect={onFileSelect}
-              />
-            </div>
+          {/* Input Area */}
+          <div className="mt-auto pt-4">
+            <AIInputWithSearch
+              placeholder="Ask me anything about internships, career advice, or CV building..."
+              onSubmit={onSubmit}
+              onFileSelect={onFileSelect}
+            />
           </div>
+        </div>
+      </div>
 
       {/* Integrated Bottom Navigation - Part of dark interface */}
       <div className="bg-bidaaya-dark border-t border-bidaaya-light/10 safe-bottom">
