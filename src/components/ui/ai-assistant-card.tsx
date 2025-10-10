@@ -193,8 +193,8 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto px-4 pt-16 pb-4 safe-top safe-bottom">
-          <div className="max-w-3xl mx-auto flex flex-col items-center justify-center min-h-full py-8">
+        <div className="flex-1 overflow-y-auto px-4 pt-16 pb-2 safe-top safe-bottom">
+          <div className="max-w-3xl mx-auto flex flex-col items-center justify-center min-h-full py-4">
             {/* AI Avatar - Voice Powered Orb */}
             <div className="relative mb-8">
               <div className="w-32 h-32 rounded-full overflow-hidden shadow-2xl">
@@ -299,7 +299,7 @@ export function AIAssistantCard({ onSubmit, onFileSelect, className }: AIAssista
         </div>
 
         {/* Fixed Input at Bottom */}
-        <div className="px-4 pb-4 safe-bottom bg-bidaaya-dark">
+        <div className="px-4 pb-3 safe-bottom bg-bidaaya-dark">
           <div className="max-w-3xl mx-auto">
             <AIInputWithSearch
               placeholder="Ask me anything about internships, career advice, or CV building..."
