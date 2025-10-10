@@ -322,7 +322,7 @@ export default function ProjectsPage() {
 
       {/* Projects Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 gap-4">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
@@ -358,7 +358,7 @@ export default function ProjectsPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-4">
           {filteredProjects.map((project) => {
             const categoryConfig = CATEGORY_CONFIG[project.category] || CATEGORY_CONFIG.MARKETING
             const statusConfig = STATUS_CONFIG[project.status] || STATUS_CONFIG.PENDING_APPROVAL
