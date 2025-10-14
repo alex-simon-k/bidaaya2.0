@@ -191,7 +191,21 @@ Bio: ${user.bio || 'Not set'}
         console.error('AI API Error:', aiError)
         
         // Fallback response
-        aiResponse = "I'm currently having trouble connecting to my AI service. Let me help you manually! I can see you're looking for opportunities. Would you like me to show you some internships that match your profile?"
+        // Try to include a few internal opportunities in the fallback
+        try {
+          const topProjects = await prisma.project.findMany({
+            where: { status: 'APPROVED' },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+            take: 3,
+          })
+          const ids = topProjects.map(p => p.id).join(',')
+          aiResponse = ids.length
+            ? `I'm having trouble connecting to my AI right now, but I pulled a few internships you might like. [OPPORTUNITY:${ids}:internal]`
+            : `I'm currently having trouble connecting to my AI service. Let me help you manually! I can see you're looking for opportunities. Would you like me to show you some internships that match your profile?`
+        } catch {
+          aiResponse = `I'm currently having trouble connecting to my AI service. Let me help you manually! I can see you're looking for opportunities. Would you like me to show you some internships that match your profile?`
+        }
       }
     } else {
       // No AI configured - provide helpful fallback response
@@ -201,13 +215,41 @@ Bio: ${user.bio || 'Not set'}
       const lowerMessage = message.toLowerCase()
       
       if (lowerMessage.includes('internship') || lowerMessage.includes('opportunit')) {
-        aiResponse = `Great! I'd love to help you find internships. Based on your profile (${user.major || 'your field'}), I can recommend some opportunities. Let me fetch some matches for you! [OPPORTUNITY:sample:internal]`
+        // Try to include live internal opportunities
+        try {
+          const topProjects = await prisma.project.findMany({
+            where: { status: 'APPROVED' },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+            take: 3,
+          })
+          const ids = topProjects.map(p => p.id).join(',')
+          aiResponse = ids.length
+            ? `Great! I'd love to help you find internships. Based on your profile (${user.major || 'your field'}), here are some to consider. [OPPORTUNITY:${ids}:internal]`
+            : `Great! I'd love to help you find internships. Based on your profile (${user.major || 'your field'}), I can recommend some opportunities. What location are you targeting?`
+        } catch {
+          aiResponse = `Great! I'd love to help you find internships. Based on your profile (${user.major || 'your field'}), I can recommend some opportunities. What location are you targeting?`
+        }
       } else if (lowerMessage.includes('cv') || lowerMessage.includes('resume')) {
         aiResponse = `I can help you build a custom CV! To get started, I'll need to know more about your experience and the role you're applying for. What type of position are you targeting?`
       } else if (lowerMessage.includes('career') || lowerMessage.includes('advice')) {
         aiResponse = `I'm here to help guide your career journey! Based on your profile, I can recommend internships, help you build your CV, and provide career advice. What would you like to focus on first?`
       } else {
-        aiResponse = `Hello! I'm your Bidaaya career assistant. I can help you with:\n\n• Finding internship opportunities\n• Building custom CVs\n• Career planning and advice\n\nWhat would you like help with?`
+        // Generic greeting – still try to surface a few opportunities
+        try {
+          const topProjects = await prisma.project.findMany({
+            where: { status: 'APPROVED' },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+            take: 3,
+          })
+          const ids = topProjects.map(p => p.id).join(',')
+          aiResponse = ids.length
+            ? `Hello! I can help you find internships, build CVs, and plan your career. Here are a few internships to get started. [OPPORTUNITY:${ids}:internal]`
+            : `Hello! I'm your Bidaaya career assistant. I can help you with:\n\n• Finding internship opportunities\n• Building custom CVs\n• Career planning and advice\n\nWhat would you like help with?`
+        } catch {
+          aiResponse = `Hello! I'm your Bidaaya career assistant. I can help you with:\n\n• Finding internship opportunities\n• Building custom CVs\n• Career planning and advice\n\nWhat would you like help with?`
+        }
       }
     }
 
