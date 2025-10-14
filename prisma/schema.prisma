@@ -109,6 +109,10 @@ model User {
   creditsRefreshDate       DateTime?
   lifetimeCreditsUsed      Int                    @default(0)
   creditTransactions       CreditTransaction[]
+  
+  // AI Chat system
+  chatConversations        ChatConversation[]
+  chatMessages             ChatMessage[]
 }
 
 model UserSession {
@@ -745,4 +749,45 @@ model ExternalOpportunityApplication {
   @@index([userId])
   @@index([externalOpportunityId])
   @@index([appliedAt])
+}
+
+// AI Chat System Models
+model ChatConversation {
+  id          String        @id @default(cuid())
+  userId      String
+  title       String?       // Auto-generated from first message
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  lastMessageAt DateTime    @default(now())
+  
+  user        User          @relation(fields: [userId], references: [id])
+  messages    ChatMessage[]
+  
+  @@index([userId])
+  @@index([lastMessageAt])
+}
+
+model ChatMessage {
+  id              String           @id @default(cuid())
+  conversationId  String
+  userId          String
+  role            String           // "user" | "assistant" | "system"
+  content         String           @db.Text
+  
+  // For opportunity recommendations in chat
+  opportunityType String?          // "internal" | "external" 
+  opportunityIds  String[]         // IDs of recommended projects/externals
+  
+  // For CV generation tracking
+  cvGenerated     Boolean          @default(false)
+  cvData          Json?            // Store CV data if generated
+  
+  createdAt       DateTime         @default(now())
+  
+  conversation    ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id])
+  
+  @@index([conversationId])
+  @@index([userId])
+  @@index([createdAt])
 }
