@@ -23,6 +23,14 @@ export async function GET(request: NextRequest) {
     const remote = searchParams.get('remote')
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
+    const idsParam = searchParams.get('ids')
+
+    const ids = idsParam
+      ? idsParam
+          .split(',')
+          .map((id) => id.trim())
+          .filter((id) => id.length > 0)
+      : null
 
     // Get user's subscription plan for premium access
     const user = await prisma.user.findUnique({
@@ -34,7 +42,8 @@ export async function GET(request: NextRequest) {
     const isStudent = user?.role === 'STUDENT'
 
     let where: any = {
-      isActive: true
+      isActive: true,
+      ...(ids && { id: { in: ids } })
     }
 
     // Premium access logic: STUDENT_PRO users see all, others see non-premium or old premium opportunities
@@ -100,10 +109,10 @@ export async function GET(request: NextRequest) {
           { isPremium: 'desc' },
           { addedAt: 'desc' }
         ],
-        take: limit,
-        skip: offset
+        take: ids ? undefined : limit,
+        skip: ids ? 0 : offset
       }).catch(() => []),
-      prisma.externalOpportunity.count({ where }).catch(() => 0)
+      prisma.externalOpportunity.count({ where: ids ? { id: { in: ids } } : where }).catch(() => 0)
     ])
 
     // Check which opportunities the user has already applied to

@@ -20,11 +20,21 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const companyId = searchParams.get('companyId')
+    const idsParam = searchParams.get('ids')
+
+    // Support filtering by a comma-separated list of IDs
+    const ids = idsParam
+      ? idsParam
+          .split(',')
+          .map((id) => id.trim())
+          .filter((id) => id.length > 0)
+      : null
 
     const where = {
       ...(status && { status: status as ProjectStatus }),
       ...(companyId && { companyId }),
-    }
+      ...(ids && { id: { in: ids } }),
+    } as any
 
     const projects = await prisma.project.findMany({
       where,
@@ -39,9 +49,10 @@ export async function GET(request: Request) {
       orderBy: {
         createdAt: 'desc',
       },
+      take: ids ? undefined : 50,
     })
 
-    return NextResponse.json(projects)
+    return NextResponse.json({ opportunities: projects })
   } catch (error) {
     console.error('Error fetching projects:', error)
     return new NextResponse('Internal error', { status: 500 })
