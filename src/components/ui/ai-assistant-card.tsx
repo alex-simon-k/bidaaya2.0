@@ -128,11 +128,15 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const fetchOpportunities = async (ids: string[], type: string) => {
     try {
       const endpoint = type === 'internal' ? '/api/projects' : '/api/external-opportunities';
-      // This is simplified - you'll need proper endpoints
       const response = await fetch(`${endpoint}?ids=${ids.join(',')}`);
       if (response.ok) {
         const data = await response.json();
-        setOpportunities(data.opportunities || []);
+        // Transform opportunities to ensure company is a string
+        const transformedOpportunities = (data.opportunities || []).map((opp: any) => ({
+          ...opp,
+          company: opp.company?.companyName || opp.company?.name || opp.company || 'Unknown Company',
+        }));
+        setOpportunities(transformedOpportunities);
       }
     } catch (error) {
       console.error('Error fetching opportunities:', error);
