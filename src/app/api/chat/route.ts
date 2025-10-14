@@ -8,10 +8,19 @@ const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
 
 // Initialize OpenAI (can switch to DeepSeek)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY,
-  baseURL: process.env.DEEPSEEK_API_KEY ? 'https://api.deepseek.com' : undefined,
-})
+const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY;
+  
+  if (!apiKey) {
+    console.warn('⚠️ No OpenAI/DeepSeek API key configured');
+    return null;
+  }
+  
+  return new OpenAI({
+    apiKey,
+    baseURL: process.env.DEEPSEEK_API_KEY ? 'https://api.deepseek.com' : undefined,
+  });
+}
 
 // AI System Prompt - Guides the conversation
 const SYSTEM_PROMPT = `You are Bidaaya's AI Career Assistant. Your role is to help students find internships and build their careers.
@@ -48,16 +57,25 @@ interface ChatRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('💬 Chat API - POST request received')
+    
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
+      console.error('❌ Chat API - No user session')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('✅ Chat API - User authenticated:', session.user.id)
 
     const body: ChatRequest = await request.json()
     const { message, conversationId } = body
 
+    console.log('📝 Chat API - Message:', message.substring(0, 50) + '...')
+    console.log('🆔 Chat API - Conversation ID:', conversationId || 'new conversation')
+
     if (!message || message.trim().length === 0) {
+      console.error('❌ Chat API - Empty message')
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
@@ -147,21 +165,51 @@ Bio: ${user.bio || 'Not set'}
       content: message,
     })
 
-    // Call AI (OpenAI or DeepSeek)
-    const completion = await openai.chat.completions.create({
-      model: process.env.DEEPSEEK_API_KEY ? 'deepseek-chat' : 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT.replace('{profile}', profileContext),
-        },
-        ...conversationHistory,
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
-    })
+    let aiResponse: string;
 
-    const aiResponse = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.'
+    // Check if AI is configured
+    const openai = getOpenAIClient();
+    
+    if (openai) {
+      // Call AI (OpenAI or DeepSeek)
+      try {
+        const completion = await openai.chat.completions.create({
+          model: process.env.DEEPSEEK_API_KEY ? 'deepseek-chat' : 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: SYSTEM_PROMPT.replace('{profile}', profileContext),
+            },
+            ...conversationHistory,
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        })
+
+        aiResponse = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.'
+      } catch (aiError: any) {
+        console.error('AI API Error:', aiError)
+        
+        // Fallback response
+        aiResponse = "I'm currently having trouble connecting to my AI service. Let me help you manually! I can see you're looking for opportunities. Would you like me to show you some internships that match your profile?"
+      }
+    } else {
+      // No AI configured - provide helpful fallback response
+      console.log('📝 No AI configured, using smart fallback response')
+      
+      // Smart fallback based on message content
+      const lowerMessage = message.toLowerCase()
+      
+      if (lowerMessage.includes('internship') || lowerMessage.includes('opportunit')) {
+        aiResponse = `Great! I'd love to help you find internships. Based on your profile (${user.major || 'your field'}), I can recommend some opportunities. Let me fetch some matches for you! [OPPORTUNITY:sample:internal]`
+      } else if (lowerMessage.includes('cv') || lowerMessage.includes('resume')) {
+        aiResponse = `I can help you build a custom CV! To get started, I'll need to know more about your experience and the role you're applying for. What type of position are you targeting?`
+      } else if (lowerMessage.includes('career') || lowerMessage.includes('advice')) {
+        aiResponse = `I'm here to help guide your career journey! Based on your profile, I can recommend internships, help you build your CV, and provide career advice. What would you like to focus on first?`
+      } else {
+        aiResponse = `Hello! I'm your Bidaaya career assistant. I can help you with:\n\n• Finding internship opportunities\n• Building custom CVs\n• Career planning and advice\n\nWhat would you like help with?`
+      }
+    }
 
     // Parse AI response for opportunity recommendations
     // Format: [OPPORTUNITY:id1,id2,id3:internal] or [OPPORTUNITY:id1,id2:external]
