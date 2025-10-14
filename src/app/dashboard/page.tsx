@@ -92,40 +92,10 @@ export default function DashboardPage() {
 
   // Student Dashboard - ChatGPT-like Interface
   if (userRole === 'STUDENT') {
-    const handleAISubmit = async (message: string, withSearch: boolean) => {
-      try {
-        const response = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            message,
-            conversationHistory: [],
-            withSearch
-          })
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('AI Response:', data.message);
-          // TODO: Handle AI response in chat interface
-        }
-      } catch (error) {
-        console.error('AI chat error:', error);
-      }
-    };
-
-    const handleFileSelect = (file: File) => {
-      console.log('File selected:', file.name);
-      // TODO: Handle file upload
-    };
-
     return (
       <>
         <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
-          <AIAssistantCard 
-            onSubmit={handleAISubmit}
-            onFileSelect={handleFileSelect}
-          />
+          <AIAssistantCard />
         </div>
 
         {/* Membership Popup */}
