@@ -194,7 +194,7 @@ Bio: ${user.bio || 'Not set'}
         // Try to include a few internal opportunities in the fallback
         try {
           const topProjects = await prisma.project.findMany({
-            where: { status: 'APPROVED' },
+            where: { status: 'LIVE' },
             orderBy: { createdAt: 'desc' },
             select: { id: true },
             take: 3,
@@ -218,7 +218,7 @@ Bio: ${user.bio || 'Not set'}
         // Try to include live internal opportunities
         try {
           const topProjects = await prisma.project.findMany({
-            where: { status: 'APPROVED' },
+            where: { status: 'LIVE' },
             orderBy: { createdAt: 'desc' },
             select: { id: true },
             take: 3,
@@ -238,7 +238,7 @@ Bio: ${user.bio || 'Not set'}
         // Generic greeting – still try to surface a few opportunities
         try {
           const topProjects = await prisma.project.findMany({
-            where: { status: 'APPROVED' },
+            where: { status: 'LIVE' },
             orderBy: { createdAt: 'desc' },
             select: { id: true },
             take: 3,
