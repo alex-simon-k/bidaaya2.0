@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
@@ -28,6 +28,8 @@ export const metadata: Metadata = {
     ],
   },
   
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://bidaaya.ae'),
+
   // Open Graph / Facebook
   openGraph: {
     type: 'website',
@@ -56,14 +58,16 @@ export const metadata: Metadata = {
   },
   
   // Additional metadata
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   robots: 'index, follow',
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0a081a',
 };
 
 export default function RootLayout({
@@ -75,6 +79,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="theme-color" content="#0a081a" />
       </head>
