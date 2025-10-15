@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
           data: {
             userId: session.user.id,
             title: message.substring(0, 50), // First message as title
-            conversationLevel: 1,
+            // conversationLevel will use default value from schema (1)
           },
           include: {
             messages: true,
@@ -356,10 +356,23 @@ Bio: ${user.bio || 'Not set'}
       console.log(`✅ Conversation level updated to ${newLevel}`)
     }
     
-    await prisma.chatConversation.update({
-      where: { id: conversation.id },
-      data: updateData,
-    })
+    try {
+      await prisma.chatConversation.update({
+        where: { id: conversation.id },
+        data: updateData,
+      })
+    } catch (updateError: any) {
+      // If conversationLevel doesn't exist yet, just update timestamp
+      if (updateError.code === 'P2022' && updateError.meta?.column === 'conversationLevel') {
+        console.log('⚠️ conversationLevel column not yet migrated, updating without it')
+        await prisma.chatConversation.update({
+          where: { id: conversation.id },
+          data: { lastMessageAt: new Date() },
+        })
+      } else {
+        throw updateError
+      }
+    }
 
     return NextResponse.json({
       conversationId: conversation.id,
@@ -376,6 +389,13 @@ Bio: ${user.bio || 'Not set'}
 
   } catch (error: any) {
     console.error('❌ Chat API error:', error)
+    console.error('❌ Error stack:', error.stack)
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      name: error.name,
+    })
     
     if (error?.error?.type === 'insufficient_quota') {
       return NextResponse.json({
@@ -388,6 +408,7 @@ Bio: ${user.bio || 'Not set'}
       error: 'Failed to process chat message',
       code: 'CHAT_ERROR',
       details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     }, { status: 500 })
   }
 }
