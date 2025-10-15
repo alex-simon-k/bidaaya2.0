@@ -7,48 +7,85 @@ import OpenAI from 'openai'
 const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
 
-// Initialize OpenAI (can switch to DeepSeek)
+// Initialize OpenAI (prioritize OpenAI over DeepSeek)
 const getOpenAIClient = () => {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
   
-  if (!apiKey) {
-    console.warn('⚠️ No OpenAI/DeepSeek API key configured');
-    return null;
+  console.log('🔑 API Key Check:', {
+    openai: openaiKey ? '✅ Configured' : '❌ Missing',
+    deepseek: deepseekKey ? '✅ Configured' : '❌ Missing',
+  });
+  
+  // Prioritize OpenAI
+  if (openaiKey) {
+    console.log('✅ Using OpenAI API');
+    return new OpenAI({
+      apiKey: openaiKey,
+    });
   }
   
-  return new OpenAI({
-    apiKey,
-    baseURL: process.env.DEEPSEEK_API_KEY ? 'https://api.deepseek.com' : undefined,
-  });
+  // Fallback to DeepSeek
+  if (deepseekKey) {
+    console.log('✅ Using DeepSeek API');
+    return new OpenAI({
+      apiKey: deepseekKey,
+      baseURL: 'https://api.deepseek.com',
+    });
+  }
+  
+  console.warn('⚠️ No AI API key configured');
+  return null;
 }
 
-// AI System Prompt - Guides the conversation
-const SYSTEM_PROMPT = `You are Bidaaya's AI Career Assistant. Your role is to help students find internships and build their careers.
+// AI System Prompt - Guides the conversation with 3-level structure
+const SYSTEM_PROMPT = `You are Bidaaya's AI Career Assistant. Your role is to help students find internships and build their careers through a structured 3-level conversation.
 
-**YOUR GOALS:**
-1. Learn about the student (skills, interests, education, career goals)
-2. Recommend relevant internship opportunities (internal Bidaaya projects & external opportunities)
-3. Help students create custom CVs for external applications
-4. Guide students through their career journey
+**3-LEVEL CONVERSATION STRUCTURE:**
 
-**CONVERSATION FLOW:**
-- Start by greeting the student warmly
-- Ask about their background, skills, interests, and goals (if not already known)
-- Based on their profile, recommend relevant opportunities
-- When recommending opportunities, use the format: [OPPORTUNITY:id1,id2,id3:type] where type is "internal" or "external"
-- Encourage students to apply to opportunities that match their profile
-- Be encouraging, supportive, and professional
+**LEVEL 1 - Essential Basics (Most Important):**
+Collect core information to understand the student:
+- Name, university, major, graduation year
+- Current education level (high school, undergraduate, graduate)
+- Location and availability
+- Primary field of interest
+
+**LEVEL 2 - Experience & Skills:**
+Understand their capabilities:
+- Technical and soft skills
+- Previous internships or work experience
+- Projects they've worked on
+- Languages they speak
+- Tools/technologies they know
+
+**LEVEL 3 - Goals & Preferences:**
+Deep dive into aspirations:
+- Career goals and dream roles
+- Industries they're interested in
+- Company size preferences (startup vs corporate)
+- Work style preferences (remote, hybrid, in-office)
+- Long-term career vision
+
+**YOUR APPROACH:**
+1. Start with Level 1 questions if profile is incomplete
+2. Move to Level 2 once basics are covered
+3. Progress to Level 3 for deeper understanding
+4. After collecting sufficient data, recommend opportunities using: [OPPORTUNITY:id1,id2,id3:type] where type is "internal" or "external"
+5. Update the conversation level indicator: [LEVEL:1], [LEVEL:2], or [LEVEL:3]
 
 **IMPORTANT:**
-- Keep responses concise (2-3 sentences max unless explaining something complex)
-- Always be encouraging and positive
-- Focus on actionable next steps
-- When you recommend opportunities, they will be displayed as beautiful cards in the chat
+- Keep responses concise (2-3 sentences max)
+- Ask 1-2 questions at a time, don't overwhelm
+- Be encouraging and supportive
+- Focus on collecting data naturally through conversation
+- When you have enough info, recommend opportunities
 
-**STUDENT PROFILE:**
+**CURRENT STUDENT PROFILE:**
 {profile}
 
-Respond naturally and help the student progress in their career journey.`
+**CURRENT CONVERSATION LEVEL:** {level}
+
+Respond naturally and help the student progress through the levels.`
 
 interface ChatRequest {
   message: string
@@ -173,12 +210,18 @@ Bio: ${user.bio || 'Not set'}
     if (openai) {
       // Call AI (OpenAI or DeepSeek)
       try {
+        // Determine model based on which API is configured
+        const model = process.env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'deepseek-chat';
+        console.log(`🤖 Using model: ${model}`);
+        
         const completion = await openai.chat.completions.create({
-          model: process.env.DEEPSEEK_API_KEY ? 'deepseek-chat' : 'gpt-4o-mini',
+          model,
           messages: [
             {
               role: 'system',
-              content: SYSTEM_PROMPT.replace('{profile}', profileContext),
+              content: SYSTEM_PROMPT
+                .replace('{profile}', profileContext)
+                .replace('{level}', `Level ${conversation.conversationLevel || 1}`),
             },
             ...conversationHistory,
           ],
@@ -187,6 +230,7 @@ Bio: ${user.bio || 'Not set'}
         })
 
         aiResponse = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.'
+        console.log('✅ AI Response generated successfully')
       } catch (aiError: any) {
         console.error('AI API Error:', aiError)
         
@@ -253,7 +297,17 @@ Bio: ${user.bio || 'Not set'}
       }
     }
 
-    // Parse AI response for opportunity recommendations
+    // Parse AI response for level updates and opportunity recommendations
+    // Format: [LEVEL:1], [LEVEL:2], [LEVEL:3]
+    const levelMatch = aiResponse.match(/\[LEVEL:(\d)\]/i)
+    let newLevel: number | null = null
+    
+    if (levelMatch) {
+      newLevel = parseInt(levelMatch[1])
+      aiResponse = aiResponse.replace(/\[LEVEL:\d\]/gi, '').trim()
+      console.log(`📊 Level update detected: ${newLevel}`)
+    }
+    
     // Format: [OPPORTUNITY:id1,id2,id3:internal] or [OPPORTUNITY:id1,id2:external]
     const opportunityMatch = aiResponse.match(/\[OPPORTUNITY:(.*?):(internal|external)\]/i)
     let opportunityIds: string[] = []
@@ -264,61 +318,44 @@ Bio: ${user.bio || 'Not set'}
       opportunityType = opportunityMatch[2]
       
       // Remove the tag from the response text
-      const cleanResponse = aiResponse.replace(/\[OPPORTUNITY:.*?\]/gi, '').trim()
-      
-      // Save AI message with opportunity data
-      const aiMessage = await prisma.chatMessage.create({
-        data: {
-          conversationId: conversation.id,
-          userId: session.user.id,
-          role: 'assistant',
-          content: cleanResponse,
-          opportunityType,
-          opportunityIds,
-        },
-      })
-
-      // Update conversation timestamp
-      await prisma.chatConversation.update({
-        where: { id: conversation.id },
-        data: { lastMessageAt: new Date() },
-      })
-
-      return NextResponse.json({
-        conversationId: conversation.id,
-        message: {
-          id: aiMessage.id,
-          role: 'assistant',
-          content: cleanResponse,
-          opportunityType,
-          opportunityIds,
-          createdAt: aiMessage.createdAt,
-        },
-      })
+      aiResponse = aiResponse.replace(/\[OPPORTUNITY:.*?\]/gi, '').trim()
     }
-
-    // Save AI message without opportunities
+    
+    const cleanResponse = aiResponse.trim()
+    
+    // Save AI message
     const aiMessage = await prisma.chatMessage.create({
       data: {
         conversationId: conversation.id,
         userId: session.user.id,
         role: 'assistant',
-        content: aiResponse,
+        content: cleanResponse,
+        opportunityType,
+        opportunityIds: opportunityIds.length > 0 ? opportunityIds : undefined,
       },
     })
 
-    // Update conversation timestamp
+    // Update conversation (timestamp and level if changed)
+    const updateData: any = { lastMessageAt: new Date() }
+    if (newLevel && newLevel !== conversation.conversationLevel) {
+      updateData.conversationLevel = newLevel
+      console.log(`✅ Conversation level updated to ${newLevel}`)
+    }
+    
     await prisma.chatConversation.update({
       where: { id: conversation.id },
-      data: { lastMessageAt: new Date() },
+      data: updateData,
     })
 
     return NextResponse.json({
       conversationId: conversation.id,
+      conversationLevel: newLevel || conversation.conversationLevel,
       message: {
         id: aiMessage.id,
         role: 'assistant',
-        content: aiResponse,
+        content: cleanResponse,
+        opportunityType,
+        opportunityIds: opportunityIds.length > 0 ? opportunityIds : undefined,
         createdAt: aiMessage.createdAt,
       },
     })

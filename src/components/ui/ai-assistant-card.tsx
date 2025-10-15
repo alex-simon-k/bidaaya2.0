@@ -22,6 +22,7 @@ import { AIVoiceInput } from "@/components/ui/ai-voice-input";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { ChatMessage, TypingIndicator } from "@/components/ui/chat-message";
 import { OpportunityCard } from "@/components/ui/opportunity-card";
+import { ConversationLevelTracker } from "@/components/ui/conversation-level-tracker";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -48,6 +49,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationLevel, setConversationLevel] = useState<number>(1);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -94,6 +96,12 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
       // Update conversation ID
       if (data.conversationId && !conversationId) {
         setConversationId(data.conversationId);
+      }
+      
+      // Update conversation level if changed
+      if (data.conversationLevel && data.conversationLevel !== conversationLevel) {
+        setConversationLevel(data.conversationLevel);
+        console.log(`📊 Conversation level updated to ${data.conversationLevel}`);
       }
 
       // Add AI response to messages
@@ -338,7 +346,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                 </div>
 
                 {/* Welcome Message */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-6">
                   <h2 className="text-xl font-medium text-bidaaya-light/80 mb-2">
                     Hi {session?.user?.name?.split(' ')[0] || 'there'},
                   </h2>
@@ -346,6 +354,12 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                     Welcome back! How can I help?
                   </h3>
                 </div>
+                
+                {/* Conversation Level Tracker */}
+                <ConversationLevelTracker 
+                  currentLevel={conversationLevel} 
+                  className="mb-6"
+                />
 
                 {/* Quick Action Badges */}
                 <div className="flex flex-wrap items-center justify-center gap-3 mb-8 max-w-lg">
