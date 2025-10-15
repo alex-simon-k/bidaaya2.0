@@ -1,3 +1,3 @@
 -- AlterTable
-ALTER TABLE "ChatConversation" ADD COLUMN IF NOT EXISTS "conversationLevel" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "ChatConversation" ADD COLUMN IF NOT EXISTS "conversationLevel" INTEGER DEFAULT 1;
 

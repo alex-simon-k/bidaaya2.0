@@ -756,7 +756,7 @@ model ChatConversation {
   id          String        @id @default(cuid())
   userId      String
   title       String?       // Auto-generated from first message
-  conversationLevel Int       @default(1) // 1 = Basics, 2 = Experience, 3 = Goals
+  conversationLevel Int?      @default(1) // 1 = Basics, 2 = Experience, 3 = Goals
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   lastMessageAt DateTime    @default(now())
