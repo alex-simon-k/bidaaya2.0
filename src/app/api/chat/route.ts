@@ -140,31 +140,42 @@ export async function POST(request: NextRequest) {
     // Create or get conversation
     let conversation
     if (conversationId) {
-      conversation = await prisma.chatConversation.findFirst({
-        where: {
-          id: conversationId,
-          userId: session.user.id,
-        },
-        include: {
-          messages: {
-            orderBy: { createdAt: 'asc' },
-            take: 20, // Last 20 messages for context
+      try {
+        conversation = await prisma.chatConversation.findFirst({
+          where: {
+            id: conversationId,
+            userId: session.user.id,
           },
-        },
-      })
+          include: {
+            messages: {
+              orderBy: { createdAt: 'asc' },
+              take: 20, // Last 20 messages for context
+            },
+          },
+        })
+      } catch (error) {
+        console.error('❌ Error fetching conversation:', error)
+      }
     }
 
     if (!conversation) {
       // Create new conversation
-      conversation = await prisma.chatConversation.create({
-        data: {
-          userId: session.user.id,
-          title: message.substring(0, 50), // First message as title
-        },
-        include: {
-          messages: true,
-        },
-      })
+      try {
+        conversation = await prisma.chatConversation.create({
+          data: {
+            userId: session.user.id,
+            title: message.substring(0, 50), // First message as title
+            conversationLevel: 1,
+          },
+          include: {
+            messages: true,
+          },
+        })
+        console.log('✅ Created new conversation:', conversation.id)
+      } catch (error) {
+        console.error('❌ Error creating conversation:', error)
+        throw error
+      }
     }
 
     // Save user message
@@ -214,6 +225,8 @@ Bio: ${user.bio || 'Not set'}
         const model = process.env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'deepseek-chat';
         console.log(`🤖 Using model: ${model}`);
         
+        const currentLevel = (conversation as any).conversationLevel || 1;
+        
         const completion = await openai.chat.completions.create({
           model,
           messages: [
@@ -221,7 +234,7 @@ Bio: ${user.bio || 'Not set'}
               role: 'system',
               content: SYSTEM_PROMPT
                 .replace('{profile}', profileContext)
-                .replace('{level}', `Level ${conversation.conversationLevel || 1}`),
+                .replace('{level}', `Level ${currentLevel}`),
             },
             ...conversationHistory,
           ],
@@ -336,8 +349,9 @@ Bio: ${user.bio || 'Not set'}
     })
 
     // Update conversation (timestamp and level if changed)
+    const currentLevel = (conversation as any).conversationLevel || 1;
     const updateData: any = { lastMessageAt: new Date() }
-    if (newLevel && newLevel !== conversation.conversationLevel) {
+    if (newLevel && newLevel !== currentLevel) {
       updateData.conversationLevel = newLevel
       console.log(`✅ Conversation level updated to ${newLevel}`)
     }
@@ -349,7 +363,7 @@ Bio: ${user.bio || 'Not set'}
 
     return NextResponse.json({
       conversationId: conversation.id,
-      conversationLevel: newLevel || conversation.conversationLevel,
+      conversationLevel: newLevel || currentLevel,
       message: {
         id: aiMessage.id,
         role: 'assistant',
