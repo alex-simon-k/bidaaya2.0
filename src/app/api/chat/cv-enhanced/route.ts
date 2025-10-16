@@ -2,6 +2,7 @@
  * Enhanced Chat API with CV Data Collection
  * 
  * This version automatically extracts and saves CV data from conversations
+ * Updated: Oct 16, 2025 - Prisma client regeneration
  */
 
 import { NextRequest, NextResponse } from 'next/server'
