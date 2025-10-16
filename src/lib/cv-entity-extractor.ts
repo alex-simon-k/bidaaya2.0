@@ -137,8 +137,14 @@ export class CVEntityExtractor {
     
     // Priority-based detection (work experience is most common)
     
-    // Work experience keywords
-    if (lowerMessage.match(/\b(work|job|internship|intern|position|role|employed|company|worked at|working at)\b/)) {
+    // Work experience keywords (ENHANCED - includes banking, consulting, etc.)
+    if (lowerMessage.match(/\b(work|job|internship|intern|position|role|employed|company|worked at|working at|banking|consultant|analyst|manager)\b/)) {
+      return 'experience'
+    }
+    
+    // Also detect company names as work experience triggers
+    const companyNames = ['hsbc', 'revolut', 'goldman', 'jpmorgan', 'mckinsey', 'google', 'meta', 'amazon', 'microsoft']
+    if (companyNames.some(company => lowerMessage.includes(company))) {
       return 'experience'
     }
     
@@ -147,8 +153,8 @@ export class CVEntityExtractor {
       return 'education'
     }
     
-    // Project keywords
-    if (lowerMessage.match(/\b(project|built|created|developed|app|website|platform|side hustle|startup|founded)\b/)) {
+    // Project keywords (ENHANCED - includes 'founded', 'launched')
+    if (lowerMessage.match(/\b(project|built|created|developed|app|website|platform|side hustle|startup|founded|launched|co-founded)\b/)) {
       return 'project'
     }
     

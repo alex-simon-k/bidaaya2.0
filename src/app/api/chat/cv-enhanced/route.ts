@@ -37,44 +37,69 @@ const getOpenAIClient = () => {
 }
 
 // Enhanced System Prompt for CV Collection
-const SYSTEM_PROMPT = `You are Bidaaya's AI Career Assistant specialized in building professional CVs through natural conversation.
+const SYSTEM_PROMPT = `You are Bidaaya's AI Career Assistant specialized in building professional CVs through structured conversation.
 
-**YOUR MISSION:**
-Help students build comprehensive professional profiles by naturally collecting their:
-- Education history
-- Work experience and internships
-- Personal projects
-- Skills and certifications
-- Achievements and leadership
+**CRITICAL: START BY ACKNOWLEDGING WHAT YOU KNOW**
+Always begin first message with what you already know about them:
+"Hi [Name]! I see you're [studying X at Y / in a gap year / etc.]. I'd love to help build your professional CV. Let me share what I already know about you, and then we can fill in the gaps together."
 
-**CONVERSATION STYLE:**
-- Be warm, encouraging, and conversational
-- Ask one thing at a time, don't overwhelm
-- Show genuine interest in their achievements
-- Acknowledge what they share ("That's impressive!" / "Great experience!")
-- Keep responses brief (2-3 sentences)
-- Progress naturally through their career story
+Then list:
+- Their name
+- Their education (university, major, year)
+- Their location
+- Any skills they mentioned
 
-**DATA COLLECTION PRIORITY:**
-1. Start with basics (name, current education)
-2. Then work experience (most recent first)
-3. Then projects and side work
-4. Then skills and certifications
-5. Finally achievements and extras
+**3-LEVEL STRUCTURE (STRICT - DO NOT SKIP LEVELS):**
 
-**SPECIAL INSTRUCTIONS:**
-- When they mention a job/internship, dig deeper: "What were your key achievements there?"
-- When they mention metrics, celebrate them: "40% improvement - that's significant!"
-- When they're vague, gently probe: "Can you tell me more about that?"
-- After collecting enough data, offer to generate their CV
+**LEVEL 1: BASICS (MUST COMPLETE FIRST)**
+Required before moving to Level 2:
+- Full name confirmed
+- Education details (institution, field, year, modules/subjects)
+- Location
 
-**CURRENT PROFILE STATUS:**
-{profileStatus}
+Questions to ask:
+- "Tell me about your experience at [University] - what have you studied there?"
+- "What specific modules or subjects have you focused on?"
+- "What has been your favorite part of studying [Major]?"
 
-**LAST COLLECTED:**
-{lastCollected}
+**LEVEL 2: EXPERIENCE (MUST COMPLETE SECOND)**
+Required before moving to Level 3:
+- At least 1 work experience OR 1 significant project with details
+- For EACH experience, get:
+  - Role/title
+  - Dates (when they worked there)
+  - At least 1 achievement with metrics if possible
 
-Respond naturally and continue building their profile.`
+Questions to ask:
+- "Have you had any internships, jobs, or work experience?"
+- "What was your role at [Company]?"
+- "What were your key achievements or responsibilities?"
+- "Can you quantify any of your impact? (e.g., grew by X%, managed Y people)"
+
+**LEVEL 3: ENRICHMENT (OPTIONAL BUT VALUABLE)**
+Additional details:
+- More projects
+- Certifications/courses
+- Leadership roles
+- Languages
+
+**RULES:**
+1. NEVER ask for information already provided in EXISTING DATA
+2. ONE question at a time
+3. DO NOT move to Level 2 until Level 1 is complete
+4. DO NOT move to Level 3 until Level 2 has at least 1 experience
+5. After Level 2 is complete, offer to show opportunities or generate CV
+
+**EXISTING DATA YOU ALREADY KNOW:**
+{existingData}
+
+**CURRENT CV STATUS:**
+{cvStatus}
+
+**WHAT TO FOCUS ON NOW:**
+{focusArea}
+
+Respond naturally, acknowledge what you know, and guide them through the levels systematically.`
 
 interface ChatRequest {
   message: string
@@ -157,50 +182,57 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // If we already have data from onboarding, save it to CV tables
-    if (conversation.messages.length === 0 && user) {
-      // First conversation - transfer onboarding data to CV tables
-      if (user.university && user.major) {
-        try {
-          await prisma.cVEducation.create({
-            data: {
-              userId,
-              institution: user.university,
-              degreeType: user.education?.toLowerCase().includes('high school') ? 'a_levels' : 'bsc',
-              degreeTitle: user.major,
-              fieldOfStudy: user.major,
-              startDate: user.graduationYear ? new Date(user.graduationYear - 3, 8, 1) : new Date(),
-              endDate: user.graduationYear ? new Date(user.graduationYear, 6, 1) : null,
-              isCurrent: user.graduationYear ? user.graduationYear >= new Date().getFullYear() : true,
-              modules: user.subjects ? user.subjects.split(',').map(s => s.trim()) : [],
-            },
-          })
-          console.log('✅ Transferred onboarding education data to CV')
-        } catch (e) {
-          console.log('⚠️ Education data already exists or error:', e)
-        }
+    // ============================================
+    // 🔄 AUTO-TRANSFER ONBOARDING DATA (ALWAYS CHECK)
+    // ============================================
+    
+    // Check if CV tables need data from onboarding
+    const existingEducation = await prisma.cVEducation.count({ where: { userId } })
+    const existingSkills = await prisma.cVSkill.count({ where: { userId } })
+    
+    // Transfer education if we have onboarding data but no CV education entries
+    if (existingEducation === 0 && user?.university && user?.major) {
+      try {
+        await prisma.cVEducation.create({
+          data: {
+            userId,
+            institution: user.university,
+            degreeType: user.education?.toLowerCase().includes('high school') ? 'a_levels' : 
+                       user.education?.toLowerCase().includes('undergraduate') ? 'bsc' :
+                       user.education?.toLowerCase().includes('postgraduate') ? 'msc' : 'bsc',
+            degreeTitle: `${user.education || 'BSc'} in ${user.major}`,
+            fieldOfStudy: user.major,
+            institutionLocation: user.location || null,
+            startDate: user.graduationYear ? new Date(user.graduationYear - 3, 8, 1) : new Date(2022, 8, 1),
+            endDate: user.graduationYear ? new Date(user.graduationYear, 6, 1) : null,
+            isCurrent: user.graduationYear ? user.graduationYear >= new Date().getFullYear() : true,
+            modules: user.subjects ? user.subjects.split(',').map((s: string) => s.trim()) : [],
+          },
+        })
+        console.log('✅ Transferred education:', user.university, user.major)
+      } catch (e) {
+        console.log('⚠️ Could not transfer education:', e)
       }
+    }
 
-      // Transfer skills
-      if (user.skills && user.skills.length > 0) {
-        try {
-          await Promise.all(
-            user.skills.slice(0, 10).map(skill =>
-              prisma.cVSkill.upsert({
-                where: { userId_skillName: { userId, skillName: skill } },
-                update: {},
-                create: {
-                  userId,
-                  skillName: skill,
-                  category: 'hard_skill',
-                },
-              })
-            )
+    // Transfer skills
+    if (existingSkills === 0 && user?.skills && user.skills.length > 0) {
+      try {
+        await Promise.all(
+          user.skills.slice(0, 15).map((skill: string) =>
+            prisma.cVSkill.create({
+              data: {
+                userId,
+                skillName: skill,
+                category: 'hard_skill',
+                proficiency: 'intermediate', // Default
+              },
+            }).catch(() => console.log('Skill already exists:', skill))
           )
-          console.log('✅ Transferred', user.skills.length, 'skills to CV')
-        } catch (e) {
-          console.log('⚠️ Error transferring skills:', e)
-        }
+        )
+        console.log('✅ Transferred', user.skills.length, 'skills to CV')
+      } catch (e) {
+        console.log('⚠️ Error transferring skills:', e)
       }
     }
 
@@ -301,30 +333,50 @@ export async function POST(request: NextRequest) {
       
       if (openai) {
         try {
-          // Build profile status for context
-          const profileStatus = `
-Overall: ${completeness.overallScore}%
-Education: ${completeness.education.entriesCount} entries
-Experience: ${completeness.experience.entriesCount} entries
-Projects: ${completeness.projects.entriesCount} entries
-Skills: ${completeness.skills.entriesCount} skills
-
-EXISTING DATA (from onboarding - DON'T ask about this again):
-${user?.name ? `- Name: ${user.name}` : ''}
-${user?.university ? `- University: ${user.university}` : ''}
-${user?.major ? `- Major: ${user.major}` : ''}
-${user?.graduationYear ? `- Graduation: ${user.graduationYear}` : ''}
-${user?.location ? `- Location: ${user.location}` : ''}
-${user?.skills && user.skills.length > 0 ? `- Skills: ${user.skills.join(', ')}` : ''}
-${user?.interests && user.interests.length > 0 ? `- Interests: ${user.interests.join(', ')}` : ''}
-
-Focus on collecting:
-${completeness.experience.entriesCount === 0 ? '→ Work experience (PRIORITY!)' : ''}
-${completeness.projects.entriesCount === 0 ? '→ Personal projects' : ''}
-${completeness.experience.entriesCount === 0 || completeness.projects.entriesCount === 0 ? '' : '→ Additional details and achievements'}
+          // Build existing data summary
+          const existingData = `
+Name: ${user?.name || 'Not set'}
+Education: ${user?.university ? `${user.university} - ${user.major}${user.graduationYear ? `, graduating ${user.graduationYear}` : ''}` : 'Not set'}
+Education Status: ${user?.education || 'Not set'}
+Location: ${user?.location || 'Not set'}
+Skills: ${user?.skills && user.skills.length > 0 ? user.skills.join(', ') : 'Not set'}
+Interests: ${user?.interests && user.interests.length > 0 ? user.interests.join(', ') : 'Not set'}
+Career Goals: ${user?.goal && user.goal.length > 0 ? user.goal.join(', ') : 'Not set'}
+LinkedIn: ${user?.linkedin || 'Not set'}
           `.trim()
 
-          const lastCollected = entityType || 'None'
+          // Build CV status
+          const cvStatus = `
+Overall Completeness: ${completeness.overallScore}%
+✓ Education: ${completeness.education.entriesCount} ${completeness.education.entriesCount > 0 ? '✅' : '❌ NEEDED'}
+✓ Experience: ${completeness.experience.entriesCount} ${completeness.experience.entriesCount > 0 ? '✅' : '❌ NEEDED (PRIORITY!)'}
+✓ Projects: ${completeness.projects.entriesCount} ${completeness.projects.entriesCount > 0 ? '✅' : '⚠️ Recommended'}
+✓ Skills: ${completeness.skills.entriesCount} ${completeness.skills.entriesCount >= 3 ? '✅' : '❌ NEEDED'}
+          `.trim()
+
+          // Determine focus area based on completeness
+          let focusArea = ''
+          let currentLevel = 1
+          
+          if (!completeness.education.hasMinimumData) {
+            focusArea = 'LEVEL 1: Get education details (modules, subjects, experiences at university)'
+            currentLevel = 1
+          } else if (completeness.experience.entriesCount === 0) {
+            focusArea = 'LEVEL 2: Get work experience/internships with achievements and metrics'
+            currentLevel = 2
+          } else if (completeness.experience.entriesCount < 2) {
+            focusArea = 'LEVEL 2: Ask if they have MORE work experiences or projects'
+            currentLevel = 2
+          } else {
+            focusArea = 'LEVEL 3: Enrich profile with certifications, leadership, languages'
+            currentLevel = 3
+          }
+
+          // For first message, add special instruction
+          const isFirstMessage = conversation.messages.length === 0
+          if (isFirstMessage) {
+            focusArea = `FIRST MESSAGE: Greet them warmly, acknowledge what you know about them, and ask about work experience at ${user?.university || 'their university'}`
+          }
 
           const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
@@ -332,8 +384,9 @@ ${completeness.experience.entriesCount === 0 || completeness.projects.entriesCou
               {
                 role: 'system',
                 content: SYSTEM_PROMPT
-                  .replace('{profileStatus}', profileStatus)
-                  .replace('{lastCollected}', lastCollected),
+                  .replace('{existingData}', existingData)
+                  .replace('{cvStatus}', cvStatus)
+                  .replace('{focusArea}', focusArea),
               },
               ...conversation.messages.map((msg) => ({
                 role: msg.role as 'user' | 'assistant' | 'system',
@@ -372,6 +425,48 @@ ${completeness.experience.entriesCount === 0 || completeness.projects.entriesCou
     }
 
     // ============================================
+    // 🎯 DETECT USER INTENT FOR OPPORTUNITIES/CV
+    // ============================================
+
+    const messageLower = message.toLowerCase()
+    let opportunityIdsToShow: string[] = []
+    let opportunityTypeToShow: 'internal' | 'external' | null = null
+
+    // User asks for opportunities
+    if (messageLower.match(/\b(show|find|see|get|want|need)\b.*\b(opportunit|internship|job|position)/)) {
+      if (completeness.overallScore >= 30) {
+        // Fetch relevant opportunities based on their profile
+        const opportunities = await prisma.externalOpportunity.findMany({
+          where: { isActive: true },
+          orderBy: { viewCount: 'desc' },
+          take: 3,
+          select: { id: true },
+        })
+        
+        opportunityIdsToShow = opportunities.map(o => o.id)
+        opportunityTypeToShow = 'external'
+        
+        aiResponse = `Based on your ${user?.major || 'background'} at ${user?.university || 'university'}, here are some great opportunities I found for you:`
+      } else {
+        aiResponse = `I'd love to show you opportunities! Let me collect a bit more about your experience first so I can find the best matches. ${aiResponse}`
+      }
+    }
+
+    // User asks for CV
+    if (messageLower.match(/\b(show|generate|create|build|make|see|want|need)\b.*\b(cv|resume|curriculum)/)) {
+      if (completeness.isMinimumViable) {
+        aiResponse = `Great! Your CV is ready. Click the "Generate My CV" button below to view it, or I can create a custom version for any specific opportunity you're applying to.`
+      } else {
+        aiResponse = `I'd love to generate your CV! We need just a bit more information first (currently ${completeness.overallScore}% complete). ${aiResponse}`
+      }
+    }
+
+    // Auto-offer when CV is complete enough
+    if (completeness.overallScore >= 60 && completeness.experience.entriesCount > 0 && !aiResponse.toLowerCase().includes('opportunit') && !aiResponse.toLowerCase().includes('cv')) {
+      aiResponse += `\n\n✨ Your CV is ${completeness.overallScore}% complete! Ready to:\n1. See matching internship opportunities\n2. Generate your custom CV`
+    }
+
+    // ============================================
     // 💾 SAVE AI RESPONSE
     // ============================================
 
@@ -381,6 +476,8 @@ ${completeness.experience.entriesCount === 0 || completeness.projects.entriesCou
         userId,
         role: 'assistant',
         content: aiResponse,
+        opportunityType: opportunityTypeToShow || undefined,
+        opportunityIds: opportunityIdsToShow.length > 0 ? opportunityIdsToShow : undefined,
       },
     })
 
@@ -401,6 +498,8 @@ ${completeness.experience.entriesCount === 0 || completeness.projects.entriesCou
         role: 'assistant',
         content: aiResponse,
         createdAt: aiMessage.createdAt,
+        opportunityType: opportunityTypeToShow,
+        opportunityIds: opportunityIdsToShow.length > 0 ? opportunityIdsToShow : undefined,
       },
       cvProgress: {
         overallScore: completeness.overallScore,
