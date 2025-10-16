@@ -110,9 +110,13 @@ export class CVWordExport {
       
       // Contact Info
       new Paragraph({
-        text: contactInfo.join(' | '),
+        children: [
+          new TextRun({
+            text: contactInfo.join(' | '),
+            size: 20, // 10pt
+          })
+        ],
         spacing: { after: 150 },
-        size: 20, // 10pt
       }),
     ]
   }
@@ -150,10 +154,14 @@ export class CVWordExport {
   private static createEducationSection(education: any[], certifications?: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Education',
-        bold: true,
+        children: [
+          new TextRun({
+            text: 'Education',
+            bold: true,
+            size: 24, // 12pt
+          })
+        ],
         spacing: { before: 200, after: 100 },
-        size: 24, // 12pt
       }),
     ]
 
@@ -257,10 +265,14 @@ export class CVWordExport {
   private static createExperienceSection(experiences: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Work Experience',
-        bold: true,
+        children: [
+          new TextRun({
+            text: 'Work Experience',
+            bold: true,
+            size: 24, // 12pt
+          })
+        ],
         spacing: { before: 200, after: 100 },
-        size: 24, // 12pt
       }),
     ]
 
@@ -420,10 +432,14 @@ export class CVWordExport {
   private static createLeadershipSection(achievements: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Leadership & Volunteering Experiences',
-        bold: true,
+        children: [
+          new TextRun({
+            text: 'Leadership & Volunteering Experiences',
+            bold: true,
+            size: 24, // 12pt
+          })
+        ],
         spacing: { before: 200, after: 100 },
-        size: 24, // 12pt
       }),
     ]
 
@@ -455,10 +471,14 @@ export class CVWordExport {
   private static createExtracurricularsSection(achievements: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Extracurriculars',
-        bold: true,
+        children: [
+          new TextRun({
+            text: 'Extracurriculars',
+            bold: true,
+            size: 24, // 12pt
+          })
+        ],
         spacing: { before: 200, after: 100 },
-        size: 24, // 12pt
       }),
     ]
 
@@ -491,10 +511,14 @@ export class CVWordExport {
   private static createAdditionalSkillsSection(skills: any[], languages?: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Additional Skills / Information',
-        bold: true,
+        children: [
+          new TextRun({
+            text: 'Additional Skills / Information',
+            bold: true,
+            size: 24, // 12pt
+          })
+        ],
         spacing: { before: 200, after: 100 },
-        size: 24, // 12pt
       }),
     ]
 
