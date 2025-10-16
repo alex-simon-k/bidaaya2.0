@@ -537,7 +537,7 @@ Extract work experience details.`
               data: {
                 experienceId: created.id,
                 statement: impact.statement,
-                metrics: impact.metrics || null,
+                metrics: impact.metrics || undefined,
                 skillsUsed: impact.skills_used || [],
                 evidenceLinks: [],
               },
@@ -632,7 +632,7 @@ Extract work experience details.`
               data: {
                 projectId: created.id,
                 statement: impact.statement,
-                metrics: impact.metrics || null,
+                metrics: impact.metrics || undefined,
                 skillsUsed: [],
               },
             })
