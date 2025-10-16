@@ -101,6 +101,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
+    // Get user's existing data from onboarding
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        location: true,
+        university: true,
+        major: true,
+        graduationYear: true,
+        education: true, // High school, undergraduate, etc.
+        highSchool: true,
+        subjects: true,
+        skills: true,
+        interests: true,
+        goal: true,
+        linkedin: true,
+        whatsapp: true,
+        bio: true,
+      },
+    })
+
     // Get or create conversation
     let conversation = conversationId ?
       await prisma.chatConversation.findFirst({
@@ -133,6 +155,53 @@ export async function POST(request: NextRequest) {
         content: message,
       },
     })
+
+    // If we already have data from onboarding, save it to CV tables
+    if (conversation.messages.length === 0 && user) {
+      // First conversation - transfer onboarding data to CV tables
+      if (user.university && user.major) {
+        try {
+          await prisma.cVEducation.create({
+            data: {
+              userId,
+              institution: user.university,
+              degreeType: user.education?.toLowerCase().includes('high school') ? 'a_levels' : 'bsc',
+              degreeTitle: user.major,
+              fieldOfStudy: user.major,
+              startDate: user.graduationYear ? new Date(user.graduationYear - 3, 8, 1) : new Date(),
+              endDate: user.graduationYear ? new Date(user.graduationYear, 6, 1) : null,
+              isCurrent: user.graduationYear ? user.graduationYear >= new Date().getFullYear() : true,
+              modules: user.subjects ? user.subjects.split(',').map(s => s.trim()) : [],
+            },
+          })
+          console.log('✅ Transferred onboarding education data to CV')
+        } catch (e) {
+          console.log('⚠️ Education data already exists or error:', e)
+        }
+      }
+
+      // Transfer skills
+      if (user.skills && user.skills.length > 0) {
+        try {
+          await Promise.all(
+            user.skills.slice(0, 10).map(skill =>
+              prisma.cVSkill.upsert({
+                where: { userId_skillName: { userId, skillName: skill } },
+                update: {},
+                create: {
+                  userId,
+                  skillName: skill,
+                  category: 'hard_skill',
+                },
+              })
+            )
+          )
+          console.log('✅ Transferred', user.skills.length, 'skills to CV')
+        } catch (e) {
+          console.log('⚠️ Error transferring skills:', e)
+        }
+      }
+    }
 
     // ============================================
     // 🎯 CV ENTITY EXTRACTION (THE KEY INNOVATION)
@@ -238,6 +307,20 @@ Education: ${completeness.education.entriesCount} entries
 Experience: ${completeness.experience.entriesCount} entries
 Projects: ${completeness.projects.entriesCount} entries
 Skills: ${completeness.skills.entriesCount} skills
+
+EXISTING DATA (from onboarding - DON'T ask about this again):
+${user?.name ? `- Name: ${user.name}` : ''}
+${user?.university ? `- University: ${user.university}` : ''}
+${user?.major ? `- Major: ${user.major}` : ''}
+${user?.graduationYear ? `- Graduation: ${user.graduationYear}` : ''}
+${user?.location ? `- Location: ${user.location}` : ''}
+${user?.skills && user.skills.length > 0 ? `- Skills: ${user.skills.join(', ')}` : ''}
+${user?.interests && user.interests.length > 0 ? `- Interests: ${user.interests.join(', ')}` : ''}
+
+Focus on collecting:
+${completeness.experience.entriesCount === 0 ? '→ Work experience (PRIORITY!)' : ''}
+${completeness.projects.entriesCount === 0 ? '→ Personal projects' : ''}
+${completeness.experience.entriesCount === 0 || completeness.projects.entriesCount === 0 ? '' : '→ Additional details and achievements'}
           `.trim()
 
           const lastCollected = entityType || 'None'

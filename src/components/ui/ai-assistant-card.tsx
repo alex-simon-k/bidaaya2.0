@@ -35,6 +35,19 @@ interface Message {
   createdAt: Date;
   opportunityType?: string;
   opportunityIds?: string[];
+  extractedData?: {
+    type: string;
+    success: boolean;
+  };
+}
+
+interface CVProgress {
+  overallScore: number;
+  isMinimumViable: boolean;
+  nextSection: string;
+  educationCount: number;
+  experienceCount: number;
+  projectsCount: number;
 }
 
 interface AIAssistantCardProps {
@@ -51,6 +64,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversationLevel, setConversationLevel] = useState<number>(1);
   const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [cvProgress, setCvProgress] = useState<CVProgress | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change
@@ -78,7 +92,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat/cv-enhanced', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,6 +118,12 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
         console.log(`📊 Conversation level updated to ${data.conversationLevel}`);
       }
 
+      // Update CV progress
+      if (data.cvProgress) {
+        setCvProgress(data.cvProgress);
+        console.log(`📊 CV Progress: ${data.cvProgress.overallScore}%`);
+      }
+
       // Add AI response to messages
       setMessages((prev) => [...prev, {
         id: data.message.id,
@@ -112,6 +132,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
         createdAt: new Date(data.message.createdAt),
         opportunityType: data.message.opportunityType,
         opportunityIds: data.message.opportunityIds,
+        extractedData: data.extractedData,
       }]);
 
       // If AI recommended opportunities, fetch them
@@ -418,6 +439,17 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                       showAvatar={true}
                     />
                     
+                    {/* Show extracted data feedback */}
+                    {message.extractedData && message.extractedData.success && (
+                      <div className="ml-11 mb-4 text-sm italic text-bidaaya-light/60 bg-bidaaya-light/5 rounded-lg px-3 py-2 border border-bidaaya-light/10">
+                        <span className="text-green-400">✓</span> Saved {message.extractedData.type === 'experience' ? 'work experience' : 
+                          message.extractedData.type === 'education' ? 'education details' : 
+                          message.extractedData.type === 'project' ? 'project information' :
+                          message.extractedData.type === 'skill' ? 'skills' :
+                          'information'} to your CV
+                      </div>
+                    )}
+                    
                     {/* Show opportunities if this message has them */}
                     {message.opportunityIds && message.opportunityIds.length > 0 && (
                       <div className="ml-11 mb-4 space-y-3">
@@ -434,6 +466,36 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                     )}
                   </div>
                 ))}
+                
+                {/* CV Progress Indicator */}
+                {cvProgress && cvProgress.overallScore > 0 && (
+                  <div className="sticky bottom-0 bg-bidaaya-dark/95 backdrop-blur-sm border-t border-bidaaya-light/10 p-4 mb-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-bidaaya-light">CV Completeness</span>
+                      <span className="text-sm font-bold text-bidaaya-accent">{cvProgress.overallScore}%</span>
+                    </div>
+                    <div className="w-full bg-bidaaya-light/10 rounded-full h-2 mb-2">
+                      <div 
+                        className="bg-gradient-to-r from-bidaaya-accent to-green-400 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${cvProgress.overallScore}%` }}
+                      />
+                    </div>
+                    <div className="flex gap-4 text-xs text-bidaaya-light/60">
+                      <span>📚 Education: {cvProgress.educationCount}</span>
+                      <span>💼 Experience: {cvProgress.experienceCount}</span>
+                      <span>🚀 Projects: {cvProgress.projectsCount}</span>
+                    </div>
+                    {cvProgress.isMinimumViable && cvProgress.overallScore >= 60 && (
+                      <Button
+                        onClick={() => router.push('/dashboard/cv')}
+                        className="w-full mt-3 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+                        size="sm"
+                      >
+                        Generate My CV
+                      </Button>
+                    )}
+                  </div>
+                )}
                 
                 {/* Typing Indicator */}
                 {isLoading && <TypingIndicator />}
