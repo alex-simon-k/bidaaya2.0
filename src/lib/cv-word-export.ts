@@ -227,8 +227,12 @@ export class CVWordExport {
     if (certifications && certifications.length > 0) {
       paragraphs.push(
         new Paragraph({
-          text: 'Coursera & Udemy:',
-          bold: true,
+          children: [
+            new TextRun({
+              text: 'Coursera & Udemy:',
+              bold: true,
+            })
+          ],
           spacing: { before: 100, after: 20 },
         })
       )
@@ -391,8 +395,12 @@ export class CVWordExport {
       if (proj.technologies && proj.technologies.length > 0) {
         paragraphs.push(
           new Paragraph({
-            text: `Technologies: ${proj.technologies.join(', ')}`,
-            italics: true,
+            children: [
+              new TextRun({
+                text: `Technologies: ${proj.technologies.join(', ')}`,
+                italics: true,
+              })
+            ],
             spacing: { after: 50 },
           })
         )
@@ -446,8 +454,12 @@ export class CVWordExport {
     achievements.forEach((ach) => {
       paragraphs.push(
         new Paragraph({
-          text: ach.name,
-          bold: true,
+          children: [
+            new TextRun({
+              text: ach.name,
+              bold: true,
+            })
+          ],
           spacing: { after: 20 },
         })
       )
@@ -485,8 +497,12 @@ export class CVWordExport {
     achievements.forEach((ach) => {
       paragraphs.push(
         new Paragraph({
-          text: ach.name,
-          bold: true,
+          children: [
+            new TextRun({
+              text: ach.name,
+              bold: true,
+            })
+          ],
           spacing: { after: 20 },
         })
       )
