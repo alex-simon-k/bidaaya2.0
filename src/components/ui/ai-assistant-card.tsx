@@ -486,13 +486,41 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                       <span>🚀 Projects: {cvProgress.projectsCount}</span>
                     </div>
                     {cvProgress.isMinimumViable && cvProgress.overallScore >= 60 && (
-                      <Button
-                        onClick={() => router.push('/dashboard/cv')}
-                        className="w-full mt-3 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
-                        size="sm"
-                      >
-                        Generate My CV
-                      </Button>
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('/api/cv/export/docx')
+                              if (response.ok) {
+                                const blob = await response.blob()
+                                const url = window.URL.createObjectURL(blob)
+                                const a = document.createElement('a')
+                                a.href = url
+                                a.download = `CV_${session?.user?.name?.replace(/\s+/g, '_')}.docx`
+                                document.body.appendChild(a)
+                                a.click()
+                                window.URL.revokeObjectURL(url)
+                                document.body.removeChild(a)
+                              }
+                            } catch (error) {
+                              console.error('Download error:', error)
+                            }
+                          }}
+                          className="flex-1 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+                          size="sm"
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Download CV
+                        </Button>
+                        <Button
+                          onClick={() => router.push('/dashboard/cv')}
+                          variant="outline"
+                          className="flex-1 border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10"
+                          size="sm"
+                        >
+                          Preview
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
