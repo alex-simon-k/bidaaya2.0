@@ -113,6 +113,16 @@ model User {
   // AI Chat system
   chatConversations        ChatConversation[]
   chatMessages             ChatMessage[]
+  
+  // CV Builder system
+  cvProfile                CVProfile?
+  cvEducation              CVEducation[]
+  cvExperience             CVExperience[]
+  cvProjects               CVProject[]
+  cvCertifications         CVCertification[]
+  cvLanguages              CVLanguage[]
+  cvAchievements           CVAchievement[]
+  cvSkills                 CVSkill[]
 }
 
 model UserSession {
@@ -791,4 +801,267 @@ model ChatMessage {
   @@index([conversationId])
   @@index([userId])
   @@index([createdAt])
+}
+
+// ============================================
+// CV BUILDER SYSTEM MODELS
+// ============================================
+
+// Enhanced CV Profile (beyond basic User fields)
+model CVProfile {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  
+  // Enhanced profile fields
+  headline               String?  @db.Text  // "Software Engineer | AI Enthusiast | Python & React"
+  professionalSummary    String?  @db.Text  // 2-3 sentence career summary
+  portfolioLink          String?
+  githubLink             String?
+  
+  // Work authorization & preferences
+  workAuthorization      String[] // ["uk_student_visa", "uae_resident", "us_opt"]
+  openToRoles            String[] // ["software_engineer", "data_analyst", "product_manager"]
+  relocationPreferences  String?  @db.Text // "Open to relocation within UAE, remote work preferred"
+  
+  // Career preferences
+  preferredIndustries    String[] // ["fintech", "ai", "ecommerce"]
+  preferredCompanyStages String[] // ["startup", "scaleup", "enterprise"]
+  preferredWorkStyle     String?  // "remote", "hybrid", "in_office"
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// Education history (multiple degrees, courses, certifications)
+model CVEducation {
+  id                    String   @id @default(cuid())
+  userId                String
+  
+  // Core details
+  degreeType            String   // "bsc", "msc", "a_levels", "diploma", "bootcamp", "short_course"
+  degreeTitle           String   // "BSc in Economics and Politics"
+  fieldOfStudy          String   // "Economics", "Computer Science", "Business"
+  institution           String   // "University College London"
+  institutionLocation   String?  // "London, UK"
+  
+  // Dates
+  startDate             DateTime
+  endDate               DateTime?
+  isCurrent             Boolean  @default(false)
+  
+  // Academic performance
+  predictedGrade        String?  // "First Class Honours", "A*"
+  finalGrade            String?  // Actual grade after completion
+  gpa                   Float?   // 3.8, 4.0, etc.
+  
+  // Additional details
+  modules               String[] // ["Econometrics", "Game Theory", "Data Science"]
+  courseworkHighlights  String[] // ["Dissertation on FinTech Innovation (Grade: 85%)"]
+  honorsAwards          String[] // ["Dean's List 2023", "Academic Excellence Award"]
+  
+  // Rich description for vector embedding
+  description           String?  @db.Text  // Free-form description
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([startDate])
+  @@index([degreeType])
+}
+
+// Work experience (jobs, internships, freelance)
+model CVExperience {
+  id                String   @id @default(cuid())
+  userId            String
+  
+  // Core details
+  title             String   // "Operations Manager Intern"
+  employer          String   // "Revolut"
+  orgType           String?  // "startup", "scaleup", "enterprise", "bank", "ngo"
+  location          String?  // "Dubai, UAE" or "Remote"
+  employmentType    String   // "internship", "full_time", "part_time", "contract", "freelance"
+  
+  // Dates
+  startDate         DateTime
+  endDate           DateTime?
+  isCurrent         Boolean  @default(false)
+  
+  // Description
+  summary           String?  @db.Text  // 1-2 sentence role description
+  
+  // Relations
+  user    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impacts CVExperienceImpact[]   // One-to-many: multiple achievements per role
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([startDate])
+  @@index([employmentType])
+}
+
+// Impact statements for work experience (with metrics)
+model CVExperienceImpact {
+  id           String @id @default(cuid())
+  experienceId String
+  
+  // Achievement
+  statement    String @db.Text // "Reduced processing time by 40%"
+  metrics      Json?  // [{ value: 40, unit: "%" }, { value: 100, unit: "hours_saved" }]
+  skillsUsed   String[] // ["python", "data_analysis", "process_optimization"]
+  evidenceLinks String[] // Optional links to proof/portfolio
+  
+  // STAR format (optional, for interview prep)
+  starSituation String? @db.Text
+  starTask      String? @db.Text
+  starAction    String? @db.Text
+  starResult    String? @db.Text
+  
+  experience CVExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([experienceId])
+}
+
+// Personal projects, side hustles, entrepreneurial ventures
+model CVProject {
+  id          String @id @default(cuid())
+  userId      String
+  
+  // Core details
+  name        String   // "Bidaaya"
+  role        String?  // "Co-Founder & Lead Developer"
+  summary     String?  @db.Text
+  techStack   String[] // ["Next.js", "React", "Prisma", "OpenAI"]
+  
+  // Dates
+  startDate   DateTime?
+  endDate     DateTime?
+  isCurrent   Boolean @default(false)
+  
+  // Links
+  projectUrl  String?
+  githubUrl   String?
+  
+  // Relations
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impacts CVProjectImpact[] // One-to-many: multiple achievements per project
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// Impact statements for projects
+model CVProjectImpact {
+  id        String @id @default(cuid())
+  projectId String
+  
+  statement   String @db.Text // "Grew user base to 1,500+ students in 7 months"
+  metrics     Json?  // [{ value: 1500, unit: "users" }]
+  skillsUsed  String[]
+  
+  project CVProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([projectId])
+}
+
+// Certifications and courses
+model CVCertification {
+  id            String @id @default(cuid())
+  userId        String
+  
+  name          String   // "SEO Mastery Course"
+  issuer        String   // "Udemy", "Coursera", "HKU"
+  credentialId  String?  // "UC-abc123xyz"
+  credentialUrl String?  // Link to certificate
+  
+  issueDate     DateTime
+  expiryDate    DateTime?
+  
+  // Description
+  description   String? @db.Text
+  skillsGained  String[] // ["seo", "google_analytics", "content_marketing"]
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([issueDate])
+}
+
+// Languages spoken
+model CVLanguage {
+  id                String @id @default(cuid())
+  userId            String
+  
+  language          String // "English", "Arabic", "French"
+  proficiencyLevel  String // "native", "fluent", "professional", "intermediate", "basic"
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, language])
+  @@index([userId])
+}
+
+// Leadership, volunteering, awards, extracurriculars
+model CVAchievement {
+  id          String @id @default(cuid())
+  userId      String
+  
+  type        String   // "leadership", "volunteering", "award", "competition", "extracurricular"
+  name        String   // "Team Lead - HSBC DeFi Challenge"
+  organization String? // "HSBC", "University Society"
+  date        DateTime
+  description String?  @db.Text
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@index([date])
+}
+
+// Skills with proficiency levels
+model CVSkill {
+  id           String @id @default(cuid())
+  userId       String
+  
+  skillName    String   // "Python", "Leadership", "Figma"
+  category     String   // "hard_skill", "soft_skill", "tool", "language"
+  proficiency  String?  // "beginner", "intermediate", "advanced", "expert"
+  evidenceUrl  String?  // Portfolio/GitHub link demonstrating skill
+  
+  // Context
+  yearsOfExperience Float? // 2.5 years
+  lastUsed          DateTime? // When they last used this skill
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, skillName])
+  @@index([userId])
+  @@index([category])
+  @@index([proficiency])
 }
