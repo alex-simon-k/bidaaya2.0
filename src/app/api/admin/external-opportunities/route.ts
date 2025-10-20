@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
       salary,
       deadline,
       isPremium,
+      isNewOpportunity,
+      unlockCredits,
       adminNotes
     } = body
 
@@ -187,6 +189,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Set early access dates if marked as new
+    const now = new Date()
+    const publishedAt = isNewOpportunity ? now : null
+    const earlyAccessUntil = isNewOpportunity ? new Date(now.getTime() + 48 * 60 * 60 * 1000) : null
+
     const opportunity = await prisma.externalOpportunity.create({
       data: {
         title: title.trim(),
@@ -202,6 +209,10 @@ export async function POST(request: NextRequest) {
         salary: salary?.trim() || null,
         deadline: deadline ? new Date(deadline) : null,
         isPremium: isPremium || false,
+        isNewOpportunity: isNewOpportunity || false,
+        publishedAt,
+        earlyAccessUntil,
+        unlockCredits: unlockCredits || 5,
         adminNotes: adminNotes?.trim() || null,
         addedBy: session.user.id,
         isActive: true

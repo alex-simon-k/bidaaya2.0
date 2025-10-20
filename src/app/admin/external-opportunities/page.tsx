@@ -41,6 +41,10 @@ interface ExternalOpportunity {
   deadline?: string
   isActive: boolean
   isPremium: boolean
+  isNewOpportunity?: boolean
+  publishedAt?: string
+  earlyAccessUntil?: string
+  unlockCredits?: number
   addedAt: string
   updatedAt: string
   adminNotes?: string
@@ -92,6 +96,8 @@ export default function AdminExternalOpportunitiesPage() {
     salary: '',
     deadline: '',
     isPremium: false,
+    isNewOpportunity: false,
+    unlockCredits: 5,
     adminNotes: ''
   })
 
@@ -289,6 +295,8 @@ export default function AdminExternalOpportunitiesPage() {
       salary: '',
       deadline: '',
       isPremium: false,
+      isNewOpportunity: false,
+      unlockCredits: 5,
       adminNotes: ''
     })
   }
@@ -532,6 +540,12 @@ export default function AdminExternalOpportunitiesPage() {
                             <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
                               <Crown className="inline-block w-3 h-3 mr-1" />
                               Premium
+                            </span>
+                          )}
+                          {opp.isNewOpportunity && opp.earlyAccessUntil && new Date(opp.earlyAccessUntil) > new Date() && (
+                            <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 text-xs font-medium rounded flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              🌟 Early Access ({Math.ceil((new Date(opp.earlyAccessUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60))}h left)
                             </span>
                           )}
                           {opp.isActive ? (
@@ -871,6 +885,53 @@ export default function AdminExternalOpportunitiesPage() {
                         Premium (Early Access for Pro Users)
                       </span>
                     </label>
+                  </div>
+
+                  {/* Early Access Section */}
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="w-5 h-5 text-purple-600" />
+                      <h4 className="font-semibold text-gray-900">Early Access Settings</h4>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.isNewOpportunity}
+                          onChange={(e) => setFormData({...formData, isNewOpportunity: e.target.checked})}
+                          className="w-4 h-4 text-purple-600 rounded"
+                        />
+                        <span className="text-sm text-gray-700 font-medium">
+                          🌟 Mark as New Opportunity (48h Early Access)
+                        </span>
+                      </label>
+
+                      {formData.isNewOpportunity && (
+                        <div className="ml-6 pl-4 border-l-2 border-purple-300 space-y-2">
+                          <p className="text-xs text-gray-600">
+                            This opportunity will be shown in "Today's Pick" for 48 hours with early access for paid users.
+                          </p>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Credits to Unlock (for free users)
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="20"
+                              value={formData.unlockCredits}
+                              onChange={(e) => setFormData({...formData, unlockCredits: parseInt(e.target.value) || 5})}
+                              className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Default: 5 credits
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>

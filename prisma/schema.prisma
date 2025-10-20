@@ -110,6 +110,13 @@ model User {
   lifetimeCreditsUsed      Int                    @default(0)
   creditTransactions       CreditTransaction[]
   
+  // Early Access system (for paid tiers)
+  earlyAccessUnlocksRemaining Int                 @default(0)
+  earlyAccessUnlocksResetAt   DateTime?
+  profileCompletionChecklist  Json?               // Stores checklist progress
+  earlyAccessUnlocks       EarlyAccessUnlock[]
+  opportunityFeedback      OpportunityFeedback[]
+  
   // AI Chat system
   chatConversations        ChatConversation[]
   chatMessages             ChatMessage[]
@@ -226,9 +233,18 @@ model Project {
   subcategory         String?
   teamSize            Int?                 @default(1)
   timeCommitment      String?              @default("Part-time")
+  
+  // Early Access system
+  isNewOpportunity Boolean   @default(false)
+  publishedAt      DateTime? 
+  earlyAccessUntil DateTime?
+  unlockCredits    Int       @default(5) // Credits required to unlock if not paid tier
+  
   applications        Application[]
   applicationSessions ApplicationSession[]
   company             User                 @relation(fields: [companyId], references: [id])
+  earlyAccessUnlocks  EarlyAccessUnlock[] @relation("ProjectUnlocks")
+  feedback            OpportunityFeedback[] @relation("ProjectFeedback")
 }
 
 model Application {
@@ -722,6 +738,12 @@ model ExternalOpportunity {
   isActive        Boolean  @default(true)
   isPremium       Boolean  @default(false) // For early access feature (STUDENT_PRO gets early access)
   
+  // Early Access system
+  isNewOpportunity Boolean   @default(false)
+  publishedAt      DateTime? 
+  earlyAccessUntil DateTime?
+  unlockCredits    Int       @default(5) // Credits required to unlock if not paid tier
+  
   // Admin fields
   addedBy         String   // Admin user ID
   addedAt         DateTime @default(now())
@@ -736,8 +758,11 @@ model ExternalOpportunity {
   applications    ExternalOpportunityApplication[]
   admin           User     @relation("ExternalOpportunitiesCreated", fields: [addedBy], references: [id])
   companyUser     User?    @relation("CompanyExternalOpportunities", fields: [companyId], references: [id])
+  earlyAccessUnlocks EarlyAccessUnlock[] @relation("ExternalOpportunityUnlocks")
+  feedback        OpportunityFeedback[] @relation("ExternalOpportunityFeedback")
   
   @@index([isActive, isPremium])
+  @@index([isNewOpportunity, publishedAt])
   @@index([category])
   @@index([addedAt])
   @@index([deadline])
@@ -1064,4 +1089,53 @@ model CVSkill {
   @@index([userId])
   @@index([category])
   @@index([proficiency])
+}
+
+// Early Access Unlock Tracking
+model EarlyAccessUnlock {
+  id                    String   @id @default(cuid())
+  userId                String
+  opportunityId         String
+  opportunityType       String   // "project" or "external"
+  projectId             String?
+  externalOpportunityId String?
+  
+  unlockedAt            DateTime @default(now())
+  usedCredit            Boolean  @default(false) // Whether credits were used or subscription unlock
+  
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project               Project?            @relation("ProjectUnlocks", fields: [projectId], references: [id], onDelete: Cascade)
+  externalOpportunity   ExternalOpportunity? @relation("ExternalOpportunityUnlocks", fields: [externalOpportunityId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, opportunityId])
+  @@index([userId])
+  @@index([projectId])
+  @@index([externalOpportunityId])
+  @@index([unlockedAt])
+}
+
+// Opportunity Feedback System
+model OpportunityFeedback {
+  id                    String   @id @default(cuid())
+  userId                String
+  opportunityId         String
+  opportunityType       String   // "project" or "external"
+  projectId             String?
+  externalOpportunityId String?
+  
+  mismatchType          String   // "degree", "experience", "skill", "location", "other"
+  mismatchDetails       String?  // Specific details about the mismatch
+  additionalComments    String?  // Optional additional feedback
+  
+  createdAt             DateTime @default(now())
+  
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project               Project?            @relation("ProjectFeedback", fields: [projectId], references: [id], onDelete: Cascade)
+  externalOpportunity   ExternalOpportunity? @relation("ExternalOpportunityFeedback", fields: [externalOpportunityId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([projectId])
+  @@index([externalOpportunityId])
+  @@index([mismatchType])
+  @@index([createdAt])
 }

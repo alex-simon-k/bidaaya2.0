@@ -23,6 +23,7 @@ import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { ChatMessage, TypingIndicator } from "@/components/ui/chat-message";
 import { OpportunityCard } from "@/components/ui/opportunity-card";
 import { ConversationLevelTracker } from "@/components/ui/conversation-level-tracker";
+import { ProfileCompletionChecklist, DEFAULT_CHECKLIST_ITEMS, ChecklistItem } from "@/components/ui/profile-completion-checklist";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const [conversationLevel, setConversationLevel] = useState<number>(1);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [cvProgress, setCvProgress] = useState<CVProgress | null>(null);
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST_ITEMS);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change
@@ -75,6 +77,30 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // Update checklist based on CV progress
+  useEffect(() => {
+    if (!cvProgress) return;
+
+    setChecklistItems((prev) => prev.map((item) => {
+      switch (item.id) {
+        case "personal_info":
+          return { ...item, completed: session?.user?.name !== undefined };
+        case "work_experience":
+          return { ...item, completed: cvProgress.experienceCount > 0 };
+        case "projects":
+          return { ...item, completed: cvProgress.projectsCount > 0 };
+        case "skills":
+          return { ...item, completed: cvProgress.overallScore > 20 };
+        case "volunteering":
+          return { ...item, completed: cvProgress.experienceCount > 1 };
+        case "career_goals":
+          return { ...item, completed: cvProgress.overallScore > 40 };
+        default:
+          return item;
+      }
+    }));
+  }, [cvProgress, session]);
 
   // Send message to AI
   const handleSendMessage = async (messageText: string) => {
@@ -381,6 +407,11 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                   currentLevel={conversationLevel} 
                   className="mb-6"
                 />
+
+                {/* Profile Completion Checklist */}
+                <div className="mb-8 max-w-md mx-auto">
+                  <ProfileCompletionChecklist items={checklistItems} />
+                </div>
 
                 {/* Quick Action Badges */}
                 <div className="flex flex-wrap items-center justify-center gap-3 mb-8 max-w-lg">

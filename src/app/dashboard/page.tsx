@@ -24,6 +24,8 @@ import { MembershipSelectionPopup } from '@/components/membership-selection-popu
 import CreditBalanceWidget from '@/components/credit-balance-widget'
 import AIChatBot from '@/components/ai-chat-bot'
 import { AIAssistantCard } from '@/components/ui/ai-assistant-card'
+import { OpportunityDashboard } from '@/components/opportunity-dashboard'
+import { ChatWidget } from '@/components/ui/chat-widget'
 import { BottomNavigation } from '@/components/ui/bottom-navigation'
 
 interface DashboardStats {
@@ -42,14 +44,33 @@ export default function DashboardPage() {
     proposals: 0
   })
   const [showMembershipPopup, setShowMembershipPopup] = useState(false)
+  const [profileCompleted, setProfileCompleted] = useState(false)
+  const [chatWidgetOpen, setChatWidgetOpen] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(false)
 
   const userRole = (session?.user as any)?.role
 
   useEffect(() => {
     if (session?.user) {
       loadDashboardStats()
+      checkProfileCompletion()
     }
   }, [session])
+
+  const checkProfileCompletion = async () => {
+    try {
+      // Check if user has completed CV (60%+ completeness)
+      const response = await fetch('/api/cv/progress')
+      if (response.ok) {
+        const data = await response.json()
+        setProfileCompleted(data.overallScore >= 60)
+      }
+    } catch (error) {
+      console.error('Failed to check profile completion:', error)
+      // Default to showing chat for onboarding
+      setProfileCompleted(false)
+    }
+  }
 
   // Show membership popup every 30 minutes for students and companies
   useEffect(() => {
@@ -90,13 +111,40 @@ export default function DashboardPage() {
     )
   }
 
-  // Student Dashboard - ChatGPT-like Interface
+  // Student Dashboard - Conditional Interface
   if (userRole === 'STUDENT') {
+    // If profile not completed (< 60%), show chat interface for onboarding
+    if (!profileCompleted) {
+      return (
+        <>
+          <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
+            <AIAssistantCard />
+          </div>
+
+          {/* Membership Popup */}
+          <MembershipSelectionPopup
+            isOpen={showMembershipPopup}
+            onClose={() => setShowMembershipPopup(false)}
+            userRole="STUDENT"
+            userName={session?.user?.name?.split(' ')[0] || 'Student'}
+          />
+        </>
+      )
+    }
+
+    // If profile completed, show opportunity dashboard
     return (
       <>
-        <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
-          <AIAssistantCard />
-        </div>
+        <OpportunityDashboard
+          onChatClick={() => setChatWidgetOpen(!chatWidgetOpen)}
+          onSidebarClick={() => setShowSidebar(!showSidebar)}
+        />
+
+        {/* Chat Widget (minimized by default) */}
+        <ChatWidget
+          isOpen={chatWidgetOpen}
+          onToggle={() => setChatWidgetOpen(!chatWidgetOpen)}
+        />
 
         {/* Membership Popup */}
         <MembershipSelectionPopup
