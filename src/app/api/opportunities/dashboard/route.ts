@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
     // Get Bidaaya internal projects (active, approved)
     const bidaayaProjects = await prisma.project.findMany({
       where: {
-        status: 'APPROVED',
+        status: 'LIVE',
         OR: [
           { applicationDeadline: null },
           { applicationDeadline: { gte: now } }
