@@ -111,9 +111,11 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           amount: -creditsRequired,
-          type: 'DEDUCTION',
-          reason: `Unlocked early access: ${opportunityType === 'external' ? 'External Opportunity' : 'Project'} #${opportunityId}`,
+          type: 'spent',
+          action: 'earlyAccessUnlock',
+          balanceBefore: user.credits,
           balanceAfter: updatedUser.credits,
+          description: `Unlocked early access: ${opportunityType === 'external' ? 'External Opportunity' : 'Project'} #${opportunityId}`,
         }
       });
 
