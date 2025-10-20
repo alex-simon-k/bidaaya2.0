@@ -168,7 +168,7 @@ export function StructuredOnboardingChat({ onComplete }: StructuredOnboardingCha
       // Show hint if available
       if (currentQuestion.hint) {
         setTimeout(() => {
-          addMessage('agent', currentQuestion.hint)
+          addMessage('agent', currentQuestion.hint!)
         }, 1000)
       }
     }, 800)
