@@ -177,14 +177,20 @@ export async function GET(request: NextRequest) {
     const externalOpps = await prisma.externalOpportunity.findMany({
       where: {
         isActive: true,
-        OR: [
-          { isNewOpportunity: false },
-          { earlyAccessUntil: { lt: now } },
-          { earlyAccessUntil: null }
-        ],
-        OR: [
-          { deadline: null },
-          { deadline: { gte: now } }
+        AND: [
+          {
+            OR: [
+              { isNewOpportunity: false },
+              { earlyAccessUntil: { lt: now } },
+              { earlyAccessUntil: null }
+            ]
+          },
+          {
+            OR: [
+              { deadline: null },
+              { deadline: { gte: now } }
+            ]
+          }
         ]
       },
       orderBy: {
