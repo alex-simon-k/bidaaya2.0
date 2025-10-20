@@ -122,25 +122,6 @@ export default function DashboardPage() {
 
   // Student Dashboard - Three-Phase Onboarding
   if (userRole === 'STUDENT') {
-    // Phase 1: Structured Onboarding Chat (Multiple Choice Q&A)
-    if (onboardingPhase === 'structured_chat') {
-      return (
-        <>
-          <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
-            <StructuredOnboardingChat onComplete={handlePhase1Complete} />
-          </div>
-
-          {/* Membership Popup */}
-          <MembershipSelectionPopup
-            isOpen={showMembershipPopup}
-            onClose={() => setShowMembershipPopup(false)}
-            userRole="STUDENT"
-            userName={session?.user?.name?.split(' ')[0] || 'Student'}
-          />
-        </>
-      )
-    }
-
     // Phase 2: CV Building Chat (Conversational, with sidebar unlocked but features locked)
     if (onboardingPhase === 'cv_building') {
       return (
@@ -160,13 +141,23 @@ export default function DashboardPage() {
       )
     }
 
-    // Phase 3: Complete - Show Opportunity Dashboard
+    // Phase 1 & 3: Show Opportunity Dashboard
+    // Phase 1 questions appear as modal overlay on top of dashboard
     return (
       <>
         <OpportunityDashboard
           onChatClick={() => setChatWidgetOpen(!chatWidgetOpen)}
           onSidebarClick={() => setShowSidebar(!showSidebar)}
         />
+
+        {/* Phase 1: Structured Onboarding Chat Modal Overlay */}
+        {onboardingPhase === 'structured_chat' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-bidaaya-dark/60 backdrop-blur-sm">
+            <div className="w-full max-w-3xl h-[85vh] bg-bidaaya-dark rounded-2xl shadow-2xl overflow-hidden m-4">
+              <StructuredOnboardingChat onComplete={handlePhase1Complete} />
+            </div>
+          </div>
+        )}
 
         {/* Chat Widget (minimized by default) */}
         <ChatWidget

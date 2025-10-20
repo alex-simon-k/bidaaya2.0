@@ -89,25 +89,19 @@ export default function VerifyCodePage() {
           
           if (response.ok) {
             const data = await response.json();
-            console.log('🔍 Verification check response:', data);
             
             if (data.isVerified) {
-              console.log('✅ User is already verified, marking in onboarding session');
               markEmailVerified()
               
               // Get next step from onboarding manager
               const nextUrl = OnboardingSessionManager.getRedirectUrl()
               if (nextUrl) {
-                console.log('🚀 Redirecting to next step:', nextUrl)
                 router.replace(nextUrl)
               } else {
-                console.log('🚀 Redirecting to dashboard')
                 router.replace('/dashboard')
               }
               
               return;
-            } else {
-              console.log('❌ User is not verified, showing verification form');
             }
           } else {
             console.error('Failed to check verification status:', response.status);
@@ -115,8 +109,6 @@ export default function VerifyCodePage() {
         } catch (error) {
           console.error('Error checking verification status:', error);
         }
-      } else {
-        console.log('No session email available for verification check');
       }
       
       // If we get here, user needs verification
@@ -130,10 +122,7 @@ export default function VerifyCodePage() {
   // Handle authentication - only redirect if not in onboarding
   useEffect(() => {
     if (status === 'unauthenticated' && !shouldProtect) {
-      console.log('🔐 User not authenticated and not in onboarding, redirecting to login')
       setTimeout(() => router.push('/auth/login'), 100);
-    } else if (status === 'unauthenticated' && shouldProtect) {
-      console.log('🛡️ User not authenticated but in onboarding - protecting from redirect')
     }
   }, [status, router, shouldProtect]);
 
@@ -207,21 +196,16 @@ export default function VerifyCodePage() {
 
   // Add resend functionality
   const handleResend = async () => {
-    console.log('🔄 Frontend: Resend button clicked');
-    
     if (!session?.user?.email) {
-      console.log('❌ Frontend: No email in session');
       setError('No email address found. Please log in again.');
       return;
     }
 
-    console.log('📧 Frontend: Starting resend for email:', session.user.email);
     setIsResending(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      console.log('🚀 Frontend: Making API call to /api/auth/send-verification');
       const response = await fetch('/api/auth/send-verification', {
         method: 'POST',
         headers: {
@@ -230,9 +214,7 @@ export default function VerifyCodePage() {
         body: JSON.stringify({ email: session.user.email }),
       });
 
-      console.log('📨 Frontend: API response status:', response.status);
       const data = await response.json();
-      console.log('📨 Frontend: API response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to resend verification code');
@@ -246,10 +228,9 @@ export default function VerifyCodePage() {
 
       // Clear any existing code
       setCode('');
-      console.log('✅ Frontend: Resend successful');
 
     } catch (error) {
-      console.error('❌ Frontend: Resend error:', error);
+      console.error('Frontend: Resend error:', error);
       setError(error instanceof Error ? error.message : 'Failed to resend verification code');
     } finally {
       setIsResending(false);

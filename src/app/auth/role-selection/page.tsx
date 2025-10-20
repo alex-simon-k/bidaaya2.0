@@ -57,11 +57,8 @@ export default function RoleSelectionPage() {
     if (status === 'loading') return
 
     if (!session && !shouldProtect) {
-      console.log('🔐 User not authenticated and not in onboarding, redirecting to login')
       router.push('/auth/login')
       return
-    } else if (!session && shouldProtect) {
-      console.log('🛡️ User not authenticated but in onboarding - protecting from redirect')
     }
   }, [session, status, router, shouldProtect])
 
@@ -70,8 +67,6 @@ export default function RoleSelectionPage() {
 
     setIsLoading(true)
     try {
-      console.log(`🎯 Setting user role to: ${role}`)
-
       // Update user role in database
       const response = await fetch('/api/user/set-role', {
         method: 'POST',
@@ -88,8 +83,7 @@ export default function RoleSelectionPage() {
         throw new Error('Failed to set user role')
       }
 
-      const result = await response.json()
-      console.log('✅ Role update response:', result)
+      await response.json()
 
       // Update onboarding session - use direct method with safety
       try {
@@ -103,13 +97,12 @@ export default function RoleSelectionPage() {
       // Force session refresh to reflect the new role
       await update()
 
-      console.log(`✅ User role set to ${role}`)
-
       // Route to appropriate onboarding flow
       if (role === 'COMPANY') {
         router.push('/onboarding/company')
       } else {
-        router.push('/auth/setup-profile')
+        // Students go directly to dashboard where Phase 1 questions appear
+        router.push('/dashboard')
       }
     } catch (error) {
       console.error('Error setting user role:', error)

@@ -30,7 +30,6 @@ export class OnboardingSessionManager {
     }
 
     OnboardingSessionManager.saveState(state)
-    console.log('🚀 Onboarding session started:', { email, step })
   }
 
   // Update current step
@@ -41,9 +40,6 @@ export class OnboardingSessionManager {
         state.currentStep = step
         state.lastActivityAt = Date.now()
         OnboardingSessionManager.saveState(state)
-        console.log('📝 Onboarding step updated:', step)
-      } else {
-        console.log('⚠️ Cannot update step - no onboarding state found')
       }
     } catch (error) {
       console.error('Error updating step:', error)
@@ -58,9 +54,6 @@ export class OnboardingSessionManager {
         state.emailVerified = true
         state.lastActivityAt = Date.now()
         OnboardingSessionManager.saveState(state)
-        console.log('✅ Email marked as verified')
-      } else {
-        console.log('⚠️ Cannot mark email verified - no onboarding state found')
       }
     } catch (error) {
       console.error('Error marking email as verified:', error)
@@ -75,9 +68,6 @@ export class OnboardingSessionManager {
         state.userRole = role
         state.lastActivityAt = Date.now()
         OnboardingSessionManager.saveState(state)
-        console.log('🎯 User role set:', role)
-      } else {
-        console.log('⚠️ Cannot set user role - no onboarding state found')
       }
     } catch (error) {
       console.error('Error setting user role:', error)
@@ -92,9 +82,6 @@ export class OnboardingSessionManager {
         state.profileCompleted = true
         state.lastActivityAt = Date.now()
         OnboardingSessionManager.saveState(state)
-        console.log('✅ Profile marked as completed')
-      } else {
-        console.log('⚠️ Cannot mark profile completed - no onboarding state found')
       }
     } catch (error) {
       console.error('Error marking profile as completed:', error)
@@ -111,7 +98,6 @@ export class OnboardingSessionManager {
     const activityExpired = (now - state.lastActivityAt) > OnboardingSessionManager.ACTIVITY_TIMEOUT
 
     if (sessionExpired || activityExpired) {
-      console.log('⏰ Onboarding session expired, clearing state')
       OnboardingSessionManager.clearState()
       return false
     }
@@ -158,7 +144,6 @@ export class OnboardingSessionManager {
 
   // Complete onboarding and clear state
   static completeOnboarding(): void {
-    console.log('🎉 Onboarding completed, clearing state')
     OnboardingSessionManager.clearState()
   }
 
@@ -177,7 +162,7 @@ export class OnboardingSessionManager {
 
     if (!state.profileCompleted) {
       if (state.userRole === 'STUDENT') {
-        return '/auth/setup-profile'
+        return '/dashboard' // Students go to dashboard where Phase 1 appears as modal
       } else {
         return '/onboarding/company'
       }
