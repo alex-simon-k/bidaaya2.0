@@ -102,6 +102,23 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
     }));
   }, [cvProgress, session]);
 
+  // Auto-progress to Phase 3 when profile reaches 60%
+  useEffect(() => {
+    if (cvProgress && cvProgress.overallScore >= 60) {
+      // Update user's onboarding phase to 'complete'
+      fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ onboardingPhase: 'complete' })
+      }).then(() => {
+        // Redirect to dashboard (will now show OpportunityDashboard)
+        window.location.href = '/dashboard'
+      }).catch((err) => {
+        console.error('Failed to update onboarding phase:', err)
+      })
+    }
+  }, [cvProgress]);
+
   // Send message to AI
   const handleSendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
@@ -398,10 +415,33 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                     Hi {session?.user?.name?.split(' ')[0] || 'there'},
                   </h2>
                   <h3 className="text-2xl font-bold text-bidaaya-light mb-4">
-                    Welcome back! How can I help?
+                    Let's build your profile! 🚀
                   </h3>
                 </div>
                 
+                {/* Profile Progress Banner */}
+                <div className="mb-6 max-w-md mx-auto">
+                  <div className="bg-gradient-to-r from-bidaaya-accent/20 to-purple-500/20 border border-bidaaya-accent/30 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-bidaaya-light font-semibold">Profile Completion</span>
+                      <span className="text-2xl font-bold text-bidaaya-accent">{cvProgress?.overallScore || 0}%</span>
+                    </div>
+                    <div className="w-full bg-bidaaya-dark-lighter rounded-full h-3 mb-4">
+                      <div 
+                        className="bg-gradient-to-r from-bidaaya-accent to-purple-500 h-3 rounded-full transition-all duration-500"
+                        style={{ width: `${cvProgress?.overallScore || 0}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-bidaaya-light/70 text-center">
+                      {cvProgress && cvProgress.overallScore >= 60 ? (
+                        "🎉 Profile complete! Redirecting to opportunities..."
+                      ) : (
+                        <>Reach <span className="font-semibold text-bidaaya-accent">60%</span> to unlock personalized opportunities</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
                 {/* Conversation Level Tracker */}
                 <ConversationLevelTracker 
                   currentLevel={conversationLevel} 
