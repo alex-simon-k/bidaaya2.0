@@ -51,6 +51,7 @@ model User {
   lastMonthlyReset         DateTime               @default(now())
   linkedin                 String?
   profileCompleted         Boolean                @default(false)
+  onboardingPhase          String?                @default("structured_chat") // structured_chat, cv_building, complete
   referralSource           String?
   referralDetails          String?
   emailVerifiedAt          DateTime?

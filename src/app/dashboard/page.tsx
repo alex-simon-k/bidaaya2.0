@@ -27,6 +27,7 @@ import { AIAssistantCard } from '@/components/ui/ai-assistant-card'
 import { OpportunityDashboard } from '@/components/opportunity-dashboard'
 import { ChatWidget } from '@/components/ui/chat-widget'
 import { BottomNavigation } from '@/components/ui/bottom-navigation'
+import { StructuredOnboardingChat } from '@/components/ui/structured-onboarding-chat'
 
 interface DashboardStats {
   applications: number
@@ -44,7 +45,7 @@ export default function DashboardPage() {
     proposals: 0
   })
   const [showMembershipPopup, setShowMembershipPopup] = useState(false)
-  const [profileCompleted, setProfileCompleted] = useState(false)
+  const [onboardingPhase, setOnboardingPhase] = useState<string>('structured_chat')
   const [chatWidgetOpen, setChatWidgetOpen] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
 
@@ -53,23 +54,31 @@ export default function DashboardPage() {
   useEffect(() => {
     if (session?.user) {
       loadDashboardStats()
-      checkProfileCompletion()
+      checkOnboardingPhase()
     }
   }, [session])
 
-  const checkProfileCompletion = async () => {
+  const checkOnboardingPhase = async () => {
     try {
-      // Check if user has completed CV (60%+ completeness)
-      const response = await fetch('/api/cv/progress')
+      const response = await fetch('/api/user/profile')
       if (response.ok) {
         const data = await response.json()
-        setProfileCompleted(data.overallScore >= 60)
+        setOnboardingPhase(data.onboardingPhase || 'structured_chat')
       }
     } catch (error) {
-      console.error('Failed to check profile completion:', error)
-      // Default to showing chat for onboarding
-      setProfileCompleted(false)
+      console.error('Failed to check onboarding phase:', error)
+      setOnboardingPhase('structured_chat')
     }
+  }
+
+  const handlePhase1Complete = async () => {
+    // Reload session and update phase
+    await fetch('/api/user/profile')
+    setOnboardingPhase('cv_building')
+  }
+
+  const handlePhase2Complete = async () => {
+    setOnboardingPhase('complete')
   }
 
   // Show membership popup every 30 minutes for students and companies
@@ -111,10 +120,29 @@ export default function DashboardPage() {
     )
   }
 
-  // Student Dashboard - Conditional Interface
+  // Student Dashboard - Three-Phase Onboarding
   if (userRole === 'STUDENT') {
-    // If profile not completed (< 60%), show chat interface for onboarding
-    if (!profileCompleted) {
+    // Phase 1: Structured Onboarding Chat (Multiple Choice Q&A)
+    if (onboardingPhase === 'structured_chat') {
+      return (
+        <>
+          <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
+            <StructuredOnboardingChat onComplete={handlePhase1Complete} />
+          </div>
+
+          {/* Membership Popup */}
+          <MembershipSelectionPopup
+            isOpen={showMembershipPopup}
+            onClose={() => setShowMembershipPopup(false)}
+            userRole="STUDENT"
+            userName={session?.user?.name?.split(' ')[0] || 'Student'}
+          />
+        </>
+      )
+    }
+
+    // Phase 2: CV Building Chat (Conversational, with sidebar unlocked but features locked)
+    if (onboardingPhase === 'cv_building') {
       return (
         <>
           <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
@@ -132,7 +160,7 @@ export default function DashboardPage() {
       )
     }
 
-    // If profile completed, show opportunity dashboard
+    // Phase 3: Complete - Show Opportunity Dashboard
     return (
       <>
         <OpportunityDashboard
