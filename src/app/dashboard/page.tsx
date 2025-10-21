@@ -82,8 +82,14 @@ export default function DashboardPage() {
   }
 
   // Show membership popup every 30 minutes for students and companies
+  // BUT NOT during Phase 1 onboarding
   useEffect(() => {
     if (session?.user?.role === 'STUDENT' || session?.user?.role === 'COMPANY') {
+      // Don't show popup during Phase 1 onboarding
+      if (onboardingPhase === 'structured_chat') {
+        return
+      }
+      
       const lastShownKey = `membership_popup_last_shown_${session.user.email}`
       const lastShown = localStorage.getItem(lastShownKey)
       const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000) // 30 minutes in milliseconds
@@ -98,7 +104,7 @@ export default function DashboardPage() {
         return () => clearTimeout(timer)
       }
     }
-  }, [session])
+  }, [session, onboardingPhase])
 
   const loadDashboardStats = async () => {
     try {
@@ -152,26 +158,30 @@ export default function DashboardPage() {
 
         {/* Phase 1: Structured Onboarding Chat Modal Overlay */}
         {onboardingPhase === 'structured_chat' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-bidaaya-dark/60 backdrop-blur-sm">
-            <div className="w-full max-w-3xl h-[85vh] bg-bidaaya-dark rounded-2xl shadow-2xl overflow-hidden m-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-bidaaya-dark/80 backdrop-blur-md">
+            <div className="w-full max-w-2xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden m-4">
               <StructuredOnboardingChat onComplete={handlePhase1Complete} />
             </div>
           </div>
         )}
 
-        {/* Chat Widget (minimized by default) */}
-        <ChatWidget
-          isOpen={chatWidgetOpen}
-          onToggle={() => setChatWidgetOpen(!chatWidgetOpen)}
-        />
+        {/* Chat Widget - ONLY show when NOT in Phase 1 */}
+        {onboardingPhase !== 'structured_chat' && (
+          <ChatWidget
+            isOpen={chatWidgetOpen}
+            onToggle={() => setChatWidgetOpen(!chatWidgetOpen)}
+          />
+        )}
 
-        {/* Membership Popup */}
-        <MembershipSelectionPopup
-          isOpen={showMembershipPopup}
-          onClose={() => setShowMembershipPopup(false)}
-          userRole="STUDENT"
-          userName={session?.user?.name?.split(' ')[0] || 'Student'}
-        />
+        {/* Membership Popup - ONLY show when NOT in Phase 1 */}
+        {onboardingPhase !== 'structured_chat' && (
+          <MembershipSelectionPopup
+            isOpen={showMembershipPopup}
+            onClose={() => setShowMembershipPopup(false)}
+            userRole="STUDENT"
+            userName={session?.user?.name?.split(' ')[0] || 'Student'}
+          />
+        )}
       </>
     )
   }
