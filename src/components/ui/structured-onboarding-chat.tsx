@@ -235,8 +235,8 @@ export function StructuredOnboardingChat({ onComplete }: StructuredOnboardingCha
       </div>
 
       {/* Question Content - Chat Style */}
-      <div className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="max-w-2xl mx-auto">
+      <div className="flex-1 overflow-y-auto px-6 py-12 flex items-center">
+        <div className="max-w-2xl mx-auto w-full">
           <AnimatePresence mode="wait">
             {currentQuestion && (
               <motion.div
@@ -245,15 +245,14 @@ export function StructuredOnboardingChat({ onComplete }: StructuredOnboardingCha
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="mb-6"
               >
                 {/* AI Question Bubble */}
-                <div className="flex items-start gap-3 mb-6">
+                <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold text-sm">B</span>
                   </div>
-                  <div className="bg-white rounded-2xl rounded-tl-sm shadow-sm border border-gray-200 px-5 py-4 max-w-lg">
-                    <p className="text-gray-800 font-medium text-lg">
+                  <div className="bg-white rounded-2xl rounded-tl-sm shadow-md border border-gray-200 px-6 py-5 max-w-xl">
+                    <p className="text-gray-800 font-medium text-lg leading-relaxed">
                       {currentQuestion.question}
                     </p>
                     {currentQuestion.hint && (
@@ -264,9 +263,9 @@ export function StructuredOnboardingChat({ onComplete }: StructuredOnboardingCha
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
 
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Input Area - Chat Style */}

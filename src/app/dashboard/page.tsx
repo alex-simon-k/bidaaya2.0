@@ -37,7 +37,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const [stats, setStats] = useState<DashboardStats>({
     applications: 0,
     projects: 0,
@@ -72,9 +72,17 @@ export default function DashboardPage() {
   }
 
   const handlePhase1Complete = async () => {
-    // Reload session and update phase
-    await fetch('/api/user/profile')
+    // Phase 1 completed - transition to Phase 2 (CV Building)
+    console.log('✅ Phase 1 complete, transitioning to Phase 2 (CV Building)...')
+    
+    // Update local state immediately for instant transition
     setOnboardingPhase('cv_building')
+    
+    // Refresh session to ensure it has the updated onboardingPhase
+    await update()
+    
+    // Double-check the phase from database
+    await checkOnboardingPhase()
   }
 
   const handlePhase2Complete = async () => {
