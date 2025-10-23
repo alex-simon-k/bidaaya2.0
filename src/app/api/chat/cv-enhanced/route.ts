@@ -211,14 +211,22 @@ export async function POST(request: NextRequest) {
     // 🔄 AUTO-TRANSFER ONBOARDING DATA (ALWAYS CHECK)
     // ============================================
     
+    console.log('🔄 Checking auto-transfer...')
+    console.log('   User has university?', user?.university)
+    console.log('   User has major?', user?.major)
+    
     // Check if CV tables need data from onboarding
     const existingEducation = await prisma.cVEducation.count({ where: { userId } })
     const existingSkills = await prisma.cVSkill.count({ where: { userId } })
     
+    console.log('   Existing CVEducation entries:', existingEducation)
+    console.log('   Existing CVSkill entries:', existingSkills)
+    
     // Transfer education if we have onboarding data but no CV education entries
     if (existingEducation === 0 && user?.university && user?.major) {
+      console.log('🔄 AUTO-TRANSFERRING education data from Phase 1...')
       try {
-        await prisma.cVEducation.create({
+        const transferred = await prisma.cVEducation.create({
           data: {
             userId,
             institution: user.university,
@@ -234,9 +242,15 @@ export async function POST(request: NextRequest) {
             modules: user.subjects ? user.subjects.split(',').map((s: string) => s.trim()) : [],
           },
         })
-        console.log('✅ Transferred education:', user.university, user.major)
+        console.log('✅ TRANSFERRED education:', transferred.institution, transferred.fieldOfStudy)
       } catch (e) {
-        console.log('⚠️ Could not transfer education:', e)
+        console.error('❌ FAILED to transfer education:', e)
+      }
+    } else {
+      if (existingEducation > 0) {
+        console.log('✅ Education already in CV tables, no transfer needed')
+      } else {
+        console.log('⚠️ No Phase 1 data to transfer (missing university or major)')
       }
     }
 

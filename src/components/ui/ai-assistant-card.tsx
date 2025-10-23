@@ -78,24 +78,53 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
     scrollToBottom();
   }, [messages, isLoading]);
 
+  // Fetch CV progress on mount
+  useEffect(() => {
+    const fetchCVProgress = async () => {
+      try {
+        const response = await fetch('/api/cv/progress');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📊 Initial CV Progress loaded:', data);
+          setCvProgress({
+            overallScore: data.overallScore || 0,
+            isMinimumViable: data.isMinimumViable || false,
+            nextSection: data.nextSection || '',
+            educationCount: data.educationCount || 0,
+            experienceCount: data.experienceCount || 0,
+            projectsCount: data.projectsCount || 0,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching CV progress:', error);
+      }
+    };
+
+    fetchCVProgress();
+  }, []); // Run once on mount
+
   // Update checklist based on CV progress
   useEffect(() => {
     if (!cvProgress) return;
 
+    console.log('🔄 Updating checklist from CV progress:', cvProgress);
+
     setChecklistItems((prev) => prev.map((item) => {
       switch (item.id) {
         case "personal_info":
-          return { ...item, completed: session?.user?.name !== undefined };
+          // Check if education data exists (from Phase 1)
+          return { ...item, completed: cvProgress.educationCount > 0 || session?.user?.name !== undefined };
         case "work_experience":
           return { ...item, completed: cvProgress.experienceCount > 0 };
         case "projects":
           return { ...item, completed: cvProgress.projectsCount > 0 };
         case "skills":
-          return { ...item, completed: cvProgress.overallScore > 20 };
+          // Check if skills exist (need to add skillsCount to API)
+          return { ...item, completed: cvProgress.overallScore >= 20 };
         case "volunteering":
           return { ...item, completed: cvProgress.experienceCount > 1 };
         case "career_goals":
-          return { ...item, completed: cvProgress.overallScore > 40 };
+          return { ...item, completed: cvProgress.overallScore >= 40 };
         default:
           return item;
       }
