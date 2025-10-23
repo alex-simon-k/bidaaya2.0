@@ -79,6 +79,14 @@ export async function GET(request: NextRequest) {
       nextSection = 'skills';
     }
 
+    console.log('📊 CV Progress calculated:', {
+      score,
+      educationCount,
+      experienceCount,
+      projectsCount,
+      skillsCount
+    });
+
     return NextResponse.json({
       overallScore: score,
       isMinimumViable,

@@ -49,6 +49,7 @@ interface CVProgress {
   educationCount: number;
   experienceCount: number;
   projectsCount: number;
+  skillsCount?: number;
 }
 
 interface AIAssistantCardProps {
@@ -93,6 +94,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
             educationCount: data.educationCount || 0,
             experienceCount: data.experienceCount || 0,
             projectsCount: data.projectsCount || 0,
+            skillsCount: data.skillsCount || 0,
           });
         }
       } catch (error) {
@@ -112,19 +114,23 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
     setChecklistItems((prev) => prev.map((item) => {
       switch (item.id) {
         case "personal_info":
-          // Check if education data exists (from Phase 1)
-          return { ...item, completed: cvProgress.educationCount > 0 || session?.user?.name !== undefined };
+          // ONLY mark complete if CV database has education entry
+          return { ...item, completed: cvProgress.educationCount > 0 };
         case "work_experience":
           return { ...item, completed: cvProgress.experienceCount > 0 };
         case "projects":
           return { ...item, completed: cvProgress.projectsCount > 0 };
         case "skills":
-          // Check if skills exist (need to add skillsCount to API)
-          return { ...item, completed: cvProgress.overallScore >= 20 };
+          // Check actual skills count from CV database
+          return { ...item, completed: (cvProgress.skillsCount || 0) >= 3 };
         case "volunteering":
           return { ...item, completed: cvProgress.experienceCount > 1 };
         case "career_goals":
           return { ...item, completed: cvProgress.overallScore >= 40 };
+        case "hobbies":
+          return { ...item, completed: cvProgress.overallScore >= 30 };
+        case "availability":
+          return { ...item, completed: cvProgress.overallScore >= 50 };
         default:
           return item;
       }
