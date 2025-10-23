@@ -45,10 +45,6 @@ BEGIN
     -- Delete Languages
     DELETE FROM "CVLanguage" WHERE "userId" = target_user_id;
     RAISE NOTICE '✅ Deleted CVLanguage entries';
-    
-    -- Delete Custom Sections
-    DELETE FROM "CVCustomSection" WHERE "userId" = target_user_id;
-    RAISE NOTICE '✅ Deleted CVCustomSection entries';
 
     -- ========================================
     -- 2. DELETE CHAT HISTORY
