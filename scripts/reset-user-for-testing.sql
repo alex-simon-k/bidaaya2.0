@@ -26,13 +26,21 @@ BEGIN
     DELETE FROM "CVEducation" WHERE "userId" = target_user_id;
     RAISE NOTICE '✅ Deleted CVEducation entries';
     
-    -- Delete Work Experience entries
+    -- Delete Work Experience entries (impacts will cascade)
     DELETE FROM "CVExperience" WHERE "userId" = target_user_id;
     RAISE NOTICE '✅ Deleted CVExperience entries';
     
-    -- Delete Projects
+    -- Delete Projects (impacts will cascade)
     DELETE FROM "CVProject" WHERE "userId" = target_user_id;
     RAISE NOTICE '✅ Deleted CVProject entries';
+    
+    -- Delete CV Profile
+    DELETE FROM "CVProfile" WHERE "userId" = target_user_id;
+    RAISE NOTICE '✅ Deleted CVProfile entries';
+    
+    -- Delete Achievements
+    DELETE FROM "CVAchievement" WHERE "userId" = target_user_id;
+    RAISE NOTICE '✅ Deleted CVAchievement entries';
     
     -- Delete Skills
     DELETE FROM "CVSkill" WHERE "userId" = target_user_id;
@@ -55,8 +63,8 @@ BEGIN
     RAISE NOTICE '✅ Deleted ChatMessage entries';
     
     -- Delete Conversations
-    DELETE FROM "Conversation" WHERE "userId" = target_user_id;
-    RAISE NOTICE '✅ Deleted Conversation entries';
+    DELETE FROM "ChatConversation" WHERE "userId" = target_user_id;
+    RAISE NOTICE '✅ Deleted ChatConversation entries';
 
     -- ========================================
     -- 3. DELETE APPLICATIONS
@@ -93,8 +101,7 @@ BEGIN
         "github" = NULL,
         "portfolio" = NULL,
         "dateOfBirth" = NULL,
-        "highschool" = NULL,
-        "highschoolGraduationYear" = NULL,
+        "highSchool" = NULL,
         "gapYear" = NULL,
         "gapYearActivity" = NULL,
         "updatedAt" = NOW()
@@ -139,7 +146,7 @@ SELECT
     (SELECT COUNT(*) FROM "CVExperience" WHERE "userId" = u.id) as experience_count,
     (SELECT COUNT(*) FROM "CVProject" WHERE "userId" = u.id) as project_count,
     (SELECT COUNT(*) FROM "CVSkill" WHERE "userId" = u.id) as skill_count,
-    (SELECT COUNT(*) FROM "Conversation" WHERE "userId" = u.id) as conversation_count,
+    (SELECT COUNT(*) FROM "ChatConversation" WHERE "userId" = u.id) as conversation_count,
     (SELECT COUNT(*) FROM "Application" WHERE "userId" = u.id) as application_count
 FROM "User" u
 WHERE u.id = 'YOUR_USER_ID_HERE'; -- ⬅️ PUT YOUR USER ID HERE
