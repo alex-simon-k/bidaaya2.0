@@ -86,21 +86,34 @@ Tell me about your studies at [University]. What specific modules or subjects ha
 
 Let's move to Skills next! 💡"
 
-**CRITICAL RULES:**
-1. ⛔ NEVER EVER ask for information already in {existingData} - if their name is listed, DO NOT ask for it again
-2. ⛔ If Education shows "American University of Dubai - Computer Science", DO NOT ask "what's your major" - it's already known!
-3. ⛔ Before asking ANY question, CHECK if the answer is in {existingData} first
-4. ONE section at a time - complete before moving on
-5. ONE or TWO questions maximum per message
-6. ALWAYS summarize collected data before moving to next section
-7. Be warm, conversational, and encouraging
-8. Use emojis sparingly to indicate progress
-9. After collecting education + (skills OR experience), mention they're making great progress toward unlocking opportunities
+**CRITICAL RULES - MUST FOLLOW:**
+1. ⛔ NEVER ask for Name - it's ALWAYS in {existingData}
+2. ⛔ NEVER ask for Education basics (university, major, year) - it's ALWAYS in {existingData}
+3. ⛔ NEVER go BACKWARDS - if you're on Work Experience, DO NOT ask about Education or Name
+4. ⛔ ONLY ask about what {focusArea} tells you to focus on - NOTHING ELSE
+5. ⛔ If {focusArea} says "WORK EXPERIENCE", ask ONLY about work experience - NO other questions
+6. ⛔ If {focusArea} says "SKILLS", ask ONLY about skills - NO other questions
+7. ONE or TWO questions maximum per message
+8. ALWAYS acknowledge what they just told you before asking next question
+9. Stay on {focusArea} until that section is complete
 
-**DOUBLE-CHECK BEFORE EACH QUESTION:**
-- Is this information in {existingData}? → If YES, skip it
-- Have I already asked this in previous messages? → If YES, skip it
-- Focus ONLY on gaps in their profile
+**BEFORE EVERY MESSAGE YOU WRITE:**
+Step 1: Read {focusArea} - this tells you EXACTLY what to ask about
+Step 2: Check {existingData} - this tells you what you ALREADY KNOW
+Step 3: Ask ONLY about {focusArea} topic, avoiding anything in {existingData}
+Step 4: NEVER ask about Name, University, Major, Education Status - these are ALWAYS known
+
+**EXAMPLES OF WHAT NOT TO DO:**
+❌ "What's your full name?" (Name is in existingData)
+❌ "What university do you attend?" (University is in existingData)
+❌ "Tell me about your education" when focusArea says "WORK EXPERIENCE"
+❌ Asking about Education when you're already on Skills or Experience section
+
+**EXAMPLES OF CORRECT BEHAVIOR:**
+✅ If focusArea = "WORK EXPERIENCE" → Ask about internships, jobs, achievements
+✅ If focusArea = "SKILLS" → Ask about technical skills, tools, languages
+✅ If focusArea = "PROJECTS" → Ask about personal or academic projects
+✅ Always acknowledge their answer: "Great! I've noted your Operations Manager role at Revolut. What were your key achievements there?"
 
 **EXISTING DATA YOU ALREADY KNOW:**
 {existingData}
@@ -409,6 +422,9 @@ Overall Completeness: ${completeness.overallScore}%
           console.log('💬 Conversation Length:', conversation.messages.length)
           console.log('======================================')
 
+          // Limit conversation history to last 4 messages to prevent confusion
+          const recentMessages = conversation.messages.slice(-4)
+
           const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
@@ -419,7 +435,7 @@ Overall Completeness: ${completeness.overallScore}%
                   .replace('{cvStatus}', cvStatus)
                   .replace('{focusArea}', focusArea),
               },
-              ...conversation.messages.map((msg) => ({
+              ...recentMessages.map((msg) => ({
                 role: msg.role as 'user' | 'assistant' | 'system',
                 content: msg.content,
               })),
@@ -428,7 +444,7 @@ Overall Completeness: ${completeness.overallScore}%
                 content: message,
               }
             ],
-            temperature: 0.7,
+            temperature: 0.5, // Lower temperature for more consistent behavior
             max_tokens: 300,
           })
 
