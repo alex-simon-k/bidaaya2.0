@@ -61,10 +61,18 @@ export default function DashboardPage() {
     }
   }, [sessionOnboardingPhase])
 
+  // Only check onboarding phase on initial load, not on every session change
+  useEffect(() => {
+    if (session?.user && !sessionOnboardingPhase) {
+      // Only fetch from DB if session doesn't have the phase
+      console.log('📊 Session missing onboarding phase, fetching from DB...')
+      checkOnboardingPhase()
+    }
+  }, [session?.user])
+  
   useEffect(() => {
     if (session?.user) {
       loadDashboardStats()
-      checkOnboardingPhase()
     }
   }, [session])
 
@@ -73,7 +81,9 @@ export default function DashboardPage() {
       const response = await fetch('/api/user/profile')
       if (response.ok) {
         const data = await response.json()
-        setOnboardingPhase(data.onboardingPhase || 'structured_chat')
+        const dbPhase = data.profile.onboardingPhase || 'structured_chat'
+        console.log('📊 Fetched onboarding phase from DB:', dbPhase)
+        setOnboardingPhase(dbPhase)
       }
     } catch (error) {
       console.error('Failed to check onboarding phase:', error)
@@ -91,8 +101,8 @@ export default function DashboardPage() {
     // Refresh session to ensure it has the updated onboardingPhase
     await update()
     
-    // Double-check the phase from database
-    await checkOnboardingPhase()
+    // DON'T re-fetch from DB - causes race condition where old phase is fetched
+    console.log('🎯 Phase 1 → Phase 2 transition complete')
   }
 
   const handlePhase2Complete = async () => {
