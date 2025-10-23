@@ -86,14 +86,21 @@ Tell me about your studies at [University]. What specific modules or subjects ha
 
 Let's move to Skills next! 💡"
 
-**RULES:**
-1. NEVER ask for information already in {existingData}
-2. ONE section at a time - complete before moving on
-3. ONE or TWO questions maximum per message
-4. ALWAYS summarize collected data before moving to next section
-5. Be warm, conversational, and encouraging
-6. Use emojis sparingly to indicate progress
-7. After collecting education + (skills OR experience), mention they're making great progress toward unlocking opportunities
+**CRITICAL RULES:**
+1. ⛔ NEVER EVER ask for information already in {existingData} - if their name is listed, DO NOT ask for it again
+2. ⛔ If Education shows "American University of Dubai - Computer Science", DO NOT ask "what's your major" - it's already known!
+3. ⛔ Before asking ANY question, CHECK if the answer is in {existingData} first
+4. ONE section at a time - complete before moving on
+5. ONE or TWO questions maximum per message
+6. ALWAYS summarize collected data before moving to next section
+7. Be warm, conversational, and encouraging
+8. Use emojis sparingly to indicate progress
+9. After collecting education + (skills OR experience), mention they're making great progress toward unlocking opportunities
+
+**DOUBLE-CHECK BEFORE EACH QUESTION:**
+- Is this information in {existingData}? → If YES, skip it
+- Have I already asked this in previous messages? → If YES, skip it
+- Focus ONLY on gaps in their profile
 
 **EXISTING DATA YOU ALREADY KNOW:**
 {existingData}
@@ -259,6 +266,7 @@ export async function POST(request: NextRequest) {
     // Extract and save if CV data detected
     if (detectedType !== 'unknown') {
       entityType = detectedType
+      console.log('💾 Attempting to extract and save:', detectedType)
 
       switch (detectedType) {
         case 'experience':
@@ -267,6 +275,7 @@ export async function POST(request: NextRequest) {
             conversation.messages.slice(-5).map(m => m.content)
           )
           if (extractedData) {
+            console.log('📤 Extracted experience data:', JSON.stringify(extractedData, null, 2))
             await CVEntityExtractor.saveExperience(userId, extractedData)
             console.log('✅ Saved work experience:', extractedData.employer)
           }
@@ -278,6 +287,7 @@ export async function POST(request: NextRequest) {
             conversation.messages.slice(-5).map(m => m.content)
           )
           if (extractedData) {
+            console.log('📤 Extracted education data:', JSON.stringify(extractedData, null, 2))
             await CVEntityExtractor.saveEducation(userId, extractedData)
             console.log('✅ Saved education:', extractedData.institution)
           }
@@ -289,6 +299,7 @@ export async function POST(request: NextRequest) {
             conversation.messages.slice(-5).map(m => m.content)
           )
           if (extractedData) {
+            console.log('📤 Extracted project data:', JSON.stringify(extractedData, null, 2))
             await CVEntityExtractor.saveProject(userId, extractedData)
             console.log('✅ Saved project:', extractedData.name)
           }
@@ -389,6 +400,14 @@ Overall Completeness: ${completeness.overallScore}%
           if (isFirstMessage) {
             focusArea = `FIRST MESSAGE: They clicked "Start Building Your Profile". Welcome them warmly and start with the FIRST incomplete section from above. Make it exciting!`
           }
+
+          // 🔍 DEBUG LOGGING - What data is AI receiving?
+          console.log('📊 ========== AI CONTEXT DEBUG ==========')
+          console.log('👤 Existing Data:\n', existingData)
+          console.log('📈 CV Status:\n', cvStatus)
+          console.log('🎯 Focus Area:', focusArea)
+          console.log('💬 Conversation Length:', conversation.messages.length)
+          console.log('======================================')
 
           const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
