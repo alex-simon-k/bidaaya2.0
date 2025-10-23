@@ -410,43 +410,14 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                 </div>
 
                 {/* Welcome Message */}
-                <div className="text-center mb-6">
-                  <h2 className="text-xl font-medium text-bidaaya-light/80 mb-2">
-                    Hi {session?.user?.name?.split(' ')[0] || 'there'},
-                  </h2>
-                  <h3 className="text-2xl font-bold text-bidaaya-light mb-4">
-                    Let's build your profile! 🚀
+                <div className="text-center mb-8">
+                  <h3 className="text-3xl font-bold text-bidaaya-light mb-2">
+                    Let's land you an internship! 🚀
                   </h3>
+                  <p className="text-sm text-bidaaya-light/60">
+                    Reach 60% to unlock personalized opportunities
+                  </p>
                 </div>
-                
-                {/* Profile Progress Banner */}
-                <div className="mb-6 max-w-md mx-auto">
-                  <div className="bg-gradient-to-r from-bidaaya-accent/20 to-purple-500/20 border border-bidaaya-accent/30 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-bidaaya-light font-semibold">Profile Completion</span>
-                      <span className="text-2xl font-bold text-bidaaya-accent">{cvProgress?.overallScore || 0}%</span>
-                    </div>
-                    <div className="w-full bg-bidaaya-dark-lighter rounded-full h-3 mb-4">
-                      <div 
-                        className="bg-gradient-to-r from-bidaaya-accent to-purple-500 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${cvProgress?.overallScore || 0}%` }}
-                      />
-                    </div>
-                    <p className="text-sm text-bidaaya-light/70 text-center">
-                      {cvProgress && cvProgress.overallScore >= 60 ? (
-                        "🎉 Profile complete! Redirecting to opportunities..."
-                      ) : (
-                        <>Reach <span className="font-semibold text-bidaaya-accent">60%</span> to unlock personalized opportunities</>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Conversation Level Tracker */}
-                <ConversationLevelTracker 
-                  currentLevel={conversationLevel} 
-                  className="mb-6"
-                />
 
                 {/* Profile Completion Checklist */}
                 <div className="mb-8 max-w-md mx-auto">
