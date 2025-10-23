@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         terms: true,
         profileCompleted: true,
         emailVerified: true,
+        onboardingPhase: true, // Track onboarding phase
         // Company-specific fields
         companyName: true,
         companyRole: true,
@@ -119,6 +120,7 @@ export async function PATCH(request: NextRequest) {
       discoveryProfile,
       discoveryCompleted,
       profileCompleted,
+      onboardingPhase, // Track onboarding phase
       // Company-specific fields
       companyName,
       companyRole,
@@ -171,6 +173,10 @@ export async function PATCH(request: NextRequest) {
     if (graduationYear !== undefined) updateData.graduationYear = graduationYear
     if (mena !== undefined) updateData.mena = mena === 'Yes' || mena === true  // Handle radio button value
     if (terms !== undefined) updateData.terms = terms
+    if (onboardingPhase !== undefined) {
+      updateData.onboardingPhase = onboardingPhase
+      console.log('🔄 Setting onboarding phase to:', onboardingPhase)
+    }
     
     // Company-specific fields
     if (companyName !== undefined) updateData.companyName = companyName
@@ -215,10 +221,12 @@ export async function PATCH(request: NextRequest) {
     
     // PHASE 2 COMPLETION: Detailed profile (guided tutorial - educational details)
     const isPhase2Update = !!(university || highSchool || major || subjects || bio || (interests && interests.length > 0))
+    const hasEducationDetails = !!(university || highSchool || major || subjects)
     
     console.log('🔍 Profile completion analysis:', {
       hasPhase1Requirements,
       isPhase2Update,
+      hasEducationDetails,
       role: currentUserRole,
       explicitFlag: profileCompleted
     })
@@ -235,22 +243,29 @@ export async function PATCH(request: NextRequest) {
     const wasAlreadyCompleted = currentUser?.profileCompleted === true
     const isFirstTimeCompletion = hasPhase1Requirements && !wasAlreadyCompleted
     
-    // CRITICAL FIX: Only mark profileCompleted=true after Phase 1, not Phase 2
+    // CRITICAL FIX: Phase 1 does NOT set profileCompleted
+    // Phase 2 (CV building with education details) sets profileCompleted
     if (profileCompleted !== undefined && profileCompleted === false) {
       // Explicit false from guided tutorial early exit - respect it
       updateData.profileCompleted = false
       console.log('🎯 EXPLICIT profileCompleted=false received (early exit)')
-    } else if (hasPhase1Requirements) {
-      // Phase 1 completion = true profile completion
+    } else if (onboardingPhase === 'cv_building') {
+      // Phase 1 is STARTING - do NOT mark profile as completed yet
+      updateData.profileCompleted = false
+      console.log('📝 PHASE 1 COMPLETED - Moving to Phase 2, profileCompleted stays FALSE')
+    } else if (isPhase2Update && hasEducationDetails) {
+      // Phase 2 is complete - NOW mark profile as completed
       updateData.profileCompleted = true
-      console.log('✅ PHASE 1 COMPLETED - Marking profile as completed in database')
-      if (isFirstTimeCompletion) {
-        console.log('🎉 FIRST TIME PHASE 1 COMPLETION - will send Slack notification')
-      } else {
-        console.log('🔄 Phase 1 already completed - NO Slack notification')
+      console.log('✅ PHASE 2 COMPLETED - Marking profile as completed (has education details)')
+      if (!wasAlreadyCompleted) {
+        console.log('🎉 FIRST TIME PROFILE COMPLETION - will send Slack notification')
       }
+    } else if (hasPhase1Requirements && onboardingPhase !== 'cv_building') {
+      // Legacy path for old users - mark as complete
+      updateData.profileCompleted = true
+      console.log('✅ LEGACY: Marking profile as completed')
     } else {
-      console.log('❌ NOT marking profile as completed - missing Phase 1 requirements')
+      console.log('❌ NOT marking profile as completed - still in progress')
     }
     
     // Store discovery quiz data in bio field temporarily
@@ -296,7 +311,7 @@ export async function PATCH(request: NextRequest) {
 
     // Track analytics for first-time profile completion and phases
     const currentSteps = currentUser?.onboardingStepsCompleted || []
-    const hasEducationDetails = !!(university || highSchool || major || subjects)
+    // hasEducationDetails already declared above
     
     console.log('🔍 Phase tracking analysis:', {
       isFirstTimeCompletion,

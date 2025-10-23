@@ -215,6 +215,7 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
             token.emailVerified = dbUser.emailVerified;
             token.profileCompleted = dbUser.profileCompleted;
+            token.onboardingPhase = dbUser.onboardingPhase; // Track onboarding phase
             token.bio = dbUser.bio;
             token.university = dbUser.university;
             token.highSchool = dbUser.highSchool;
@@ -228,6 +229,7 @@ export const authOptions: NextAuthOptions = {
             console.log('🔄 JWT callback - Token updated with fresh database values');
             console.log('🔄 Updated subscription plan:', dbUser.subscriptionPlan);
             console.log('🔄 Updated subscription status:', dbUser.subscriptionStatus);
+            console.log('🔄 Updated onboarding phase:', dbUser.onboardingPhase);
           } else {
             console.log('🔄 JWT callback - No database user found for email:', email);
           }
@@ -247,6 +249,7 @@ export const authOptions: NextAuthOptions = {
         email: token.email,
         role: token.role,
         emailVerified: token.emailVerified,
+        onboardingPhase: token.onboardingPhase,
         profileCompleted: token.profileCompleted,
         subscriptionPlan: token.subscriptionPlan,
         subscriptionStatus: token.subscriptionStatus
@@ -266,6 +269,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role;
         (session.user as any).emailVerified = token.emailVerified;
         (session.user as any).profileCompleted = token.profileCompleted;
+        (session.user as any).onboardingPhase = token.onboardingPhase; // Track onboarding phase
         (session.user as any).bio = token.bio;
         (session.user as any).university = token.university;
         (session.user as any).highSchool = token.highSchool;
@@ -281,6 +285,7 @@ export const authOptions: NextAuthOptions = {
         console.log('📋 User role:', token.role);
         console.log('📋 Email verified:', token.emailVerified);
         console.log('📋 Profile completed:', token.profileCompleted);
+        console.log('📋 Onboarding phase:', token.onboardingPhase);
         console.log('📋 Subscription plan:', token.subscriptionPlan);
       }
 

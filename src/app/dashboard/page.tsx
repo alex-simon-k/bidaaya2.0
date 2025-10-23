@@ -45,11 +45,21 @@ export default function DashboardPage() {
     proposals: 0
   })
   const [showMembershipPopup, setShowMembershipPopup] = useState(false)
-  const [onboardingPhase, setOnboardingPhase] = useState<string>('structured_chat')
+  // Get onboarding phase from session first, fallback to state
+  const sessionOnboardingPhase = (session?.user as any)?.onboardingPhase
+  const [onboardingPhase, setOnboardingPhase] = useState<string>(sessionOnboardingPhase || 'structured_chat')
   const [chatWidgetOpen, setChatWidgetOpen] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
 
   const userRole = (session?.user as any)?.role
+  
+  // Sync local state with session onboarding phase
+  useEffect(() => {
+    if (sessionOnboardingPhase) {
+      console.log('📌 Dashboard: Syncing onboarding phase from session:', sessionOnboardingPhase)
+      setOnboardingPhase(sessionOnboardingPhase)
+    }
+  }, [sessionOnboardingPhase])
 
   useEffect(() => {
     if (session?.user) {
