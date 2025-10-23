@@ -407,18 +407,22 @@ export async function POST(request: NextRequest) {
         try {
           // Build existing data summary - BASIC INFO ONLY (from Phase 1)
           const existingData = `
-BASIC INFO FROM PHASE 1 (DO NOT ASK AGAIN):
-- Name: ${user?.name || 'Not set'}
-- University: ${user?.university || 'Not set'}
-- Major: ${user?.major || 'Not set'}
-- Education Level: ${user?.education || 'Not set'}
-- Graduation Year: ${user?.graduationYear || 'Not set'}
-- Location: ${user?.location || 'Not set'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⛔ YOU ALREADY KNOW THESE - NEVER ASK AGAIN ⛔
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Name: ${user?.name || 'Not set'}
+✓ University: ${user?.university || 'Not set'}  
+✓ Major: ${user?.major || 'Not set'}
+✓ Education Level: ${user?.education || 'Not set'}
+✓ Graduation Year: ${user?.graduationYear || 'Not set'}
+✓ Location: ${user?.location || 'Not set'}
 
-⚠️ IMPORTANT: This is BASIC data only. You MUST ask for DETAILED information:
-- For Education: Ask about modules, subjects, grades, achievements
-- For Skills: Ask what specific skills they have
-- For Experience: Ask about internships, jobs, responsibilities
+⚠️ CRITICAL INSTRUCTIONS:
+1. DO NOT ask "what's your full name?" - you already know it's "${user?.name}"
+2. DO NOT ask "what university?" - you already know it's "${user?.university}"
+3. DO NOT ask "what's your major?" - you already know it's "${user?.major}"
+4. DO ask for DETAILED info: modules, subjects, grades, specific experiences
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           `.trim()
 
           // Build CV status
@@ -517,6 +521,34 @@ DO NOT ask about work experience yet - focus ONLY on education details first.`
 
           aiResponse = completion.choices[0]?.message?.content || 
             'Tell me more about your background!'
+
+          // ⛔ POST-PROCESSING FILTER: Block AI from asking forbidden questions
+          const forbiddenPatterns = [
+            /what'?s?\s+your\s+(full\s+)?name/i,
+            /tell\s+me\s+your\s+name/i,
+            /what\s+university/i,
+            /which\s+university/i,
+            /what'?s?\s+your\s+major/i,
+            /what\s+are\s+you\s+studying/i,
+          ];
+
+          const hasForbiddenQuestion = forbiddenPatterns.some(pattern => pattern.test(aiResponse));
+          
+          if (hasForbiddenQuestion) {
+            console.error('⛔ AI ASKED FORBIDDEN QUESTION! Blocking and regenerating...');
+            console.error('   Blocked response:', aiResponse);
+            
+            // Force AI to focus on next appropriate question
+            if (completeness.education.entriesCount === 0) {
+              aiResponse = `Great! I've noted that you're studying ${user?.major} at ${user?.university}. Now tell me about the specific modules or courses you've taken - which ones did you enjoy most and what did you learn from them?`;
+            } else if (completeness.skills.entriesCount < 3) {
+              aiResponse = `Perfect! Now let's talk about your skills. What technical skills, tools, or languages are you proficient in?`;
+            } else if (completeness.experience.entriesCount === 0) {
+              aiResponse = `Great progress! Now let's discuss your work experience. Have you had any internships, jobs, or work experience? Tell me about your roles and achievements.`;
+            } else {
+              aiResponse = `Tell me more about your experiences and what you've accomplished!`;
+            }
+          }
 
         } catch (aiError) {
           console.error('AI API Error:', aiError)
