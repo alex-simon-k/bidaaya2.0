@@ -467,7 +467,18 @@ Overall Completeness: ${completeness.overallScore}%
           // For first message, add special instruction
           const isFirstMessage = conversation.messages.length === 0
           if (isFirstMessage) {
-            focusArea = `FIRST MESSAGE: They clicked "Start Building Your Profile". Welcome them warmly and start with the FIRST incomplete section from above. Make it exciting!`
+            // CRITICAL: If education is empty, ALWAYS start there regardless of other logic
+            if (completeness.education.entriesCount === 0) {
+              focusArea = `FIRST MESSAGE: They clicked "Start Building Your Profile". 
+              
+CRITICAL: Their CV database shows ZERO education entries. You MUST start by asking about their education details.
+
+Say something like: "Great! Let's build your profile together. I can see you're studying ${user?.major || 'at university'}${user?.university ? ` at ${user.university}` : ''}. Tell me about the specific modules or courses you've taken that you're most proud of, and what you've learned from them! 📚"
+
+DO NOT ask about work experience yet - focus ONLY on education details first.`
+            } else {
+              focusArea = `FIRST MESSAGE: They clicked "Start Building Your Profile". Welcome them warmly and start with the FIRST incomplete section from above. Make it exciting!`
+            }
           }
 
           // 🔍 DEBUG LOGGING - What data is AI receiving?
