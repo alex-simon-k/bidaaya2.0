@@ -39,56 +39,61 @@ const getOpenAIClient = () => {
 // Enhanced System Prompt for CV Collection
 const SYSTEM_PROMPT = `You are Bidaaya's AI Career Assistant specialized in building professional CVs through structured conversation.
 
-**CRITICAL: START BY ACKNOWLEDGING WHAT YOU KNOW**
-Always begin first message with what you already know about them:
-"Hi [Name]! I see you're [studying X at Y / in a gap year / etc.]. I'd love to help build your professional CV. Let me share what I already know about you, and then we can fill in the gaps together."
+**YOUR ROLE:**
+Guide users section-by-section through their profile, checking off items as you collect information. Work through incomplete sections systematically.
 
-Then list:
-- Their name
-- Their education (university, major, year)
-- Their location
-- Any skills they mentioned
+**PROFILE SECTIONS (CHECK ONE AT A TIME):**
 
-**3-LEVEL STRUCTURE (STRICT - DO NOT SKIP LEVELS):**
+1. **Education** - University, major, year, modules/subjects
+2. **Skills** - Technical skills, soft skills, languages, tools
+3. **Work Experience** - Internships, jobs, roles, achievements with metrics
+4. **Projects** - Personal or academic projects with impact
+5. **Additional Info** - Certifications, leadership, volunteering
 
-**LEVEL 1: BASICS (MUST COMPLETE FIRST)**
-Required before moving to Level 2:
-- Full name confirmed
-- Education details (institution, field, year, modules/subjects)
-- Location
+**CONVERSATION FLOW:**
 
-Questions to ask:
-- "Tell me about your experience at [University] - what have you studied there?"
-- "What specific modules or subjects have you focused on?"
-- "What has been your favorite part of studying [Major]?"
+**WHEN USER STARTS ("I'm ready to start"):**
+1. Warmly greet them: "Great! Let's build your profile together. I'll guide you through each section step by step. 🚀"
+2. Check what information you already have from {existingData}
+3. Identify the FIRST incomplete section from the list above
+4. Focus ONLY on that section until complete
 
-**LEVEL 2: EXPERIENCE (MUST COMPLETE SECOND)**
-Required before moving to Level 3:
-- At least 1 work experience OR 1 significant project with details
-- For EACH experience, get:
-  - Role/title
-  - Dates (when they worked there)
-  - At least 1 achievement with metrics if possible
+**FOR EACH SECTION:**
+1. Announce the section: "Let's start with your [SECTION NAME] 📝"
+2. Ask 1-2 focused questions at a time
+3. When section feels complete, SUMMARIZE what you collected:
+   "Great! I've captured:
+   - [Point 1]
+   - [Point 2]
+   - [Point 3]
+   
+   Ready to move to the next section?"
+4. Move to the NEXT incomplete section
 
-Questions to ask:
-- "Have you had any internships, jobs, or work experience?"
-- "What was your role at [Company]?"
-- "What were your key achievements or responsibilities?"
-- "Can you quantify any of your impact? (e.g., grew by X%, managed Y people)"
+**EXAMPLE - EDUCATION SECTION:**
+"Let's start with your Education 📚
 
-**LEVEL 3: ENRICHMENT (OPTIONAL BUT VALUABLE)**
-Additional details:
-- More projects
-- Certifications/courses
-- Leadership roles
-- Languages
+Tell me about your studies at [University]. What specific modules or subjects have you focused on that you're most proud of?"
+
+[After they respond, ask 1-2 follow-up questions]
+
+[When complete:]
+"Perfect! I've captured:
+- Studying [Major] at [University]
+- Year: [X]
+- Key modules: [A, B, C]
+- Favorite part: [Y]
+
+Let's move to Skills next! 💡"
 
 **RULES:**
-1. NEVER ask for information already provided in EXISTING DATA
-2. ONE question at a time
-3. DO NOT move to Level 2 until Level 1 is complete
-4. DO NOT move to Level 3 until Level 2 has at least 1 experience
-5. After Level 2 is complete, offer to show opportunities or generate CV
+1. NEVER ask for information already in {existingData}
+2. ONE section at a time - complete before moving on
+3. ONE or TWO questions maximum per message
+4. ALWAYS summarize collected data before moving to next section
+5. Be warm, conversational, and encouraging
+6. Use emojis sparingly to indicate progress
+7. After collecting education + (skills OR experience), mention they're making great progress toward unlocking opportunities
 
 **EXISTING DATA YOU ALREADY KNOW:**
 {existingData}
@@ -99,7 +104,7 @@ Additional details:
 **WHAT TO FOCUS ON NOW:**
 {focusArea}
 
-Respond naturally, acknowledge what you know, and guide them through the levels systematically.`
+Guide them systematically, celebrate progress, and make profile building feel like a natural conversation.`
 
 interface ChatRequest {
   message: string
@@ -354,28 +359,35 @@ Overall Completeness: ${completeness.overallScore}%
 ✓ Skills: ${completeness.skills.entriesCount} ${completeness.skills.entriesCount >= 3 ? '✅' : '❌ NEEDED'}
           `.trim()
 
-          // Determine focus area based on completeness
+          // Determine focus area - guide section by section
           let focusArea = ''
           let currentLevel = 1
           
+          // Check sections in order and focus on first incomplete one
           if (!completeness.education.hasMinimumData) {
-            focusArea = 'LEVEL 1: Get education details (modules, subjects, experiences at university)'
+            focusArea = 'SECTION 1 - EDUCATION: Ask about their studies, modules, subjects, and what they enjoy most about their field'
+            currentLevel = 1
+          } else if (completeness.skills.entriesCount < 3) {
+            focusArea = 'SECTION 2 - SKILLS: Ask about technical skills, soft skills, languages, and tools they use'
             currentLevel = 1
           } else if (completeness.experience.entriesCount === 0) {
-            focusArea = 'LEVEL 2: Get work experience/internships with achievements and metrics'
+            focusArea = 'SECTION 3 - WORK EXPERIENCE: Ask about internships, jobs, roles, and key achievements with metrics'
             currentLevel = 2
-          } else if (completeness.experience.entriesCount < 2) {
-            focusArea = 'LEVEL 2: Ask if they have MORE work experiences or projects'
+          } else if (completeness.projects.entriesCount === 0) {
+            focusArea = 'SECTION 4 - PROJECTS: Ask about personal or academic projects they\'re proud of'
+            currentLevel = 2
+          } else if (completeness.experience.entriesCount < 2 || completeness.projects.entriesCount < 2) {
+            focusArea = 'SECTION 5 - MORE DETAILS: Ask if they have additional experiences, projects, or want to enrich any section'
             currentLevel = 2
           } else {
-            focusArea = 'LEVEL 3: Enrich profile with certifications, leadership, languages'
+            focusArea = 'SECTION 6 - FINAL TOUCHES: Certifications, leadership roles, volunteering, or anything else they want to add'
             currentLevel = 3
           }
 
           // For first message, add special instruction
           const isFirstMessage = conversation.messages.length === 0
           if (isFirstMessage) {
-            focusArea = `FIRST MESSAGE: Greet them warmly, acknowledge what you know about them, and ask about work experience at ${user?.university || 'their university'}`
+            focusArea = `FIRST MESSAGE: They clicked "Start Building Your Profile". Welcome them warmly and start with the FIRST incomplete section from above. Make it exciting!`
           }
 
           const completion = await openai.chat.completions.create({

@@ -419,6 +419,17 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                   </p>
                 </div>
 
+                {/* Start Building Button */}
+                <button
+                  onClick={() => handleQuickPrompt("I'm ready to start building my profile")}
+                  className="mb-8 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
+                >
+                  <span className="text-lg">Start Building Your Profile</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+
                 {/* Profile Completion Checklist */}
                 <div className="mb-8 max-w-md mx-auto">
                   <ProfileCompletionChecklist items={checklistItems} />
