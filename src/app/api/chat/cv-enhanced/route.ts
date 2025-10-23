@@ -87,12 +87,12 @@ Tell me about your studies at [University]. What specific modules or subjects ha
 Let's move to Skills next! 💡"
 
 **CRITICAL RULES - MUST FOLLOW:**
-1. ⛔ NEVER ask for Name - it's ALWAYS in {existingData}
-2. ⛔ NEVER ask for Education basics (university, major, year) - it's ALWAYS in {existingData}
-3. ⛔ NEVER go BACKWARDS - if you're on Work Experience, DO NOT ask about Education or Name
-4. ⛔ ONLY ask about what {focusArea} tells you to focus on - NOTHING ELSE
-5. ⛔ If {focusArea} says "WORK EXPERIENCE", ask ONLY about work experience - NO other questions
-6. ⛔ If {focusArea} says "SKILLS", ask ONLY about skills - NO other questions
+1. ⛔ NEVER ask for Name, University, Major, Education Level - these are in {existingData}
+2. ⛔ DO ask for DETAILED education info (modules, subjects, grades) even if university is in {existingData}
+3. ⛔ {existingData} contains BASIC info from signup - you must collect DETAILED info for their CV
+4. ⛔ Check {cvStatus} to see what's actually in their CV database - if it says "Education: 0 ❌", you MUST ask about education details
+5. ⛔ NEVER go BACKWARDS - if you're on Work Experience, DO NOT ask about Education
+6. ⛔ ONLY ask about what {focusArea} tells you to focus on
 7. ONE or TWO questions maximum per message
 8. ALWAYS acknowledge what they just told you before asking next question
 9. Stay on {focusArea} until that section is complete
@@ -107,13 +107,18 @@ Step 4: NEVER ask about Name, University, Major, Education Status - these are AL
 ❌ "What's your full name?" (Name is in existingData)
 ❌ "What university do you attend?" (University is in existingData)
 ❌ "Tell me about your education" when focusArea says "WORK EXPERIENCE"
-❌ Asking about Education when you're already on Skills or Experience section
+❌ Saying "I see you already have education filled out" when cvStatus shows "Education: 0"
 
 **EXAMPLES OF CORRECT BEHAVIOR:**
-✅ If focusArea = "WORK EXPERIENCE" → Ask about internships, jobs, achievements
+✅ If cvStatus shows "Education: 0" but university is in existingData → ASK: "I see you study Computer Science at AUD. Tell me about the modules or subjects you've taken that you're most proud of?"
+✅ If focusArea = "WORK EXPERIENCE" and cvStatus shows "Experience: 0" → Ask about internships, jobs, achievements
 ✅ If focusArea = "SKILLS" → Ask about technical skills, tools, languages
-✅ If focusArea = "PROJECTS" → Ask about personal or academic projects
 ✅ Always acknowledge their answer: "Great! I've noted your Operations Manager role at Revolut. What were your key achievements there?"
+
+**KEY DISTINCTION:**
+- existingData = BASIC info they entered at signup (name, university, major)
+- cvStatus = What's ACTUALLY in their CV database (detailed education, experience, projects)
+- You must collect DETAILED info to fill the CV database, even if basic info exists
 
 **EXISTING DATA YOU ALREADY KNOW:**
 {existingData}
@@ -400,16 +405,20 @@ export async function POST(request: NextRequest) {
       
       if (openai) {
         try {
-          // Build existing data summary
+          // Build existing data summary - BASIC INFO ONLY (from Phase 1)
           const existingData = `
-Name: ${user?.name || 'Not set'}
-Education: ${user?.university ? `${user.university} - ${user.major}${user.graduationYear ? `, graduating ${user.graduationYear}` : ''}` : 'Not set'}
-Education Status: ${user?.education || 'Not set'}
-Location: ${user?.location || 'Not set'}
-Skills: ${user?.skills && user.skills.length > 0 ? user.skills.join(', ') : 'Not set'}
-Interests: ${user?.interests && user.interests.length > 0 ? user.interests.join(', ') : 'Not set'}
-Career Goals: ${user?.goal && user.goal.length > 0 ? user.goal.join(', ') : 'Not set'}
-LinkedIn: ${user?.linkedin || 'Not set'}
+BASIC INFO FROM PHASE 1 (DO NOT ASK AGAIN):
+- Name: ${user?.name || 'Not set'}
+- University: ${user?.university || 'Not set'}
+- Major: ${user?.major || 'Not set'}
+- Education Level: ${user?.education || 'Not set'}
+- Graduation Year: ${user?.graduationYear || 'Not set'}
+- Location: ${user?.location || 'Not set'}
+
+⚠️ IMPORTANT: This is BASIC data only. You MUST ask for DETAILED information:
+- For Education: Ask about modules, subjects, grades, achievements
+- For Skills: Ask what specific skills they have
+- For Experience: Ask about internships, jobs, responsibilities
           `.trim()
 
           // Build CV status
@@ -421,19 +430,26 @@ Overall Completeness: ${completeness.overallScore}%
 ✓ Skills: ${completeness.skills.entriesCount} ${completeness.skills.entriesCount >= 3 ? '✅' : '❌ NEEDED'}
           `.trim()
 
-          // Determine focus area - guide section by section
+          // Determine focus area - guide section by section based on CV DATABASE (not Phase 1 data)
           let focusArea = ''
           let currentLevel = 1
           
-          // Check sections in order and focus on first incomplete one
-          if (!completeness.education.hasMinimumData) {
-            focusArea = 'SECTION 1 - EDUCATION: Ask about their studies, modules, subjects, and what they enjoy most about their field'
+          console.log('🎯 Determining focus area based on CV completeness:', {
+            educationCount: completeness.education.entriesCount,
+            skillsCount: completeness.skills.entriesCount,
+            experienceCount: completeness.experience.entriesCount,
+            projectsCount: completeness.projects.entriesCount
+          })
+          
+          // Check sections in order and focus on first incomplete one IN THE CV DATABASE
+          if (completeness.education.entriesCount === 0) {
+            focusArea = 'SECTION 1 - EDUCATION: The CV database shows 0 education entries. Even though you know their university/major from signup, you MUST ask for DETAILED info (modules, subjects, grades, achievements) and save it to the CV database.'
             currentLevel = 1
           } else if (completeness.skills.entriesCount < 3) {
             focusArea = 'SECTION 2 - SKILLS: Ask about technical skills, soft skills, languages, and tools they use'
             currentLevel = 1
           } else if (completeness.experience.entriesCount === 0) {
-            focusArea = 'SECTION 3 - WORK EXPERIENCE: Ask about internships, jobs, roles, and key achievements with metrics'
+            focusArea = 'SECTION 3 - WORK EXPERIENCE: The CV database shows 0 work experience. Ask about internships, jobs, roles, and key achievements with metrics'
             currentLevel = 2
           } else if (completeness.projects.entriesCount === 0) {
             focusArea = 'SECTION 4 - PROJECTS: Ask about personal or academic projects they\'re proud of'
@@ -445,6 +461,8 @@ Overall Completeness: ${completeness.overallScore}%
             focusArea = 'SECTION 6 - FINAL TOUCHES: Certifications, leadership roles, volunteering, or anything else they want to add'
             currentLevel = 3
           }
+          
+          console.log('🎯 Selected focus area:', focusArea)
 
           // For first message, add special instruction
           const isFirstMessage = conversation.messages.length === 0
