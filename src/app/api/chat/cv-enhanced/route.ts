@@ -267,6 +267,7 @@ export async function POST(request: NextRequest) {
 
     let extractedData = null
     let entityType: string | null = null
+    let dataSaved = false
 
     // Detect if user is providing CV information
     const detectedType = await CVEntityExtractor.detectEntityType(
@@ -289,8 +290,15 @@ export async function POST(request: NextRequest) {
           )
           if (extractedData) {
             console.log('📤 Extracted experience data:', JSON.stringify(extractedData, null, 2))
-            await CVEntityExtractor.saveExperience(userId, extractedData)
-            console.log('✅ Saved work experience:', extractedData.employer)
+            const saved = await CVEntityExtractor.saveExperience(userId, extractedData)
+            if (saved) {
+              console.log('✅ Saved work experience:', extractedData.employer)
+              dataSaved = true
+            } else {
+              console.error('❌ FAILED to save work experience')
+            }
+          } else {
+            console.log('⚠️ Extraction returned null - could not parse experience from message')
           }
           break
 
@@ -301,8 +309,15 @@ export async function POST(request: NextRequest) {
           )
           if (extractedData) {
             console.log('📤 Extracted education data:', JSON.stringify(extractedData, null, 2))
-            await CVEntityExtractor.saveEducation(userId, extractedData)
-            console.log('✅ Saved education:', extractedData.institution)
+            const saved = await CVEntityExtractor.saveEducation(userId, extractedData)
+            if (saved) {
+              console.log('✅ Saved education:', extractedData.institution)
+              dataSaved = true
+            } else {
+              console.error('❌ FAILED to save education')
+            }
+          } else {
+            console.log('⚠️ Extraction returned null - could not parse education from message')
           }
           break
 
@@ -313,14 +328,23 @@ export async function POST(request: NextRequest) {
           )
           if (extractedData) {
             console.log('📤 Extracted project data:', JSON.stringify(extractedData, null, 2))
-            await CVEntityExtractor.saveProject(userId, extractedData)
-            console.log('✅ Saved project:', extractedData.name)
+            const saved = await CVEntityExtractor.saveProject(userId, extractedData)
+            if (saved) {
+              console.log('✅ Saved project:', extractedData.name)
+              dataSaved = true
+            } else {
+              console.error('❌ FAILED to save project')
+            }
+          } else {
+            console.log('⚠️ Extraction returned null - could not parse project from message')
           }
           break
 
         default:
           console.log('⚠️ Entity type not yet implemented:', detectedType)
       }
+    } else {
+      console.log('ℹ️ No CV entity detected in this message (type: unknown)')
     }
 
     // ============================================
@@ -558,7 +582,8 @@ Overall Completeness: ${completeness.overallScore}%
       },
       extractedData: extractedData ? {
         type: entityType,
-        success: true
+        success: dataSaved,
+        data: extractedData
       } : null,
     })
 
