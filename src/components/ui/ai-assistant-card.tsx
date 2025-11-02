@@ -71,6 +71,8 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST_ITEMS);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const [voiceTranscript, setVoiceTranscript] = useState<string>('');
+  const [isListening, setIsListening] = useState(false);
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -168,16 +170,19 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
       recognitionRef.current.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript
         if (transcript) {
-          handleSendMessage(transcript)
+          // Set transcript in state so it appears in the text box
+          setVoiceTranscript(transcript)
+          setIsListening(false)
         }
       }
 
       recognitionRef.current.onend = () => {
-        // Clean up if needed
+        setIsListening(false)
       }
 
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error)
+        setIsListening(false)
       }
     }
   }, [])
@@ -290,9 +295,16 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const startVoiceRecognition = () => {
     if (recognitionRef.current) {
       try {
+        setIsListening(true);
         recognitionRef.current.start();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to start speech recognition:', error);
+        setIsListening(false);
+        if (error.message?.includes('already started')) {
+          // Already listening, don't show error
+          return;
+        }
+        alert('Speech recognition not supported in your browser');
       }
     } else {
       alert('Speech recognition not supported in your browser');
@@ -473,10 +485,10 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                   <div className="w-32 h-32 rounded-full overflow-hidden shadow-2xl">
                     <VoicePoweredOrb
                       hue={0}
-                      enableVoiceControl={showVoiceInput}
+                      enableVoiceControl={false}
                       className="w-full h-full"
                       onVoiceDetected={(detected) => {
-                        console.log('Voice detected:', detected);
+                        // Voice handled by SpeechRecognition, not VoicePoweredOrb
                       }}
                     />
                   </div>
@@ -688,13 +700,23 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
             <AIInputWithSearch
               placeholder="Ask me anything..."
               onSubmit={(message) => handleSendMessage(message)}
+              externalValue={voiceTranscript}
+              onExternalValueSet={() => setVoiceTranscript('')}
             />
             <button
               type="button"
               onClick={startVoiceRecognition}
-              className="absolute right-[60px] top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-bidaaya-light/10 transition-colors z-10"
+              className={cn(
+                "absolute right-[60px] top-1/2 -translate-y-1/2 p-2 rounded-lg transition-colors z-10",
+                isListening 
+                  ? "bg-red-500/20 hover:bg-red-500/30" 
+                  : "hover:bg-bidaaya-light/10"
+              )}
             >
-              <Mic className="w-5 h-5 text-bidaaya-light/60 hover:text-bidaaya-light" />
+              <Mic className={cn(
+                "w-5 h-5",
+                isListening ? "text-red-400 animate-pulse" : "text-bidaaya-light/60 hover:text-bidaaya-light"
+              )} />
             </button>
           </div>
         </div>

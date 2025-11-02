@@ -473,7 +473,11 @@ export class CVConversationManager {
         return `Great! I've saved your ${data.title} role at ${data.employer}.`
 
       case 'education':
-        return `Perfect! I've added your ${data.degree_type.toUpperCase()} in ${data.field_of_study} from ${data.institution}.`
+        // Safe fallback for missing fields
+        const degreeType = data.degree_type ? data.degree_type.toUpperCase() : 'education'
+        const field = data.field_of_study || 'your studies'
+        const institution = data.institution || ''
+        return `Perfect! I've added your ${degreeType} in ${field}${institution ? ` from ${institution}` : ''}.`
 
       case 'project':
         if (data.tech_stack && data.tech_stack.length > 0) {

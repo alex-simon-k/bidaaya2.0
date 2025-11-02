@@ -1,7 +1,7 @@
 "use client";
 
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAutoResizeTextarea } from "@/components/hooks/use-auto-resize-textarea";
@@ -14,6 +14,8 @@ interface AIInputWithSearchProps {
   onSubmit?: (value: string, withSearch: boolean) => void;
   onFileSelect?: (file: File) => void;
   className?: string;
+  externalValue?: string; // Allow parent to inject value
+  onExternalValueSet?: () => void; // Callback when external value is set
 }
 
 export function AIInputWithSearch({
@@ -23,13 +25,24 @@ export function AIInputWithSearch({
   maxHeight = 120,
   onSubmit,
   onFileSelect,
-  className
+  className,
+  externalValue,
+  onExternalValueSet
 }: AIInputWithSearchProps) {
   const [value, setValue] = useState("");
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight,
     maxHeight,
   });
+
+  // Handle external value injection (for voice input)
+  useEffect(() => {
+    if (externalValue && externalValue !== value) {
+      setValue(externalValue);
+      adjustHeight();
+      onExternalValueSet?.();
+    }
+  }, [externalValue]);
 
   const handleSubmit = () => {
     if (value.trim()) {
