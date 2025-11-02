@@ -477,7 +477,7 @@ Overall Completeness: ${completeness.overallScore}%
               
 CRITICAL: Their CV database shows ZERO education entries. You MUST start by asking about their education details.
 
-Say something like: "Great! Let's build your profile together. I can see you're studying ${user?.major || 'at university'}${user?.university ? ` at ${user.university}` : ''}. Tell me about the specific modules or courses you've taken that you're most proud of, and what you've learned from them! 📚"
+Say something like: "Great! Let's build your profile together.${user?.university && user?.major ? ` I can see you're studying ${user.major} at ${user.university}.` : ''} Tell me about the specific modules or courses you've taken that you're most proud of, and what you've learned from them! 📚"
 
 DO NOT ask about work experience yet - focus ONLY on education details first.`
             } else {
@@ -515,8 +515,8 @@ DO NOT ask about work experience yet - focus ONLY on education details first.`
                 content: message,
               }
             ],
-            temperature: 0.5, // Lower temperature for more consistent behavior
-            max_tokens: 300,
+            temperature: 0.3, // Lower temperature for more consistent behavior
+            max_tokens: 150, // Shorter responses = faster + more focused
           })
 
           aiResponse = completion.choices[0]?.message?.content || 
