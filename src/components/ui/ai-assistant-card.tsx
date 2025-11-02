@@ -13,6 +13,7 @@ import {
   Building,
   ChevronRight,
   Send,
+  Mic,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const [cvProgress, setCvProgress] = useState<CVProgress | null>(null);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST_ITEMS);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -153,6 +155,32 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
       })
     }
   }, [cvProgress]);
+
+  // Initialize speech recognition for voice input
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+      recognitionRef.current = new SpeechRecognition()
+      recognitionRef.current.continuous = false
+      recognitionRef.current.interimResults = false
+      recognitionRef.current.lang = 'en-US'
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        if (transcript) {
+          handleSendMessage(transcript)
+        }
+      }
+
+      recognitionRef.current.onend = () => {
+        // Clean up if needed
+      }
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error)
+      }
+    }
+  }, [])
 
   // Send message to AI
   const handleSendMessage = async (messageText: string) => {
@@ -256,6 +284,19 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
 
   const handleVoiceClick = () => {
     setShowVoiceInput(!showVoiceInput);
+  };
+
+  // Setup voice recognition when user wants to use it
+  const startVoiceRecognition = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+      }
+    } else {
+      alert('Speech recognition not supported in your browser');
+    }
   };
 
   // Show welcome screen if no messages
@@ -520,13 +561,17 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                   🎤 {showVoiceInput ? 'Hide Voice' : 'Use Voice'}
                 </button>
 
-                {/* Voice Input */}
+                {/* Voice Input Toggle Button */}
                 {showVoiceInput && (
-                  <AIVoiceInput
-                    onStart={() => console.log('Voice recording started')}
-                    onStop={(duration) => console.log('Voice recording stopped, duration:', duration)}
-                    className="w-full mb-6"
-                  />
+                  <div className="w-full mb-6 flex flex-col items-center gap-2">
+                    <button
+                      onClick={startVoiceRecognition}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                    >
+                      🎤 Start Voice Input
+                    </button>
+                    <p className="text-xs text-bidaaya-light/60">Click to speak</p>
+                  </div>
                 )}
               </div>
             ) : (
@@ -639,11 +684,18 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
 
         {/* Fixed Input at Bottom */}
         <div className="px-4 pb-3 safe-bottom bg-bidaaya-dark">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto relative">
             <AIInputWithSearch
               placeholder="Ask me anything..."
               onSubmit={(message) => handleSendMessage(message)}
             />
+            <button
+              type="button"
+              onClick={startVoiceRecognition}
+              className="absolute right-[60px] top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-bidaaya-light/10 transition-colors z-10"
+            >
+              <Mic className="w-5 h-5 text-bidaaya-light/60 hover:text-bidaaya-light" />
+            </button>
           </div>
         </div>
       </div>
