@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GraduationCap, MapPin, Calendar, Award, BookOpen, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -58,7 +57,6 @@ const COMMON_COUNTRIES = [
   { code: "Other", name: "Other" },
 ];
 
-// Common universities list (can be expanded)
 const COMMON_UNIVERSITIES = [
   "American University of Dubai (AUD)",
   "American University of Sharjah (AUS)",
@@ -182,20 +180,20 @@ export function StructuredCVEducationForm({
         <h3 className="text-xl font-semibold text-bidaaya-light">Education Details</h3>
       </div>
 
-      {/* Degree Type */}
+      {/* Education Level */}
       <div className="space-y-2">
-        <Label htmlFor="degreeType" className="text-bidaaya-light">
-          Degree Type <span className="text-red-400">*</span>
+        <Label htmlFor="level" className="text-bidaaya-light">
+          Education Level <span className="text-red-400">*</span>
         </Label>
         <Select
-          value={formData.degreeType}
-          onValueChange={(value) => setFormData((prev) => ({ ...prev, degreeType: value }))}
+          value={formData.level}
+          onValueChange={(value) => setFormData((prev) => ({ ...prev, level: value }))}
         >
           <SelectTrigger className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light">
-            <SelectValue placeholder="Select degree type" />
+            <SelectValue placeholder="Select education level" />
           </SelectTrigger>
           <SelectContent>
-            {DEGREE_TYPES.map((type) => (
+            {EDUCATION_LEVELS.map((type) => (
               <SelectItem key={type.value} value={type.value}>
                 {type.label}
               </SelectItem>
@@ -204,19 +202,109 @@ export function StructuredCVEducationForm({
         </Select>
       </div>
 
-      {/* Field of Study */}
+      {/* Program/Degree Name */}
       <div className="space-y-2">
-        <Label htmlFor="fieldOfStudy" className="text-bidaaya-light">
-          Field of Study / Major <span className="text-red-400">*</span>
+        <Label htmlFor="program" className="text-bidaaya-light">
+          Program / Degree Name <span className="text-red-400">*</span>
         </Label>
         <Input
-          id="fieldOfStudy"
-          value={formData.fieldOfStudy}
-          onChange={(e) => setFormData((prev) => ({ ...prev, fieldOfStudy: e.target.value }))}
-          placeholder="e.g., Computer Science, Business Administration"
+          id="program"
+          value={formData.program}
+          onChange={(e) => setFormData((prev) => ({ ...prev, program: e.target.value }))}
+          placeholder="e.g., BSc Economics, A-Levels"
           className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
           required
         />
+      </div>
+
+      {/* Majors */}
+      <div className="space-y-2">
+        <Label className="text-bidaaya-light">
+          Major(s) <span className="text-sm text-bidaaya-light/60">(max 3)</span>
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            value={newMajor}
+            onChange={(e) => setNewMajor(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addItem("majors", newMajor, 3);
+              }
+            }}
+            placeholder="Add major (press Enter)"
+            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+          />
+          <Button
+            type="button"
+            onClick={() => addItem("majors", newMajor, 3)}
+            className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+          >
+            Add
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {formData.majors.map((major, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-1 px-3 py-1 bg-bidaaya-accent/20 rounded-full text-sm text-bidaaya-light"
+            >
+              {major}
+              <button
+                type="button"
+                onClick={() => removeItem("majors", index)}
+                className="ml-1 hover:text-red-400"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Minors */}
+      <div className="space-y-2">
+        <Label className="text-bidaaya-light">
+          Minor(s) <span className="text-sm text-bidaaya-light/60">(max 2, optional)</span>
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            value={newMinor}
+            onChange={(e) => setNewMinor(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addItem("minors", newMinor, 2);
+              }
+            }}
+            placeholder="Add minor (press Enter)"
+            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+          />
+          <Button
+            type="button"
+            onClick={() => addItem("minors", newMinor, 2)}
+            className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+          >
+            Add
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {formData.minors.map((minor, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 rounded-full text-sm text-bidaaya-light"
+            >
+              {minor}
+              <button
+                type="button"
+                onClick={() => removeItem("minors", index)}
+                className="ml-1 hover:text-red-400"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Institution */}
@@ -262,19 +350,27 @@ export function StructuredCVEducationForm({
         )}
       </div>
 
-      {/* Institution Location */}
+      {/* Country */}
       <div className="space-y-2">
-        <Label htmlFor="institutionLocation" className="text-bidaaya-light flex items-center gap-2">
+        <Label htmlFor="country" className="text-bidaaya-light flex items-center gap-2">
           <MapPin className="w-4 h-4" />
-          Location
+          Country <span className="text-red-400">*</span>
         </Label>
-        <Input
-          id="institutionLocation"
-          value={formData.institutionLocation}
-          onChange={(e) => setFormData((prev) => ({ ...prev, institutionLocation: e.target.value }))}
-          placeholder="e.g., Dubai, UAE"
-          className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
-        />
+        <Select
+          value={formData.country}
+          onValueChange={(value) => setFormData((prev) => ({ ...prev, country: value }))}
+        >
+          <SelectTrigger className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light">
+            <SelectValue placeholder="Select country" />
+          </SelectTrigger>
+          <SelectContent>
+            {COMMON_COUNTRIES.map((country) => (
+              <SelectItem key={country.code} value={country.code}>
+                {country.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Dates */}
@@ -327,6 +423,34 @@ export function StructuredCVEducationForm({
         </Label>
       </div>
 
+      {/* GPA */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="gpaValue" className="text-bidaaya-light">
+            GPA Value
+          </Label>
+          <Input
+            id="gpaValue"
+            value={formData.gpaValue || ""}
+            onChange={(e) => setFormData((prev) => ({ ...prev, gpaValue: e.target.value }))}
+            placeholder="e.g., 3.8"
+            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="gpaScale" className="text-bidaaya-light">
+            GPA Scale
+          </Label>
+          <Input
+            id="gpaScale"
+            value={formData.gpaScale || ""}
+            onChange={(e) => setFormData((prev) => ({ ...prev, gpaScale: e.target.value }))}
+            placeholder="e.g., 4.0, 100"
+            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+          />
+        </div>
+      </div>
+
       {/* Grades */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -356,34 +480,11 @@ export function StructuredCVEducationForm({
         </div>
       </div>
 
-      {/* GPA */}
-      <div className="space-y-2">
-        <Label htmlFor="gpa" className="text-bidaaya-light">
-          GPA (Optional)
-        </Label>
-        <Input
-          id="gpa"
-          type="number"
-          step="0.01"
-          min="0"
-          max="4"
-          value={formData.gpa || ""}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              gpa: e.target.value ? parseFloat(e.target.value) : undefined,
-            }))
-          }
-          placeholder="e.g., 3.8"
-          className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
-        />
-      </div>
-
       {/* Modules */}
       <div className="space-y-2">
         <Label className="text-bidaaya-light flex items-center gap-2">
           <BookOpen className="w-4 h-4" />
-          Modules / Courses
+          Modules / Courses <span className="text-sm text-bidaaya-light/60">(max 6)</span>
         </Label>
         <div className="flex gap-2">
           <Input
@@ -392,7 +493,7 @@ export function StructuredCVEducationForm({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                addItem("modules", newModule);
+                addItem("modules", newModule, 6);
               }
             }}
             placeholder="Add module (press Enter)"
@@ -400,7 +501,7 @@ export function StructuredCVEducationForm({
           />
           <Button
             type="button"
-            onClick={() => addItem("modules", newModule)}
+            onClick={() => addItem("modules", newModule, 6)}
             className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
           >
             Add
@@ -425,45 +526,7 @@ export function StructuredCVEducationForm({
         </div>
       </div>
 
-      {/* Coursework Highlights */}
-      <div className="space-y-2">
-        <Label className="text-bidaaya-light">Coursework Highlights</Label>
-        <div className="flex gap-2">
-          <Textarea
-            value={newHighlight}
-            onChange={(e) => setNewHighlight(e.target.value)}
-            placeholder="e.g., Dissertation on FinTech Innovation (Grade: 85%)"
-            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
-            rows={2}
-          />
-          <Button
-            type="button"
-            onClick={() => addItem("courseworkHighlights", newHighlight)}
-            className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-          >
-            Add
-          </Button>
-        </div>
-        <div className="space-y-1 mt-2">
-          {formData.courseworkHighlights.map((highlight, index) => (
-            <div
-              key={index}
-              className="flex items-start justify-between p-2 bg-bidaaya-light/5 rounded text-sm text-bidaaya-light/80"
-            >
-              <span>{highlight}</span>
-              <button
-                type="button"
-                onClick={() => removeItem("courseworkHighlights", index)}
-                className="ml-2 hover:text-red-400"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Honors & Awards */}
+      {/* Awards */}
       <div className="space-y-2">
         <Label className="text-bidaaya-light flex items-center gap-2">
           <Award className="w-4 h-4" />
@@ -476,7 +539,7 @@ export function StructuredCVEducationForm({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                addItem("honorsAwards", newAward);
+                addItem("awards", newAward);
               }
             }}
             placeholder="e.g., Dean's List 2023"
@@ -484,14 +547,14 @@ export function StructuredCVEducationForm({
           />
           <Button
             type="button"
-            onClick={() => addItem("honorsAwards", newAward)}
+            onClick={() => addItem("awards", newAward)}
             className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
           >
             Add
           </Button>
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
-          {formData.honorsAwards.map((award, index) => (
+          {formData.awards.map((award, index) => (
             <div
               key={index}
               className="flex items-center gap-1 px-3 py-1 bg-bidaaya-accent/20 rounded-full text-sm text-bidaaya-light"
@@ -499,7 +562,7 @@ export function StructuredCVEducationForm({
               {award}
               <button
                 type="button"
-                onClick={() => removeItem("honorsAwards", index)}
+                onClick={() => removeItem("awards", index)}
                 className="ml-1 hover:text-red-400"
               >
                 <X className="w-3 h-3" />
@@ -530,4 +593,3 @@ export function StructuredCVEducationForm({
     </form>
   );
 }
-

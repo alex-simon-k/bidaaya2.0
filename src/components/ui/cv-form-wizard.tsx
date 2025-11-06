@@ -170,6 +170,22 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
 
       {/* Form Content */}
       <div className="flex-1 overflow-y-auto p-6">
+        {currentSection === "profile" && (
+          <div className="max-w-2xl mx-auto text-center py-20">
+            <User className="w-16 h-16 text-bidaaya-accent mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-bidaaya-light mb-2">Profile & Contact</h3>
+            <p className="text-bidaaya-light/60 mb-6">
+              Coming soon! For now, you can update your profile through settings.
+            </p>
+            <Button
+              onClick={handleSkip}
+              className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+            >
+              Skip to Education
+            </Button>
+          </div>
+        )}
+
         {currentSection === "education" && (
           <div className="max-w-2xl mx-auto">
             <StructuredCVEducationForm
