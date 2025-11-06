@@ -66,7 +66,10 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
       }
 
       const result = await response.json();
-      setSavedEducations((prev) => [...prev, result.education]);
+      setSavedItems((prev) => ({
+        ...prev,
+        education: [...prev.education, result.education]
+      }));
       setCompletedSections((prev) => new Set([...prev, "education"]));
       
       // Move to next section
