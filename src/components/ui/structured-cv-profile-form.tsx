@@ -9,13 +9,11 @@ import { User, Mail, Phone, MapPin, Globe, Linkedin, Github } from "lucide-react
 import { cn } from "@/lib/utils";
 
 interface ProfileFormData {
-  firstName: string;
-  middleName?: string;
-  lastName: string;
+  name: string; // Full name (matching Phase I)
+  dateOfBirth: string; // YYYY-MM-DD
   email: string;
-  phone: string;
-  city: string;
-  country: string; // ISO-2
+  whatsapp: string; // Phone/WhatsApp (matching Phase I field name)
+  location: string; // City, Country (matching Phase I)
   linkedinUrl?: string;
   portfolioUrl?: string;
   githubUrl?: string;
@@ -47,13 +45,11 @@ export function StructuredCVProfileForm({
   initialData,
 }: StructuredCVProfileFormProps) {
   const [formData, setFormData] = useState<ProfileFormData>({
-    firstName: initialData?.firstName || "",
-    middleName: initialData?.middleName || "",
-    lastName: initialData?.lastName || "",
+    name: initialData?.name || "",
+    dateOfBirth: initialData?.dateOfBirth || "",
     email: initialData?.email || "",
-    phone: initialData?.phone || "",
-    city: initialData?.city || "",
-    country: initialData?.country || "",
+    whatsapp: initialData?.whatsapp || "",
+    location: initialData?.location || "",
     linkedinUrl: initialData?.linkedinUrl || "",
     portfolioUrl: initialData?.portfolioUrl || "",
     githubUrl: initialData?.githubUrl || "",
@@ -65,8 +61,7 @@ export function StructuredCVProfileForm({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!formData.name.trim()) newErrors.name = "Name is required";
     
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -76,23 +71,27 @@ export function StructuredCVProfileForm({
       newErrors.email = "Invalid email format";
     }
 
-    // Phone validation (E.164)
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone is required";
-    } else if (!formData.phone.startsWith("+")) {
-      newErrors.phone = "Phone must start with + (e.g., +971501234567)";
+    // WhatsApp validation (E.164)
+    if (!formData.whatsapp.trim()) {
+      newErrors.whatsapp = "WhatsApp number is required";
+    } else if (!formData.whatsapp.startsWith("+")) {
+      newErrors.whatsapp = "WhatsApp must start with + (e.g., +971501234567)";
     }
 
-    if (!formData.city.trim()) newErrors.city = "City is required";
-    if (!formData.country) newErrors.country = "Country is required";
+    if (!formData.location.trim()) newErrors.location = "Location is required";
+
+    // Date of birth validation
+    if (!formData.dateOfBirth) {
+      newErrors.dateOfBirth = "Date of birth is required";
+    }
 
     // LinkedIn validation
-    if (formData.linkedinUrl && !formData.linkedinUrl.includes("linkedin.com")) {
+    if (formData.linkedinUrl && formData.linkedinUrl.trim() && !formData.linkedinUrl.includes("linkedin.com")) {
       newErrors.linkedinUrl = "Must be a LinkedIn URL";
     }
 
     // GitHub validation
-    if (formData.githubUrl && !formData.githubUrl.includes("github.com")) {
+    if (formData.githubUrl && formData.githubUrl.trim() && !formData.githubUrl.includes("github.com")) {
       newErrors.githubUrl = "Must be a GitHub URL";
     }
 
@@ -122,56 +121,43 @@ export function StructuredCVProfileForm({
         <h3 className="text-xl font-semibold text-bidaaya-light">Identity & Contact</h3>
       </div>
 
-      {/* Name Fields */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="firstName" className="text-bidaaya-light">
-            First Name <span className="text-red-400">*</span>
-          </Label>
-          <Input
-            id="firstName"
-            value={formData.firstName}
-            onChange={(e) => setFormData((prev) => ({ ...prev, firstName: e.target.value }))}
-            placeholder="John"
-            className={cn(
-              "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
-              errors.firstName && "border-red-400"
-            )}
-            required
-          />
-          {errors.firstName && <p className="text-xs text-red-400">{errors.firstName}</p>}
-        </div>
+      {/* Full Name */}
+      <div className="space-y-2">
+        <Label htmlFor="name" className="text-bidaaya-light">
+          Full Name <span className="text-red-400">*</span>
+        </Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder="e.g., Ahmed Mohammed Al Zarooni"
+          className={cn(
+            "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
+            errors.name && "border-red-400"
+          )}
+          required
+        />
+        {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
+        <p className="text-xs text-bidaaya-light/60">Enter your full name as it appears on official documents</p>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="middleName" className="text-bidaaya-light">
-            Middle Name
-          </Label>
-          <Input
-            id="middleName"
-            value={formData.middleName}
-            onChange={(e) => setFormData((prev) => ({ ...prev, middleName: e.target.value }))}
-            placeholder="Optional"
-            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="lastName" className="text-bidaaya-light">
-            Last Name <span className="text-red-400">*</span>
-          </Label>
-          <Input
-            id="lastName"
-            value={formData.lastName}
-            onChange={(e) => setFormData((prev) => ({ ...prev, lastName: e.target.value }))}
-            placeholder="Doe"
-            className={cn(
-              "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
-              errors.lastName && "border-red-400"
-            )}
-            required
-          />
-          {errors.lastName && <p className="text-xs text-red-400">{errors.lastName}</p>}
-        </div>
+      {/* Date of Birth */}
+      <div className="space-y-2">
+        <Label htmlFor="dateOfBirth" className="text-bidaaya-light">
+          Date of Birth <span className="text-red-400">*</span>
+        </Label>
+        <Input
+          id="dateOfBirth"
+          type="date"
+          value={formData.dateOfBirth}
+          onChange={(e) => setFormData((prev) => ({ ...prev, dateOfBirth: e.target.value }))}
+          className={cn(
+            "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
+            errors.dateOfBirth && "border-red-400"
+          )}
+          required
+        />
+        {errors.dateOfBirth && <p className="text-xs text-red-400">{errors.dateOfBirth}</p>}
       </div>
 
       {/* Email */}
@@ -195,74 +181,47 @@ export function StructuredCVProfileForm({
         {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
       </div>
 
-      {/* Phone */}
+      {/* WhatsApp */}
       <div className="space-y-2">
-        <Label htmlFor="phone" className="text-bidaaya-light flex items-center gap-2">
+        <Label htmlFor="whatsapp" className="text-bidaaya-light flex items-center gap-2">
           <Phone className="w-4 h-4" />
-          Phone (E.164 format) <span className="text-red-400">*</span>
+          WhatsApp Number <span className="text-red-400">*</span>
         </Label>
         <Input
-          id="phone"
+          id="whatsapp"
           type="tel"
-          value={formData.phone}
-          onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+          value={formData.whatsapp}
+          onChange={(e) => setFormData((prev) => ({ ...prev, whatsapp: e.target.value }))}
           placeholder="+971501234567"
           className={cn(
             "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
-            errors.phone && "border-red-400"
+            errors.whatsapp && "border-red-400"
           )}
           required
         />
-        <p className="text-xs text-bidaaya-light/60">Format: +[country code][number]</p>
-        {errors.phone && <p className="text-xs text-red-400">{errors.phone}</p>}
+        <p className="text-xs text-bidaaya-light/60">Format: +[country code][number] (e.g., +971501234567)</p>
+        {errors.whatsapp && <p className="text-xs text-red-400">{errors.whatsapp}</p>}
       </div>
 
       {/* Location */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="city" className="text-bidaaya-light flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            City <span className="text-red-400">*</span>
-          </Label>
-          <Input
-            id="city"
-            value={formData.city}
-            onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
-            placeholder="Dubai"
-            className={cn(
-              "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
-              errors.city && "border-red-400"
-            )}
-            required
-          />
-          {errors.city && <p className="text-xs text-red-400">{errors.city}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="country" className="text-bidaaya-light flex items-center gap-2">
-            <Globe className="w-4 h-4" />
-            Country <span className="text-red-400">*</span>
-          </Label>
-          <Select
-            value={formData.country}
-            onValueChange={(value) => setFormData((prev) => ({ ...prev, country: value }))}
-          >
-            <SelectTrigger className={cn(
-              "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
-              errors.country && "border-red-400"
-            )}>
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              {COMMON_COUNTRIES.map((country) => (
-                <SelectItem key={country.code} value={country.code}>
-                  {country.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.country && <p className="text-xs text-red-400">{errors.country}</p>}
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="location" className="text-bidaaya-light flex items-center gap-2">
+          <MapPin className="w-4 h-4" />
+          Location <span className="text-red-400">*</span>
+        </Label>
+        <Input
+          id="location"
+          value={formData.location}
+          onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+          placeholder="e.g., Dubai, UAE"
+          className={cn(
+            "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
+            errors.location && "border-red-400"
+          )}
+          required
+        />
+        <p className="text-xs text-bidaaya-light/60">City and country (e.g., "Dubai, UAE" or "London, UK")</p>
+        {errors.location && <p className="text-xs text-red-400">{errors.location}</p>}
       </div>
 
       {/* Optional URLs */}

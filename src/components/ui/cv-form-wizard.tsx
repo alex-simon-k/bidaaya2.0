@@ -223,12 +223,11 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
               onSave={handleProfileSave}
               onCancel={handleSkip}
               initialData={userData ? {
-                firstName: userData.name?.split(' ')[0] || '',
-                lastName: userData.name?.split(' ').slice(1).join(' ') || '',
+                name: userData.name || '',
+                dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
                 email: userData.email || '',
-                phone: userData.whatsapp || '',
-                city: userData.location?.split(',')[0] || '',
-                country: 'AE', // Default, user can change
+                whatsapp: userData.whatsapp || '',
+                location: userData.location || '',
                 linkedinUrl: userData.linkedin || '',
               } : undefined}
             />
