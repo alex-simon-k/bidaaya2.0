@@ -18,20 +18,21 @@ interface CVFormWizardProps {
 type Section = "profile" | "education" | "experience" | "projects" | "skills" | "complete";
 
 interface EducationFormData {
-  degreeType: string;
-  degreeTitle: string;
-  fieldOfStudy: string;
+  level: string; // High_School, Foundation, Bachelor, Master, PhD, Other
+  program: string; // e.g., "BSc Economics"
+  majors: string[]; // max 3
+  minors: string[]; // max 2
   institution: string;
-  institutionLocation: string;
+  country: string; // ISO-2
   startDate: string;
   endDate: string;
   isCurrent: boolean;
+  gpaValue?: string;
+  gpaScale?: string; // e.g., "4.0", "100"
   predictedGrade?: string;
   finalGrade?: string;
-  gpa?: number;
-  modules: string[];
-  courseworkHighlights: string[];
-  honorsAwards: string[];
+  modules: string[]; // max 6
+  awards: string[];
 }
 
 export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
@@ -175,10 +176,10 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
               onSave={handleEducationSave}
               onCancel={handleSkip}
             />
-            {savedEducations.length > 0 && (
+            {savedItems.education.length > 0 && (
               <div className="mt-4 p-4 bg-bidaaya-accent/10 rounded-lg">
                 <p className="text-sm text-bidaaya-light/80">
-                  ✓ Saved {savedEducations.length} education entr{savedEducations.length > 1 ? "ies" : "y"}
+                  ✓ Saved {savedItems.education.length} education entr{savedItems.education.length > 1 ? "ies" : "y"}
                 </p>
                 <Button
                   onClick={moveToNextSection}
