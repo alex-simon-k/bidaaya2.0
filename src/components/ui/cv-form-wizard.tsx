@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Briefcase, FolderKanban, Award, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
+import { User, GraduationCap, Briefcase, FolderKanban, Award, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
 import { StructuredCVEducationForm } from "./structured-cv-education-form";
+import { StructuredCVProfileForm } from "./structured-cv-profile-form";
+import { StructuredCVExperienceForm } from "./structured-cv-experience-form";
+import { StructuredCVProjectsForm } from "./structured-cv-projects-form";
+import { StructuredCVSkillsForm } from "./structured-cv-skills-form";
 import { cn } from "@/lib/utils";
 
 interface CVFormWizardProps {
@@ -11,7 +15,7 @@ interface CVFormWizardProps {
   onCancel: () => void;
 }
 
-type Section = "education" | "experience" | "projects" | "skills" | "complete";
+type Section = "profile" | "education" | "experience" | "projects" | "skills" | "complete";
 
 interface EducationFormData {
   degreeType: string;
@@ -31,13 +35,20 @@ interface EducationFormData {
 }
 
 export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
-  const [currentSection, setCurrentSection] = useState<Section>("education");
+  const [currentSection, setCurrentSection] = useState<Section>("profile");
   const [completedSections, setCompletedSections] = useState<Set<Section>>(new Set());
-  const [savedEducations, setSavedEducations] = useState<any[]>([]);
+  const [savedItems, setSavedItems] = useState<Record<string, any[]>>({
+    profile: [],
+    education: [],
+    experience: [],
+    projects: [],
+    skills: [],
+  });
 
   const sections: { id: Section; label: string; icon: any }[] = [
+    { id: "profile", label: "Profile", icon: User },
     { id: "education", label: "Education", icon: GraduationCap },
-    { id: "experience", label: "Work Experience", icon: Briefcase },
+    { id: "experience", label: "Experience", icon: Briefcase },
     { id: "projects", label: "Projects", icon: FolderKanban },
     { id: "skills", label: "Skills", icon: Award },
   ];
