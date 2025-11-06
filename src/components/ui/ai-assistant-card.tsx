@@ -25,6 +25,7 @@ import { ChatMessage, TypingIndicator } from "@/components/ui/chat-message";
 import { OpportunityCard } from "@/components/ui/opportunity-card";
 import { ConversationLevelTracker } from "@/components/ui/conversation-level-tracker";
 import { ProfileCompletionChecklist, DEFAULT_CHECKLIST_ITEMS, ChecklistItem } from "@/components/ui/profile-completion-checklist";
+import { CVFormWizard } from "@/components/ui/cv-form-wizard";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -73,6 +74,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const recognitionRef = useRef<any>(null);
   const [voiceTranscript, setVoiceTranscript] = useState<string>('');
   const [isListening, setIsListening] = useState(false);
+  const [showStructuredForm, setShowStructuredForm] = useState(false);
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -293,26 +295,79 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
 
   // Setup voice recognition when user wants to use it
   const startVoiceRecognition = () => {
-    if (recognitionRef.current) {
+    if (!recognitionRef.current) {
+      alert('Speech recognition not supported in your browser');
+      return;
+    }
+
+    // Check if already listening
+    if (isListening) {
+      console.log('Already listening, stopping first...');
       try {
-        setIsListening(true);
-        recognitionRef.current.start();
-      } catch (error: any) {
-        console.error('Failed to start speech recognition:', error);
+        recognitionRef.current.stop();
         setIsListening(false);
-        if (error.message?.includes('already started')) {
-          // Already listening, don't show error
-          return;
+        // Wait a bit before restarting
+        setTimeout(() => {
+          startVoiceRecognition();
+        }, 100);
+      } catch (e) {
+        console.error('Error stopping recognition:', e);
+      }
+      return;
+    }
+
+    try {
+      setIsListening(true);
+      recognitionRef.current.start();
+    } catch (error: any) {
+      console.error('Failed to start speech recognition:', error);
+      setIsListening(false);
+      if (error.name === 'InvalidStateError' || error.message?.includes('already started')) {
+        // Try to stop and restart
+        try {
+          recognitionRef.current.stop();
+          setTimeout(() => {
+            setIsListening(true);
+            recognitionRef.current.start();
+          }, 100);
+        } catch (e) {
+          console.error('Error restarting recognition:', e);
+          setIsListening(false);
         }
+      } else {
         alert('Speech recognition not supported in your browser');
       }
-    } else {
-      alert('Speech recognition not supported in your browser');
     }
   };
 
   // Show welcome screen if no messages
   const showWelcome = messages.length === 0;
+
+  // Show structured form wizard if enabled
+  if (showStructuredForm) {
+    return (
+      <CVFormWizard
+        onComplete={() => {
+          setShowStructuredForm(false);
+          // Refresh CV progress
+          fetch('/api/cv/progress')
+            .then(res => res.json())
+            .then(data => {
+              setCvProgress({
+                overallScore: data.overallScore || 0,
+                isMinimumViable: data.isMinimumViable || false,
+                nextSection: data.nextSection || '',
+                educationCount: data.educationCount || 0,
+                experienceCount: data.experienceCount || 0,
+                projectsCount: data.projectsCount || 0,
+                skillsCount: data.skillsCount || 0,
+              });
+            });
+        }}
+        onCancel={() => setShowStructuredForm(false)}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 w-full h-full bg-bidaaya-dark overflow-hidden">
@@ -507,16 +562,27 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                   </p>
                 </div>
 
-                {/* Start Building Button */}
-                <button
-                  onClick={() => handleQuickPrompt("I'm ready to start building my profile")}
-                  className="mb-8 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
-                >
-                  <span className="text-lg">Start Building Your Profile</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </button>
+                {/* Start Building Buttons */}
+                <div className="mb-8 flex flex-col gap-3 w-full max-w-md mx-auto">
+                  <button
+                    onClick={() => setShowStructuredForm(true)}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
+                  >
+                    <span className="text-lg">Use Structured Forms</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleQuickPrompt("I'm ready to start building my profile")}
+                    className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
+                  >
+                    <span className="text-lg">Chat with AI</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                </div>
 
                 {/* Profile Completion Checklist */}
                 <div className="mb-8 max-w-md mx-auto">
