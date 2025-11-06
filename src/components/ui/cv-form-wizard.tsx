@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { User, GraduationCap, Briefcase, FolderKanban, Award, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
 import { StructuredCVEducationForm } from "./structured-cv-education-form";
@@ -36,7 +37,7 @@ interface EducationFormData {
 }
 
 export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
-  const [currentSection, setCurrentSection] = useState<Section>("education"); // Start with education, skip profile
+  const [currentSection, setCurrentSection] = useState<Section>("profile"); // Start with profile to review Phase I data
   const [completedSections, setCompletedSections] = useState<Set<Section>>(new Set());
   const [savedItems, setSavedItems] = useState<Record<string, any[]>>({
     profile: [],
@@ -45,6 +46,24 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
     projects: [],
     skills: [],
   });
+  const [userData, setUserData] = useState<any>(null);
+  const [educationFormKey, setEducationFormKey] = useState(0); // Used to reset education form
+
+  // Fetch user data from Phase I
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("/api/user/profile");
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data.user);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   const sections: { id: Section; label: string; icon: any }[] = [
     { id: "profile", label: "Profile", icon: User },
@@ -53,6 +72,29 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
     { id: "projects", label: "Projects", icon: FolderKanban },
     { id: "skills", label: "Skills", icon: Award },
   ];
+
+  const handleProfileSave = async (data: any) => {
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save profile");
+      }
+
+      const result = await response.json();
+      setCompletedSections((prev) => new Set([...prev, "profile"]));
+      
+      // Move to next section
+      moveToNextSection();
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      throw error;
+    }
+  };
 
   const handleEducationSave = async (data: EducationFormData) => {
     try {
@@ -73,8 +115,7 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
       }));
       setCompletedSections((prev) => new Set([...prev, "education"]));
       
-      // Move to next section
-      moveToNextSection();
+      // DON'T auto-move to next - allow adding more education entries
     } catch (error) {
       console.error("Error saving education:", error);
       throw error;
@@ -171,38 +212,65 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
       {/* Form Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {currentSection === "profile" && (
-          <div className="max-w-2xl mx-auto text-center py-20">
-            <User className="w-16 h-16 text-bidaaya-accent mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-bidaaya-light mb-2">Profile & Contact</h3>
-            <p className="text-bidaaya-light/60 mb-6">
-              Coming soon! For now, you can update your profile through settings.
-            </p>
-            <Button
-              onClick={handleSkip}
-              className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-            >
-              Skip to Education
-            </Button>
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-sm text-bidaaya-light">
+                <strong>Review your contact information.</strong> This is what employers will use to reach you. 
+                Make sure your <strong>email</strong>, <strong>phone (WhatsApp)</strong>, and <strong>LinkedIn</strong> are correct!
+              </p>
+            </div>
+            <StructuredCVProfileForm
+              onSave={handleProfileSave}
+              onCancel={handleSkip}
+              initialData={userData ? {
+                firstName: userData.name?.split(' ')[0] || '',
+                lastName: userData.name?.split(' ').slice(1).join(' ') || '',
+                email: userData.email || '',
+                phone: userData.whatsapp || '',
+                city: userData.location?.split(',')[0] || '',
+                country: 'AE', // Default, user can change
+                linkedinUrl: userData.linkedin || '',
+              } : undefined}
+            />
           </div>
         )}
 
         {currentSection === "education" && (
           <div className="max-w-2xl mx-auto">
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-sm text-bidaaya-light">
+                <strong>Add all your education.</strong> High school, foundation, bachelor's, master's – add each one separately. 
+                Click "Add Another Education" to add multiple entries.
+              </p>
+            </div>
             <StructuredCVEducationForm
+              key={educationFormKey} // Force remount when key changes
               onSave={handleEducationSave}
               onCancel={handleSkip}
             />
             {savedItems.education.length > 0 && (
-              <div className="mt-4 p-4 bg-bidaaya-accent/10 rounded-lg">
-                <p className="text-sm text-bidaaya-light/80">
+              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg space-y-3">
+                <p className="text-sm text-bidaaya-light font-semibold">
                   ✓ Saved {savedItems.education.length} education entr{savedItems.education.length > 1 ? "ies" : "y"}
                 </p>
-                <Button
-                  onClick={moveToNextSection}
-                  className="mt-2 bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-                >
-                  Continue to Work Experience <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      // Reset form by changing key (forces remount)
+                      setEducationFormKey(prev => prev + 1);
+                    }}
+                    variant="outline"
+                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                  >
+                    + Add Another Education
+                  </Button>
+                  <Button
+                    onClick={moveToNextSection}
+                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                  >
+                    Continue to Work Experience <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>
