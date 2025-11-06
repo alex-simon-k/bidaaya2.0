@@ -36,7 +36,7 @@ interface EducationFormData {
 }
 
 export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
-  const [currentSection, setCurrentSection] = useState<Section>("profile");
+  const [currentSection, setCurrentSection] = useState<Section>("education"); // Start with education, skip profile
   const [completedSections, setCompletedSections] = useState<Set<Section>>(new Set());
   const [savedItems, setSavedItems] = useState<Record<string, any[]>>({
     profile: [],

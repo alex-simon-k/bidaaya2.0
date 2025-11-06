@@ -164,13 +164,14 @@ export function StructuredCVEducationForm({
   };
 
   const isFormValid = () => {
-    return (
+    const hasRequiredFields = 
       formData.level &&
       formData.program &&
       (showCustomInstitution ? customInstitution : formData.institution) &&
       formData.country &&
-      formData.startDate
-    );
+      formData.startDate;
+    
+    return hasRequiredFields;
   };
 
   return (

@@ -562,27 +562,18 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                   </p>
                 </div>
 
-                {/* Start Building Buttons */}
-                <div className="mb-8 flex flex-col gap-3 w-full max-w-md mx-auto">
-                  <button
-                    onClick={() => setShowStructuredForm(true)}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
-                  >
-                    <span className="text-lg">Use Structured Forms</span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleQuickPrompt("I'm ready to start building my profile")}
-                    className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
-                  >
-                    <span className="text-lg">Chat with AI</span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </button>
-                </div>
+              {/* Start Building Button */}
+              <div className="mb-8 w-full max-w-md mx-auto">
+                <button
+                  onClick={() => setShowStructuredForm(true)}
+                  className="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
+                >
+                  <span className="text-lg">Start Building Your Profile</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+              </div>
 
                 {/* Profile Completion Checklist */}
                 <div className="mb-8 max-w-md mx-auto">

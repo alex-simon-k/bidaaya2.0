@@ -14,27 +14,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log("📥 Received education data:", body);
+
     const {
-      degreeType,
-      degreeTitle,
-      fieldOfStudy,
+      level,
+      program,
+      majors,
+      minors,
       institution,
-      institutionLocation,
+      country,
       startDate,
       endDate,
       isCurrent,
       predictedGrade,
       finalGrade,
-      gpa,
+      gpaValue,
+      gpaScale,
       modules,
-      courseworkHighlights,
-      honorsAwards,
+      awards,
     } = body;
 
     // Validate required fields
-    if (!degreeType || !fieldOfStudy || !institution || !startDate) {
+    if (!level || !program || !institution || !country || !startDate) {
       return NextResponse.json(
-        { error: "Missing required fields: degreeType, fieldOfStudy, institution, startDate" },
+        { 
+          error: "Missing required fields", 
+          required: ["level", "program", "institution", "country", "startDate"],
+          received: body
+        },
         { status: 400 }
       );
     }
@@ -43,33 +50,35 @@ export async function POST(request: NextRequest) {
     const startDateObj = new Date(startDate + "-01");
     const endDateObj = endDate ? new Date(endDate + "-01") : null;
 
-    // Create education entry
+    // Map new fields to existing Prisma schema fields
     const education = await prisma.cVEducation.create({
       data: {
         userId: session.user.id,
-        degreeType,
-        degreeTitle: degreeTitle || `${degreeType.toUpperCase()} in ${fieldOfStudy}`,
-        fieldOfStudy,
+        degreeType: level, // Map level -> degreeType
+        degreeTitle: program, // Map program -> degreeTitle
+        fieldOfStudy: majors && majors.length > 0 ? majors[0] : program, // Use first major or program
         institution,
-        institutionLocation: institutionLocation || null,
+        institutionLocation: country, // Map country -> institutionLocation (temporary)
         startDate: startDateObj,
         endDate: endDateObj,
         isCurrent: isCurrent || false,
         predictedGrade: predictedGrade || null,
         finalGrade: finalGrade || null,
-        gpa: gpa || null,
+        gpa: gpaValue ? parseFloat(gpaValue) : null,
         modules: modules || [],
-        courseworkHighlights: courseworkHighlights || [],
-        honorsAwards: honorsAwards || [],
+        courseworkHighlights: [], // Will be populated in Phase III
+        honorsAwards: awards || [],
       },
     });
+
+    console.log("✅ Education saved successfully:", education.id);
 
     return NextResponse.json({
       success: true,
       education,
     });
   } catch (error: any) {
-    console.error("Error saving education:", error);
+    console.error("❌ Error saving education:", error);
     return NextResponse.json(
       { error: error.message || "Failed to save education" },
       { status: 500 }
@@ -99,4 +108,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
