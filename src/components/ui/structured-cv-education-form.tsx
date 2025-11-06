@@ -11,20 +11,21 @@ import { GraduationCap, MapPin, Calendar, Award, BookOpen, X } from "lucide-reac
 import { cn } from "@/lib/utils";
 
 interface EducationFormData {
-  degreeType: string;
-  degreeTitle: string;
-  fieldOfStudy: string;
+  level: string; // High_School, Foundation, Bachelor, Master, PhD, Other
+  program: string; // e.g., "BSc Economics"
+  majors: string[]; // max 3
+  minors: string[]; // max 2
   institution: string;
-  institutionLocation: string;
+  country: string; // ISO-2
   startDate: string;
   endDate: string;
   isCurrent: boolean;
+  gpaValue?: string;
+  gpaScale?: string; // e.g., "4.0", "100"
   predictedGrade?: string;
   finalGrade?: string;
-  gpa?: number;
-  modules: string[];
-  courseworkHighlights: string[];
-  honorsAwards: string[];
+  modules: string[]; // max 6
+  awards: string[];
 }
 
 interface StructuredCVEducationFormProps {
@@ -33,15 +34,28 @@ interface StructuredCVEducationFormProps {
   initialData?: Partial<EducationFormData>;
 }
 
-const DEGREE_TYPES = [
-  { value: "a_levels", label: "A-Levels" },
-  { value: "high_school", label: "High School Diploma" },
-  { value: "diploma", label: "Diploma" },
-  { value: "bsc", label: "Bachelor's Degree (BSc/BA)" },
-  { value: "msc", label: "Master's Degree (MSc/MA)" },
-  { value: "phd", label: "PhD" },
-  { value: "bootcamp", label: "Bootcamp/Certificate Program" },
-  { value: "short_course", label: "Short Course" },
+const EDUCATION_LEVELS = [
+  { value: "High_School", label: "High School" },
+  { value: "Foundation", label: "Foundation" },
+  { value: "Bachelor", label: "Bachelor's Degree" },
+  { value: "Master", label: "Master's Degree" },
+  { value: "PhD", label: "PhD / Doctorate" },
+  { value: "Other", label: "Other" },
+];
+
+const COMMON_COUNTRIES = [
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "AU", name: "Australia" },
+  { code: "IN", name: "India" },
+  { code: "PK", name: "Pakistan" },
+  { code: "EG", name: "Egypt" },
+  { code: "JO", name: "Jordan" },
+  { code: "LB", name: "Lebanon" },
+  { code: "Other", name: "Other" },
 ];
 
 // Common universities list (can be expanded)
@@ -67,26 +81,28 @@ export function StructuredCVEducationForm({
   initialData,
 }: StructuredCVEducationFormProps) {
   const [formData, setFormData] = useState<EducationFormData>({
-    degreeType: initialData?.degreeType || "",
-    degreeTitle: initialData?.degreeTitle || "",
-    fieldOfStudy: initialData?.fieldOfStudy || "",
+    level: initialData?.level || "",
+    program: initialData?.program || "",
+    majors: initialData?.majors || [],
+    minors: initialData?.minors || [],
     institution: initialData?.institution || "",
-    institutionLocation: initialData?.institutionLocation || "",
+    country: initialData?.country || "",
     startDate: initialData?.startDate || "",
     endDate: initialData?.endDate || "",
     isCurrent: initialData?.isCurrent || false,
+    gpaValue: initialData?.gpaValue || "",
+    gpaScale: initialData?.gpaScale || "4.0",
     predictedGrade: initialData?.predictedGrade || "",
     finalGrade: initialData?.finalGrade || "",
-    gpa: initialData?.gpa,
     modules: initialData?.modules || [],
-    courseworkHighlights: initialData?.courseworkHighlights || [],
-    honorsAwards: initialData?.honorsAwards || [],
+    awards: initialData?.awards || [],
   });
 
   const [customInstitution, setCustomInstitution] = useState("");
   const [showCustomInstitution, setShowCustomInstitution] = useState(false);
   const [newModule, setNewModule] = useState("");
-  const [newHighlight, setNewHighlight] = useState("");
+  const [newMajor, setNewMajor] = useState("");
+  const [newMinor, setNewMinor] = useState("");
   const [newAward, setNewAward] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -108,18 +124,23 @@ export function StructuredCVEducationForm({
     }
   };
 
-  const addItem = (field: "modules" | "courseworkHighlights" | "honorsAwards", value: string) => {
+  const addItem = (field: "modules" | "majors" | "minors" | "awards", value: string, maxLength?: number) => {
     if (!value.trim()) return;
+    if (maxLength && formData[field].length >= maxLength) {
+      alert(`Maximum ${maxLength} items allowed`);
+      return;
+    }
     setFormData((prev) => ({
       ...prev,
       [field]: [...prev[field], value.trim()],
     }));
     if (field === "modules") setNewModule("");
-    if (field === "courseworkHighlights") setNewHighlight("");
-    if (field === "honorsAwards") setNewAward("");
+    if (field === "majors") setNewMajor("");
+    if (field === "minors") setNewMinor("");
+    if (field === "awards") setNewAward("");
   };
 
-  const removeItem = (field: "modules" | "courseworkHighlights" | "honorsAwards", index: number) => {
+  const removeItem = (field: "modules" | "majors" | "minors" | "awards", index: number) => {
     setFormData((prev) => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
@@ -146,9 +167,10 @@ export function StructuredCVEducationForm({
 
   const isFormValid = () => {
     return (
-      formData.degreeType &&
-      formData.fieldOfStudy &&
+      formData.level &&
+      formData.program &&
       (showCustomInstitution ? customInstitution : formData.institution) &&
+      formData.country &&
       formData.startDate
     );
   };
