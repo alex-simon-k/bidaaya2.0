@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         bio: true,
         whatsapp: true,
         linkedin: true,
+        location: true, // Add location field
         calendlyLink: true,
         graduationYear: true,
         mena: true,
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      profile: user
+      user: user // Return as 'user' not 'profile' for consistency
     })
 
   } catch (error) {
@@ -113,6 +114,7 @@ export async function PATCH(request: NextRequest) {
       bio,
       whatsapp,
       linkedin,
+      location, // Add location field
       calendlyLink,
       graduationYear,
       mena,
@@ -157,6 +159,7 @@ export async function PATCH(request: NextRequest) {
     if (bio !== undefined) updateData.bio = bio
     if (whatsapp !== undefined) updateData.whatsapp = whatsapp
     if (linkedin !== undefined) updateData.linkedin = linkedin
+    if (location !== undefined) updateData.location = location // Add location update
     if (calendlyLink !== undefined) {
       // Clean up malformed URLs - remove duplicate protocols and domains
       let cleanedLink = calendlyLink

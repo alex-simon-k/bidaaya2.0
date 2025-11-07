@@ -53,13 +53,25 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        console.log("📥 Fetching user profile data...");
         const response = await fetch("/api/user/profile");
         if (response.ok) {
           const data = await response.json();
+          console.log("✅ User data fetched:", data.user);
+          console.log("📋 Phase I data available:", {
+            name: data.user?.name,
+            dateOfBirth: data.user?.dateOfBirth,
+            email: data.user?.email,
+            whatsapp: data.user?.whatsapp,
+            location: data.user?.location,
+            linkedin: data.user?.linkedin
+          });
           setUserData(data.user);
+        } else {
+          console.error("❌ Failed to fetch user data:", response.status);
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("❌ Error fetching user data:", error);
       }
     };
     fetchUserData();
