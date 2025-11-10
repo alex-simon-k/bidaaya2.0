@@ -120,10 +120,10 @@ export function StructuredCVEducationFormSimple({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-6 bg-bidaaya-dark rounded-lg">
-      <div className="flex items-center gap-2 mb-2">
-        <GraduationCap className="w-5 h-5 text-bidaaya-accent" />
-        <h3 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Add Education</h3>
+    <form onSubmit={handleSubmit} className="space-y-3 p-3 sm:p-4 bg-bidaaya-dark rounded-lg max-h-[70vh] overflow-y-auto">
+      <div className="flex items-center gap-2 mb-1">
+        <GraduationCap className="w-4 h-4 text-bidaaya-accent" />
+        <h3 className="text-base sm:text-lg font-semibold text-bidaaya-light">Add Education</h3>
       </div>
 
       {/* Level */}
@@ -331,23 +331,25 @@ export function StructuredCVEducationFormSimple({
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2 sm:gap-3 pt-2">
-        <Button
-          type="submit"
-          disabled={isSaving}
-          className="flex-1 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white text-sm sm:text-base"
-        >
-          {isSaving ? "Saving..." : "Save"}
-        </Button>
-        <Button
-          type="button"
-          onClick={onCancel}
-          variant="outline"
-          className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10 text-sm sm:text-base"
-        >
-          Skip
-        </Button>
+      {/* Actions - Sticky at bottom */}
+      <div className="sticky bottom-0 bg-bidaaya-dark pt-3 pb-1 -mx-3 px-3 border-t border-bidaaya-light/10">
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            disabled={isSaving}
+            className="flex-1 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white text-sm h-10"
+          >
+            {isSaving ? "Saving..." : "Save"}
+          </Button>
+          <Button
+            type="button"
+            onClick={onCancel}
+            variant="outline"
+            className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10 text-sm h-10"
+          >
+            Skip
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -119,24 +119,17 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
 
     setChecklistItems((prev) => prev.map((item) => {
       switch (item.id) {
-        case "personal_info":
-          // ONLY mark complete if CV database has education entry
+        case "profile":
+          // Profile completed in Phase I (always true if they're in Phase II)
+          return { ...item, completed: true };
+        case "education":
           return { ...item, completed: cvProgress.educationCount > 0 };
-        case "work_experience":
+        case "experience":
           return { ...item, completed: cvProgress.experienceCount > 0 };
         case "projects":
           return { ...item, completed: cvProgress.projectsCount > 0 };
         case "skills":
-          // Check actual skills count from CV database
           return { ...item, completed: (cvProgress.skillsCount || 0) >= 3 };
-        case "volunteering":
-          return { ...item, completed: cvProgress.experienceCount > 1 };
-        case "career_goals":
-          return { ...item, completed: cvProgress.overallScore >= 40 };
-        case "hobbies":
-          return { ...item, completed: cvProgress.overallScore >= 30 };
-        case "availability":
-          return { ...item, completed: cvProgress.overallScore >= 50 };
         default:
           return item;
       }

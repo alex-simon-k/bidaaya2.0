@@ -98,54 +98,36 @@ export function ProfileCompletionChecklist({ items, className }: ProfileCompleti
   );
 }
 
-// Default checklist items
+// Default checklist items - Phase II Steps
 export const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
   {
-    id: "personal_info",
-    label: "Personal Information",
-    description: "Name, university, major, year of study",
+    id: "profile",
+    label: "Profile & Contact",
+    description: "Name, email, phone, location",
     completed: false,
   },
   {
-    id: "work_experience",
+    id: "education",
+    label: "Education",
+    description: "Your degree, institution, and key courses",
+    completed: false,
+  },
+  {
+    id: "experience",
     label: "Work Experience",
-    description: "Previous jobs, internships, responsibilities",
+    description: "Internships, jobs, and volunteering",
     completed: false,
   },
   {
     id: "projects",
     label: "Projects",
-    description: "Academic or personal projects you've worked on",
+    description: "Personal projects and tech you've used",
     completed: false,
   },
   {
     id: "skills",
-    label: "Skills & Competencies",
-    description: "Technical skills, languages, tools you know",
-    completed: false,
-  },
-  {
-    id: "volunteering",
-    label: "Volunteering & Extracurriculars",
-    description: "Volunteer work, clubs, leadership roles",
-    completed: false,
-  },
-  {
-    id: "hobbies",
-    label: "Hobbies & Interests",
-    description: "Personal interests that make you unique",
-    completed: false,
-  },
-  {
-    id: "career_goals",
-    label: "Career Goals",
-    description: "What kind of opportunities you're looking for",
-    completed: false,
-  },
-  {
-    id: "availability",
-    label: "Availability & Preferences",
-    description: "When you're available, preferred locations, work type",
+    label: "Skills",
+    description: "Your top technical and soft skills",
     completed: false,
   },
 ];
