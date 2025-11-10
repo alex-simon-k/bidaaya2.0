@@ -418,18 +418,19 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                 <Button
                   onClick={moveToPreviousSection}
                   variant="outline"
-                className="border-bidaaya-light/20 text-bidaaya-light"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <Button
-                onClick={handleSkip}
-                className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-              >
-                Skip for Now
-              </Button>
-            </div>
+                  className="border-bidaaya-light/20 text-bidaaya-light"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleSkip}
+                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                >
+                  Skip for Now
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
