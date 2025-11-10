@@ -270,18 +270,18 @@ export function StructuredOnboardingChat({ onComplete }: StructuredOnboardingCha
 
       {/* Input Area - Chat Style */}
       {currentQuestion && !isSubmitting && (
-        <div className="bg-white border-t border-gray-200 px-6 py-6">
+        <div className="bg-white border-t border-gray-200 px-4 py-4 sm:px-6 sm:py-6">
           <div className="max-w-2xl mx-auto">
             {/* Multiple Choice Options */}
             {(currentQuestion.type === 'multipleChoice' || currentQuestion.type === 'terms') && (
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {currentQuestion.options?.map((option) => (
                   <motion.button
                     key={option}
                     onClick={() => handleMultipleChoiceAnswer(option)}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    className="w-full py-3.5 px-5 bg-white hover:bg-emerald-50 border-2 border-gray-200 hover:border-emerald-500 rounded-xl text-gray-700 hover:text-emerald-700 font-medium text-base transition-all duration-200 text-left shadow-sm"
+                    className="w-full py-3 px-4 sm:py-3.5 sm:px-5 bg-white hover:bg-emerald-50 border-2 border-gray-200 hover:border-emerald-500 rounded-xl text-gray-700 hover:text-emerald-700 font-medium text-base transition-all duration-200 text-left shadow-sm"
                   >
                     {option}
                   </motion.button>
@@ -301,17 +301,17 @@ export function StructuredOnboardingChat({ onComplete }: StructuredOnboardingCha
 
             {/* Text/Date/Phone/URL Input */}
             {(currentQuestion.type === 'text' || currentQuestion.type === 'date' || currentQuestion.type === 'phone' || currentQuestion.type === 'url') && (
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-50 border border-red-200 rounded-lg px-4 py-2.5"
+                    className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 sm:px-4 sm:py-2.5"
                   >
                     <p className="text-red-700 text-sm">{error}</p>
                   </motion.div>
                 )}
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <input
                     type={currentQuestion.type === 'date' ? 'date' : currentQuestion.type === 'phone' ? 'tel' : currentQuestion.type === 'url' ? 'url' : 'text'}
                     value={textInput}
@@ -319,14 +319,14 @@ export function StructuredOnboardingChat({ onComplete }: StructuredOnboardingCha
                     onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
                     placeholder={currentQuestion.placeholder}
                     autoFocus
-                    className="flex-1 bg-white border-2 border-gray-300 focus:border-emerald-500 rounded-xl px-5 py-3.5 text-gray-800 placeholder-gray-400 text-base outline-none transition-colors shadow-sm"
+                    className="flex-1 bg-white border-2 border-gray-300 focus:border-emerald-500 rounded-xl px-4 py-3 sm:px-5 sm:py-3.5 text-gray-800 placeholder-gray-400 text-base outline-none transition-colors shadow-sm"
                   />
                   <motion.button
                     onClick={handleTextSubmit}
                     disabled={(!textInput.trim() && currentQuestion.required)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl px-7 py-3.5 text-white font-semibold transition-all duration-200 shadow-md"
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl px-5 py-3 sm:px-7 sm:py-3.5 text-white font-semibold transition-all duration-200 shadow-md whitespace-nowrap"
                   >
                     {currentQuestion.required ? (
                       'Next'

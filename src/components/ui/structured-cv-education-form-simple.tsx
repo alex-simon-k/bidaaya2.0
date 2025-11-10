@@ -120,11 +120,15 @@ export function StructuredCVEducationFormSimple({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 p-3 sm:p-4 bg-bidaaya-dark rounded-lg max-h-[70vh] overflow-y-auto">
-      <div className="flex items-center gap-2 mb-1">
+    <form onSubmit={handleSubmit} className="bg-bidaaya-dark rounded-lg flex flex-col max-h-[75vh]">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
         <GraduationCap className="w-4 h-4 text-bidaaya-accent" />
         <h3 className="text-base sm:text-lg font-semibold text-bidaaya-light">Add Education</h3>
       </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-3 sm:px-4 space-y-3 pb-3">
 
       {/* Level */}
       <div className="space-y-2">
@@ -331,8 +335,10 @@ export function StructuredCVEducationFormSimple({
         )}
       </div>
 
-      {/* Actions - Sticky at bottom */}
-      <div className="sticky bottom-0 bg-bidaaya-dark pt-3 pb-1 -mx-3 px-3 border-t border-bidaaya-light/10">
+      </div>
+
+      {/* Actions - Fixed at bottom */}
+      <div className="border-t border-bidaaya-light/10 px-3 py-3 sm:px-4 bg-bidaaya-dark">
         <div className="flex gap-2">
           <Button
             type="submit"
