@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { User, GraduationCap, Briefcase, FolderKanban, Award, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
-import { StructuredCVEducationForm } from "./structured-cv-education-form";
+import { StructuredCVEducationFormSimple } from "./structured-cv-education-form-simple";
 import { StructuredCVProfileForm } from "./structured-cv-profile-form";
 import { StructuredCVExperienceForm } from "./structured-cv-experience-form";
 import { StructuredCVProjectsForm } from "./structured-cv-projects-form";
@@ -112,7 +112,7 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
     }
   };
 
-  const handleEducationSave = async (data: EducationFormData) => {
+  const handleEducationSave = async (data: any) => {
     try {
       const response = await fetch("/api/cv/education", {
         method: "POST",
@@ -134,6 +134,32 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
       // DON'T auto-move to next - allow adding more education entries
     } catch (error) {
       console.error("Error saving education:", error);
+      throw error;
+    }
+  };
+
+  const handleExperienceSave = async (data: any) => {
+    try {
+      const response = await fetch("/api/cv/experience", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save experience");
+      }
+
+      const result = await response.json();
+      setSavedItems((prev) => ({
+        ...prev,
+        experience: [...prev.experience, result.experience]
+      }));
+      setCompletedSections((prev) => new Set([...prev, "experience"]));
+      
+      // DON'T auto-move to next - allow adding more experiences
+    } catch (error) {
+      console.error("Error saving experience:", error);
       throw error;
     }
   };
@@ -311,38 +337,34 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
 
         {currentSection === "education" && (
           <div className="max-w-2xl mx-auto">
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-sm text-bidaaya-light">
-                <strong>Add all your education.</strong> High school, foundation, bachelor's, master's – add each one separately. 
-                Click "Add Another Education" to add multiple entries.
+            <div className="mb-4 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-xs sm:text-sm text-bidaaya-light">
+                <strong>Add your education.</strong> High school, bachelor's, master's – add each one.
               </p>
             </div>
-            <StructuredCVEducationForm
-              key={educationFormKey} // Force remount when key changes
+            <StructuredCVEducationFormSimple
+              key={educationFormKey}
               onSave={handleEducationSave}
               onCancel={handleSkip}
             />
             {savedItems.education.length > 0 && (
-              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg space-y-3">
-                <p className="text-sm text-bidaaya-light font-semibold">
-                  ✓ Saved {savedItems.education.length} education entr{savedItems.education.length > 1 ? "ies" : "y"}
+              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
+                <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
+                  ✓ Saved {savedItems.education.length}
                 </p>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
-                    onClick={() => {
-                      // Reset form by changing key (forces remount)
-                      setEducationFormKey(prev => prev + 1);
-                    }}
+                    onClick={() => setEducationFormKey(prev => prev + 1)}
                     variant="outline"
-                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
                   >
-                    + Add Another Education
+                    + Add Another
                   </Button>
                   <Button
                     onClick={moveToNextSection}
-                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
                   >
-                    Continue to Work Experience <ArrowRight className="w-4 h-4 ml-2" />
+                    Continue <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               </div>
@@ -351,81 +373,81 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
         )}
 
         {currentSection === "experience" && (
-          <div className="max-w-2xl mx-auto text-center py-20">
-            <Briefcase className="w-16 h-16 text-bidaaya-accent mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-bidaaya-light mb-2">Work Experience</h3>
-            <p className="text-bidaaya-light/60 mb-6">
-              Coming soon! For now, you can add experience through the chat.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button
-                onClick={moveToPreviousSection}
-                variant="outline"
-                className="border-bidaaya-light/20 text-bidaaya-light"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <Button
-                onClick={handleSkip}
-                className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-              >
-                Skip for Now
-              </Button>
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-4 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-xs sm:text-sm text-bidaaya-light">
+                <strong>Add work experience.</strong> Internships, jobs, volunteering – we'll ask details later!
+              </p>
             </div>
+            <StructuredCVExperienceForm
+              key={savedItems.experience.length}
+              onSave={handleExperienceSave}
+              onCancel={handleSkip}
+            />
+            {savedItems.experience.length > 0 && (
+              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
+                <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
+                  ✓ Saved {savedItems.experience.length}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    onClick={() => {}}
+                    variant="outline"
+                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
+                  >
+                    + Add Another
+                  </Button>
+                  <Button
+                    onClick={moveToNextSection}
+                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
+                  >
+                    Continue <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {currentSection === "projects" && (
           <div className="max-w-2xl mx-auto">
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-sm text-bidaaya-light">
-                <strong>Add your projects.</strong> Personal projects, side hustles, hackathons – anything you've built! 
-                Click "Add Another Project" to add multiple entries.
+            <div className="mb-4 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-xs sm:text-sm text-bidaaya-light">
+                <strong>Add projects.</strong> Personal projects, hackathons – we'll ask more later!
               </p>
             </div>
             <StructuredCVProjectsForm
-              key={savedItems.projects.length} // Reset form after each save
+              key={savedItems.projects.length}
               onSave={handleProjectSave}
               onCancel={handleSkip}
             />
             {savedItems.projects.length > 0 && (
-              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg space-y-3">
-                <p className="text-sm text-bidaaya-light font-semibold">
-                  ✓ Saved {savedItems.projects.length} project{savedItems.projects.length > 1 ? "s" : ""}
+              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
+                <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
+                  ✓ Saved {savedItems.projects.length}
                 </p>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
-                    onClick={() => {
-                      // Form will reset automatically due to key change
-                    }}
+                    onClick={() => {}}
                     variant="outline"
-                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
                   >
-                    + Add Another Project
+                    + Add Another
                   </Button>
                   <Button
                     onClick={moveToNextSection}
-                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
                   >
-                    Continue to Skills <ArrowRight className="w-4 h-4 ml-2" />
+                    Continue <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               </div>
             )}
             {savedItems.projects.length === 0 && (
-              <div className="mt-4 flex gap-3">
-                <Button
-                  onClick={moveToPreviousSection}
-                  variant="outline"
-                  className="border-bidaaya-light/20 text-bidaaya-light"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
                 <Button
                   onClick={handleSkip}
-                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
                 >
                   Skip for Now
                 </Button>
@@ -436,64 +458,53 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
 
         {currentSection === "skills" && (
           <div className="max-w-2xl mx-auto">
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-sm text-bidaaya-light">
-                <strong>Add your skills.</strong> Technical skills, soft skills, tools – anything that makes you stand out! 
-                Add them one by one. You can add as many as you want.
+            <div className="mb-4 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-xs sm:text-sm text-bidaaya-light">
+                <strong>Add skills.</strong> Python, Leadership, Excel – add your top skills!
               </p>
             </div>
             <StructuredCVSkillsForm
-              key={savedItems.skills.length} // Reset form after each save
+              key={savedItems.skills.length}
               onSave={handleSkillSave}
               onCancel={handleSkip}
             />
             {savedItems.skills.length > 0 && (
-              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg space-y-3">
-                <p className="text-sm text-bidaaya-light font-semibold">
-                  ✓ Saved {savedItems.skills.length} skill{savedItems.skills.length > 1 ? "s" : ""}
+              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
+                <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
+                  ✓ Saved {savedItems.skills.length}
                 </p>
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {savedItems.skills.map((skill: any, idx: number) => (
                     <div
                       key={idx}
-                      className="px-3 py-2 bg-bidaaya-accent/20 border border-bidaaya-accent/30 rounded-lg text-sm text-bidaaya-light"
+                      className="px-2 py-1 bg-bidaaya-accent/20 rounded-full text-xs text-bidaaya-light"
                     >
                       {skill.skillName}
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
-                    onClick={() => {
-                      // Form will reset automatically due to key change
-                    }}
+                    onClick={() => {}}
                     variant="outline"
-                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
                   >
-                    + Add Another Skill
+                    + Add Another
                   </Button>
                   <Button
                     onClick={handleComplete}
-                    className="bg-green-500 hover:bg-green-600"
+                    className="bg-green-500 hover:bg-green-600 text-sm"
                   >
-                    Complete Profile <CheckCircle2 className="w-4 h-4 ml-2" />
+                    Complete <CheckCircle2 className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               </div>
             )}
             {savedItems.skills.length === 0 && (
-              <div className="mt-4 flex gap-3">
-                <Button
-                  onClick={moveToPreviousSection}
-                  variant="outline"
-                  className="border-bidaaya-light/20 text-bidaaya-light"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
                 <Button
                   onClick={handleSkip}
-                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
                 >
                   Skip for Now
                 </Button>

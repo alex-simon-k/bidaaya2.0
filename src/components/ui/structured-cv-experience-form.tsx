@@ -4,83 +4,70 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Briefcase, MapPin, Calendar, Clock } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ExperienceFormData {
-  organization: string;
-  roleTitle: string;
-  employmentType: string; // Internship, Part_time, Voluntary, Project, Freelance
-  locationMode: string; // On_site, Hybrid, Remote
-  city?: string;
-  country?: string; // ISO-2
+  title: string; // Job title
+  employer: string; // Company name
+  employmentType: string; // internship, full_time, part_time, etc.
   startDate: string; // YYYY-MM
-  endDate?: string; // YYYY-MM
+  endDate: string; // YYYY-MM
   isCurrent: boolean;
-  hoursPerWeek?: number;
+  summary?: string; // Brief description (optional)
 }
 
 interface StructuredCVExperienceFormProps {
   onSave: (data: ExperienceFormData) => Promise<void>;
   onCancel: () => void;
-  initialData?: Partial<ExperienceFormData>;
 }
 
 const EMPLOYMENT_TYPES = [
-  { value: "Internship", label: "Internship" },
-  { value: "Part_time", label: "Part-time" },
-  { value: "Voluntary", label: "Voluntary" },
-  { value: "Project", label: "Project-based" },
-  { value: "Freelance", label: "Freelance" },
-];
-
-const LOCATION_MODES = [
-  { value: "On_site", label: "On-site" },
-  { value: "Hybrid", label: "Hybrid" },
-  { value: "Remote", label: "Remote" },
-];
-
-const COMMON_COUNTRIES = [
-  { code: "AE", name: "United Arab Emirates" },
-  { code: "SA", name: "Saudi Arabia" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "US", name: "United States" },
-  { code: "CA", name: "Canada" },
-  { code: "AU", name: "Australia" },
-  { code: "IN", name: "India" },
-  { code: "PK", name: "Pakistan" },
-  { code: "EG", name: "Egypt" },
-  { code: "JO", name: "Jordan" },
-  { code: "LB", name: "Lebanon" },
+  { value: "internship", label: "Internship" },
+  { value: "full_time", label: "Full-time" },
+  { value: "part_time", label: "Part-time" },
+  { value: "contract", label: "Contract" },
+  { value: "freelance", label: "Freelance" },
+  { value: "volunteer", label: "Volunteer" },
 ];
 
 export function StructuredCVExperienceForm({
   onSave,
   onCancel,
-  initialData,
 }: StructuredCVExperienceFormProps) {
   const [formData, setFormData] = useState<ExperienceFormData>({
-    organization: initialData?.organization || "",
-    roleTitle: initialData?.roleTitle || "",
-    employmentType: initialData?.employmentType || "",
-    locationMode: initialData?.locationMode || "",
-    city: initialData?.city || "",
-    country: initialData?.country || "",
-    startDate: initialData?.startDate || "",
-    endDate: initialData?.endDate || "",
-    isCurrent: initialData?.isCurrent || false,
-    hoursPerWeek: initialData?.hoursPerWeek,
+    title: "",
+    employer: "",
+    employmentType: "",
+    startDate: "",
+    endDate: "",
+    isCurrent: false,
+    summary: "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const isRemote = formData.locationMode === "Remote";
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.title.trim()) newErrors.title = "Job title is required";
+    if (!formData.employer.trim()) newErrors.employer = "Company name is required";
+    if (!formData.employmentType) newErrors.employmentType = "Type is required";
+    if (!formData.startDate) newErrors.startDate = "Start date is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
 
+    if (!validateForm()) return;
+
+    setIsSaving(true);
     try {
       await onSave(formData);
     } catch (error) {
@@ -90,166 +77,105 @@ export function StructuredCVExperienceForm({
     }
   };
 
-  const isFormValid = () => {
-    return (
-      formData.organization &&
-      formData.roleTitle &&
-      formData.employmentType &&
-      formData.locationMode &&
-      formData.startDate &&
-      (isRemote || formData.country) // Country required unless Remote
-    );
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-bidaaya-dark rounded-lg">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-6 bg-bidaaya-dark rounded-lg">
       <div className="flex items-center gap-2 mb-4">
         <Briefcase className="w-5 h-5 text-bidaaya-accent" />
-        <h3 className="text-xl font-semibold text-bidaaya-light">Work Experience</h3>
+        <h3 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Add Work Experience</h3>
       </div>
 
-      {/* Organization */}
+      {/* Job Title */}
       <div className="space-y-2">
-        <Label htmlFor="organization" className="text-bidaaya-light">
-          Organization / Company <span className="text-red-400">*</span>
+        <Label htmlFor="title" className="text-bidaaya-light text-sm">
+          Job Title <span className="text-red-400">*</span>
         </Label>
         <Input
-          id="organization"
-          value={formData.organization}
-          onChange={(e) => setFormData((prev) => ({ ...prev, organization: e.target.value }))}
-          placeholder="e.g., Goldman Sachs, Google"
-          className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+          placeholder="e.g., Marketing Intern"
+          className={cn(
+            "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
+            errors.title && "border-red-400"
+          )}
           required
         />
+        {errors.title && <p className="text-xs text-red-400">{errors.title}</p>}
       </div>
 
-      {/* Role Title */}
+      {/* Company */}
       <div className="space-y-2">
-        <Label htmlFor="roleTitle" className="text-bidaaya-light">
-          Role / Job Title <span className="text-red-400">*</span>
+        <Label htmlFor="employer" className="text-bidaaya-light text-sm">
+          Company <span className="text-red-400">*</span>
         </Label>
         <Input
-          id="roleTitle"
-          value={formData.roleTitle}
-          onChange={(e) => setFormData((prev) => ({ ...prev, roleTitle: e.target.value }))}
-          placeholder="e.g., Software Engineering Intern"
-          className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+          id="employer"
+          value={formData.employer}
+          onChange={(e) => setFormData((prev) => ({ ...prev, employer: e.target.value }))}
+          placeholder="e.g., Google, Local Startup"
+          className={cn(
+            "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
+            errors.employer && "border-red-400"
+          )}
           required
         />
+        {errors.employer && <p className="text-xs text-red-400">{errors.employer}</p>}
       </div>
 
-      {/* Employment Type & Location Mode */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="employmentType" className="text-bidaaya-light">
-            Employment Type <span className="text-red-400">*</span>
-          </Label>
-          <Select
-            value={formData.employmentType}
-            onValueChange={(value) => setFormData((prev) => ({ ...prev, employmentType: value }))}
+      {/* Employment Type */}
+      <div className="space-y-2">
+        <Label htmlFor="employmentType" className="text-bidaaya-light text-sm">
+          Type <span className="text-red-400">*</span>
+        </Label>
+        <Select
+          value={formData.employmentType}
+          onValueChange={(value) => setFormData((prev) => ({ ...prev, employmentType: value }))}
+        >
+          <SelectTrigger
+            className={cn(
+              "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
+              errors.employmentType && "border-red-400"
+            )}
           >
-            <SelectTrigger className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light">
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {EMPLOYMENT_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="locationMode" className="text-bidaaya-light">
-            Location Mode <span className="text-red-400">*</span>
-          </Label>
-          <Select
-            value={formData.locationMode}
-            onValueChange={(value) => setFormData((prev) => ({ ...prev, locationMode: value }))}
-          >
-            <SelectTrigger className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light">
-              <SelectValue placeholder="Select mode" />
-            </SelectTrigger>
-            <SelectContent>
-              {LOCATION_MODES.map((mode) => (
-                <SelectItem key={mode.value} value={mode.value}>
-                  {mode.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent className="bg-bidaaya-dark border-bidaaya-light/20">
+            {EMPLOYMENT_TYPES.map((type) => (
+              <SelectItem
+                key={type.value}
+                value={type.value}
+                className="text-bidaaya-light hover:bg-bidaaya-light/10"
+              >
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.employmentType && <p className="text-xs text-red-400">{errors.employmentType}</p>}
       </div>
-
-      {/* City & Country (conditional) */}
-      {!isRemote && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="city" className="text-bidaaya-light flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              City
-            </Label>
-            <Input
-              id="city"
-              value={formData.city}
-              onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
-              placeholder="e.g., Dubai"
-              className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="country" className="text-bidaaya-light">
-              Country <span className="text-red-400">*</span>
-            </Label>
-            <Select
-              value={formData.country}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, country: value }))}
-            >
-              <SelectTrigger className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light">
-                <SelectValue placeholder="Select country" />
-              </SelectTrigger>
-              <SelectContent>
-                {COMMON_COUNTRIES.map((country) => (
-                  <SelectItem key={country.code} value={country.code}>
-                    {country.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
-
-      {isRemote && (
-        <p className="text-sm text-bidaaya-light/60">
-          📍 Location not required for remote positions
-        </p>
-      )}
 
       {/* Dates */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="startDate" className="text-bidaaya-light flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Start Date <span className="text-red-400">*</span>
+          <Label htmlFor="startDate" className="text-bidaaya-light text-sm">
+            Start <span className="text-red-400">*</span>
           </Label>
           <Input
             id="startDate"
             type="month"
             value={formData.startDate}
             onChange={(e) => setFormData((prev) => ({ ...prev, startDate: e.target.value }))}
-            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+            className={cn(
+              "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
+              errors.startDate && "border-red-400"
+            )}
             required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endDate" className="text-bidaaya-light flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            End Date {formData.isCurrent && "(Current)"}
+          <Label htmlFor="endDate" className="text-bidaaya-light text-sm">
+            End
           </Label>
           <Input
             id="endDate"
@@ -257,71 +183,64 @@ export function StructuredCVExperienceForm({
             value={formData.endDate}
             onChange={(e) => setFormData((prev) => ({ ...prev, endDate: e.target.value }))}
             disabled={formData.isCurrent}
-            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+            className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light disabled:opacity-50"
           />
         </div>
       </div>
 
-      {/* Currently Working */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
+      {/* Current Job Checkbox */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
           id="isCurrent"
           checked={formData.isCurrent}
-          onCheckedChange={(checked) => {
+          onChange={(e) => {
             setFormData((prev) => ({
               ...prev,
-              isCurrent: checked as boolean,
-              endDate: checked ? "" : prev.endDate,
+              isCurrent: e.target.checked,
+              endDate: e.target.checked ? "" : prev.endDate,
             }));
           }}
+          className="w-4 h-4 rounded border-bidaaya-light/20 bg-bidaaya-light/10 text-bidaaya-accent"
         />
-        <Label htmlFor="isCurrent" className="text-bidaaya-light cursor-pointer">
+        <Label htmlFor="isCurrent" className="text-bidaaya-light text-sm cursor-pointer">
           I currently work here
         </Label>
       </div>
 
-      {/* Hours per Week */}
+      {/* Summary (optional) */}
       <div className="space-y-2">
-        <Label htmlFor="hoursPerWeek" className="text-bidaaya-light flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          Hours per Week (Optional)
+        <Label htmlFor="summary" className="text-bidaaya-light text-sm">
+          Brief Description (optional)
         </Label>
-        <Input
-          id="hoursPerWeek"
-          type="number"
-          min="1"
-          max="168"
-          value={formData.hoursPerWeek || ""}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              hoursPerWeek: e.target.value ? parseInt(e.target.value) : undefined,
-            }))
-          }
-          placeholder="e.g., 40"
-          className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light"
+        <Textarea
+          id="summary"
+          value={formData.summary}
+          onChange={(e) => setFormData((prev) => ({ ...prev, summary: e.target.value }))}
+          placeholder="1-2 sentences about your role (optional - we'll ask more details later!)"
+          rows={2}
+          className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light resize-none text-sm"
         />
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 pt-4">
+      <div className="flex gap-2 sm:gap-3 pt-2">
         <Button
           type="submit"
-          disabled={!isFormValid() || isSaving}
-          className="flex-1 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+          disabled={isSaving}
+          className="flex-1 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white text-sm sm:text-base"
         >
-          {isSaving ? "Saving..." : "Save Experience"}
+          {isSaving ? "Saving..." : "Save"}
         </Button>
         <Button
           type="button"
           onClick={onCancel}
           variant="outline"
-          className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10"
+          className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10 text-sm sm:text-base"
         >
-          Cancel
+          Skip
         </Button>
       </div>
     </form>
   );
 }
-

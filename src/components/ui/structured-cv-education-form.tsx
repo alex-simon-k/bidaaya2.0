@@ -11,9 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface EducationFormData {
   level: string; // High_School, Foundation, Bachelor, Master, PhD, Other
-  program: string; // e.g., "BSc Economics"
-  majors: string[]; // max 3
-  minors: string[]; // max 2
+  program: string; // e.g., "BSc Economics" (this is their major/degree)
   institution: string;
   country: string; // ISO-2
   startDate: string;
@@ -23,7 +21,7 @@ interface EducationFormData {
   gpaScale?: string; // e.g., "4.0", "100"
   predictedGrade?: string;
   finalGrade?: string;
-  modules: string[]; // max 6
+  modules: string[]; // max 6 - KEY COURSES ONLY
   awards: string[];
 }
 
@@ -81,8 +79,6 @@ export function StructuredCVEducationForm({
   const [formData, setFormData] = useState<EducationFormData>({
     level: initialData?.level || "",
     program: initialData?.program || "",
-    majors: initialData?.majors || [],
-    minors: initialData?.minors || [],
     institution: initialData?.institution || "",
     country: initialData?.country || "",
     startDate: initialData?.startDate || "",
