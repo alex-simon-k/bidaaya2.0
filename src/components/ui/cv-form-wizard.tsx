@@ -47,6 +47,7 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
     skills: [],
   });
   const [userData, setUserData] = useState<any>(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
   const [educationFormKey, setEducationFormKey] = useState(0); // Used to reset education form
 
   // Fetch user data from Phase I
@@ -54,6 +55,7 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
     const fetchUserData = async () => {
       try {
         console.log("📥 Fetching user profile data...");
+        setIsLoadingUserData(true);
         const response = await fetch("/api/user/profile");
         if (response.ok) {
           const data = await response.json();
@@ -72,6 +74,8 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
         }
       } catch (error) {
         console.error("❌ Error fetching user data:", error);
+      } finally {
+        setIsLoadingUserData(false);
       }
     };
     fetchUserData();
@@ -231,18 +235,24 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                 Make sure your <strong>email</strong>, <strong>phone (WhatsApp)</strong>, and <strong>LinkedIn</strong> are correct!
               </p>
             </div>
-            <StructuredCVProfileForm
-              onSave={handleProfileSave}
-              onCancel={handleSkip}
-              initialData={userData ? {
-                name: userData.name || '',
-                dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
-                email: userData.email || '',
-                whatsapp: userData.whatsapp || '',
-                location: userData.location || '',
-                linkedinUrl: userData.linkedin || '',
-              } : undefined}
-            />
+            {isLoadingUserData ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bidaaya-accent"></div>
+              </div>
+            ) : (
+              <StructuredCVProfileForm
+                onSave={handleProfileSave}
+                onCancel={handleSkip}
+                initialData={userData ? {
+                  name: userData.name || '',
+                  dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
+                  email: userData.email || '',
+                  whatsapp: userData.whatsapp || '',
+                  location: userData.location || '',
+                  linkedinUrl: userData.linkedin || '',
+                } : undefined}
+              />
+            )}
           </div>
         )}
 

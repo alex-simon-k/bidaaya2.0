@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +54,23 @@ export function StructuredCVProfileForm({
     portfolioUrl: initialData?.portfolioUrl || "",
     githubUrl: initialData?.githubUrl || "",
   });
+
+  // Update form when initialData changes (when API data loads)
+  useEffect(() => {
+    if (initialData) {
+      console.log("🔄 ProfileForm: Updating with initialData:", initialData);
+      setFormData({
+        name: initialData.name || "",
+        dateOfBirth: initialData.dateOfBirth || "",
+        email: initialData.email || "",
+        whatsapp: initialData.whatsapp || "",
+        location: initialData.location || "",
+        linkedinUrl: initialData.linkedinUrl || "",
+        portfolioUrl: initialData.portfolioUrl || "",
+        githubUrl: initialData.githubUrl || "",
+      });
+    }
+  }, [initialData]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
