@@ -138,6 +138,59 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
     }
   };
 
+  const handleProjectSave = async (data: any) => {
+    try {
+      const response = await fetch("/api/cv/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save project");
+      }
+
+      const result = await response.json();
+      setSavedItems((prev) => ({
+        ...prev,
+        projects: [...prev.projects, result.project]
+      }));
+      setCompletedSections((prev) => new Set([...prev, "projects"]));
+      
+      // DON'T auto-move to next - allow adding more projects
+    } catch (error) {
+      console.error("Error saving project:", error);
+      throw error;
+    }
+  };
+
+  const handleSkillSave = async (data: any) => {
+    try {
+      const response = await fetch("/api/cv/skills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save skill");
+      }
+
+      const result = await response.json();
+      setSavedItems((prev) => ({
+        ...prev,
+        skills: [...prev.skills, result.skill]
+      }));
+      setCompletedSections((prev) => new Set([...prev, "skills"]));
+      
+      // DON'T auto-move to next - allow adding more skills
+    } catch (error) {
+      console.error("Error saving skill:", error);
+      throw error;
+    }
+  };
+
   const moveToNextSection = () => {
     const currentIndex = sections.findIndex((s) => s.id === currentSection);
     if (currentIndex < sections.length - 1) {
@@ -324,16 +377,47 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
         )}
 
         {currentSection === "projects" && (
-          <div className="max-w-2xl mx-auto text-center py-20">
-            <FolderKanban className="w-16 h-16 text-bidaaya-accent mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-bidaaya-light mb-2">Projects</h3>
-            <p className="text-bidaaya-light/60 mb-6">
-              Coming soon! For now, you can add projects through the chat.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button
-                onClick={moveToPreviousSection}
-                variant="outline"
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-sm text-bidaaya-light">
+                <strong>Add your projects.</strong> Personal projects, side hustles, hackathons – anything you've built! 
+                Click "Add Another Project" to add multiple entries.
+              </p>
+            </div>
+            <StructuredCVProjectsForm
+              key={savedItems.projects.length} // Reset form after each save
+              onSave={handleProjectSave}
+              onCancel={handleSkip}
+            />
+            {savedItems.projects.length > 0 && (
+              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg space-y-3">
+                <p className="text-sm text-bidaaya-light font-semibold">
+                  ✓ Saved {savedItems.projects.length} project{savedItems.projects.length > 1 ? "s" : ""}
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      // Form will reset automatically due to key change
+                    }}
+                    variant="outline"
+                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                  >
+                    + Add Another Project
+                  </Button>
+                  <Button
+                    onClick={moveToNextSection}
+                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                  >
+                    Continue to Skills <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            {savedItems.projects.length === 0 && (
+              <div className="mt-4 flex gap-3">
+                <Button
+                  onClick={moveToPreviousSection}
+                  variant="outline"
                 className="border-bidaaya-light/20 text-bidaaya-light"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -350,28 +434,70 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
         )}
 
         {currentSection === "skills" && (
-          <div className="max-w-2xl mx-auto text-center py-20">
-            <Award className="w-16 h-16 text-bidaaya-accent mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-bidaaya-light mb-2">Skills</h3>
-            <p className="text-bidaaya-light/60 mb-6">
-              Coming soon! For now, you can add skills through the chat.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button
-                onClick={moveToPreviousSection}
-                variant="outline"
-                className="border-bidaaya-light/20 text-bidaaya-light"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <Button
-                onClick={handleComplete}
-                className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-              >
-                Complete
-              </Button>
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-sm text-bidaaya-light">
+                <strong>Add your skills.</strong> Technical skills, soft skills, tools – anything that makes you stand out! 
+                Add them one by one. You can add as many as you want.
+              </p>
             </div>
+            <StructuredCVSkillsForm
+              key={savedItems.skills.length} // Reset form after each save
+              onSave={handleSkillSave}
+              onCancel={handleSkip}
+            />
+            {savedItems.skills.length > 0 && (
+              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg space-y-3">
+                <p className="text-sm text-bidaaya-light font-semibold">
+                  ✓ Saved {savedItems.skills.length} skill{savedItems.skills.length > 1 ? "s" : ""}
+                </p>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {savedItems.skills.map((skill: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="px-3 py-2 bg-bidaaya-accent/20 border border-bidaaya-accent/30 rounded-lg text-sm text-bidaaya-light"
+                    >
+                      {skill.skillName}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      // Form will reset automatically due to key change
+                    }}
+                    variant="outline"
+                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                  >
+                    + Add Another Skill
+                  </Button>
+                  <Button
+                    onClick={handleComplete}
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    Complete Profile <CheckCircle2 className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            {savedItems.skills.length === 0 && (
+              <div className="mt-4 flex gap-3">
+                <Button
+                  onClick={moveToPreviousSection}
+                  variant="outline"
+                  className="border-bidaaya-light/20 text-bidaaya-light"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleSkip}
+                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                >
+                  Skip for Now
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
