@@ -80,7 +80,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       const creditsResponse = await fetch('/api/credits/balance');
       if (creditsResponse.ok) {
         const creditsData = await creditsResponse.json();
-        setUserCredits(creditsData.remaining || 0);
+        setUserCredits(creditsData.balance || 0);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -252,20 +252,6 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
-        {/* Welcome Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-bidaaya-light mb-2">
-            Welcome back, {session?.user?.name?.split(' ')[0]}
-          </h1>
-          <p className="text-bidaaya-light/60">
-            Set your preferences and let our AI agent find opportunities for you
-          </p>
-        </motion.div>
-
         {/* AI Agent Controls V2 */}
         <AgentControlsV2 onPreferencesChange={(prefs) => {
           console.log('Preferences updated:', prefs);

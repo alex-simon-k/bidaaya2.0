@@ -128,28 +128,6 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 mb-8">
-      {/* Logo Header */}
-      <motion.div 
-        className="text-center mb-6"
-        animate={{ 
-          opacity: [0.9, 1, 0.9],
-          scale: [0.98, 1, 0.98]
-        }}
-        transition={{
-          duration: 2.5,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      >
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Zap className="w-8 h-8 text-bidaaya-accent" />
-          <h1 className="text-2xl font-semibold text-bidaaya-light">Bidaaya AI Agent</h1>
-        </div>
-        <p className="text-sm text-bidaaya-light/60">
-          Set your preferences and let our AI agent find opportunities
-        </p>
-      </motion.div>
-
       {/* Glass Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
