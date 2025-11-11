@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { OpportunityFeedbackModal } from "@/components/ui/opportunity-feedback-modal";
+import { AgentControls } from "@/components/ui/agent-controls";
 import { cn } from "@/lib/utils";
 
 interface Opportunity {
@@ -156,9 +157,15 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             Welcome back, {session?.user?.name?.split(' ')[0]}
           </h1>
           <p className="text-bidaaya-light/60">
-            Here are today's personalized opportunities
+            Set your preferences and let our AI agent find opportunities for you
           </p>
         </motion.div>
+
+        {/* Agent Controls */}
+        <AgentControls onPreferencesChange={(prefs) => {
+          console.log('Preferences updated:', prefs);
+          // TODO: Refresh opportunities based on new preferences
+        }} />
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
