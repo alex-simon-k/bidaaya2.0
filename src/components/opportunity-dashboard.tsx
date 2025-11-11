@@ -18,6 +18,7 @@ import {
   X,
   User,
   Settings,
+  Zap,
   CreditCard,
   LogOut,
   Building,
