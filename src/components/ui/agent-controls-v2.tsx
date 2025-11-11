@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Target, Briefcase, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -45,6 +45,7 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
   const [showFieldDropdown, setShowFieldDropdown] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activityMessageIndex, setActivityMessageIndex] = useState(0)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Rotate activity messages when active
   useEffect(() => {
@@ -56,6 +57,20 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
     
     return () => clearInterval(interval)
   }, [isActive])
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    if (!showFieldDropdown) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowFieldDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showFieldDropdown])
 
   useEffect(() => {
     loadPreferences()
@@ -129,14 +144,6 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 mb-8">
-      {/* Close dropdown when clicking outside - MUST BE BEFORE DROPDOWN */}
-      {showFieldDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowFieldDropdown(false)}
-        />
-      )}
-
       {/* Glass Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -210,7 +217,7 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
         </div>
 
         {/* Smart Select Field */}
-        <div className="mb-5 relative">
+        <div className="mb-5 relative" ref={dropdownRef}>
           <label className="text-xs text-bidaaya-light/60 mb-2 block">Field of Interest</label>
           <button
             onClick={() => setShowFieldDropdown(!showFieldDropdown)}
@@ -234,8 +241,7 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-[#0f1320]/95 backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl z-50"
-                style={{ maxHeight: '400px' }}
+                className="absolute top-full left-0 right-0 mt-2 bg-[#0f1320]/95 backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl z-[9999]"
               >
                 {/* Search Input */}
                 <div className="p-3 border-b border-white/[0.05]">
@@ -254,16 +260,13 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
 
                 {/* Options */}
                 <div 
-                  className="overflow-y-auto overscroll-contain"
+                  className="overflow-y-scroll"
                   style={{ 
-                    maxHeight: '320px',
+                    maxHeight: '300px',
                     WebkitOverflowScrolling: 'touch',
                     scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(139, 92, 246, 0.3) transparent',
-                    touchAction: 'pan-y'
+                    scrollbarColor: 'rgba(139, 92, 246, 0.3) transparent'
                   }}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onTouchMove={(e) => e.stopPropagation()}
                 >
                   {filteredFields.length === 0 ? (
                     <div className="p-4 text-center text-sm text-bidaaya-light/40">
