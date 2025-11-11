@@ -10,6 +10,7 @@ interface AgentControlsV2Props {
 }
 
 const FIELDS = [
+  { value: 'best_for_you', label: 'Best for You', icon: '✨', description: 'AI-matched opportunities' },
   { value: 'technology', label: 'Technology', icon: '💻', description: 'Software, AI, Data' },
   { value: 'business', label: 'Business', icon: '📊', description: 'Strategy, Operations' },
   { value: 'marketing', label: 'Marketing', icon: '📱', description: 'Digital, Brand, Growth' },
@@ -38,7 +39,7 @@ const ACTIVITY_MESSAGES = [
 
 export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
   const [commitmentLevel, setCommitmentLevel] = useState<string>('part_time')
-  const [field, setField] = useState<string>('any')
+  const [field, setField] = useState<string>('best_for_you')
   const [isActive, setIsActive] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showFieldDropdown, setShowFieldDropdown] = useState(false)
@@ -243,7 +244,14 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
                 </div>
 
                 {/* Options */}
-                <div className="max-h-64 overflow-y-auto">
+                <div 
+                  className="max-h-64 overflow-y-auto overscroll-contain"
+                  style={{ 
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(139, 92, 246, 0.3) transparent'
+                  }}
+                >
                   {filteredFields.length === 0 ? (
                     <div className="p-4 text-center text-sm text-bidaaya-light/40">
                       No fields found

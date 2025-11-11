@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
           ? JSON.parse(user.agentPreferences) 
           : user.agentPreferences)
       : {
-          commitmentLevel: 'flexible',
-          field: 'any',
+          commitmentLevel: 'part_time',
+          field: 'best_for_you',
           agentActive: false,
         };
 
@@ -73,7 +73,21 @@ export async function PATCH(request: NextRequest) {
 
     // Validate inputs
     const validCommitmentLevels = ['full_time', 'part_time', 'flexible'];
-    const validFields = ['technology', 'business', 'marketing', 'design', 'finance', 'consulting', 'engineering', 'any'];
+    const validFields = [
+      'best_for_you', 
+      'technology', 
+      'business', 
+      'marketing', 
+      'design', 
+      'finance', 
+      'consulting', 
+      'engineering', 
+      'sustainability', 
+      'data', 
+      'healthcare', 
+      'legal', 
+      'any'
+    ];
 
     if (commitmentLevel && !validCommitmentLevels.includes(commitmentLevel)) {
       return NextResponse.json(
