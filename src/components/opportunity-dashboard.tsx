@@ -290,7 +290,12 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               </motion.div>
             )}
 
-            {/* Early Release Opportunity (Locked) */}
+            {/* Early Release Opportunity (Locked) 
+                Only shows when:
+                1. There's at least one Bidaaya opportunity
+                2. The first opportunity has an "earlyAccessUntil" date set
+                3. This creates a premium, time-limited section that requires credits to unlock
+            */}
             {bidaayaOpportunities.length > 0 && bidaayaOpportunities[0].earlyAccessUntil && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

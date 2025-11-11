@@ -234,7 +234,8 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-[#0f1320]/95 backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl z-50 overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-2 bg-[#0f1320]/95 backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl z-50"
+                style={{ maxHeight: '400px' }}
               >
                 {/* Search Input */}
                 <div className="p-3 border-b border-white/[0.05]">
@@ -253,12 +254,16 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
 
                 {/* Options */}
                 <div 
-                  className="max-h-64 overflow-y-auto overscroll-contain"
+                  className="overflow-y-auto overscroll-contain"
                   style={{ 
+                    maxHeight: '320px',
                     WebkitOverflowScrolling: 'touch',
                     scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(139, 92, 246, 0.3) transparent'
+                    scrollbarColor: 'rgba(139, 92, 246, 0.3) transparent',
+                    touchAction: 'pan-y'
                   }}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
                 >
                   {filteredFields.length === 0 ? (
                     <div className="p-4 text-center text-sm text-bidaaya-light/40">
