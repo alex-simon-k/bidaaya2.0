@@ -85,6 +85,7 @@ model User {
   subscriptionStatus       SubscriptionStatus     @default(ACTIVE)
   isExternalCompany        Boolean                @default(false)
   companySource            String?                // "signup", "admin_created", "bulk_upload"
+  agentPreferences         Json?                  // AI agent preferences: { commitmentLevel, field, agentActive }
   aiMatches                AIMatch[]
   accounts                 Account[]
   applications             Application[]
