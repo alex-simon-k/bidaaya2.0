@@ -340,8 +340,27 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   if (showStructuredForm) {
     return (
       <CVFormWizard
-        onComplete={() => {
+        onComplete={async () => {
           setShowStructuredForm(false);
+          
+          // Update onboarding phase to 'complete' to show the opportunity dashboard
+          try {
+            const response = await fetch('/api/user/profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                onboardingPhase: 'complete',
+              }),
+            });
+
+            if (response.ok) {
+              // Force page reload to show the opportunity dashboard
+              window.location.href = '/dashboard';
+            }
+          } catch (error) {
+            console.error('Error updating onboarding phase:', error);
+          }
+          
           // Refresh CV progress
           fetch('/api/cv/progress')
             .then(res => res.json())
