@@ -59,7 +59,7 @@ interface AIAssistantCardProps {
 }
 
 export function AIAssistantCard({ className }: AIAssistantCardProps) {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
   const [showSidebar, setShowSidebar] = useState(false);
   const [showVoiceInput, setShowVoiceInput] = useState(false);
@@ -354,6 +354,9 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
             });
 
             if (response.ok) {
+              // Update the session with new onboarding phase
+              await update({ onboardingPhase: 'complete' });
+              
               // Force page reload to show the opportunity dashboard
               window.location.href = '/dashboard';
             }
