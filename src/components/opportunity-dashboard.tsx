@@ -26,7 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { OpportunityFeedbackModal } from "@/components/ui/opportunity-feedback-modal";
-import { AgentControls } from "@/components/ui/agent-controls";
+import { AgentControlsV2 } from "@/components/ui/agent-controls-v2";
 import { cn } from "@/lib/utils";
 
 interface Opportunity {
@@ -123,7 +123,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const externalOpportunities = opportunities.filter(opp => opp.type === 'external').slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-bidaaya-dark">
+    <div className="min-h-screen bg-[#0B0F1A]">
       {/* Sidebar Overlay */}
       {showSidebar && (
         <div 
@@ -266,8 +266,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           </p>
         </motion.div>
 
-        {/* Agent Controls */}
-        <AgentControls onPreferencesChange={(prefs) => {
+        {/* AI Agent Controls V2 */}
+        <AgentControlsV2 onPreferencesChange={(prefs) => {
           console.log('Preferences updated:', prefs);
           // TODO: Refresh opportunities based on new preferences
         }} />
