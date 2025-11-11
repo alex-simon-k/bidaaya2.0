@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
 
     score = Math.min(100, Math.round(score));
 
-    const isMinimumViable = score >= 60 && educationCount > 0 && (experienceCount > 0 || projectsCount > 0);
+    // Minimum viable: Profile + Education + Experience + Skills (Projects optional)
+    const isMinimumViable = educationCount > 0 && experienceCount > 0 && skillsCount >= 3;
 
     // Determine next section to complete
     let nextSection = 'profile';

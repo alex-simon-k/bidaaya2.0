@@ -81,6 +81,46 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
     fetchUserData();
   }, []);
 
+  // Fetch saved CV data (education, experience, projects, skills)
+  useEffect(() => {
+    const fetchSavedCVData = async () => {
+      try {
+        // Fetch education
+        const eduRes = await fetch("/api/cv/education");
+        if (eduRes.ok) {
+          const eduData = await eduRes.json();
+          setSavedItems((prev) => ({ ...prev, education: eduData.education || [] }));
+        }
+
+        // Fetch experience
+        const expRes = await fetch("/api/cv/experience");
+        if (expRes.ok) {
+          const expData = await expRes.json();
+          setSavedItems((prev) => ({ ...prev, experience: expData.experiences || [] }));
+        }
+
+        // Fetch projects
+        const projRes = await fetch("/api/cv/projects");
+        if (projRes.ok) {
+          const projData = await projRes.json();
+          setSavedItems((prev) => ({ ...prev, projects: projData.projects || [] }));
+        }
+
+        // Fetch skills
+        const skillsRes = await fetch("/api/cv/skills");
+        if (skillsRes.ok) {
+          const skillsData = await skillsRes.json();
+          setSavedItems((prev) => ({ ...prev, skills: skillsData.skills || [] }));
+        }
+
+        console.log("✅ Saved CV data loaded");
+      } catch (error) {
+        console.error("❌ Error fetching saved CV data:", error);
+      }
+    };
+    fetchSavedCVData();
+  }, []);
+
   const sections: { id: Section; label: string; icon: any }[] = [
     { id: "profile", label: "Profile", icon: User },
     { id: "education", label: "Education", icon: GraduationCap },
@@ -342,6 +382,20 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                 <strong>Add your education.</strong> High school, bachelor's, master's – add each one.
               </p>
             </div>
+            
+            {/* Show saved education items */}
+            {savedItems.education.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-sm text-bidaaya-light font-semibold">Your Education:</p>
+                {savedItems.education.map((edu: any, idx: number) => (
+                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg">
+                    <p className="text-sm text-bidaaya-light font-medium">{edu.degreeTitle || edu.program}</p>
+                    <p className="text-xs text-bidaaya-light/60">{edu.institution}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <StructuredCVEducationFormSimple
               key={educationFormKey}
               onSave={handleEducationSave}
@@ -379,6 +433,20 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                 <strong>Add work experience.</strong> Internships, jobs, volunteering – we'll ask details later!
               </p>
             </div>
+            
+            {/* Show saved experience items */}
+            {savedItems.experience.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-sm text-bidaaya-light font-semibold">Your Experience:</p>
+                {savedItems.experience.map((exp: any, idx: number) => (
+                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg">
+                    <p className="text-sm text-bidaaya-light font-medium">{exp.title}</p>
+                    <p className="text-xs text-bidaaya-light/60">{exp.employer}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <StructuredCVExperienceForm
               key={savedItems.experience.length}
               onSave={handleExperienceSave}
@@ -390,13 +458,6 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                   ✓ Saved {savedItems.experience.length}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Button
-                    onClick={() => {}}
-                    variant="outline"
-                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
-                  >
-                    + Add Another
-                  </Button>
                   <Button
                     onClick={moveToNextSection}
                     className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
@@ -411,11 +472,33 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
 
         {currentSection === "projects" && (
           <div className="max-w-2xl mx-auto">
-            <div className="mb-4 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="mb-4 p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
               <p className="text-xs sm:text-sm text-bidaaya-light">
-                <strong>Add projects.</strong> Personal projects, hackathons – we'll ask more later!
+                <strong>Add projects (optional).</strong> Personal projects, hackathons – skip if you don't have any yet!
               </p>
             </div>
+            
+            {/* Show saved projects */}
+            {savedItems.projects.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-sm text-bidaaya-light font-semibold">Your Projects:</p>
+                {savedItems.projects.map((proj: any, idx: number) => (
+                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg">
+                    <p className="text-sm text-bidaaya-light font-medium">{proj.name}</p>
+                    {proj.techStack && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {proj.techStack.slice(0, 3).map((tech: string, i: number) => (
+                          <span key={i} className="text-xs text-bidaaya-light/60 bg-bidaaya-light/5 px-2 py-0.5 rounded">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <StructuredCVProjectsForm
               key={savedItems.projects.length}
               onSave={handleProjectSave}
@@ -428,29 +511,12 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button
-                    onClick={() => {}}
-                    variant="outline"
-                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
-                  >
-                    + Add Another
-                  </Button>
-                  <Button
                     onClick={moveToNextSection}
                     className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
                   >
                     Continue <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
-              </div>
-            )}
-            {savedItems.projects.length === 0 && (
-              <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                <Button
-                  onClick={handleSkip}
-                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
-                >
-                  Skip for Now
-                </Button>
               </div>
             )}
           </div>
@@ -460,20 +526,15 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
           <div className="max-w-2xl mx-auto">
             <div className="mb-4 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <p className="text-xs sm:text-sm text-bidaaya-light">
-                <strong>Add skills.</strong> Python, Leadership, Excel – add your top skills!
+                <strong>Add skills.</strong> Python, Leadership, Excel – add at least 3 skills!
               </p>
             </div>
-            <StructuredCVSkillsForm
-              key={savedItems.skills.length}
-              onSave={handleSkillSave}
-              onCancel={handleSkip}
-            />
+            
+            {/* Show saved skills */}
             {savedItems.skills.length > 0 && (
-              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
-                <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
-                  ✓ Saved {savedItems.skills.length}
-                </p>
-                <div className="flex flex-wrap gap-1.5 mb-2">
+              <div className="mb-4">
+                <p className="text-sm text-bidaaya-light font-semibold mb-2">Your Skills:</p>
+                <div className="flex flex-wrap gap-1.5">
                   {savedItems.skills.map((skill: any, idx: number) => (
                     <div
                       key={idx}
@@ -483,14 +544,20 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            <StructuredCVSkillsForm
+              key={savedItems.skills.length}
+              onSave={handleSkillSave}
+              onCancel={handleSkip}
+            />
+            {savedItems.skills.length >= 3 && (
+              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
+                <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
+                  ✓ Saved {savedItems.skills.length} skills
+                </p>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Button
-                    onClick={() => {}}
-                    variant="outline"
-                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
-                  >
-                    + Add Another
-                  </Button>
                   <Button
                     onClick={handleComplete}
                     className="bg-green-500 hover:bg-green-600 text-sm"
@@ -498,16 +565,6 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                     Complete <CheckCircle2 className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
-              </div>
-            )}
-            {savedItems.skills.length === 0 && (
-              <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                <Button
-                  onClick={handleSkip}
-                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
-                >
-                  Skip for Now
-                </Button>
               </div>
             )}
           </div>
