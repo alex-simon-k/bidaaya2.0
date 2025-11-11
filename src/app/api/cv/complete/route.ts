@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         whatsapp: true,
         location: true,
         linkedin: true,
-        profilePicture: true,
+        image: true,
         bio: true,
       },
     });

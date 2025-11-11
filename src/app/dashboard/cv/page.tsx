@@ -31,7 +31,7 @@ interface CVData {
     whatsapp?: string
     location?: string
     linkedin?: string
-    profilePicture?: string
+    image?: string
     bio?: string
   }
   education: any[]
