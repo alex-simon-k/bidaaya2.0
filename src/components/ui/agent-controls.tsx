@@ -97,26 +97,22 @@ export function AgentControls({ onPreferencesChange }: AgentControlsProps) {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-r from-bidaaya-accent/10 to-blue-500/10 border border-bidaaya-accent/20 rounded-xl p-6 mb-8"
+      className="bg-gradient-to-r from-bidaaya-accent/10 to-blue-500/10 border border-bidaaya-accent/20 rounded-xl p-4 mb-6"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-            isActive ? "bg-green-500" : "bg-bidaaya-light/10"
+      {/* Compact Header with Toggle */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Zap className={cn(
+            "w-5 h-5",
+            isActive ? "text-green-400" : "text-bidaaya-light/40"
+          )} />
+          <h2 className="text-base font-semibold text-bidaaya-light">AI Agent</h2>
+          <span className={cn(
+            "text-xs px-2 py-0.5 rounded-full",
+            isActive ? "bg-green-500/20 text-green-400" : "bg-bidaaya-light/10 text-bidaaya-light/40"
           )}>
-            <Zap className={cn(
-              "w-5 h-5 transition-colors",
-              isActive ? "text-white" : "text-bidaaya-light/40"
-            )} />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-bidaaya-light">AI Agent</h2>
-            <p className="text-xs text-bidaaya-light/60">
-              {isActive ? 'Actively searching for opportunities' : 'Set your preferences to start'}
-            </p>
-          </div>
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
         </div>
 
         {/* Toggle Switch */}
@@ -124,7 +120,7 @@ export function AgentControls({ onPreferencesChange }: AgentControlsProps) {
           onClick={toggleAgent}
           disabled={isSaving}
           className={cn(
-            "relative w-14 h-8 rounded-full transition-colors duration-300",
+            "relative w-12 h-6 rounded-full transition-colors duration-300",
             isActive ? "bg-green-500" : "bg-bidaaya-light/20",
             isSaving && "opacity-50 cursor-not-allowed"
           )}
@@ -132,67 +128,51 @@ export function AgentControls({ onPreferencesChange }: AgentControlsProps) {
           <motion.div
             animate={{ x: isActive ? 24 : 2 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-md"
+            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md"
           />
         </button>
       </div>
 
-      {/* Commitment Level */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Target className="w-4 h-4 text-bidaaya-accent" />
-          <label className="text-sm font-medium text-bidaaya-light">Commitment Level</label>
+      {/* Compact Controls Row */}
+      <div className="flex gap-3">
+        {/* Commitment Level Dropdown */}
+        <div className="flex-1">
+          <label className="text-xs text-bidaaya-light/60 mb-1 flex items-center gap-1">
+            <Target className="w-3 h-3" />
+            Commitment
+          </label>
+          <select
+            value={commitmentLevel}
+            onChange={(e) => handleCommitmentChange(e.target.value)}
+            disabled={isSaving}
+            className="w-full bg-bidaaya-light/5 border border-bidaaya-light/20 rounded-lg px-3 py-2 text-sm text-bidaaya-light focus:border-bidaaya-accent focus:outline-none"
+          >
+            {COMMITMENT_LEVELS.map((level) => (
+              <option key={level.value} value={level.value}>
+                {level.label} ({level.description})
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {COMMITMENT_LEVELS.map((level) => (
-            <button
-              key={level.value}
-              onClick={() => handleCommitmentChange(level.value)}
-              disabled={isSaving}
-              className={cn(
-                "p-3 rounded-lg border transition-all text-left",
-                commitmentLevel === level.value
-                  ? "bg-bidaaya-accent/20 border-bidaaya-accent text-bidaaya-light"
-                  : "bg-bidaaya-light/5 border-bidaaya-light/10 text-bidaaya-light/60 hover:border-bidaaya-light/20",
-                isSaving && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium">{level.label}</span>
-                {commitmentLevel === level.value && (
-                  <CheckCircle className="w-4 h-4 text-bidaaya-accent" />
-                )}
-              </div>
-              <span className="text-xs opacity-70">{level.description}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Field Selection */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Briefcase className="w-4 h-4 text-bidaaya-accent" />
-          <label className="text-sm font-medium text-bidaaya-light">Field of Interest</label>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {FIELDS.map((fieldOption) => (
-            <button
-              key={fieldOption.value}
-              onClick={() => handleFieldChange(fieldOption.value)}
-              disabled={isSaving}
-              className={cn(
-                "p-3 rounded-lg border transition-all text-center",
-                field === fieldOption.value
-                  ? "bg-bidaaya-accent/20 border-bidaaya-accent text-bidaaya-light"
-                  : "bg-bidaaya-light/5 border-bidaaya-light/10 text-bidaaya-light/60 hover:border-bidaaya-light/20",
-                isSaving && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <div className="text-2xl mb-1">{fieldOption.icon}</div>
-              <div className="text-xs font-medium">{fieldOption.label}</div>
-            </button>
-          ))}
+        {/* Field Dropdown */}
+        <div className="flex-1">
+          <label className="text-xs text-bidaaya-light/60 mb-1 flex items-center gap-1">
+            <Briefcase className="w-3 h-3" />
+            Field
+          </label>
+          <select
+            value={field}
+            onChange={(e) => handleFieldChange(e.target.value)}
+            disabled={isSaving}
+            className="w-full bg-bidaaya-light/5 border border-bidaaya-light/20 rounded-lg px-3 py-2 text-sm text-bidaaya-light focus:border-bidaaya-accent focus:outline-none"
+          >
+            {FIELDS.map((fieldOption) => (
+              <option key={fieldOption.value} value={fieldOption.value}>
+                {fieldOption.icon} {fieldOption.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -201,11 +181,11 @@ export function AgentControls({ onPreferencesChange }: AgentControlsProps) {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
+          className="mt-3 p-2 bg-green-500/10 border border-green-500/20 rounded-lg"
         >
-          <p className="text-sm text-green-400 flex items-center gap-2">
-            <Zap className="w-4 h-4" />
-            Agent is active! You'll receive personalized opportunities matching your preferences.
+          <p className="text-xs text-green-400 flex items-center gap-1.5">
+            <Zap className="w-3 h-3" />
+            Agent active - finding opportunities for you
           </p>
         </motion.div>
       )}
