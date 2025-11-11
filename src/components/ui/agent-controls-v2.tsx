@@ -129,6 +129,14 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 mb-8">
+      {/* Close dropdown when clicking outside - MUST BE BEFORE DROPDOWN */}
+      {showFieldDropdown && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowFieldDropdown(false)}
+        />
+      )}
+
       {/* Glass Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -316,14 +324,6 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
           </div>
         )}
       </motion.div>
-
-      {/* Close dropdown when clicking outside */}
-      {showFieldDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowFieldDropdown(false)}
-        />
-      )}
     </div>
   )
 }

@@ -289,49 +289,64 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               </motion.div>
             )}
 
-            {/* Bidaaya Exclusive Internships */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="h-5 w-5 text-blue-400" />
-                <h2 className="text-xl font-semibold text-bidaaya-light">Bidaaya Exclusive</h2>
-              </div>
+            {/* Early Release Opportunity (Locked) */}
+            {bidaayaOpportunities.length > 0 && bidaayaOpportunities[0].earlyAccessUntil && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mb-8"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Zap className="h-5 w-5 text-yellow-400" />
+                  <h2 className="text-xl font-semibold text-bidaaya-light">Early Release Opportunity</h2>
+                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                    🔥 Just Released
+                  </Badge>
+                </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {bidaayaOpportunities.map((opp, index) => (
-                  <motion.div
-                    key={opp.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + index * 0.1 }}
-                  >
-                    <OpportunityCard opportunity={opp} onReportMismatch={handleReportMismatch} />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
+                <OpportunityCard 
+                  opportunity={bidaayaOpportunities[0]} 
+                  onReportMismatch={handleReportMismatch}
+                  earlyAccessUnlocksRemaining={earlyAccessUnlocksRemaining}
+                  userPlan={userPlan}
+                />
+              </motion.div>
+            )}
 
-            {/* External Opportunities */}
+            {/* All Opportunities */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Globe className="h-5 w-5 text-purple-400" />
-                <h2 className="text-xl font-semibold text-bidaaya-light">External Opportunities</h2>
+                <Briefcase className="h-5 w-5 text-bidaaya-accent" />
+                <h2 className="text-xl font-semibold text-bidaaya-light">Available Opportunities</h2>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Remaining Bidaaya Exclusive (skip first if it's early release) */}
+                {bidaayaOpportunities
+                  .slice(bidaayaOpportunities[0]?.earlyAccessUntil ? 1 : 0)
+                  .map((opp, index) => (
+                    <motion.div
+                      key={opp.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                    >
+                      <OpportunityCard opportunity={opp} onReportMismatch={handleReportMismatch} />
+                    </motion.div>
+                  ))}
+
+                {/* External Opportunities */}
                 {externalOpportunities.map((opp, index) => (
                   <motion.div
                     key={opp.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
+                    transition={{ delay: 0.4 + (bidaayaOpportunities.length > 1 ? bidaayaOpportunities.length - 1 : 0) * 0.1 + index * 0.1 }}
                   >
                     <OpportunityCard opportunity={opp} isExternal onReportMismatch={handleReportMismatch} />
                   </motion.div>
