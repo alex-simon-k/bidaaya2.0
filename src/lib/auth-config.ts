@@ -115,6 +115,8 @@ export const authOptions: NextAuthOptions = {
                 profileCompleted: false,
                 subscriptionPlan: 'FREE',
                 subscriptionStatus: 'ACTIVE',
+                credits: 20, // Default credits for free plan
+                creditsRefreshDate: new Date(),
               }
             });
             

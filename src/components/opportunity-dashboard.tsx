@@ -15,6 +15,13 @@ import {
   Menu,
   ChevronRight,
   Flag,
+  X,
+  User,
+  Settings,
+  CreditCard,
+  LogOut,
+  Building,
+  Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +59,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const [loading, setLoading] = useState(true);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -116,6 +124,103 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
   return (
     <div className="min-h-screen bg-bidaaya-dark">
+      {/* Sidebar Overlay */}
+      {showSidebar && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
+      {/* Sidebar Panel */}
+      <div className={cn(
+        "fixed top-0 left-0 h-full w-80 bg-bidaaya-dark/95 backdrop-blur-xl border-r border-bidaaya-light/10 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
+        showSidebar ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-4 h-full flex flex-col safe-top overflow-y-auto">
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img 
+                  src="/android-chrome-192x192.png" 
+                  alt="Bidaaya Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className="text-bidaaya-light font-semibold">Bidaaya</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-bidaaya-light hover:bg-bidaaya-light/10"
+              onClick={() => setShowSidebar(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Credit Balance */}
+          <div className="bg-bidaaya-light/5 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-bidaaya-light/60">Available Credits</p>
+                <p className="text-2xl font-bold text-bidaaya-light">{userCredits}</p>
+              </div>
+              <CreditCard className="h-5 w-5 text-bidaaya-accent" />
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1">
+            <a
+              href="/dashboard"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-bidaaya-accent/10 text-bidaaya-accent"
+            >
+              <Home className="h-5 w-5" />
+              <span className="font-medium">Dashboard</span>
+            </a>
+            <a
+              href="/dashboard/projects"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+            >
+              <Briefcase className="h-5 w-5" />
+              <span>Internships</span>
+            </a>
+            <a
+              href="/dashboard/companies"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+            >
+              <Building className="h-5 w-5" />
+              <span>Companies</span>
+            </a>
+            <a
+              href="/dashboard/cv"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+            >
+              <User className="h-5 w-5" />
+              <span>My Profile</span>
+            </a>
+            <a
+              href="/dashboard/settings"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+            >
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
+            </a>
+          </nav>
+
+          {/* Sign Out */}
+          <button
+            onClick={() => window.location.href = '/api/auth/signout'}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 mt-4"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Navigation */}
       <div className="bg-bidaaya-dark/95 backdrop-blur-xl border-b border-bidaaya-light/10 safe-top">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -124,7 +229,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               variant="ghost"
               size="icon"
               className="text-bidaaya-light hover:bg-bidaaya-light/10"
-              onClick={onSidebarClick}
+              onClick={() => setShowSidebar(true)}
             >
               <Menu className="h-6 w-6" />
             </Button>
