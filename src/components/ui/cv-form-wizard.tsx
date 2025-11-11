@@ -402,24 +402,38 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
               onCancel={handleSkip}
             />
             {savedItems.education.length > 0 && (
-              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
-                <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
-                  ✓ Saved {savedItems.education.length}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button
-                    onClick={() => setEducationFormKey(prev => prev + 1)}
-                    variant="outline"
-                    className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
-                  >
-                    + Add Another
-                  </Button>
-                  <Button
-                    onClick={moveToNextSection}
-                    className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-sm"
-                  >
-                    Continue <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
+              <div className="mt-3 space-y-3">
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
+                    ✓ Saved {savedItems.education.length}
+                  </p>
+                </div>
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-xs sm:text-sm text-bidaaya-light mb-3">
+                    <strong>Ready to start applying?</strong> You can skip to your dashboard now, or add more details (experience, projects, skills) for better matches.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      onClick={() => setEducationFormKey(prev => prev + 1)}
+                      variant="outline"
+                      className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10 text-sm"
+                    >
+                      + Add Another Education
+                    </Button>
+                    <Button
+                      onClick={moveToNextSection}
+                      variant="outline"
+                      className="border-bidaaya-accent text-bidaaya-accent hover:bg-bidaaya-accent/10 text-sm"
+                    >
+                      Add Experience/Projects
+                    </Button>
+                    <Button
+                      onClick={handleComplete}
+                      className="bg-green-500 hover:bg-green-600 text-white text-sm"
+                    >
+                      Go to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -552,10 +566,11 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
               onSave={handleSkillSave}
               onCancel={handleSkip}
             />
-            {savedItems.skills.length >= 3 && (
+            {savedItems.skills.length > 0 && (
               <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
                 <p className="text-xs sm:text-sm text-bidaaya-light font-semibold">
-                  ✓ Saved {savedItems.skills.length} skills
+                  ✓ Saved {savedItems.skills.length} skill{savedItems.skills.length > 1 ? 's' : ''}
+                  {savedItems.skills.length < 3 && ' (add at least 3 recommended)'}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button
