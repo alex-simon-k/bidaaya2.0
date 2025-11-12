@@ -14,7 +14,7 @@ interface OpportunityCardV2Props {
     company: string
     companyLogo?: string
     location: string
-    type: 'internal' | 'external'
+    type: 'internal' | 'external' | 'early_access'
     matchScore?: number
     earlyAccessUntil?: Date | string | null
     isLocked?: boolean
