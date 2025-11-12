@@ -35,8 +35,8 @@ interface OpportunityDetailModalProps {
     description?: string
     requirements?: string[]
   }
-  applicationStatus?: 'not_applied' | 'applied' | 'interview' | 'rejected' | 'accepted'
-  onUpdateStatus?: (status: 'applied' | 'interview' | 'rejected' | 'accepted') => void
+  hasApplied?: boolean
+  onMarkAsApplied?: () => void
   onGenerateCV?: () => void
   onGenerateCoverLetter?: () => void
 }
@@ -45,51 +45,17 @@ export function OpportunityDetailModal({
   isOpen,
   onClose,
   opportunity,
-  applicationStatus = 'not_applied',
-  onUpdateStatus,
+  hasApplied = false,
+  onMarkAsApplied,
   onGenerateCV,
   onGenerateCoverLetter
 }: OpportunityDetailModalProps) {
-  const [showStatusOptions, setShowStatusOptions] = useState(false)
-
   const handleApply = () => {
     if (opportunity.type === 'external' && opportunity.applicationUrl) {
       window.open(opportunity.applicationUrl, '_blank')
-      // Show status tracking options after they click apply
-      setShowStatusOptions(true)
     } else {
       // For internal opportunities, navigate to application page
       window.location.href = `/dashboard/projects/${opportunity.id}`
-    }
-  }
-
-  const getStatusIcon = (status: typeof applicationStatus) => {
-    switch (status) {
-      case 'applied':
-        return <CheckCircle2 className="h-4 w-4" />
-      case 'interview':
-        return <Calendar className="h-4 w-4" />
-      case 'rejected':
-        return <XCircle className="h-4 w-4" />
-      case 'accepted':
-        return <Trophy className="h-4 w-4" />
-      default:
-        return null
-    }
-  }
-
-  const getStatusColor = (status: typeof applicationStatus) => {
-    switch (status) {
-      case 'applied':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-      case 'interview':
-        return 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-      case 'rejected':
-        return 'bg-red-500/20 text-red-400 border-red-500/30'
-      case 'accepted':
-        return 'bg-green-500/20 text-green-400 border-green-500/30'
-      default:
-        return ''
     }
   }
 
@@ -199,10 +165,10 @@ export function OpportunityDetailModal({
                     </Badge>
                   )}
 
-                  {applicationStatus !== 'not_applied' && (
-                    <Badge className={cn('px-3 py-1', getStatusColor(applicationStatus))}>
-                      {getStatusIcon(applicationStatus)}
-                      <span className="ml-1.5 capitalize">{applicationStatus}</span>
+                  {hasApplied && (
+                    <Badge className="px-3 py-1 bg-green-500/20 text-green-400 border-green-500/30">
+                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                      Applied
                     </Badge>
                   )}
                 </div>
@@ -262,87 +228,40 @@ export function OpportunityDetailModal({
                   </div>
 
                   {/* Apply Button */}
-                  <Button
-                    onClick={handleApply}
-                    disabled={applicationStatus === 'applied' || applicationStatus === 'interview' || applicationStatus === 'accepted'}
-                    className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {applicationStatus === 'applied' || applicationStatus === 'interview' || applicationStatus === 'accepted' ? (
-                      <>
+                  {!hasApplied ? (
+                    <Button
+                      onClick={handleApply}
+                      className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Apply Now
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button
+                        disabled
+                        className="w-full bg-green-500/20 text-green-400 cursor-default"
+                      >
                         <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Already Applied
-                      </>
-                    ) : (
-                      <>
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Apply Now
-                      </>
-                    )}
-                  </Button>
-
-                  {/* Status Tracking */}
-                  {(showStatusOptions || applicationStatus !== 'not_applied') && (
-                    <div className="space-y-2 pt-2">
-                      <p className="text-xs text-bidaaya-light/60 mb-2">Track your application:</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          onClick={() => onUpdateStatus?.('applied')}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            'text-xs',
-                            applicationStatus === 'applied' 
-                              ? 'border-blue-500/50 bg-blue-500/10 text-blue-400' 
-                              : 'border-bidaaya-light/20 text-bidaaya-light/60'
-                          )}
-                        >
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Applied
-                        </Button>
-                        <Button
-                          onClick={() => onUpdateStatus?.('interview')}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            'text-xs',
-                            applicationStatus === 'interview' 
-                              ? 'border-purple-500/50 bg-purple-500/10 text-purple-400' 
-                              : 'border-bidaaya-light/20 text-bidaaya-light/60'
-                          )}
-                        >
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Interview
-                        </Button>
-                        <Button
-                          onClick={() => onUpdateStatus?.('rejected')}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            'text-xs',
-                            applicationStatus === 'rejected' 
-                              ? 'border-red-500/50 bg-red-500/10 text-red-400' 
-                              : 'border-bidaaya-light/20 text-bidaaya-light/60'
-                          )}
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Rejected
-                        </Button>
-                        <Button
-                          onClick={() => onUpdateStatus?.('accepted')}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            'text-xs',
-                            applicationStatus === 'accepted' 
-                              ? 'border-green-500/50 bg-green-500/10 text-green-400' 
-                              : 'border-bidaaya-light/20 text-bidaaya-light/60'
-                          )}
-                        >
-                          <Trophy className="h-3 w-3 mr-1" />
-                          Accepted
-                        </Button>
-                      </div>
+                        Applied
+                      </Button>
+                      <p className="text-xs text-center text-bidaaya-light/60">
+                        Track this application in your Applications page
+                      </p>
                     </div>
+                  )}
+
+                  {/* Mark as Applied Button (after clicking Apply) */}
+                  {!hasApplied && onMarkAsApplied && (
+                    <Button
+                      onClick={onMarkAsApplied}
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Mark as Applied
+                    </Button>
                   )}
                 </div>
               </div>

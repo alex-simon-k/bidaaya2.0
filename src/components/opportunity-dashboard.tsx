@@ -70,7 +70,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const [showSidebar, setShowSidebar] = useState(false);
   const [earlyAccessDismissed, setEarlyAccessDismissed] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [opportunityStatuses, setOpportunityStatuses] = useState<Record<string, 'not_applied' | 'applied' | 'interview' | 'rejected' | 'accepted'>>({});
+  const [appliedOpportunities, setAppliedOpportunities] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadDashboardData();
@@ -126,9 +126,10 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
     setDetailModalOpen(true);
   };
 
-  const handleUpdateStatus = (opportunityId: string, status: 'applied' | 'interview' | 'rejected' | 'accepted') => {
-    setOpportunityStatuses(prev => ({ ...prev, [opportunityId]: status }));
-    // TODO: Persist status to backend
+  const handleMarkAsApplied = (opportunityId: string) => {
+    setAppliedOpportunities(prev => new Set(prev).add(opportunityId));
+    // TODO: Persist to backend
+    console.log('Marked as applied:', opportunityId);
   };
 
   const handleGenerateCV = () => {
@@ -290,19 +291,21 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 sm:pb-24">
         {/* AI Agent Controls V2 */}
-        <AgentControlsV2 onPreferencesChange={(prefs) => {
-          console.log('Preferences updated:', prefs);
-          // TODO: Refresh opportunities based on new preferences
-        }} />
+        <div className="mb-4">
+          <AgentControlsV2 onPreferencesChange={(prefs) => {
+            console.log('Preferences updated:', prefs);
+            // TODO: Refresh opportunities based on new preferences
+          }} />
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bidaaya-accent"></div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Early Access Banner - Compact & Dismissable */}
             {earlyAccessOpportunity && !earlyAccessDismissed && (
               <EarlyAccessBanner
@@ -315,24 +318,24 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-bidaaya-accent" />
-                <h2 className="text-xl font-semibold text-bidaaya-light">Top Matches</h2>
+                <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-bidaaya-accent" />
+                <h2 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Top Matches</h2>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={loadDashboardData}
-                className="border-bidaaya-light/20 text-bidaaya-light/70 hover:bg-bidaaya-light/10"
+                className="border-bidaaya-light/20 text-bidaaya-light/70 hover:bg-bidaaya-light/10 text-xs sm:text-sm h-8"
               >
-                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
             </div>
 
             {/* 2x2 Grid of Opportunities */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
               {[...bidaayaOpportunities, ...externalOpportunities]
                 .slice(0, 4)
                 .map((opp) => (
@@ -348,9 +351,9 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 Array.from({ length: 4 - [...bidaayaOpportunities, ...externalOpportunities].length }).map((_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="rounded-xl border border-dashed border-bidaaya-light/10 bg-bidaaya-light/5 p-4 flex items-center justify-center min-h-[140px]"
+                    className="rounded-lg sm:rounded-xl border border-dashed border-bidaaya-light/10 bg-bidaaya-light/5 p-3 sm:p-4 flex items-center justify-center min-h-[120px] sm:min-h-[140px]"
                   >
-                    <p className="text-xs text-bidaaya-light/40 text-center">
+                    <p className="text-[10px] sm:text-xs text-bidaaya-light/40 text-center">
                       No more opportunities<br />at this time
                     </p>
                   </div>
@@ -377,9 +380,10 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       {/* Floating Chat Button */}
       <button
         onClick={onChatClick}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-bidaaya-accent hover:bg-bidaaya-accent/90 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 z-50 safe-bottom"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-bidaaya-accent hover:bg-bidaaya-accent/90 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 z-50"
+        style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <MessageCircle className="h-6 w-6 text-white" />
+        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       </button>
 
       {/* Opportunity Detail Modal */}
@@ -391,8 +395,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             setSelectedOpportunity(null);
           }}
           opportunity={selectedOpportunity}
-          applicationStatus={opportunityStatuses[selectedOpportunity.id] || 'not_applied'}
-          onUpdateStatus={(status) => handleUpdateStatus(selectedOpportunity.id, status)}
+          hasApplied={appliedOpportunities.has(selectedOpportunity.id)}
+          onMarkAsApplied={() => handleMarkAsApplied(selectedOpportunity.id)}
           onGenerateCV={handleGenerateCV}
           onGenerateCoverLetter={handleGenerateCoverLetter}
         />

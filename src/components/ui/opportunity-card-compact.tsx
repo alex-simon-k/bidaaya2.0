@@ -49,14 +49,14 @@ export function OpportunityCardCompact({
       transition={{ duration: 0.2 }}
       onClick={onClick}
       className={cn(
-        'relative rounded-xl border backdrop-blur-sm p-4 cursor-pointer transition-all duration-300 hover:shadow-lg',
+        'relative rounded-lg sm:rounded-xl border backdrop-blur-sm p-2.5 sm:p-4 cursor-pointer transition-all duration-300 hover:shadow-lg',
         getMatchColor(),
         className
       )}
     >
       {/* Company Logo & Title */}
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-lg bg-bidaaya-light/10 flex items-center justify-center overflow-hidden border border-bidaaya-light/10 flex-shrink-0">
+      <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg bg-bidaaya-light/10 flex items-center justify-center overflow-hidden border border-bidaaya-light/10 flex-shrink-0">
           {opportunity.companyLogo ? (
             <img 
               src={opportunity.companyLogo} 
@@ -64,43 +64,43 @@ export function OpportunityCardCompact({
               className="w-full h-full object-cover"
             />
           ) : (
-            <Building2 className="h-5 w-5 text-bidaaya-light/60" />
+            <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-bidaaya-light/60" />
           )}
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-bidaaya-light mb-0.5 line-clamp-2 leading-tight">
+          <h3 className="text-xs sm:text-sm font-semibold text-bidaaya-light mb-0.5 line-clamp-2 leading-tight">
             {opportunity.title}
           </h3>
-          <p className="text-xs text-bidaaya-light/60 line-clamp-1">
+          <p className="text-[10px] sm:text-xs text-bidaaya-light/60 line-clamp-1">
             {opportunity.company}
           </p>
         </div>
 
         {/* External Badge */}
         {opportunity.type === 'external' && (
-          <ExternalLink className="h-4 w-4 text-purple-400 flex-shrink-0" />
+          <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400 flex-shrink-0" />
         )}
       </div>
 
       {/* Location */}
-      <div className="flex items-center gap-1.5 text-xs text-bidaaya-light/60 mb-3">
-        <MapPin className="h-3 w-3" />
+      <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-bidaaya-light/60 mb-2 sm:mb-3">
+        <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
         <span className="line-clamp-1">{opportunity.location}</span>
       </div>
 
       {/* Match Score */}
       {opportunity.matchScore !== undefined && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-bidaaya-light/60">Match</span>
-          <div className="flex items-center gap-2">
-            <div className="w-16 bg-bidaaya-light/10 rounded-full h-1.5">
+          <span className="text-[10px] sm:text-xs text-bidaaya-light/60">Match</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-12 sm:w-16 bg-bidaaya-light/10 rounded-full h-1 sm:h-1.5">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${opportunity.matchScore}%` }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className={cn(
-                  'h-1.5 rounded-full',
+                  'h-1 sm:h-1.5 rounded-full',
                   opportunity.matchScore >= 80 ? 'bg-green-400' :
                   opportunity.matchScore >= 60 ? 'bg-blue-400' :
                   opportunity.matchScore >= 40 ? 'bg-orange-400' :
@@ -108,7 +108,7 @@ export function OpportunityCardCompact({
                 )}
               />
             </div>
-            <span className={cn('text-sm font-bold', getAccentColor())}>
+            <span className={cn('text-xs sm:text-sm font-bold', getAccentColor())}>
               {opportunity.matchScore}%
             </span>
           </div>
