@@ -98,7 +98,19 @@ export function OpportunityCard({ opportunity, type, onApply }: OpportunityCardP
           <div className="flex items-center gap-1.5 text-bidaaya-light/60 text-sm">
             <Calendar className="h-3.5 w-3.5" />
             <span className="truncate">
-              Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
+              Deadline: {(() => {
+                try {
+                  const date = opportunity.deadline instanceof Date 
+                    ? opportunity.deadline 
+                    : new Date(opportunity.deadline);
+                  if (isNaN(date.getTime())) {
+                    return 'TBA';
+                  }
+                  return date.toLocaleDateString();
+                } catch {
+                  return 'TBA';
+                }
+              })()}
             </span>
           </div>
         )}

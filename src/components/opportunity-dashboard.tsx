@@ -116,10 +116,18 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   };
 
   const getTimeRemaining = (earlyAccessUntil: Date) => {
-    const now = new Date();
-    const diff = earlyAccessUntil.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    return hours > 0 ? `${hours}h remaining` : 'Ending soon';
+    try {
+      const date = earlyAccessUntil instanceof Date ? earlyAccessUntil : new Date(earlyAccessUntil);
+      if (isNaN(date.getTime())) {
+        return 'Ending soon';
+      }
+      const now = new Date();
+      const diff = date.getTime() - now.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      return hours > 0 ? `${hours}h remaining` : 'Ending soon';
+    } catch (error) {
+      return 'Ending soon';
+    }
   };
 
   const userPlan = (session?.user as any)?.subscriptionPlan || 'FREE';
@@ -547,9 +555,17 @@ function OpportunityCard({
 }
 
 function getTimeRemaining(earlyAccessUntil: Date): string {
-  const now = new Date();
-  const diff = earlyAccessUntil.getTime() - now.getTime();
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  return hours > 0 ? `${hours}h remaining` : 'Ending soon';
+  try {
+    const date = earlyAccessUntil instanceof Date ? earlyAccessUntil : new Date(earlyAccessUntil);
+    if (isNaN(date.getTime())) {
+      return 'Ending soon';
+    }
+    const now = new Date();
+    const diff = date.getTime() - now.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    return hours > 0 ? `${hours}h remaining` : 'Ending soon';
+  } catch (error) {
+    return 'Ending soon';
+  }
 }
 
