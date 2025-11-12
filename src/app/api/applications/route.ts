@@ -22,18 +22,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Fetch all applications for this user
-    const applications = await prisma.application.findMany({
+    // Fetch all external applications for this user (we track external applications)
+    const applications = await prisma.externalApplication.findMany({
       where: {
         userId: user.id,
-      },
-      include: {
-        project: {
-          include: {
-            company: true,
-          },
-        },
-        externalOpportunity: true,
       },
       orderBy: {
         appliedDate: 'desc',
@@ -41,29 +33,20 @@ export async function GET(req: NextRequest) {
     });
 
     // Transform applications to the expected format
-    const formattedApplications = applications.map((app) => {
-      const isExternal = !!app.externalOpportunity;
-      const opportunity = isExternal ? app.externalOpportunity : app.project;
-      
-      return {
-        id: app.id,
-        opportunityId: app.projectId || app.externalOpportunityId || '',
-        title: opportunity?.title || 'Unknown Position',
-        company: isExternal 
-          ? app.externalOpportunity?.company || 'Unknown Company'
-          : app.project?.company?.companyName || 'Unknown Company',
-        companyLogo: isExternal 
-          ? app.externalOpportunity?.companyLogo 
-          : app.project?.company?.logoUrl,
-        location: opportunity?.location || 'Unknown',
-        type: isExternal ? 'external' : 'internal',
-        appliedDate: app.appliedDate || app.createdAt,
-        status: app.applicationStatus || 'applied',
-        matchScore: app.matchScore,
-        notes: app.notes,
-        applicationUrl: isExternal ? app.externalOpportunity?.applicationUrl : undefined,
-      };
-    });
+    const formattedApplications = applications.map((app) => ({
+      id: app.id,
+      opportunityId: app.id, // Use the application ID as the opportunity ID
+      title: app.jobTitle,
+      company: app.company,
+      companyLogo: undefined, // External applications don't have logos stored
+      location: app.location || 'Unknown',
+      type: 'external' as const,
+      appliedDate: app.appliedDate,
+      status: app.status.toLowerCase(), // Convert enum to lowercase
+      matchScore: undefined, // External applications don't have match scores
+      notes: app.notes,
+      applicationUrl: app.jobUrl,
+    }));
 
     return NextResponse.json({
       applications: formattedApplications,
@@ -96,74 +79,57 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { opportunityId, opportunityType, matchScore, notes } = body;
+    const { opportunityTitle, opportunityCompany, opportunityUrl, opportunityLocation, notes } = body;
 
-    if (!opportunityId || !opportunityType) {
+    if (!opportunityTitle || !opportunityCompany) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: title and company are required' },
         { status: 400 }
       );
     }
 
-    // Check if application already exists
-    const existingApplication = await prisma.application.findFirst({
+    // Check if application already exists for this exact job
+    const existingApplication = await prisma.externalApplication.findFirst({
       where: {
         userId: user.id,
-        ...(opportunityType === 'internal'
-          ? { projectId: opportunityId }
-          : { externalOpportunityId: opportunityId }),
+        jobTitle: opportunityTitle,
+        company: opportunityCompany,
       },
     });
 
     if (existingApplication) {
       return NextResponse.json(
-        { error: 'Application already exists' },
+        { error: 'Application already exists for this position' },
         { status: 400 }
       );
     }
 
-    // Create new application
-    const application = await prisma.application.create({
+    // Create new external application
+    const application = await prisma.externalApplication.create({
       data: {
         userId: user.id,
-        ...(opportunityType === 'internal'
-          ? { projectId: opportunityId }
-          : { externalOpportunityId: opportunityId }),
+        jobTitle: opportunityTitle,
+        company: opportunityCompany,
+        jobUrl: opportunityUrl,
+        location: opportunityLocation || 'Unknown',
+        status: 'APPLIED',
         appliedDate: new Date(),
-        applicationStatus: 'applied',
-        matchScore,
         notes,
       },
-      include: {
-        project: {
-          include: {
-            company: true,
-          },
-        },
-        externalOpportunity: true,
-      },
     });
-
-    const isExternal = !!application.externalOpportunity;
-    const opportunity = isExternal ? application.externalOpportunity : application.project;
 
     return NextResponse.json({
       application: {
         id: application.id,
-        opportunityId: application.projectId || application.externalOpportunityId,
-        title: opportunity?.title,
-        company: isExternal 
-          ? application.externalOpportunity?.company
-          : application.project?.company?.companyName,
-        companyLogo: isExternal 
-          ? application.externalOpportunity?.companyLogo
-          : application.project?.company?.logoUrl,
-        location: opportunity?.location,
-        type: isExternal ? 'external' : 'internal',
+        opportunityId: application.id,
+        title: application.jobTitle,
+        company: application.company,
+        location: application.location,
+        type: 'external',
         appliedDate: application.appliedDate,
-        status: application.applicationStatus,
-        matchScore: application.matchScore,
+        status: application.status.toLowerCase(),
         notes: application.notes,
+        applicationUrl: application.jobUrl,
       },
     });
   } catch (error) {

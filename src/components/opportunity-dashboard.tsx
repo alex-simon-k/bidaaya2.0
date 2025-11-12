@@ -145,9 +145,11 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          opportunityId: opportunity.id,
-          opportunityType: opportunity.type === 'internal' ? 'internal' : 'external',
-          matchScore: opportunity.matchScore,
+          opportunityTitle: opportunity.title,
+          opportunityCompany: opportunity.company,
+          opportunityUrl: opportunity.applicationUrl,
+          opportunityLocation: opportunity.location,
+          notes: `Match score: ${opportunity.matchScore || 0}%`,
         }),
       });
 

@@ -28,7 +28,7 @@ export async function DELETE(
     const applicationId = params.id;
 
     // Verify the application belongs to the user
-    const application = await prisma.application.findFirst({
+    const application = await prisma.externalApplication.findFirst({
       where: {
         id: applicationId,
         userId: user.id,
@@ -43,7 +43,7 @@ export async function DELETE(
     }
 
     // Delete the application
-    await prisma.application.delete({
+    await prisma.externalApplication.delete({
       where: { id: applicationId },
     });
 

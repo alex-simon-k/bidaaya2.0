@@ -37,7 +37,7 @@ export async function PATCH(
     }
 
     // Verify the application belongs to the user
-    const application = await prisma.application.findFirst({
+    const application = await prisma.externalApplication.findFirst({
       where: {
         id: applicationId,
         userId: user.id,
@@ -51,11 +51,11 @@ export async function PATCH(
       );
     }
 
-    // Update the application
-    const updatedApplication = await prisma.application.update({
+    // Update the external application (using ExternalApplication model)
+    const updatedApplication = await prisma.externalApplication.update({
       where: { id: applicationId },
       data: {
-        applicationStatus: status,
+        status: status.toUpperCase() as any, // Convert to ExternalApplicationStatus enum
         ...(notes !== undefined && { notes }),
       },
     });
@@ -63,7 +63,7 @@ export async function PATCH(
     return NextResponse.json({
       application: {
         id: updatedApplication.id,
-        status: updatedApplication.applicationStatus,
+        status: updatedApplication.status.toLowerCase(),
         notes: updatedApplication.notes,
       },
     });
