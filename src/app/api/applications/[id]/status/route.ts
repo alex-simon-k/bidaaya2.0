@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// DELETE - Remove an application
-export async function DELETE(
+// PATCH - Update application status
+export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -24,6 +24,15 @@ export async function DELETE(
     }
 
     const applicationId = params.id;
+    const body = await req.json();
+    const { status, notes } = body;
+
+    if (!status || !['applied', 'interview', 'rejected', 'accepted'].includes(status)) {
+      return NextResponse.json(
+        { error: 'Invalid status' },
+        { status: 400 }
+      );
+    }
 
     // Verify the application belongs to the user
     const application = await prisma.application.findFirst({
@@ -40,17 +49,28 @@ export async function DELETE(
       );
     }
 
-    // Delete the application
-    await prisma.application.delete({
+    // Update the application
+    const updatedApplication = await prisma.application.update({
       where: { id: applicationId },
+      data: {
+        applicationStatus: status,
+        ...(notes !== undefined && { notes }),
+      },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      application: {
+        id: updatedApplication.id,
+        status: updatedApplication.applicationStatus,
+        notes: updatedApplication.notes,
+      },
+    });
   } catch (error) {
-    console.error('Error deleting application:', error);
+    console.error('Error updating application status:', error);
     return NextResponse.json(
-      { error: 'Failed to delete application' },
+      { error: 'Failed to update application status' },
       { status: 500 }
     );
   }
 }
+

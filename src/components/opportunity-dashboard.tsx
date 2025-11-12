@@ -142,6 +142,34 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
     alert('Generating custom cover letter for this opportunity...');
   };
 
+  const handleMarkAsApplied = async (opportunityId: string) => {
+    const opportunity = opportunities.find(opp => opp.id === opportunityId);
+    if (!opportunity) return;
+
+    try {
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opportunityId: opportunity.id,
+          opportunityType: opportunity.type === 'internal' ? 'internal' : 'external',
+          matchScore: opportunity.matchScore,
+        }),
+      });
+
+      if (response.ok) {
+        setAppliedOpportunities(prev => new Set(prev).add(opportunityId));
+        alert('Application tracked! View it in My Applications.');
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to mark as applied');
+      }
+    } catch (error) {
+      console.error('Error marking as applied:', error);
+      alert('Failed to mark as applied');
+    }
+  };
+
   const getTimeRemaining = (earlyAccessUntil: Date) => {
     try {
       const date = earlyAccessUntil instanceof Date ? earlyAccessUntil : new Date(earlyAccessUntil);
@@ -219,6 +247,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             >
               <Home className="h-5 w-5" />
               <span className="font-medium">Dashboard</span>
+            </a>
+            <a
+              href="/dashboard/applications"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+            >
+              <FileText className="h-5 w-5" />
+              <span>My Applications</span>
             </a>
             <a
               href="/dashboard/projects"
