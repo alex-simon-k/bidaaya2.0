@@ -29,6 +29,9 @@ import { Badge } from "@/components/ui/badge";
 import { OpportunityFeedbackModal } from "@/components/ui/opportunity-feedback-modal";
 import { AgentControlsV2 } from "@/components/ui/agent-controls-v2";
 import { OpportunityCardV2 } from "@/components/ui/opportunity-card-v2";
+import { OpportunityCardCompact } from "@/components/ui/opportunity-card-compact";
+import { OpportunityDetailModal } from "@/components/ui/opportunity-detail-modal";
+import { EarlyAccessBanner } from "@/components/ui/early-access-banner";
 import { cn } from "@/lib/utils";
 
 interface Opportunity {
@@ -65,6 +68,9 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [earlyAccessDismissed, setEarlyAccessDismissed] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [opportunityStatuses, setOpportunityStatuses] = useState<Record<string, 'not_applied' | 'applied' | 'interview' | 'rejected' | 'accepted'>>({});
 
   useEffect(() => {
     loadDashboardData();
@@ -113,6 +119,26 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const handleReportMismatch = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
     setFeedbackModalOpen(true);
+  };
+
+  const handleOpportunityClick = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setDetailModalOpen(true);
+  };
+
+  const handleUpdateStatus = (opportunityId: string, status: 'applied' | 'interview' | 'rejected' | 'accepted') => {
+    setOpportunityStatuses(prev => ({ ...prev, [opportunityId]: status }));
+    // TODO: Persist status to backend
+  };
+
+  const handleGenerateCV = () => {
+    // TODO: Navigate to CV generation
+    alert('Generating custom CV for this opportunity...');
+  };
+
+  const handleGenerateCoverLetter = () => {
+    // TODO: Navigate to cover letter generation
+    alert('Generating custom cover letter for this opportunity...');
   };
 
   const getTimeRemaining = (earlyAccessUntil: Date) => {
@@ -276,101 +302,74 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bidaaya-accent"></div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Today's Pick - Early Access */}
-            {earlyAccessOpportunity && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="h-5 w-5 text-bidaaya-accent" />
-                  <h2 className="text-xl font-semibold text-bidaaya-light">Today's Pick</h2>
-                  <Badge className="bg-bidaaya-accent/20 text-bidaaya-accent border-bidaaya-accent/30">
-                    Early Access
-                  </Badge>
-                </div>
-
-                <OpportunityCard
-                  opportunity={earlyAccessOpportunity}
-                  onUnlock={handleUnlockEarlyAccess}
-                  onReportMismatch={handleReportMismatch}
-                  earlyAccessUnlocksRemaining={earlyAccessUnlocksRemaining}
-                  userPlan={userPlan}
-                />
-              </motion.div>
+          <div className="space-y-4">
+            {/* Early Access Banner - Compact & Dismissable */}
+            {earlyAccessOpportunity && !earlyAccessDismissed && (
+              <EarlyAccessBanner
+                opportunity={earlyAccessOpportunity}
+                onDismiss={() => setEarlyAccessDismissed(true)}
+                onClick={() => handleOpportunityClick(earlyAccessOpportunity)}
+              />
             )}
 
-            {/* Early Release Opportunity (Locked) 
-                Only shows when:
-                1. There's at least one Bidaaya opportunity
-                2. The first opportunity has an "earlyAccessUntil" date set
-                3. This creates a premium, time-limited section that requires credits to unlock
-            */}
-            {bidaayaOpportunities.length > 0 && bidaayaOpportunities[0].earlyAccessUntil && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mb-8"
-              >
-                <div className="flex items-center gap-2 mb-4">
-                  <Zap className="h-5 w-5 text-yellow-400" />
-                  <h2 className="text-xl font-semibold text-bidaaya-light">Early Release Opportunity</h2>
-                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                    🔥 Just Released
-                  </Badge>
-                </div>
-
-                <OpportunityCardV2
-                  opportunity={bidaayaOpportunities[0]}
-                  isEarlyRelease={true}
-                  userPlan={userPlan}
-                  earlyAccessUnlocksRemaining={earlyAccessUnlocksRemaining}
-                  onApply={(id) => console.log('Apply to:', id)}
-                  onUnlock={(id) => console.log('Unlock:', id)}
-                />
-              </motion.div>
-            )}
-
-            {/* All Opportunities */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="flex items-center gap-2 mb-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-bidaaya-accent" />
-                <h2 className="text-xl font-semibold text-bidaaya-light">Available Opportunities</h2>
+                <h2 className="text-xl font-semibold text-bidaaya-light">Top Matches</h2>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadDashboardData}
+                className="border-bidaaya-light/20 text-bidaaya-light/70 hover:bg-bidaaya-light/10"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </Button>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Remaining Bidaaya Exclusive (skip first if it's early release) */}
-                {bidaayaOpportunities
-                  .slice(bidaayaOpportunities[0]?.earlyAccessUntil ? 1 : 0)
-                  .map((opp, index) => (
-                    <OpportunityCardV2
-                      key={opp.id}
-                      opportunity={opp}
-                      userPlan={userPlan}
-                      earlyAccessUnlocksRemaining={earlyAccessUnlocksRemaining}
-                      onApply={(id) => console.log('Apply to:', id)}
-                      onUnlock={(id) => console.log('Unlock:', id)}
-                    />
-                  ))}
-
-                {/* External Opportunities */}
-                {externalOpportunities.map((opp, index) => (
-                  <OpportunityCardV2
+            {/* 2x2 Grid of Opportunities */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              {[...bidaayaOpportunities, ...externalOpportunities]
+                .slice(0, 4)
+                .map((opp) => (
+                  <OpportunityCardCompact
                     key={opp.id}
                     opportunity={opp}
-                    userPlan={userPlan}
-                    onApply={(id) => window.open(opp.applicationUrl, '_blank')}
+                    onClick={() => handleOpportunityClick(opp)}
                   />
                 ))}
+              
+              {/* Fill empty slots if less than 4 opportunities */}
+              {[...bidaayaOpportunities, ...externalOpportunities].length < 4 && (
+                Array.from({ length: 4 - [...bidaayaOpportunities, ...externalOpportunities].length }).map((_, i) => (
+                  <div
+                    key={`empty-${i}`}
+                    className="rounded-xl border border-dashed border-bidaaya-light/10 bg-bidaaya-light/5 p-4 flex items-center justify-center min-h-[140px]"
+                  >
+                    <p className="text-xs text-bidaaya-light/40 text-center">
+                      No more opportunities<br />at this time
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Empty State */}
+            {[...bidaayaOpportunities, ...externalOpportunities].length === 0 && (
+              <div className="text-center py-12">
+                <Briefcase className="h-12 w-12 text-bidaaya-light/20 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-bidaaya-light mb-2">
+                  No opportunities yet
+                </h3>
+                <p className="text-bidaaya-light/60 text-sm">
+                  We're finding the best matches for your profile. Check back soon!
+                </p>
               </div>
-            </motion.div>
+            )}
           </div>
         )}
       </div>
@@ -382,6 +381,22 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       >
         <MessageCircle className="h-6 w-6 text-white" />
       </button>
+
+      {/* Opportunity Detail Modal */}
+      {selectedOpportunity && (
+        <OpportunityDetailModal
+          isOpen={detailModalOpen}
+          onClose={() => {
+            setDetailModalOpen(false);
+            setSelectedOpportunity(null);
+          }}
+          opportunity={selectedOpportunity}
+          applicationStatus={opportunityStatuses[selectedOpportunity.id] || 'not_applied'}
+          onUpdateStatus={(status) => handleUpdateStatus(selectedOpportunity.id, status)}
+          onGenerateCV={handleGenerateCV}
+          onGenerateCoverLetter={handleGenerateCoverLetter}
+        />
+      )}
 
       {/* Feedback Modal */}
       {selectedOpportunity && (
