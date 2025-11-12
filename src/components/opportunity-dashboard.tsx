@@ -35,6 +35,7 @@ interface Opportunity {
   id: string;
   title: string;
   company: string;
+  companyLogo?: string;
   location: string;
   type: 'internal' | 'external' | 'early_access';
   matchScore: number;
@@ -43,9 +44,11 @@ interface Opportunity {
     warnings: string[];
   };
   postedAt?: Date;
+  postedDate?: Date | string;
   earlyAccessUntil?: Date;
   isLocked?: boolean;
   unlockCredits?: number;
+  applicationUrl?: string;
 }
 
 interface OpportunityDashboardProps {
