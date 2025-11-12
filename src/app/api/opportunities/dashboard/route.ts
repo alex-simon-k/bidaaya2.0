@@ -228,7 +228,7 @@ export async function GET(request: NextRequest) {
         id: opp.id,
         title: opp.title,
         company: opp.company,
-        companyLogo: opp.companyLogo || undefined,
+        companyLogo: undefined, // External opportunities don't have logos yet
         location: opp.location || 'Remote',
         type: 'external' as const,
         matchScore: match.score,
@@ -238,7 +238,7 @@ export async function GET(request: NextRequest) {
         },
         postedAt: opp.addedAt,
         postedDate: opp.addedAt,
-        applicationUrl: opp.applicationUrl || undefined,
+        applicationUrl: opp.applicationUrl,
       };
     });
 
@@ -269,7 +269,7 @@ export async function GET(request: NextRequest) {
         id: opp.id,
         title: opp.title,
         company: opp.company,
-        companyLogo: opp.companyLogo || undefined,
+        companyLogo: undefined, // External opportunities don't have logos yet
         location: opp.location || 'Remote',
         type: 'early_access' as const,
         matchScore: match.score,
@@ -282,7 +282,7 @@ export async function GET(request: NextRequest) {
         earlyAccessUntil: opp.earlyAccessUntil,
         isLocked,
         unlockCredits: opp.unlockCredits,
-        applicationUrl: opp.applicationUrl || undefined,
+        applicationUrl: opp.applicationUrl,
       };
     }
 
