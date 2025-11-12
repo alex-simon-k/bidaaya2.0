@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
+import { 
   Menu,
   CheckCircle2,
   Calendar,
@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils'
 interface Application {
   id: string
   opportunityId: string
-  title: string
+    title: string
   company: string
   companyLogo?: string
   location: string
@@ -76,8 +76,8 @@ export default function ApplicationsPage() {
       })
 
       if (response.ok) {
-        setApplications(prev =>
-          prev.map(app =>
+        setApplications(prev => 
+          prev.map(app => 
             app.id === applicationId ? { ...app, status: newStatus } : app
           )
         )
@@ -129,8 +129,8 @@ export default function ApplicationsPage() {
     return Math.round(((stats.interview + stats.accepted) / total) * 100)
   }
 
-  return (
-    <div className="min-h-screen bg-bidaaya-dark">
+    return (
+    <div className="min-h-screen bg-bidaaya-dark overflow-x-hidden">
       {/* Header */}
       <div className="border-b border-bidaaya-light/10 bg-bidaaya-dark/80 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -146,9 +146,9 @@ export default function ApplicationsPage() {
                 <h1 className="text-2xl font-bold text-bidaaya-light">My Applications</h1>
                 <p className="text-sm text-bidaaya-light/60">
                   Track and manage your job applications
-                </p>
-              </div>
+              </p>
             </div>
+                    </div>
 
             <Button
               onClick={() => router.push('/dashboard')}
@@ -159,24 +159,24 @@ export default function ApplicationsPage() {
               <Plus className="h-4 w-4 mr-2" />
               Find Opportunities
             </Button>
-          </div>
-        </div>
-      </div>
-
+                      </div>
+                        </div>
+                      </div>
+                      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
           {/* Total */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-xl p-4"
+            className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-2"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <FileText className="h-4 w-4 text-bidaaya-accent" />
-              <p className="text-xs text-bidaaya-light/60">Total</p>
-            </div>
-            <p className="text-2xl font-bold text-bidaaya-light">{stats.total}</p>
+            <div className="flex items-center gap-1 mb-1">
+              <FileText className="h-3 w-3 text-bidaaya-accent" />
+              <p className="text-[10px] text-bidaaya-light/60">Total</p>
+                      </div>
+            <p className="text-lg font-bold text-bidaaya-light">{stats.total}</p>
           </motion.div>
 
           {/* Applied */}
@@ -184,13 +184,13 @@ export default function ApplicationsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4"
+            className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-2"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="h-4 w-4 text-blue-400" />
-              <p className="text-xs text-blue-400/80">Applied</p>
-            </div>
-            <p className="text-2xl font-bold text-blue-400">{stats.applied}</p>
+            <div className="flex items-center gap-1 mb-1">
+              <CheckCircle2 className="h-3 w-3 text-blue-400" />
+              <p className="text-[10px] text-blue-400/80">Applied</p>
+                </div>
+            <p className="text-lg font-bold text-blue-400">{stats.applied}</p>
           </motion.div>
 
           {/* Interview */}
@@ -198,13 +198,13 @@ export default function ApplicationsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4"
+            className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-2"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-purple-400" />
-              <p className="text-xs text-purple-400/80">Interview</p>
-            </div>
-            <p className="text-2xl font-bold text-purple-400">{stats.interview}</p>
+            <div className="flex items-center gap-1 mb-1">
+              <Calendar className="h-3 w-3 text-purple-400" />
+              <p className="text-[10px] text-purple-400/80">Interview</p>
+        </div>
+            <p className="text-lg font-bold text-purple-400">{stats.interview}</p>
           </motion.div>
 
           {/* Rejected */}
@@ -212,13 +212,13 @@ export default function ApplicationsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-red-500/5 border border-red-500/20 rounded-xl p-4"
+            className="bg-red-500/5 border border-red-500/20 rounded-lg p-2"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <XCircle className="h-4 w-4 text-red-400" />
-              <p className="text-xs text-red-400/80">Rejected</p>
-            </div>
-            <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
+            <div className="flex items-center gap-1 mb-1">
+              <XCircle className="h-3 w-3 text-red-400" />
+              <p className="text-[10px] text-red-400/80">Rejected</p>
+                </div>
+            <p className="text-lg font-bold text-red-400">{stats.rejected}</p>
           </motion.div>
 
           {/* Accepted */}
@@ -226,15 +226,15 @@ export default function ApplicationsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-green-500/5 border border-green-500/20 rounded-xl p-4"
+            className="bg-green-500/5 border border-green-500/20 rounded-lg p-2"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Trophy className="h-4 w-4 text-green-400" />
-              <p className="text-xs text-green-400/80">Accepted</p>
+            <div className="flex items-center gap-1 mb-1">
+              <Trophy className="h-3 w-3 text-green-400" />
+              <p className="text-[10px] text-green-400/80">Accepted</p>
             </div>
-            <p className="text-2xl font-bold text-green-400">{stats.accepted}</p>
+            <p className="text-lg font-bold text-green-400">{stats.accepted}</p>
           </motion.div>
-        </div>
+          </div>
 
         {/* Success Rate */}
         {stats.total > 0 && (
@@ -242,31 +242,26 @@ export default function ApplicationsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-gradient-to-r from-bidaaya-accent/10 to-green-500/10 border border-bidaaya-accent/20 rounded-xl p-6 mb-8"
+            className="bg-gradient-to-r from-bidaaya-accent/10 to-green-500/10 border border-bidaaya-accent/20 rounded-lg p-3 mb-4"
           >
             <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-5 w-5 text-bidaaya-accent" />
-                  <h3 className="text-lg font-semibold text-bidaaya-light">Success Rate</h3>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-bidaaya-accent" />
+                <div>
+                  <h3 className="text-sm font-semibold text-bidaaya-light">Success Rate</h3>
+                  <p className="text-[10px] text-bidaaya-light/60">
+                    {stats.interview + stats.accepted} of {stats.total} apps
+                  </p>
                 </div>
-                <p className="text-sm text-bidaaya-light/60">
-                  Percentage of applications that led to interviews or offers
-                </p>
               </div>
-              <div className="text-right">
-                <p className="text-4xl font-bold text-bidaaya-accent">{getSuccessRate()}%</p>
-                <p className="text-xs text-bidaaya-light/60 mt-1">
-                  {stats.interview + stats.accepted} of {stats.total} applications
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-bidaaya-accent">{getSuccessRate()}%</p>
             </div>
           </motion.div>
         )}
 
-        {/* Filters */}
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-          <Filter className="h-4 w-4 text-bidaaya-light/60 flex-shrink-0" />
+      {/* Filters */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+          <Filter className="h-3.5 w-3.5 text-bidaaya-light/60 flex-shrink-0" />
           {(['all', 'applied', 'interview', 'rejected', 'accepted'] as FilterType[]).map((filter) => (
             <Button
               key={filter}
@@ -274,7 +269,7 @@ export default function ApplicationsPage() {
               variant="outline"
               size="sm"
               className={cn(
-                'whitespace-nowrap',
+                'whitespace-nowrap text-xs h-7 px-3',
                 activeFilter === filter
                   ? 'border-bidaaya-accent bg-bidaaya-accent/20 text-bidaaya-accent'
                   : 'border-bidaaya-light/10 text-bidaaya-light/60 hover:text-bidaaya-light'
@@ -285,15 +280,15 @@ export default function ApplicationsPage() {
           ))}
         </div>
 
-        {/* Applications List */}
+      {/* Applications List */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bidaaya-accent"></div>
-          </div>
+                </div>
         ) : filteredApplications.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
             className="text-center py-16"
           >
             <FileText className="h-16 w-16 text-bidaaya-light/20 mx-auto mb-4" />
@@ -320,7 +315,7 @@ export default function ApplicationsPage() {
             <AnimatePresence mode="popLayout">
               {filteredApplications.map((application) => (
                 <ApplicationCard
-                  key={application.id}
+                    key={application.id}
                   application={application}
                   onStatusChange={(status) => handleStatusChange(application.id, status)}
                   onDelete={() => handleDeleteApplication(application.id)}
@@ -328,7 +323,7 @@ export default function ApplicationsPage() {
                 />
               ))}
             </AnimatePresence>
-          </div>
+                                </div>
         )}
       </div>
 
@@ -358,3 +353,4 @@ export default function ApplicationsPage() {
     </div>
   )
 }
+ 

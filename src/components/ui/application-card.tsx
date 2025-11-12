@@ -107,16 +107,16 @@ export function ApplicationCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
       className={cn(
-        'relative rounded-xl border backdrop-blur-sm p-4 transition-all duration-300',
+        'relative rounded-lg border backdrop-blur-sm p-3 transition-all duration-300',
         statusConfig.bgColor,
         'border-bidaaya-light/10 hover:border-bidaaya-light/20'
       )}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-start gap-3 flex-1">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-start gap-2 flex-1 min-w-0">
           {/* Company Logo */}
-          <div className="w-12 h-12 rounded-lg bg-bidaaya-light/10 flex items-center justify-center overflow-hidden border border-bidaaya-light/10 flex-shrink-0">
+          <div className="w-10 h-10 rounded-md bg-bidaaya-light/10 flex items-center justify-center overflow-hidden border border-bidaaya-light/10 flex-shrink-0">
             {application.companyLogo ? (
               <img 
                 src={application.companyLogo} 
@@ -124,27 +124,27 @@ export function ApplicationCard({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Building2 className="h-6 w-6 text-bidaaya-light/60" />
+              <Building2 className="h-5 w-5 text-bidaaya-light/60" />
             )}
           </div>
 
           {/* Title & Company */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-bidaaya-light mb-1 line-clamp-2">
+            <h3 className="text-sm font-semibold text-bidaaya-light mb-0.5 line-clamp-1">
               {application.title}
             </h3>
-            <p className="text-sm text-bidaaya-light/70 flex items-center gap-1.5 mb-2">
-              <Building2 className="h-3.5 w-3.5" />
-              {application.company}
+            <p className="text-xs text-bidaaya-light/70 flex items-center gap-1 mb-1.5">
+              <Building2 className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{application.company}</span>
             </p>
-            <div className="flex items-center gap-3 text-xs text-bidaaya-light/60">
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {application.location}
+            <div className="flex items-center gap-2 text-[10px] text-bidaaya-light/60">
+              <span className="flex items-center gap-0.5">
+                <MapPin className="h-2.5 w-2.5 flex-shrink-0" />
+                <span className="truncate">{application.location}</span>
               </span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Applied {formatDate(application.appliedDate)}
+              <span className="flex items-center gap-0.5 whitespace-nowrap">
+                <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                {formatDate(application.appliedDate)}
               </span>
             </div>
           </div>
@@ -194,21 +194,21 @@ export function ApplicationCard({
       </div>
 
       {/* Status Badge & Match Score */}
-      <div className="flex items-center gap-2 mb-3">
-        <Badge className={cn('px-2.5 py-1', statusConfig.color)}>
-          <StatusIcon className="h-3.5 w-3.5 mr-1.5" />
+      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+        <Badge className={cn('px-2 py-0.5 text-[10px]', statusConfig.color)}>
+          <StatusIcon className="h-2.5 w-2.5 mr-1" />
           {statusConfig.label}
         </Badge>
 
         {application.type === 'external' && (
-          <Badge variant="outline" className="border-purple-500/30 text-purple-400 text-xs">
-            <ExternalLink className="h-3 w-3 mr-1" />
+          <Badge variant="outline" className="border-purple-500/30 text-purple-400 text-[10px] px-1.5 py-0.5">
+            <ExternalLink className="h-2.5 w-2.5 mr-0.5" />
             External
           </Badge>
         )}
 
         {application.matchScore !== undefined && (
-          <Badge variant="outline" className="border-bidaaya-light/20 text-bidaaya-light/60 text-xs ml-auto">
+          <Badge variant="outline" className="border-bidaaya-light/20 text-bidaaya-light/60 text-[10px] px-1.5 py-0.5 ml-auto">
             {application.matchScore}% Match
           </Badge>
         )}
@@ -216,68 +216,64 @@ export function ApplicationCard({
 
       {/* Notes Preview */}
       {application.notes && (
-        <p className="text-xs text-bidaaya-light/60 italic mb-3 line-clamp-2">
+        <p className="text-[10px] text-bidaaya-light/60 italic mb-2 line-clamp-1">
           "{application.notes}"
         </p>
       )}
 
       {/* Status Update Buttons */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-1.5">
         <Button
           onClick={() => onStatusChange('applied')}
           variant="outline"
           size="sm"
           className={cn(
-            'text-xs h-8',
+            'text-[10px] h-7 px-1',
             application.status === 'applied'
               ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
               : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
           )}
         >
-          <CheckCircle2 className="h-3 w-3 mr-1" />
-          Applied
+          <CheckCircle2 className="h-2.5 w-2.5" />
         </Button>
         <Button
           onClick={() => onStatusChange('interview')}
           variant="outline"
           size="sm"
           className={cn(
-            'text-xs h-8',
+            'text-[10px] h-7 px-1',
             application.status === 'interview'
               ? 'border-purple-500/50 bg-purple-500/10 text-purple-400'
               : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
           )}
         >
-          <Calendar className="h-3 w-3 mr-1" />
-          Interview
+          <Calendar className="h-2.5 w-2.5" />
         </Button>
         <Button
           onClick={() => onStatusChange('rejected')}
           variant="outline"
           size="sm"
           className={cn(
-            'text-xs h-8',
+            'text-[10px] h-7 px-1',
             application.status === 'rejected'
               ? 'border-red-500/50 bg-red-500/10 text-red-400'
               : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
           )}
         >
-          <XCircle className="h-3 w-3 mr-1" />
-          Rejected
+          <XCircle className="h-2.5 w-2.5" />
         </Button>
         <Button
           onClick={() => onStatusChange('accepted')}
           variant="outline"
           size="sm"
           className={cn(
-            'text-xs h-8',
+            'text-[10px] h-7 px-1',
             application.status === 'accepted'
               ? 'border-green-500/50 bg-green-500/10 text-green-400'
               : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
           )}
         >
-          <Trophy className="h-3 w-3 mr-1" />
-          Accepted
+          <Trophy className="h-2.5 w-2.5" />
         </Button>
       </div>
     </motion.div>
