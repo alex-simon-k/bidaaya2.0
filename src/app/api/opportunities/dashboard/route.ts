@@ -208,6 +208,7 @@ export async function GET(request: NextRequest) {
         id: project.id,
         title: project.title,
         company: project.company.companyName || project.company.name || 'Bidaaya Partner',
+        companyLogo: undefined,
         location: project.location || 'Remote',
         type: 'internal' as const,
         matchScore: match.score,
@@ -215,6 +216,9 @@ export async function GET(request: NextRequest) {
           positive: match.positive,
           warnings: match.warnings,
         },
+        postedAt: project.createdAt,
+        postedDate: project.createdAt,
+        applicationUrl: undefined,
       };
     });
 
@@ -224,6 +228,7 @@ export async function GET(request: NextRequest) {
         id: opp.id,
         title: opp.title,
         company: opp.company,
+        companyLogo: opp.companyLogo || undefined,
         location: opp.location || 'Remote',
         type: 'external' as const,
         matchScore: match.score,
@@ -231,6 +236,9 @@ export async function GET(request: NextRequest) {
           positive: match.positive,
           warnings: match.warnings,
         },
+        postedAt: opp.addedAt,
+        postedDate: opp.addedAt,
+        applicationUrl: opp.applicationUrl || undefined,
       };
     });
 
@@ -261,6 +269,7 @@ export async function GET(request: NextRequest) {
         id: opp.id,
         title: opp.title,
         company: opp.company,
+        companyLogo: opp.companyLogo || undefined,
         location: opp.location || 'Remote',
         type: 'early_access' as const,
         matchScore: match.score,
@@ -269,9 +278,11 @@ export async function GET(request: NextRequest) {
           warnings: match.warnings,
         },
         postedAt: opp.publishedAt,
+        postedDate: opp.publishedAt,
         earlyAccessUntil: opp.earlyAccessUntil,
         isLocked,
         unlockCredits: opp.unlockCredits,
+        applicationUrl: opp.applicationUrl || undefined,
       };
     }
 
