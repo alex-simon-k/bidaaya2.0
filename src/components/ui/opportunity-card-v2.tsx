@@ -60,31 +60,53 @@ export function OpportunityCardV2({
 
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'Recently'
-    const d = typeof date === 'string' ? new Date(date) : date
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - d.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Yesterday'
-    if (diffDays < 7) return `${diffDays} days ago`
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    try {
+      const d = typeof date === 'string' ? new Date(date) : date
+      
+      if (!d || !(d instanceof Date) || isNaN(d.getTime())) {
+        return 'Recently'
+      }
+      
+      const now = new Date()
+      const diffTime = Math.abs(now.getTime() - d.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays === 0) return 'Today'
+      if (diffDays === 1) return 'Yesterday'
+      if (diffDays < 7) return `${diffDays} days ago`
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return 'Recently'
+    }
   }
 
   const getTimeRemaining = () => {
     if (!opportunity.earlyAccessUntil) return ''
-    const until = typeof opportunity.earlyAccessUntil === 'string' 
-      ? new Date(opportunity.earlyAccessUntil) 
-      : opportunity.earlyAccessUntil
-    const now = new Date()
-    const diffTime = until.getTime() - now.getTime()
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
     
-    if (diffHours < 1) return 'Less than 1 hour'
-    if (diffHours < 24) return `${diffHours} hours left`
-    const diffDays = Math.floor(diffHours / 24)
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} left`
+    try {
+      const until = typeof opportunity.earlyAccessUntil === 'string' 
+        ? new Date(opportunity.earlyAccessUntil) 
+        : opportunity.earlyAccessUntil
+      
+      if (!until || !(until instanceof Date) || isNaN(until.getTime())) {
+        return ''
+      }
+      
+      const now = new Date()
+      const diffTime = until.getTime() - now.getTime()
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+      
+      if (diffHours < 1) return 'Less than 1 hour'
+      if (diffHours < 24) return `${diffHours} hours left`
+      const diffDays = Math.floor(diffHours / 24)
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} left`
+    } catch (error) {
+      console.error('Error calculating time remaining:', error)
+      return ''
+    }
   }
 
   const handleApply = () => {
