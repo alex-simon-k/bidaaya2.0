@@ -235,7 +235,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
         id: data.message.id,
         role: data.message.role,
         content: data.message.content,
-        createdAt: new Date(data.message.createdAt),
+        createdAt: data.message.createdAt ? new Date(data.message.createdAt) : new Date(),
         opportunityType: data.message.opportunityType,
         opportunityIds: data.message.opportunityIds,
         extractedData: data.extractedData,

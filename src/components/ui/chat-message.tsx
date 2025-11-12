@@ -73,10 +73,26 @@ export function ChatMessage({ role, content, timestamp, showAvatar = true }: Cha
         {/* Timestamp */}
         {timestamp && (
           <span className="text-xs text-bidaaya-light/40 mt-1 px-2">
-            {new Date(timestamp).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
+            {(() => {
+              try {
+                const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+                if (isNaN(date.getTime())) {
+                  return new Date().toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  });
+                }
+                return date.toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                });
+              } catch {
+                return new Date().toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                });
+              }
+            })()}
           </span>
         )}
       </div>
