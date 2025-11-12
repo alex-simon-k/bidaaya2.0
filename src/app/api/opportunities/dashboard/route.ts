@@ -330,6 +330,7 @@ export async function GET(request: NextRequest) {
           },
           postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
           postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          applicationUrl: undefined,
         },
         {
           id: 'mock-internal-2',
@@ -345,6 +346,7 @@ export async function GET(request: NextRequest) {
           },
           postedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
           postedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          applicationUrl: undefined,
         },
         {
           id: 'mock-external-1',
