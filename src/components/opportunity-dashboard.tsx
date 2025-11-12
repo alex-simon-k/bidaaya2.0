@@ -126,12 +126,6 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
     setDetailModalOpen(true);
   };
 
-  const handleMarkAsApplied = (opportunityId: string) => {
-    setAppliedOpportunities(prev => new Set(prev).add(opportunityId));
-    // TODO: Persist to backend
-    console.log('Marked as applied:', opportunityId);
-  };
-
   const handleGenerateCV = () => {
     // TODO: Navigate to CV generation
     alert('Generating custom CV for this opportunity...');
@@ -411,15 +405,6 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           </div>
         )}
       </div>
-
-      {/* Floating Chat Button */}
-      <button
-        onClick={onChatClick}
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-bidaaya-accent hover:bg-bidaaya-accent/90 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 z-50"
-        style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-      </button>
 
       {/* Opportunity Detail Modal */}
       {selectedOpportunity && (
