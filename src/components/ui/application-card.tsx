@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Trophy,
   MoreVertical,
   Trash2,
   Eye
@@ -29,11 +28,11 @@ interface ApplicationCardProps {
     location: string
     type: 'internal' | 'external'
     appliedDate: Date | string
-    status: 'applied' | 'interview' | 'rejected' | 'accepted'
+    status: 'applied' | 'interview' | 'rejected'
     matchScore?: number
     notes?: string
   }
-  onStatusChange: (status: 'applied' | 'interview' | 'rejected' | 'accepted') => void
+  onStatusChange: (status: 'applied' | 'interview' | 'rejected') => void
   onDelete: () => void
   onViewDetails: () => void
 }
@@ -68,13 +67,6 @@ export function ApplicationCard({
           label: 'Rejected',
           color: 'bg-red-500/20 text-red-400 border-red-500/30',
           bgColor: 'bg-red-500/5'
-        }
-      case 'accepted':
-        return {
-          icon: Trophy,
-          label: 'Accepted',
-          color: 'bg-green-500/20 text-green-400 border-green-500/30',
-          bgColor: 'bg-green-500/5'
         }
     }
   }
@@ -222,58 +214,48 @@ export function ApplicationCard({
       )}
 
       {/* Status Update Buttons */}
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5">
         <Button
           onClick={() => onStatusChange('applied')}
           variant="outline"
           size="sm"
           className={cn(
-            'text-[10px] h-7 px-1',
+            'text-[9px] h-7 px-2 flex items-center gap-1',
             application.status === 'applied'
               ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
               : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
           )}
         >
-          <CheckCircle2 className="h-2.5 w-2.5" />
+          <CheckCircle2 className="h-2.5 w-2.5 flex-shrink-0" />
+          <span className="hidden xs:inline">Applied</span>
         </Button>
         <Button
           onClick={() => onStatusChange('interview')}
           variant="outline"
           size="sm"
           className={cn(
-            'text-[10px] h-7 px-1',
+            'text-[9px] h-7 px-2 flex items-center gap-1',
             application.status === 'interview'
               ? 'border-purple-500/50 bg-purple-500/10 text-purple-400'
               : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
           )}
         >
-          <Calendar className="h-2.5 w-2.5" />
+          <Calendar className="h-2.5 w-2.5 flex-shrink-0" />
+          <span className="hidden xs:inline">Interview</span>
         </Button>
         <Button
           onClick={() => onStatusChange('rejected')}
           variant="outline"
           size="sm"
           className={cn(
-            'text-[10px] h-7 px-1',
+            'text-[9px] h-7 px-2 flex items-center gap-1',
             application.status === 'rejected'
               ? 'border-red-500/50 bg-red-500/10 text-red-400'
               : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
           )}
         >
-          <XCircle className="h-2.5 w-2.5" />
-        </Button>
-        <Button
-          onClick={() => onStatusChange('accepted')}
-          variant="outline"
-          size="sm"
-          className={cn(
-            'text-[10px] h-7 px-1',
-            application.status === 'accepted'
-              ? 'border-green-500/50 bg-green-500/10 text-green-400'
-              : 'border-bidaaya-light/10 text-bidaaya-light/40 hover:text-bidaaya-light/70'
-          )}
-        >
-          <Trophy className="h-2.5 w-2.5" />
+          <XCircle className="h-2.5 w-2.5 flex-shrink-0" />
+          <span className="hidden xs:inline">Rejected</span>
         </Button>
       </div>
     </motion.div>

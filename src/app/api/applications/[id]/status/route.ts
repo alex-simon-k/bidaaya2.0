@@ -29,12 +29,19 @@ export async function PATCH(
     const body = await req.json();
     const { status, notes } = body;
 
-    if (!status || !['applied', 'interview', 'rejected', 'accepted'].includes(status)) {
+    if (!status || !['applied', 'interview', 'rejected'].includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status' },
         { status: 400 }
       );
     }
+
+    // Map frontend status to database enum values
+    const statusMap: Record<string, string> = {
+      'applied': 'APPLIED',
+      'interview': 'INTERVIEW_SCHEDULED',
+      'rejected': 'REJECTED',
+    };
 
     // Verify the application belongs to the user
     const application = await prisma.externalApplication.findFirst({
@@ -55,15 +62,23 @@ export async function PATCH(
     const updatedApplication = await prisma.externalApplication.update({
       where: { id: applicationId },
       data: {
-        status: status.toUpperCase() as any, // Convert to ExternalApplicationStatus enum
+        status: statusMap[status] as any,
         ...(notes !== undefined && { notes }),
       },
     });
 
+    // Map database status back to frontend format
+    const statusReverseMap: Record<string, string> = {
+      'APPLIED': 'applied',
+      'INTERVIEW_SCHEDULED': 'interview',
+      'INTERVIEWED': 'interview',
+      'REJECTED': 'rejected',
+    };
+
     return NextResponse.json({
       application: {
         id: updatedApplication.id,
-        status: updatedApplication.status.toLowerCase(),
+        status: statusReverseMap[updatedApplication.status] || updatedApplication.status.toLowerCase(),
         notes: updatedApplication.notes,
       },
     });

@@ -9,8 +9,6 @@ import {
   CheckCircle2,
   Calendar,
   XCircle,
-  Trophy,
-  TrendingUp,
   Filter,
   Plus,
   FileText
@@ -30,13 +28,13 @@ interface Application {
   location: string
   type: 'internal' | 'external'
   appliedDate: Date | string
-  status: 'applied' | 'interview' | 'rejected' | 'accepted'
+  status: 'applied' | 'interview' | 'rejected'
   matchScore?: number
   notes?: string
   applicationUrl?: string
 }
 
-type FilterType = 'all' | 'applied' | 'interview' | 'rejected' | 'accepted'
+type FilterType = 'all' | 'applied' | 'interview' | 'rejected'
 
 export default function ApplicationsPage() {
   const { data: session } = useSession()
@@ -120,13 +118,6 @@ export default function ApplicationsPage() {
     applied: applications.filter(a => a.status === 'applied').length,
     interview: applications.filter(a => a.status === 'interview').length,
     rejected: applications.filter(a => a.status === 'rejected').length,
-    accepted: applications.filter(a => a.status === 'accepted').length
-  }
-
-  const getSuccessRate = () => {
-    const total = stats.applied + stats.interview + stats.rejected + stats.accepted
-    if (total === 0) return 0
-    return Math.round(((stats.interview + stats.accepted) / total) * 100)
   }
 
     return (
@@ -165,7 +156,7 @@ export default function ApplicationsPage() {
                       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
           {/* Total */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -220,49 +211,12 @@ export default function ApplicationsPage() {
                 </div>
             <p className="text-lg font-bold text-red-400">{stats.rejected}</p>
           </motion.div>
-
-          {/* Accepted */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-green-500/5 border border-green-500/20 rounded-lg p-2"
-          >
-            <div className="flex items-center gap-1 mb-1">
-              <Trophy className="h-3 w-3 text-green-400" />
-              <p className="text-[10px] text-green-400/80">Accepted</p>
-            </div>
-            <p className="text-lg font-bold text-green-400">{stats.accepted}</p>
-          </motion.div>
           </div>
-
-        {/* Success Rate */}
-        {stats.total > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gradient-to-r from-bidaaya-accent/10 to-green-500/10 border border-bidaaya-accent/20 rounded-lg p-3 mb-4"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-bidaaya-accent" />
-                <div>
-                  <h3 className="text-sm font-semibold text-bidaaya-light">Success Rate</h3>
-                  <p className="text-[10px] text-bidaaya-light/60">
-                    {stats.interview + stats.accepted} of {stats.total} apps
-                  </p>
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-bidaaya-accent">{getSuccessRate()}%</p>
-            </div>
-          </motion.div>
-        )}
 
       {/* Filters */}
         <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
           <Filter className="h-3.5 w-3.5 text-bidaaya-light/60 flex-shrink-0" />
-          {(['all', 'applied', 'interview', 'rejected', 'accepted'] as FilterType[]).map((filter) => (
+          {(['all', 'applied', 'interview', 'rejected'] as FilterType[]).map((filter) => (
             <Button
               key={filter}
               onClick={() => setActiveFilter(filter)}
