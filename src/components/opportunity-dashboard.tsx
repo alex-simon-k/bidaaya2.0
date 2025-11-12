@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { OpportunityFeedbackModal } from "@/components/ui/opportunity-feedback-modal";
 import { AgentControlsV2 } from "@/components/ui/agent-controls-v2";
+import { OpportunityCardV2 } from "@/components/ui/opportunity-card-v2";
 import { cn } from "@/lib/utils";
 
 interface Opportunity {
@@ -311,11 +312,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                   </Badge>
                 </div>
 
-                <OpportunityCard 
-                  opportunity={bidaayaOpportunities[0]} 
-                  onReportMismatch={handleReportMismatch}
-                  earlyAccessUnlocksRemaining={earlyAccessUnlocksRemaining}
+                <OpportunityCardV2
+                  opportunity={bidaayaOpportunities[0]}
+                  isEarlyRelease={true}
                   userPlan={userPlan}
+                  earlyAccessUnlocksRemaining={earlyAccessUnlocksRemaining}
+                  onApply={(id) => console.log('Apply to:', id)}
+                  onUnlock={(id) => console.log('Unlock:', id)}
                 />
               </motion.div>
             )}
@@ -336,26 +339,24 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 {bidaayaOpportunities
                   .slice(bidaayaOpportunities[0]?.earlyAccessUntil ? 1 : 0)
                   .map((opp, index) => (
-                    <motion.div
+                    <OpportunityCardV2
                       key={opp.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 + index * 0.1 }}
-                    >
-                      <OpportunityCard opportunity={opp} onReportMismatch={handleReportMismatch} />
-                    </motion.div>
+                      opportunity={opp}
+                      userPlan={userPlan}
+                      earlyAccessUnlocksRemaining={earlyAccessUnlocksRemaining}
+                      onApply={(id) => console.log('Apply to:', id)}
+                      onUnlock={(id) => console.log('Unlock:', id)}
+                    />
                   ))}
 
                 {/* External Opportunities */}
                 {externalOpportunities.map((opp, index) => (
-                  <motion.div
+                  <OpportunityCardV2
                     key={opp.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + (bidaayaOpportunities.length > 1 ? bidaayaOpportunities.length - 1 : 0) * 0.1 + index * 0.1 }}
-                  >
-                    <OpportunityCard opportunity={opp} isExternal onReportMismatch={handleReportMismatch} />
-                  </motion.div>
+                    opportunity={opp}
+                    userPlan={userPlan}
+                    onApply={(id) => window.open(opp.applicationUrl, '_blank')}
+                  />
                 ))}
               </div>
             </motion.div>
