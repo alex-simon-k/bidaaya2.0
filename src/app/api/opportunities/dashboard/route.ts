@@ -276,11 +276,83 @@ export async function GET(request: NextRequest) {
     }
 
     // Combine all opportunities
-    const opportunities = [
+    let opportunities = [
       ...(earlyAccessOpp ? [earlyAccessOpp] : []),
       ...topBidaaya,
       ...topExternal,
     ];
+
+    // IF NO OPPORTUNITIES IN DATABASE, USE MOCK DATA FOR DEMONSTRATION
+    if (opportunities.length === 0) {
+      console.log('⚠️ No opportunities found in database - using mock data for demonstration');
+      opportunities = [
+        {
+          id: 'mock-early-1',
+          title: 'Software Engineering Intern',
+          company: 'Tech Startup Dubai',
+          companyLogo: 'https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=200&h=200&fit=crop',
+          location: 'Dubai, UAE',
+          type: 'early_access' as const,
+          matchScore: 92,
+          matchReasons: {
+            positive: ['Your technical skills match perfectly', 'Location preference aligned', 'Remote work available'],
+            warnings: [],
+          },
+          postedAt: new Date(),
+          postedDate: new Date(),
+          earlyAccessUntil: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+          isLocked: user.subscriptionPlan === 'FREE',
+          unlockCredits: 5,
+          applicationUrl: 'https://example.com/apply'
+        },
+        {
+          id: 'mock-internal-1',
+          title: 'Marketing Intern',
+          company: 'Bidaaya Partners LLC',
+          companyLogo: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=200&fit=crop',
+          location: 'Abu Dhabi, UAE',
+          type: 'internal' as const,
+          matchScore: 85,
+          matchReasons: {
+            positive: ['Creative skills match', 'Strong communication skills', 'Experience with social media'],
+            warnings: ['Requires on-site presence 3 days/week'],
+          },
+          postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: 'mock-internal-2',
+          title: 'Data Analyst Intern',
+          company: 'Financial Services Co.',
+          companyLogo: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&h=200&fit=crop',
+          location: 'Remote',
+          type: 'internal' as const,
+          matchScore: 78,
+          matchReasons: {
+            positive: ['Python skills match', 'Data visualization experience', 'Remote opportunity'],
+            warnings: [],
+          },
+          postedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          postedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: 'mock-external-1',
+          title: 'Business Development Intern',
+          company: 'Global Consulting Firm',
+          companyLogo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=200&h=200&fit=crop',
+          location: 'Riyadh, Saudi Arabia',
+          type: 'external' as const,
+          matchScore: 71,
+          matchReasons: {
+            positive: ['Business acumen matches', 'Networking skills valued'],
+            warnings: ['Requires Arabic language skills'],
+          },
+          postedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          postedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          applicationUrl: 'https://example.com/apply-bd'
+        },
+      ];
+    }
 
     return NextResponse.json({
       opportunities,
