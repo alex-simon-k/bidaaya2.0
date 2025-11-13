@@ -76,11 +76,11 @@ export function EarlyAccessBanner({ opportunity, onDismiss, onClick, isLocked = 
         >
           <div className="flex items-start gap-3">
             {/* Icon */}
-            <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
               <img 
                 src="/icons/early-access.svg" 
                 alt="Early Access"
-                className="h-5 w-5 object-contain"
+                className="h-7 w-7 object-contain"
               />
             </div>
 
@@ -88,7 +88,7 @@ export function EarlyAccessBanner({ opportunity, onDismiss, onClick, isLocked = 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h3 className="text-sm font-bold text-bidaaya-light whitespace-nowrap">
-                  🔥 Early Access
+                  Early Access
                 </h3>
                 {getTimeRemaining() && (
                   <span className="flex items-center gap-1 text-[10px] text-yellow-400 bg-yellow-500/20 px-2 py-0.5 rounded-full font-semibold">

@@ -170,7 +170,7 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
               src="/icons/ai-agent.svg" 
               alt="AI Agent"
               className={cn(
-                "w-5 h-5 transition-opacity object-contain",
+                "w-6 h-6 transition-opacity object-contain",
                 isActive ? "opacity-100" : "opacity-40"
               )}
             />

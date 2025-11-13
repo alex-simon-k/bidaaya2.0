@@ -408,7 +408,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 <img 
                   src="/icons/top-matches.svg" 
                   alt="Top Matches"
-                  className="h-4 w-4 sm:h-5 sm:w-5 object-contain"
+                  className="h-5 w-5 sm:h-6 sm:w-6 object-contain"
                 />
                 <h2 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Top Matches</h2>
               </div>
