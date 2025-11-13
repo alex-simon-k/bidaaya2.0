@@ -45,7 +45,7 @@ export function ApplicationCard({
 }: ApplicationCardProps) {
   const [showMenu, setShowMenu] = useState(false)
 
-  const getStatusConfig = (status: typeof application.status) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
       case 'applied':
         return {
@@ -67,6 +67,14 @@ export function ApplicationCard({
           label: 'Rejected',
           color: 'bg-red-500/20 text-red-400 border-red-500/30',
           bgColor: 'bg-red-500/5'
+        }
+      default:
+        // Handle legacy 'accepted' status or any other unexpected values
+        return {
+          icon: CheckCircle2,
+          label: 'Applied',
+          color: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+          bgColor: 'bg-blue-500/5'
         }
     }
   }
