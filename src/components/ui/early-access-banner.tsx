@@ -77,7 +77,11 @@ export function EarlyAccessBanner({ opportunity, onDismiss, onClick, isLocked = 
           <div className="flex items-start gap-3">
             {/* Icon */}
             <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="h-5 w-5 text-yellow-400" />
+              <img 
+                src="/icons/early-access.png" 
+                alt="Early Access"
+                className="h-5 w-5"
+              />
             </div>
 
             {/* Content */}

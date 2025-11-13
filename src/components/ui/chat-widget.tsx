@@ -115,7 +115,11 @@ export function ChatWidget({ isOpen, onToggle, onSendMessage, className }: ChatW
           className
         )}
       >
-        <MessageCircle className="h-6 w-6 text-white" />
+        <img 
+          src="/icons/chatbot.png" 
+          alt="Chat"
+          className="h-8 w-8"
+        />
         {messages.length > 0 && (
           <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-bidaaya-dark flex items-center justify-center">
             <span className="text-xs text-white font-bold">{messages.length}</span>

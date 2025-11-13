@@ -166,10 +166,14 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
           className="w-full flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl"
         >
           <div className="flex items-center gap-2">
-            <Zap className={cn(
-              "w-5 h-5 transition-colors",
-              isActive ? "text-green-400" : "text-bidaaya-light/40"
-            )} />
+            <img 
+              src="/icons/ai-agent.png" 
+              alt="AI Agent"
+              className={cn(
+                "w-5 h-5 transition-opacity",
+                isActive ? "opacity-100" : "opacity-40"
+              )}
+            />
             <span className="text-base font-medium text-bidaaya-light">AI Agent</span>
           </div>
 
