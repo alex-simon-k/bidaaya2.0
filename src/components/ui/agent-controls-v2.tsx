@@ -167,13 +167,12 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
         >
           <div className="flex items-center gap-2">
             <img 
-              src="/icons/ai-agent.png" 
+              src="/icons/ai-agent.svg" 
               alt="AI Agent"
               className={cn(
                 "w-5 h-5 transition-opacity object-contain",
                 isActive ? "opacity-100" : "opacity-40"
               )}
-              style={{ imageRendering: 'crisp-edges' }}
             />
             <span className="text-base font-medium text-bidaaya-light">AI Agent</span>
           </div>
