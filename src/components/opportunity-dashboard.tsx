@@ -348,48 +348,42 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           </div>
         ) : !agentActive ? (
           /* Agent Off - Show CV/Cover Letter Builders */
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Turn On Agent Message */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-[20px] p-6 text-center"
+              className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-xl p-4 text-center"
             >
-              <Zap className="h-12 w-12 text-bidaaya-light/40 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-bidaaya-light mb-2">
+              <Zap className="h-8 w-8 text-bidaaya-light/40 mx-auto mb-2" />
+              <h3 className="text-base font-semibold text-bidaaya-light mb-1">
                 Turn on the agent to start seeing opportunities
               </h3>
-              <p className="text-sm text-bidaaya-light/60">
-                Enable the AI agent above to discover personalized opportunities best suited for you
+              <p className="text-xs text-bidaaya-light/60">
+                Enable the AI agent above to discover personalized opportunities
               </p>
             </motion.div>
 
-            {/* CV and Cover Letter Builders */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* CV and Cover Letter Builders - Compact */}
+            <div className="grid grid-cols-2 gap-2.5">
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-gradient-to-br from-bidaaya-accent/20 to-purple-500/20 border border-bidaaya-accent/30 rounded-[20px] p-6 text-left hover:from-bidaaya-accent/30 hover:to-purple-500/30 transition-all duration-300 group"
+                className="bg-gradient-to-br from-bidaaya-accent/20 to-purple-500/20 border border-bidaaya-accent/30 rounded-xl p-3 hover:from-bidaaya-accent/30 hover:to-purple-500/30 transition-all duration-300 group"
               >
-                <FileText className="h-10 w-10 text-bidaaya-accent mb-3 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-bidaaya-light mb-2">Build Custom CV</h3>
-                <p className="text-sm text-bidaaya-light/60">
-                  Create a professional CV tailored to your experience and goals
-                </p>
+                <FileText className="h-6 w-6 text-bidaaya-accent mb-2 group-hover:scale-110 transition-transform" />
+                <h3 className="text-xs font-semibold text-bidaaya-light">Build Custom CV</h3>
               </motion.button>
 
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-[20px] p-6 text-left hover:from-blue-500/30 hover:to-cyan-500/30 transition-all duration-300 group"
+                className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl p-3 hover:from-blue-500/30 hover:to-cyan-500/30 transition-all duration-300 group"
               >
-                <FileText className="h-10 w-10 text-blue-400 mb-3 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-bidaaya-light mb-2">Build Custom Cover Letter</h3>
-                <p className="text-sm text-bidaaya-light/60">
-                  Generate compelling cover letters for any application
-                </p>
+                <FileText className="h-6 w-6 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
+                <h3 className="text-xs font-semibold text-bidaaya-light">Build Cover Letter</h3>
               </motion.button>
             </div>
           </div>
