@@ -34,20 +34,20 @@ export function MembershipSelectionPopup({
   const plans = [
     {
       id: PRICING_PLANS.STUDENT_PREMIUM.id,
-      name: "I'm Cooked",
+      name: "Fries in the Bag",
       price: PRICING_PLANS.STUDENT_PREMIUM.price,
       credits: 100,
-      icon: '🪙',
+      image: '/pricing/cooked-guy.png',
       gradient: 'from-orange-500/20 to-red-500/20',
       borderColor: 'border-orange-500/30',
       buttonGradient: 'from-orange-500 to-red-500',
     },
     {
       id: PRICING_PLANS.STUDENT_PRO.id,
-      name: 'Unemployed No More',
+      name: 'Unemployed Bro',
       price: PRICING_PLANS.STUDENT_PRO.price,
       credits: 200,
-      icon: '💰',
+      image: '/pricing/unemployed-guy.png',
       gradient: 'from-bidaaya-accent/20 to-purple-500/20',
       borderColor: 'border-bidaaya-accent/30',
       buttonGradient: 'from-bidaaya-accent to-purple-500',
@@ -101,7 +101,11 @@ export function MembershipSelectionPopup({
 
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="text-4xl">{plan.icon}</div>
+                    <img 
+                      src={plan.image} 
+                      alt={plan.name}
+                      className="w-16 h-16 object-contain"
+                    />
                     <div>
                       <h3 className="text-lg font-bold text-bidaaya-light">{plan.name}</h3>
                       <div className="flex items-center gap-1.5 text-bidaaya-light/80">
