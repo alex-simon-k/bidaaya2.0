@@ -144,7 +144,10 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
   const selectedField = FIELDS.find(f => f.value === field)
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 mb-4">
+    <div className={cn(
+      "w-full mx-auto px-4 mb-4 transition-all duration-500",
+      isExpanded ? "max-w-4xl" : "max-w-2xl"
+    )}>
       {/* Compact Glass Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
