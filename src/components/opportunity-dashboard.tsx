@@ -72,6 +72,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [appliedOpportunities, setAppliedOpportunities] = useState<Set<string>>(new Set());
   const [agentActive, setAgentActive] = useState(false);
+  const [agentExpanded, setAgentExpanded] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -338,6 +339,9 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             if ('agentActive' in prefs) {
               setAgentActive(prefs.agentActive as boolean);
             }
+            if ('isExpanded' in prefs) {
+              setAgentExpanded(prefs.isExpanded as boolean);
+            }
             // TODO: Refresh opportunities based on new preferences
           }} />
         </div>
@@ -417,10 +421,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               </Button>
             </div>
 
-            {/* 2x2 Grid of Opportunities */}
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+            {/* Dynamic Grid - 3x2 when collapsed, 2x2 when expanded */}
+            <div className={cn(
+              "grid gap-2.5 sm:gap-4 transition-all duration-300",
+              agentExpanded ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"
+            )}>
               {[...bidaayaOpportunities, ...externalOpportunities]
-                .slice(0, 4)
+                .slice(0, agentExpanded ? 4 : 6)
                 .map((opp) => (
                   <OpportunityCardCompact
                     key={opp.id}
@@ -429,9 +436,11 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                   />
                 ))}
               
-              {/* Fill empty slots if less than 4 opportunities */}
-              {[...bidaayaOpportunities, ...externalOpportunities].length < 4 && (
-                Array.from({ length: 4 - [...bidaayaOpportunities, ...externalOpportunities].length }).map((_, i) => (
+              {/* Fill empty slots */}
+              {[...bidaayaOpportunities, ...externalOpportunities].length < (agentExpanded ? 4 : 6) && (
+                Array.from({ 
+                  length: (agentExpanded ? 4 : 6) - [...bidaayaOpportunities, ...externalOpportunities].length 
+                }).map((_, i) => (
                   <div
                     key={`empty-${i}`}
                     className="rounded-lg sm:rounded-xl border border-dashed border-bidaaya-light/10 bg-bidaaya-light/5 p-3 sm:p-4 flex items-center justify-center min-h-[120px] sm:min-h-[140px]"

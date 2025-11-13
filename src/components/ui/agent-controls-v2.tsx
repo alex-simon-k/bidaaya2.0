@@ -6,7 +6,7 @@ import { Zap, Target, Briefcase, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AgentControlsV2Props {
-  onPreferencesChange?: (preferences: { commitmentLevel?: string; field?: string; agentActive?: boolean }) => void
+  onPreferencesChange?: (preferences: { commitmentLevel?: string; field?: string; agentActive?: boolean; isExpanded?: boolean }) => void
 }
 
 const FIELDS = [
@@ -136,6 +136,12 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
     savePreferences(undefined, undefined, newActive)
   }
 
+  const toggleExpanded = () => {
+    const newExpanded = !isExpanded
+    setIsExpanded(newExpanded)
+    onPreferencesChange?.({ isExpanded: newExpanded })
+  }
+
   const filteredFields = FIELDS.filter(f => 
     f.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
     f.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -156,7 +162,7 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
       >
         {/* Header Row - Always Visible */}
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={toggleExpanded}
           className="w-full flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl"
         >
           <div className="flex items-center gap-2">
