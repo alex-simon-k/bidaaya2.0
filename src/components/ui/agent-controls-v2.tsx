@@ -6,7 +6,7 @@ import { Zap, Target, Briefcase, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AgentControlsV2Props {
-  onPreferencesChange?: (preferences: { commitmentLevel: string; field: string }) => void
+  onPreferencesChange?: (preferences: { commitmentLevel?: string; field?: string; agentActive?: boolean }) => void
 }
 
 const FIELDS = [
@@ -26,7 +26,7 @@ const FIELDS = [
 ]
 
 const COMMITMENT_OPTIONS = [
-  { value: 'part_time', label: 'Part-time', description: '≤20h/week' },
+  { value: 'flexible', label: 'Flexible', description: '≤20h/week' },
   { value: 'full_time', label: 'Full-time', description: '40+h/week' },
 ]
 
@@ -38,7 +38,7 @@ const ACTIVITY_MESSAGES = [
 ]
 
 export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
-  const [commitmentLevel, setCommitmentLevel] = useState<string>('part_time')
+  const [commitmentLevel, setCommitmentLevel] = useState<string>('flexible')
   const [field, setField] = useState<string>('best_for_you')
   const [isActive, setIsActive] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -82,7 +82,7 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
       if (response.ok) {
         const data = await response.json()
         if (data.preferences) {
-          setCommitmentLevel(data.preferences.commitmentLevel || 'part_time')
+          setCommitmentLevel(data.preferences.commitmentLevel || 'flexible')
           setField(data.preferences.field || 'any')
           setIsActive(data.preferences.agentActive || false)
         }

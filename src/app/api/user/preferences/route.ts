@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
           ? JSON.parse(user.agentPreferences) 
           : user.agentPreferences)
       : {
-          commitmentLevel: 'part_time',
+          commitmentLevel: 'flexible',
           field: 'best_for_you',
           agentActive: false,
         };
@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest) {
     const { commitmentLevel, field, agentActive } = body;
 
     // Validate inputs
-    const validCommitmentLevels = ['full_time', 'part_time', 'flexible'];
+    const validCommitmentLevels = ['full_time', 'flexible'];
     const validFields = [
       'best_for_you', 
       'technology', 
