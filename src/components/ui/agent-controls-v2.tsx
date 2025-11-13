@@ -165,12 +165,12 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
           onClick={toggleExpanded}
           className="w-full flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <img 
               src="/icons/ai-agent.svg" 
               alt="AI Agent"
               className={cn(
-                "w-6 h-6 transition-opacity object-contain",
+                "w-7 h-7 transition-opacity object-contain",
                 isActive ? "opacity-100" : "opacity-40"
               )}
             />

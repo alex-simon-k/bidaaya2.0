@@ -111,14 +111,14 @@ export function ChatWidget({ isOpen, onToggle, onSendMessage, className }: ChatW
       <button
         onClick={onToggle}
         className={cn(
-          "fixed bottom-6 right-6 w-14 h-14 bg-bidaaya-accent hover:bg-bidaaya-accent/90 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 z-50 safe-bottom",
+          "fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-bidaaya-accent to-purple-600 hover:from-bidaaya-accent/90 hover:to-purple-600/90 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 z-50 safe-bottom",
           className
         )}
       >
         <img 
           src="/icons/chatbot.svg" 
           alt="Chat"
-          className="h-10 w-10 object-contain"
+          className="h-10 w-10 object-contain brightness-0 invert"
         />
         {messages.length > 0 && (
           <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-bidaaya-dark flex items-center justify-center">

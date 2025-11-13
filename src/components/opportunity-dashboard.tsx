@@ -404,11 +404,11 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <img 
                   src="/icons/top-matches.svg" 
                   alt="Top Matches"
-                  className="h-5 w-5 sm:h-6 sm:w-6 object-contain"
+                  className="h-6 w-6 sm:h-7 sm:w-7 object-contain"
                 />
                 <h2 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Top Matches</h2>
               </div>
