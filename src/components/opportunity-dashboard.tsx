@@ -408,7 +408,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 <img 
                   src="/icons/top-matches.png" 
                   alt="Top Matches"
-                  className="h-4 w-4 sm:h-5 sm:w-5"
+                  className="h-4 w-4 sm:h-5 sm:w-5 object-contain"
+                  style={{ imageRendering: 'crisp-edges' }}
                 />
                 <h2 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Top Matches</h2>
               </div>

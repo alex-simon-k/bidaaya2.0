@@ -80,7 +80,8 @@ export function EarlyAccessBanner({ opportunity, onDismiss, onClick, isLocked = 
               <img 
                 src="/icons/early-access.png" 
                 alt="Early Access"
-                className="h-5 w-5"
+                className="h-5 w-5 object-contain"
+                style={{ imageRendering: 'crisp-edges' }}
               />
             </div>
 
