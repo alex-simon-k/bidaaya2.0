@@ -164,17 +164,30 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
     if (!opportunity) return;
 
     try {
-      const response = await fetch('/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          opportunityTitle: opportunity.title,
-          opportunityCompany: opportunity.company,
-          opportunityUrl: opportunity.applicationUrl,
-          opportunityLocation: opportunity.location,
-          notes: `Match score: ${opportunity.matchScore || 0}%`,
-        }),
-      });
+      // For external opportunities, use the specific external opportunity application endpoint
+      let response;
+      if (opportunity.type === 'external' || opportunity.type === 'early_access') {
+        response = await fetch(`/api/external-opportunities/${opportunityId}/apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            notes: `Match score: ${opportunity.matchScore || 0}%`,
+          }),
+        });
+      } else {
+        // For internal opportunities, use generic tracking
+        response = await fetch('/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            opportunityTitle: opportunity.title,
+            opportunityCompany: opportunity.company,
+            opportunityUrl: opportunity.applicationUrl,
+            opportunityLocation: opportunity.location,
+            notes: `Match score: ${opportunity.matchScore || 0}%`,
+          }),
+        });
+      }
 
       if (response.ok) {
         setAppliedOpportunities(prev => new Set(prev).add(opportunityId));
@@ -189,7 +202,15 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
         alert('Application tracked! View it in My Applications.');
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to mark as applied');
+        if (data.alreadyApplied) {
+          // Already applied - just close modal and refresh
+          setAppliedOpportunities(prev => new Set(prev).add(opportunityId));
+          setDetailModalOpen(false);
+          setSelectedOpportunity(null);
+          await loadDashboardData();
+        } else {
+          alert(data.error || 'Failed to mark as applied');
+        }
       }
     } catch (error) {
       console.error('Error marking as applied:', error);

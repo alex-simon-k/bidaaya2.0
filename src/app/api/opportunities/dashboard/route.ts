@@ -262,7 +262,8 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.matchScore - a.matchScore);
     
     // Take top 6 overall (for the grid display)
-    const topMatches = allOpportunities.slice(0, 6);
+    // If we have opportunities, show them regardless of match score
+    const topMatches = allOpportunities.slice(0, Math.min(6, allOpportunities.length));
     
     // Also maintain separate lists for backward compatibility
     const topBidaaya = scoredBidaaya
