@@ -212,8 +212,10 @@ export async function GET(request: NextRequest) {
       orderBy: {
         addedAt: 'desc',
       },
-      take: 10, // Get more, then filter by match
+      take: 50, // Fetch more to ensure we have enough matches
     });
+    
+    console.log(`📊 Dashboard: Found ${externalOpps.length} external opportunities (non-early access)`);
 
     // Calculate match scores for all opportunities
     const scoredBidaaya = bidaayaProjects.map(project => {
@@ -261,9 +263,13 @@ export async function GET(request: NextRequest) {
     const allOpportunities = [...scoredBidaaya, ...scoredExternal]
       .sort((a, b) => b.matchScore - a.matchScore);
     
-    // Take top 6 overall (for the grid display)
-    // If we have opportunities, show them regardless of match score
-    const topMatches = allOpportunities.slice(0, Math.min(6, allOpportunities.length));
+    console.log(`📊 Dashboard: Total opportunities after scoring: ${allOpportunities.length}`);
+    console.log(`📊 Dashboard: Bidaaya: ${scoredBidaaya.length}, External: ${scoredExternal.length}`);
+    
+    // Take top 12 for better variety (was 6)
+    const topMatches = allOpportunities.slice(0, Math.min(12, allOpportunities.length));
+    
+    console.log(`📊 Dashboard: Returning ${topMatches.length} top matches to student`);
     
     // Also maintain separate lists for backward compatibility
     const topBidaaya = scoredBidaaya
