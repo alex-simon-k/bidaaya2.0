@@ -109,12 +109,12 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
     }
   };
 
-  const handleUnlockEarlyAccess = async (opportunityId: string) => {
+  const handleUnlockEarlyAccess = async (opportunityId: string, opportunityType: string = 'external') => {
     try {
       const response = await fetch('/api/opportunities/unlock-early-access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ opportunityId }),
+        body: JSON.stringify({ opportunityId, opportunityType }),
       });
 
       if (response.ok) {
@@ -287,6 +287,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             >
               <Settings className="h-5 w-5" />
               <span>Settings</span>
+            </a>
+            <a
+              href="/student/subscription"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+            >
+              <TrendingUp className="h-5 w-5" />
+              <span>Land an Internship Faster</span>
             </a>
           </nav>
 
@@ -475,6 +482,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           onMarkAsApplied={() => handleMarkAsApplied(selectedOpportunity.id)}
           onGenerateCV={handleGenerateCV}
           onGenerateCoverLetter={handleGenerateCoverLetter}
+          onUnlock={handleUnlockEarlyAccess}
+          userPlan={userPlan}
         />
       )}
 

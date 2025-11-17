@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   Calendar,
   XCircle,
-  Trophy
+  Trophy,
+  Lock,
+  Unlock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,11 +36,15 @@ interface OpportunityDetailModalProps {
     postedDate?: Date | string
     description?: string
     requirements?: string[]
+    isLocked?: boolean
+    unlockCredits?: number
   }
   hasApplied?: boolean
   onMarkAsApplied?: () => void
   onGenerateCV?: () => void
   onGenerateCoverLetter?: () => void
+  onUnlock?: (opportunityId: string, opportunityType: string) => void
+  userPlan?: string
 }
 
 export function OpportunityDetailModal({
@@ -48,12 +54,15 @@ export function OpportunityDetailModal({
   hasApplied = false,
   onMarkAsApplied,
   onGenerateCV,
-  onGenerateCoverLetter
+  onGenerateCoverLetter,
+  onUnlock,
+  userPlan
 }: OpportunityDetailModalProps) {
   const handleApply = () => {
-    if (opportunity.type === 'external' && opportunity.applicationUrl) {
+    // Treat early_access type as external since they're external opportunities with early access
+    if ((opportunity.type === 'external' || opportunity.type === 'early_access') && opportunity.applicationUrl) {
       window.open(opportunity.applicationUrl, '_blank')
-    } else {
+    } else if (opportunity.type === 'internal') {
       // For internal opportunities, navigate to application page
       window.location.href = `/dashboard/projects/${opportunity.id}`
     }
@@ -227,8 +236,31 @@ export function OpportunityDetailModal({
                     </Button>
                   </div>
 
-                  {/* Apply Button */}
-                  {!hasApplied ? (
+                  {/* Apply Button or Unlock Button */}
+                  {opportunity.isLocked && opportunity.type === 'early_access' && onUnlock ? (
+                    <div className="space-y-2">
+                      {userPlan === 'STUDENT_PRO' ? (
+                        <Button
+                          onClick={() => onUnlock(opportunity.id, 'external')}
+                          className="w-full bg-green-500 hover:bg-green-600 text-white"
+                        >
+                          <Unlock className="h-4 w-4 mr-2" />
+                          Unlock Free (Pro Member)
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => onUnlock(opportunity.id, 'external')}
+                          className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+                        >
+                          <Lock className="h-4 w-4 mr-2" />
+                          Unlock Now ({opportunity.unlockCredits || 7} Credits)
+                        </Button>
+                      )}
+                      <p className="text-xs text-center text-bidaaya-light/60">
+                        This is an early access opportunity
+                      </p>
+                    </div>
+                  ) : !hasApplied ? (
                     <Button
                       onClick={handleApply}
                       className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
