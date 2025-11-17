@@ -11,8 +11,7 @@ WHERE "isActive" = false;
 -- 2. VERIFY IT WORKED
 SELECT 
   "isActive", 
-  COUNT(*) as count,
-  ARRAY_AGG("company" ORDER BY "addedAt" DESC LIMIT 5) as sample_companies
+  COUNT(*) as count
 FROM "ExternalOpportunity"
 GROUP BY "isActive";
 

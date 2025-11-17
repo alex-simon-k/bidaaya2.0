@@ -200,7 +200,7 @@ export default function StudentSubscription() {
                     <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
                     <p className="text-white/90 text-sm mb-4">{plan.displayName} Plan</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold">AED {plan.price}</span>
+                      <span className="text-4xl font-bold">£{plan.price}</span>
                       <span className="text-white/80">/month</span>
                     </div>
                     <div className="mt-3 flex items-center gap-2 text-sm bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 w-fit">
@@ -272,7 +272,7 @@ export default function StudentSubscription() {
         <div className="text-center mt-8">
           <Link
             href="/student/settings"
-            className="text-bidaaya-light/60 hover:text-bidaaya-light underline"
+            className="text-bidaaya-light/60 hover:text-bidaaya-light transition-colors"
           >
             Go to Settings & Credit Management
           </Link>
