@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')
     const isActive = searchParams.get('isActive')
     const search = searchParams.get('search')
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = parseInt(searchParams.get('limit') || '1000') // Admin can see all opportunities
     const offset = parseInt(searchParams.get('offset') || '0')
 
     let where: any = {}

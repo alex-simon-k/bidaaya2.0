@@ -282,7 +282,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <span>My Profile</span>
             </a>
             <a
-              href="/dashboard/settings"
+              href="/student/settings"
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
             >
               <Settings className="h-5 w-5" />
@@ -457,18 +457,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               )}
             </div>
 
-            {/* Empty State */}
-            {[...bidaayaOpportunities, ...externalOpportunities].length === 0 && (
-              <div className="text-center py-12">
-                <Briefcase className="h-12 w-12 text-bidaaya-light/20 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-bidaaya-light mb-2">
-                  No opportunities yet
-                </h3>
-                <p className="text-bidaaya-light/60 text-sm">
-                  We're finding the best matches for your profile. Check back soon!
-                </p>
-              </div>
-            )}
+            {/* Empty State - Removed to prevent unwanted scrolling */}
           </div>
         )}
       </div>
