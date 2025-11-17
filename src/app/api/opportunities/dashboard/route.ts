@@ -280,12 +280,8 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, 2);
 
-    // Handle early access opportunity
-    let earlyAccessOpp = null;
-    if (newExternalOpps.length > 0) {
-      const opp = newExternalOpps[0];
-      const match = calculateMatchScore(opp, user);
-      
+    // Handle early access opportunities - show 2 at a time
+    const earlyAccessOpportunities = newExternalOpps.slice(0, 2).map(opp => {
       // Check if user has already unlocked this
       const hasUnlocked = user.earlyAccessUnlocks.some(
         unlock => unlock.externalOpportunityId === opp.id
@@ -297,17 +293,17 @@ export async function GET(request: NextRequest) {
       
       console.log(`📊 Early Access: User ${user.id}, Opp ${opp.id}, hasUnlocked: ${hasUnlocked}, plan: ${userPlan}, isLocked: ${isLocked}`);
       
-      earlyAccessOpp = {
+      return {
         id: opp.id,
         title: opp.title,
         company: opp.company,
         companyLogo: opp.companyLogoUrl || undefined,
         location: opp.location || 'Remote',
         type: 'early_access' as const,
-        matchScore: match.score,
+        matchScore: 85, // Higher score for early access
         matchReasons: {
-          positive: match.positive,
-          warnings: match.warnings,
+          positive: ['New opportunity - early access'],
+          warnings: [],
         },
         postedAt: opp.publishedAt,
         postedDate: opp.publishedAt,
@@ -316,12 +312,12 @@ export async function GET(request: NextRequest) {
         unlockCredits: opp.unlockCredits,
         applicationUrl: opp.applicationUrl,
       };
-    }
+    });
 
     // Use the mixed top matches instead of separate lists
     let opportunities = [
-      ...(earlyAccessOpp ? [earlyAccessOpp] : []),
-      ...topMatches,
+      ...earlyAccessOpportunities, // Show 2 early access at top
+      ...topMatches, // Then show all regular opportunities
     ];
 
     // IF NO OPPORTUNITIES IN DATABASE, USE MOCK DATA FOR DEMONSTRATION
