@@ -745,7 +745,17 @@ model ExternalOpportunity {
   isNewOpportunity Boolean   @default(false)
   publishedAt      DateTime? 
   earlyAccessUntil DateTime?
-  unlockCredits    Int       @default(5) // Credits required to unlock if not paid tier
+  unlockCredits    Int       @default(7) // Credits required to unlock if not paid tier
+  
+  // Student Matching & Categorization fields (for AI/GPT-based filtering)
+  requiredDegrees      String[]  @default([]) // e.g., ["Business", "Computer Science", "Engineering"]
+  preferredMajors      String[]  @default([]) // More specific fields of study
+  requiredSkills       String[]  @default([]) // Technical or soft skills needed
+  industries           String[]  @default([]) // Industry tags for matching
+  matchingTags         String[]  @default([]) // General tags for flexible matching
+  requiresWorkAuth     String?               // "UAE", "US", "UK", etc.
+  minGPA               Float?                // Minimum GPA requirement if any
+  targetedUniversities String[]  @default([]) // Specific universities if targeting
   
   // Admin fields
   addedBy         String   // Admin user ID

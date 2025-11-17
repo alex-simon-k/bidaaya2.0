@@ -11,7 +11,8 @@ import {
   Crown,
   CheckCircle,
   Clock,
-  Sparkles
+  Sparkles,
+  Coins
 } from 'lucide-react'
 
 interface ExternalOpportunity {
@@ -31,6 +32,10 @@ interface ExternalOpportunity {
   addedAt: string
   hasApplied: boolean
   applicationCount: number
+  isNewOpportunity: boolean
+  earlyAccessUntil?: string
+  isUnlocked?: boolean
+  unlockCredits: number
 }
 
 interface ExternalOpportunitiesListProps {
@@ -52,10 +57,25 @@ export function ExternalOpportunitiesList({
   const [showModal, setShowModal] = useState(false)
   const [applyNotes, setApplyNotes] = useState('')
   const [isApplying, setIsApplying] = useState(false)
+  const [unlockingId, setUnlockingId] = useState<string | null>(null)
+  const [userCredits, setUserCredits] = useState(0)
 
   useEffect(() => {
     fetchOpportunities()
+    fetchUserCredits()
   }, [categoryFilter, remoteFilter])
+
+  const fetchUserCredits = async () => {
+    try {
+      const response = await fetch('/api/student/credits')
+      if (response.ok) {
+        const data = await response.json()
+        setUserCredits(data.currentCredits)
+      }
+    } catch (error) {
+      console.error('Failed to fetch credits:', error)
+    }
+  }
 
   const fetchOpportunities = async () => {
     setIsLoading(true)
@@ -133,6 +153,43 @@ export function ExternalOpportunitiesList({
     }
   }
 
+  const handleUnlockEarlyAccess = async (opportunity: ExternalOpportunity) => {
+    if (unlockingId) return // Prevent double clicks
+    
+    if (userCredits < opportunity.unlockCredits && !isPro) {
+      alert(`You need ${opportunity.unlockCredits} credits to unlock early access. You currently have ${userCredits} credits. Upgrade your plan to get more credits!`)
+      return
+    }
+
+    setUnlockingId(opportunity.id)
+    
+    try {
+      const response = await fetch('/api/student/early-access/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opportunityId: opportunity.id,
+          opportunityType: 'external'
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh opportunities and credits
+        await fetchOpportunities()
+        await fetchUserCredits()
+        alert(data.message || 'Opportunity unlocked!')
+      } else {
+        alert(data.error || 'Failed to unlock opportunity')
+      }
+    } catch (error) {
+      alert('Failed to unlock opportunity. Please try again.')
+    } finally {
+      setUnlockingId(null)
+    }
+  }
+
   const filteredOpportunities = opportunities.filter(opp => {
     if (!searchTerm) return true
     const search = searchTerm.toLowerCase()
@@ -187,15 +244,19 @@ export function ExternalOpportunitiesList({
       )}
 
       <div className="space-y-4">
-        {filteredOpportunities.map((opp, index) => (
+        {filteredOpportunities.map((opp, index) => {
+          const isEarlyAccess = opp.isNewOpportunity && !opp.isUnlocked && !isPro
+          const isLocked = isEarlyAccess
+          
+          return (
           <motion.div
             key={opp.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className={`bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-all ${
-              opp.isPremium ? 'border-2 border-purple-200' : 'border border-gray-200'
-            }`}
+            className={`bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-all relative ${
+              opp.isPremium || isEarlyAccess ? 'border-2 border-purple-200' : 'border border-gray-200'
+            } ${isLocked ? 'overflow-hidden' : ''}`}
           >
             <div className="flex items-start gap-4 mb-3">
               {/* Company Logo */}
@@ -285,10 +346,87 @@ export function ExternalOpportunitiesList({
               )}
             </div>
 
+            {/* Blur Overlay for Early Access */}
+            {isLocked && (
+              <div className="absolute inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-10">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="bg-white rounded-xl shadow-2xl p-6 max-w-sm mx-4 border-2 border-purple-300"
+                >
+                  <div className="text-center">
+                    <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
+                      <Sparkles className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      Early Access Opportunity
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4">
+                      This opportunity is available early! Unlock it now or wait for public release.
+                    </p>
+                    
+                    <div className="bg-purple-50 rounded-lg p-3 mb-4">
+                      <div className="flex items-center justify-center gap-2 text-purple-700">
+                        <Coins className="w-5 h-5" />
+                        <span className="font-semibold text-lg">{opp.unlockCredits} Credits</span>
+                      </div>
+                      {!isPro && (
+                        <p className="text-xs text-purple-600 mt-1">
+                          You have {userCredits} credits
+                        </p>
+                      )}
+                    </div>
+
+                    {isPro ? (
+                      <button
+                        onClick={() => handleUnlockEarlyAccess(opp)}
+                        disabled={unlockingId === opp.id}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50"
+                      >
+                        {unlockingId === opp.id ? (
+                          'Unlocking...'
+                        ) : (
+                          <>
+                            <Crown className="w-5 h-5" />
+                            Unlock Free (Pro Member)
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUnlockEarlyAccess(opp)}
+                        disabled={unlockingId === opp.id || userCredits < opp.unlockCredits}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {unlockingId === opp.id ? (
+                          'Unlocking...'
+                        ) : userCredits < opp.unlockCredits ? (
+                          <>Not Enough Credits</>
+                        ) : (
+                          <>
+                            <Sparkles className="w-5 h-5" />
+                            Unlock Now
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {opp.earlyAccessUntil && (
+                      <p className="text-xs text-gray-500 mt-3">
+                        <Clock className="w-3 h-3 inline mr-1" />
+                        Public release: {new Date(opp.earlyAccessUntil).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between pt-4 border-t border-gray-100 gap-3">
               <button
                 onClick={() => handleVisitWebsite(opp)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+                disabled={isLocked}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Visit Website
                 <ExternalLink className="w-4 h-4" />
@@ -297,7 +435,8 @@ export function ExternalOpportunitiesList({
               {!opp.hasApplied ? (
                 <button
                   onClick={() => handleMarkAsApplied(opp)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  disabled={isLocked}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Mark as Applied
@@ -310,7 +449,8 @@ export function ExternalOpportunitiesList({
               )}
             </div>
           </motion.div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Application Confirmation Modal */}

@@ -97,6 +97,9 @@ export async function GET(request: NextRequest) {
           salary: true,
           deadline: true,
           isPremium: true,
+          isNewOpportunity: true,
+          earlyAccessUntil: true,
+          unlockCredits: true,
           addedAt: true,
           viewCount: true,
           clickCount: true,
@@ -118,24 +121,41 @@ export async function GET(request: NextRequest) {
 
     // Check which opportunities the user has already applied to
     let appliedOpportunityIds: string[] = []
+    let unlockedOpportunityIds: string[] = []
+    
     if (isStudent) {
-      const applications = await prisma.externalOpportunityApplication.findMany({
-        where: {
-          userId: session.user.id,
-          externalOpportunityId: {
-            in: opportunities.map(o => o.id)
-          }
-        },
-        select: { externalOpportunityId: true }
-      }).catch(() => [])
+      const [applications, unlocks] = await Promise.all([
+        prisma.externalOpportunityApplication.findMany({
+          where: {
+            userId: session.user.id,
+            externalOpportunityId: {
+              in: opportunities.map(o => o.id)
+            }
+          },
+          select: { externalOpportunityId: true }
+        }).catch(() => []),
+        prisma.earlyAccessUnlock.findMany({
+          where: {
+            userId: session.user.id,
+            externalOpportunityId: {
+              in: opportunities.map(o => o.id)
+            }
+          },
+          select: { externalOpportunityId: true }
+        }).catch(() => [])
+      ])
 
       appliedOpportunityIds = applications.map(a => a.externalOpportunityId)
+      unlockedOpportunityIds = unlocks
+        .filter(u => u.externalOpportunityId)
+        .map(u => u.externalOpportunityId as string)
     }
 
-    // Add hasApplied flag to each opportunity
+    // Add hasApplied and isUnlocked flags to each opportunity
     const opportunitiesWithStatus = opportunities.map(opp => ({
       ...opp,
       hasApplied: appliedOpportunityIds.includes(opp.id),
+      isUnlocked: unlockedOpportunityIds.includes(opp.id),
       applicationCount: opp._count?.applications || 0
     }))
 
