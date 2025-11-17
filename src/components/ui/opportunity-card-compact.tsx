@@ -89,31 +89,7 @@ export function OpportunityCardCompact({
         <span className="line-clamp-1">{opportunity.location}</span>
       </div>
 
-      {/* Match Score - HIDDEN FOR NOW */}
-      {false && opportunity.matchScore !== undefined && (
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] sm:text-xs text-bidaaya-light/60">Match</span>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-12 sm:w-16 bg-bidaaya-light/10 rounded-full h-1 sm:h-1.5">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${opportunity.matchScore}%` }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-                className={cn(
-                  'h-1 sm:h-1.5 rounded-full',
-                  opportunity.matchScore >= 80 ? 'bg-green-400' :
-                  opportunity.matchScore >= 60 ? 'bg-blue-400' :
-                  opportunity.matchScore >= 40 ? 'bg-orange-400' :
-                  'bg-bidaaya-accent'
-                )}
-              />
-            </div>
-            <span className={cn('text-xs sm:text-sm font-bold', getAccentColor())}>
-              {opportunity.matchScore}%
-            </span>
-          </div>
-        </div>
-      )}
+      {/* Match Score - HIDDEN FOR NOW (will re-enable with GPT matching later) */}
     </motion.div>
   )
 }
