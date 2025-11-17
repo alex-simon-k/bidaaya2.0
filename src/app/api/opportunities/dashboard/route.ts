@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
             externalOpportunity: true,
           }
         },
-        externalOpportunityApplications: {
+        externalOpportunityApps: {
           select: {
             externalOpportunityId: true
           }
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     const now = new Date();
 
     // Get IDs of opportunities user has already applied to
-    const appliedOpportunityIds = user.externalOpportunityApplications.map(app => app.externalOpportunityId);
+    const appliedOpportunityIds = user.externalOpportunityApps.map(app => app.externalOpportunityId);
 
     // Find early access opportunity (Today's Pick)
     // Look for opportunities published in last 48 hours
