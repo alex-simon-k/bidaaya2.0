@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     const allApplications = formattedExternal
       .sort((a, b) => new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime());
 
-    console.log(`📊 Applications API: Returning ${allApplications.length} applications (${formattedExternal.length} external + ${formattedProjects.length} internal)`);
+    console.log(`📊 Applications API: Returning ${allApplications.length} external opportunity applications`);
 
     return NextResponse.json({
       applications: allApplications,
