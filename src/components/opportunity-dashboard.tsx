@@ -476,13 +476,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               </Button>
             </div>
 
-            {/* Dynamic Grid - 3x2 when collapsed, 2x2 when expanded */}
+            {/* Dynamic Grid - 3x4 when collapsed, 2x3 when expanded */}
             <div className={cn(
               "grid gap-2.5 sm:gap-4 transition-all duration-300",
               agentExpanded ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"
             )}>
               {[...bidaayaOpportunities, ...externalOpportunities]
-                .slice(0, agentExpanded ? 4 : 6)
+                .slice(0, agentExpanded ? 6 : 12)
                 .map((opp) => (
                   <OpportunityCardCompact
                     key={opp.id}
