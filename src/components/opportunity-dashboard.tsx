@@ -81,28 +81,40 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const loadDashboardData = async () => {
     setLoading(true);
     try {
+      // Add cache busting timestamp to force fresh data
+      const timestamp = Date.now();
+      
       // Load opportunities - USE SIMPLIFIED API
-      const oppResponse = await fetch('/api/opportunities/dashboard-simple');
+      const oppResponse = await fetch(`/api/opportunities/dashboard-simple?t=${timestamp}`, {
+        cache: 'no-store' // Force no caching
+      });
       if (oppResponse.ok) {
         const data = await oppResponse.json();
         console.log(`📊 Frontend: Received ${data.opportunities?.length || 0} opportunities`);
         setOpportunities(data.opportunities || []);
         setEarlyAccessUnlocksRemaining(data.earlyAccessUnlocksRemaining || 0);
+        setUserCredits(data.userCredits || 0); // Also get credits from dashboard API
       }
 
-      // Load credits
-      const creditsResponse = await fetch('/api/credits/balance');
+      // Load credits again for confirmation
+      const creditsResponse = await fetch(`/api/credits/balance?t=${timestamp}`, {
+        cache: 'no-store'
+      });
       if (creditsResponse.ok) {
         const creditsData = await creditsResponse.json();
         setUserCredits(creditsData.balance || 0);
       }
 
       // Load agent preferences
-      const prefsResponse = await fetch('/api/user/preferences');
+      const prefsResponse = await fetch(`/api/user/preferences?t=${timestamp}`, {
+        cache: 'no-store'
+      });
       if (prefsResponse.ok) {
         const prefsData = await prefsResponse.json();
         setAgentActive(prefsData.preferences?.agentActive || false);
       }
+      
+      console.log('✅ Dashboard refreshed successfully');
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
