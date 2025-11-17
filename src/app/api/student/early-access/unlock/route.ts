@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     // Check if user has Pro plan (free early access)
     const hasProAccess = canAccessEarlyForFree(user.subscriptionPlan)
     const creditCost = CREDIT_COSTS.EARLY_ACCESS
+    const userId = session.user.id // Store for type safety in transaction
 
     if (!hasProAccess) {
       // Check if user has enough credits
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
       // Create unlock record
       await tx.earlyAccessUnlock.create({
         data: {
-          userId: session.user.id,
+          userId: userId,
           opportunityId: opportunityId,
           opportunityType: opportunityType,
           projectId: opportunityType === 'project' ? opportunityId : null,
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
         const newBalance = user.credits - creditCost
         
         await tx.user.update({
-          where: { id: session.user.id },
+          where: { id: userId },
           data: {
             credits: newBalance,
             lifetimeCreditsUsed: user.lifetimeCreditsUsed + creditCost
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
 
         await tx.creditTransaction.create({
           data: {
-            userId: session.user.id,
+            userId: userId,
             type: 'spent',
             action: 'EARLY_ACCESS',
             amount: -creditCost,
