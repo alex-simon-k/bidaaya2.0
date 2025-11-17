@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       location: app.opportunity.location || 'Remote',
       type: 'external' as const,
       appliedDate: app.appliedAt,
-      status: app.status.toLowerCase() as 'applied' | 'interview' | 'rejected',
+      status: 'applied' as 'applied' | 'interview' | 'rejected', // ExternalOpportunityApplication doesn't have status field yet
       matchScore: undefined,
       notes: app.notes,
       applicationUrl: app.opportunity.applicationUrl,
