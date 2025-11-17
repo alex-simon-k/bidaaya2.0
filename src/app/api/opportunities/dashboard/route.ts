@@ -292,7 +292,10 @@ export async function GET(request: NextRequest) {
       );
 
       const userPlan = user.subscriptionPlan;
-      const isLocked = !hasUnlocked && userPlan === 'FREE';
+      // Pro members get free access, others need to unlock if they haven't already
+      const isLocked = !hasUnlocked && userPlan !== 'STUDENT_PRO';
+      
+      console.log(`📊 Early Access: User ${user.id}, Opp ${opp.id}, hasUnlocked: ${hasUnlocked}, plan: ${userPlan}, isLocked: ${isLocked}`);
       
       earlyAccessOpp = {
         id: opp.id,

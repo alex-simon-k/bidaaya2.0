@@ -140,14 +140,17 @@ export async function POST(request: NextRequest) {
       data: unlockData,
     });
 
+    const creditsUsed = usedCredit ? ((opportunity as any).unlockCredits || 7) : 0;
+    
     return NextResponse.json({
       success: true,
       message: usedCredit 
-        ? 'Unlocked with 5 credits' 
+        ? `Unlocked with ${creditsUsed} credits` 
         : hasProPlan 
           ? 'Unlocked with Pro early access (unlimited)' 
           : 'Unlocked with free unlock',
       creditsRemaining: updatedUser.credits,
+      creditsSpent: creditsUsed,
       earlyAccessUnlocksRemaining: updatedUser.earlyAccessUnlocksRemaining,
       usedCredit,
       usedFreeUnlock: !usedCredit && !hasProPlan,
