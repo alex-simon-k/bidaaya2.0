@@ -100,12 +100,12 @@ export async function POST(request: NextRequest) {
             location: location?.trim() || null,
             applicationUrl: titleUrl.trim(),
             source: 'OctoParse Scraping',
-            isActive: false, // Start as inactive until admin reviews
+            isActive: true, // Active immediately for students to see
             isPremium: false,
             isNewOpportunity: publishAsEarlyAccess,
             publishedAt,
             earlyAccessUntil,
-            unlockCredits: 5,
+            unlockCredits: 7, // 7 credits for early access
             addedBy: session.user.id
           }
         })

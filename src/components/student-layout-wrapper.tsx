@@ -118,7 +118,7 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
             </button>
 
             <button 
-              onClick={() => { router.push('/pricing'); setShowSidebar(false); }}
+              onClick={() => { router.push('/student/subscription'); setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
             </button>
 
             <button 
-              onClick={() => { router.push('/dashboard/settings'); setShowSidebar(false); }}
+              onClick={() => { router.push('/student/settings'); setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">

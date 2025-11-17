@@ -145,8 +145,8 @@ export default function StudentSettings() {
               <div className="flex items-center">
                 <Award className="h-5 w-5 text-purple-600 mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900">Early Access (2 opportunities)</p>
-                  <p className="text-sm text-gray-500">See new opportunities 24hrs before everyone</p>
+                  <p className="font-medium text-gray-900">Early Access Unlock</p>
+                  <p className="text-sm text-gray-500">Unlock any opportunity 24hrs before public release</p>
                 </div>
               </div>
               <span className="text-xl font-bold text-purple-600">{CREDIT_COSTS.EARLY_ACCESS}</span>
