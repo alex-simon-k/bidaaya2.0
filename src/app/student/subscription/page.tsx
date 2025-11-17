@@ -114,8 +114,8 @@ export default function StudentSubscription() {
     }
   ]
 
-  const currentPlanId = userSub?.subscriptionPlan === 'STUDENT_PREMIUM' ? 'student-premium' :
-                        userSub?.subscriptionPlan === 'STUDENT_PRO' ? 'student-pro' : 'free'
+  const currentPlanId = userSub?.subscriptionPlan === 'STUDENT_PREMIUM' ? 'student_premium' :
+                        userSub?.subscriptionPlan === 'STUDENT_PRO' ? 'student_pro' : 'free'
 
   if (loading) {
     return (
@@ -153,7 +153,7 @@ export default function StudentSubscription() {
             >
               <Check className="h-4 w-4" />
               <span className="font-medium">
-                Current Plan: {currentPlanId === 'student-premium' ? 'Premium' : 'Pro'}
+                Current Plan: {currentPlanId === 'student_premium' ? 'Premium' : 'Pro'}
               </span>
             </motion.div>
           )}
@@ -163,7 +163,7 @@ export default function StudentSubscription() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {plans.map((plan, index) => {
             const isCurrentPlan = currentPlanId === plan.id
-            const isDowngrade = (currentPlanId === 'student-pro' && plan.id === 'student-premium')
+            const isDowngrade = (currentPlanId === 'student_pro' && plan.id === 'student_premium')
             
             return (
               <motion.div
