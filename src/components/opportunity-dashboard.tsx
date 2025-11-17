@@ -483,7 +483,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               agentExpanded ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"
             )}>
               {[...bidaayaOpportunities, ...externalOpportunities]
-                .slice(0, agentExpanded ? 6 : 12)
+                .slice(0, agentExpanded ? 12 : 50)
                 .map((opp) => (
                   <OpportunityCardCompact
                     key={opp.id}
