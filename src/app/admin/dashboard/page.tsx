@@ -3,358 +3,113 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { 
+  Users, 
   Building2,
   Briefcase,
   ExternalLink,
-  Eye,
-  EyeOff,
-  Plus,
-  Search,
-  Link as LinkIcon,
-  CheckCircle,
-  AlertCircle,
-  Trash2,
-  Upload,
   TrendingUp,
-  Filter,
   Clock,
-  Users,
-  Crown
+  Eye,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  ArrowRight,
+  Calendar,
+  Target,
+  Upload,
+  Shield
 } from 'lucide-react'
 
-interface UnifiedOpportunity {
-  id: string
-  type: 'internal' | 'external'
-  title: string
-  company: string
-  companyId: string | null
-  companyData?: {
-    id: string
-    companyName: string
-    image: string | null
-    industry?: string | null
-  } | null
-  description?: string
-  location?: string | null
-  url: string
-  category?: string | null
-  isActive: boolean
-  isPremium?: boolean
-  addedAt: string
-  applicationCount?: number
-  status?: string
-}
-
-interface Company {
-  id: string
-  companyName: string
-  companyWebsite: string | null
-  image: string | null
-  industry: string | null
-  isExternalCompany: boolean
-  _count?: {
-    projects: number
-    externalOpportunities: number
+interface DashboardStats {
+  users: {
+    total: number
+    students: number
+    companies: number
+    admins: number
+    newThisWeek: number
   }
-}
-
-interface Stats {
+  opportunities: {
   total: number
   internal: number
   external: number
   active: number
-  unlinked: number
-  totalApplications: number
-  totalCompanies: number
-  externalCompanies: number
-  selfServeCompanies: number
+    pending: number
+  }
+  applications: {
+    total: number
+    thisWeek: number
+    thisMonth: number
+  }
+  earlyAccess: {
+    active: number
+    expiringSoon: number
+  }
 }
 
-export default function UnifiedAdminDashboard() {
+export default function AdminDashboardPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  
-  const [opportunities, setOpportunities] = useState<UnifiedOpportunity[]>([])
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [stats, setStats] = useState<Stats>({
-    total: 0,
-    internal: 0,
-    external: 0,
-    active: 0,
-    unlinked: 0,
-    totalApplications: 0,
-    totalCompanies: 0,
-    externalCompanies: 0,
-    selfServeCompanies: 0
-  })
-  
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentUsers, setRecentUsers] = useState<any[]>([])
+  const [recentOpportunities, setRecentOpportunities] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [viewFilter, setViewFilter] = useState<'all' | 'unlinked' | 'linked'>('unlinked')
-  
-  // Modals
-  const [showLinkModal, setShowLinkModal] = useState(false)
-  const [showCreateCompanyModal, setShowCreateCompanyModal] = useState(false)
-  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
-  const [selectedOpportunity, setSelectedOpportunity] = useState<UnifiedOpportunity | null>(null)
-  
-  // Forms
-  const [selectedCompanyId, setSelectedCompanyId] = useState('')
-  const [newCompanyData, setNewCompanyData] = useState({
-    companyName: '',
-    companyWebsite: ''
-  })
-  const [bulkData, setBulkData] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const cleanJSON = () => {
-    try {
-      // Replace curly quotes with straight quotes
-      let cleaned = bulkData
-        .replace(/[\u201C\u201D]/g, '"')  // Replace " and "
-        .replace(/[\u2018\u2019]/g, "'")  // Replace ' and '
-        .replace(/\u2013/g, '-')           // Replace en-dash
-        .replace(/\u2014/g, '--')          // Replace em-dash
-        .trim()
-      
-      // Try to parse and re-stringify for proper formatting
-      const parsed = JSON.parse(cleaned)
-      const formatted = JSON.stringify(parsed, null, 2)
-      setBulkData(formatted)
-      alert('✅ JSON cleaned and formatted!')
-    } catch (error) {
-      alert(`❌ Could not clean JSON: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
-  }
 
   useEffect(() => {
-    if (session?.user?.role !== 'ADMIN') {
+    if (!session?.user?.role) return
+    if (session.user.role !== 'ADMIN') {
       router.push('/dashboard')
       return
     }
-    fetchAllData()
+    
+    fetchDashboardData()
   }, [session])
 
-  const fetchAllData = async () => {
+  const fetchDashboardData = async () => {
     setIsLoading(true)
     try {
-      const [oppsRes, companiesRes] = await Promise.all([
-        fetch('/api/admin/all-opportunities'), // NEW: Fetch both internal & external
-        fetch('/api/admin/companies')
+      const [statsRes, usersRes, oppsRes] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/users?limit=5'),
+        fetch('/api/admin/external-opportunities?limit=5')
       ])
+
+      if (statsRes.ok) {
+        const data = await statsRes.json()
+        setStats(data)
+      }
+
+      if (usersRes.ok) {
+        const data = await usersRes.json()
+        setRecentUsers(data.users || [])
+      }
 
       if (oppsRes.ok) {
         const data = await oppsRes.json()
-        setOpportunities(data.opportunities || [])
-        
-        // Use stats from API
-        if (data.stats) {
-          setStats(prev => ({
-            ...prev,
-            total: data.stats.total,
-            internal: data.stats.internal,
-            external: data.stats.external,
-            active: data.stats.active,
-            unlinked: data.stats.unlinked,
-            totalApplications: data.stats.totalApplications
-          }))
-        }
-      }
-
-      if (companiesRes.ok) {
-        const companiesData = await companiesRes.json()
-        const allCompanies = companiesData.companies || []
-        setCompanies(allCompanies)
-        
-        const external = allCompanies.filter((c: Company) => c.isExternalCompany).length
-        const selfServe = allCompanies.filter((c: Company) => !c.isExternalCompany).length
-        
-        setStats(prev => ({
-          ...prev,
-          totalCompanies: allCompanies.length,
-          externalCompanies: external,
-          selfServeCompanies: selfServe
-        }))
+        setRecentOpportunities(data.opportunities || [])
       }
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching dashboard data:', error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const openLinkModal = (opp: UnifiedOpportunity) => {
-    setSelectedOpportunity(opp)
-    setSelectedCompanyId('')
-    setShowLinkModal(true)
+  if (session?.user?.role !== 'ADMIN') {
+    return null
   }
 
-  const handleLinkToCompany = async () => {
-    if (!selectedOpportunity || !selectedCompanyId) return
-    
-    setIsSubmitting(true)
-    try {
-      const response = await fetch(`/api/admin/external-opportunities/${selectedOpportunity.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          companyId: selectedCompanyId,
-          company: companies.find(c => c.id === selectedCompanyId)?.companyName || selectedOpportunity.company
-        })
-      })
-
-      if (response.ok) {
-        setShowLinkModal(false)
-        setSelectedOpportunity(null)
-        fetchAllData()
-        alert('✅ Opportunity linked to company!')
-      }
-    } catch (error) {
-      alert('❌ Failed to link opportunity')
-    } finally {
-      setIsSubmitting(false)
-    }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading dashboard...</p>
+        </div>
+      </div>
+    )
   }
-
-  const handleCreateMinimalCompany = async () => {
-    if (!newCompanyData.companyName) {
-      alert('Company name is required')
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const response = await fetch('/api/admin/companies/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          companyName: newCompanyData.companyName,
-          companyWebsite: newCompanyData.companyWebsite || null,
-          isExternalCompany: true,
-          companySource: 'admin_created'
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        
-        // If we have a selected opportunity, link it
-        if (selectedOpportunity) {
-          await fetch(`/api/admin/external-opportunities/${selectedOpportunity.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              companyId: data.company.id,
-              company: data.company.companyName
-            })
-          })
-        }
-        
-        setShowCreateCompanyModal(false)
-        setShowLinkModal(false)
-        setNewCompanyData({ companyName: '', companyWebsite: '' })
-        fetchAllData()
-        alert('✅ Company created and linked!')
-      }
-    } catch (error) {
-      alert('❌ Failed to create company')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleBulkUpload = async () => {
-    setIsSubmitting(true)
-    
-    // Step 1: Validate JSON
-    let opportunitiesData
-    try {
-      opportunitiesData = JSON.parse(bulkData)
-    } catch (jsonError) {
-      alert(`❌ Invalid JSON format!\n\nError: ${jsonError instanceof Error ? jsonError.message : 'Parse error'}\n\nTip: Check for:\n- Missing quotes\n- Trailing commas\n- Curly quotes (use straight quotes)`)
-      setIsSubmitting(false)
-      return
-    }
-    
-    // Step 2: Validate array
-    if (!Array.isArray(opportunitiesData)) {
-      alert('❌ Data must be a JSON array [ ]')
-      setIsSubmitting(false)
-      return
-    }
-
-    // Step 3: Validate required fields
-    const missing = []
-    for (let i = 0; i < Math.min(5, opportunitiesData.length); i++) {
-      const opp = opportunitiesData[i]
-      if (!opp.title || !opp.company || !opp.applicationUrl) {
-        missing.push(`Row ${i + 1}: Missing ${!opp.title ? 'title' : !opp.company ? 'company' : 'applicationUrl'}`)
-      }
-    }
-    
-    if (missing.length > 0) {
-      alert(`❌ Missing required fields:\n\n${missing.join('\n')}\n\nEach opportunity needs:\n- title\n- company\n- applicationUrl`)
-      setIsSubmitting(false)
-      return
-    }
-
-    // Step 4: Upload
-    try {
-      console.log(`Uploading ${opportunitiesData.length} opportunities...`)
-      
-      const response = await fetch('/api/admin/external-opportunities/bulk-smart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ opportunities: opportunitiesData })
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setShowBulkUploadModal(false)
-        setBulkData('')
-        fetchAllData()
-        alert(`✅ Bulk upload complete!\n\nCreated: ${data.created}\nAuto-linked: ${data.autoLinked}\nNew companies: ${data.newCompanies}\nFailed: ${data.failed || 0}`)
-      } else {
-        alert(`❌ Upload failed!\n\n${data.error || 'Unknown error'}\n\nServer response: ${response.status}`)
-      }
-    } catch (error) {
-      console.error('Upload error:', error)
-      alert(`❌ Network error during upload!\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nTry:\n1. Smaller batches (50 at a time)\n2. Check your internet connection`)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleToggleActive = async (id: string, currentStatus: boolean) => {
-    try {
-      await fetch(`/api/admin/external-opportunities/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus })
-      })
-      fetchAllData()
-    } catch (error) {
-      console.error('Error toggling status:', error)
-    }
-  }
-
-  const filteredOpportunities = opportunities
-    .filter(opp => {
-      // Unlinked filter only applies to external opportunities
-      if (viewFilter === 'unlinked') return opp.type === 'external' && !opp.companyId
-      if (viewFilter === 'linked') return opp.companyId !== null
-      return true
-    })
-    .filter(opp => {
-      if (!searchTerm) return true
-      return opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             opp.company.toLowerCase().includes(searchTerm.toLowerCase())
-    })
-
-  if (session?.user?.role !== 'ADMIN') return null
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -362,481 +117,281 @@ export default function UnifiedAdminDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Command Center
+            Admin Dashboard
           </h1>
           <p className="text-gray-600">
-            Unified dashboard for managing opportunities, companies, and system operations
+            Manage users, opportunities, and platform operations
           </p>
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-sm p-6"
+          <Link
+            href="/admin/octoparse-upload"
+            className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-6 hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Opportunities</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                <p className="text-xs text-gray-500 mt-1">{stats.internal} internal • {stats.external} external</p>
-              </div>
-              <Briefcase className="h-8 w-8 text-blue-600" />
-            </div>
-          </motion.div>
+            <Upload className="w-8 h-8 mb-3" />
+            <h3 className="font-semibold text-lg mb-1">OctoParse Upload</h3>
+            <p className="text-blue-100 text-sm">Upload scraped opportunities</p>
+          </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-lg shadow-sm p-6"
+          <Link
+            href="/admin/external-opportunities"
+            className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg p-6 hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Unlinked External Opps</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.unlinked}</p>
-                <p className="text-xs text-gray-500 mt-1">Need company assignment</p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-orange-600" />
-            </div>
-          </motion.div>
+            <Briefcase className="w-8 h-8 mb-3" />
+            <h3 className="font-semibold text-lg mb-1">External Opportunities</h3>
+            <p className="text-purple-100 text-sm">Manage external jobs</p>
+          </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-lg shadow-sm p-6"
+          <Link
+            href="/admin/projects"
+            className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-6 hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Companies</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalCompanies}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {stats.externalCompanies} external • {stats.selfServeCompanies} self-serve
-                </p>
-              </div>
-              <Building2 className="h-8 w-8 text-purple-600" />
-            </div>
-          </motion.div>
+            <Target className="w-8 h-8 mb-3" />
+            <h3 className="font-semibold text-lg mb-1">Company Projects</h3>
+            <p className="text-green-100 text-sm">Review & approve projects</p>
+          </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-lg shadow-sm p-6"
+          <Link
+            href="/admin/users"
+            className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg p-6 hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <div className="flex items-center justify-between">
+            <Users className="w-8 h-8 mb-3" />
+            <h3 className="font-semibold text-lg mb-1">User Management</h3>
+            <p className="text-orange-100 text-sm">View & manage users</p>
+          </Link>
+        </div>
+
+        {/* Stats Grid */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Users Stats */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                  +{stats.users.newThisWeek} this week
+                </span>
+              </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {stats.users.total}
+              </div>
+              <div className="text-sm text-gray-600 mb-3">Total Users</div>
+              <div className="flex gap-4 text-xs">
+                <div>
+                  <span className="text-gray-500">Students:</span>{' '}
+                  <span className="font-medium text-gray-900">{stats.users.students}</span>
+            </div>
               <div>
-                <p className="text-sm text-gray-600">Quick Actions</p>
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => setShowBulkUploadModal(true)}
-                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
-                  >
-                    <Upload className="inline w-3 h-3 mr-1" />
-                    Upload
-                  </button>
-                  <button
-                    onClick={() => router.push('/admin/companies')}
-                    className="px-3 py-1 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700"
-                  >
-                    Companies
-                  </button>
+                  <span className="text-gray-500">Companies:</span>{' '}
+                  <span className="font-medium text-gray-900">{stats.users.companies}</span>
                 </div>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
             </div>
-          </motion.div>
-        </div>
 
-        {/* Filter Bar */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex gap-3 flex-1 w-full md:w-auto">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search opportunities..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                />
+            {/* Opportunities Stats */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Briefcase className="w-6 h-6 text-purple-600" />
+                </div>
+                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                  {stats.opportunities.active} active
+                </span>
               </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setViewFilter('unlinked')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    viewFilter === 'unlinked'
-                      ? 'bg-orange-100 text-orange-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <AlertCircle className="inline w-4 h-4 mr-1" />
-                  Unlinked ({stats.unlinked})
-                </button>
-                <button
-                  onClick={() => setViewFilter('linked')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    viewFilter === 'linked'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <CheckCircle className="inline w-4 h-4 mr-1" />
-                  Linked
-                </button>
-                <button
-                  onClick={() => setViewFilter('all')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    viewFilter === 'all'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  All
-                </button>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {stats.opportunities.total}
+              </div>
+              <div className="text-sm text-gray-600 mb-3">Total Opportunities</div>
+              <div className="flex gap-4 text-xs">
+                <div>
+                  <span className="text-gray-500">External:</span>{' '}
+                  <span className="font-medium text-gray-900">{stats.opportunities.external}</span>
+            </div>
+              <div>
+                  <span className="text-gray-500">Internal:</span>{' '}
+                  <span className="font-medium text-gray-900">{stats.opportunities.internal}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Opportunities List */}
-        {isLoading ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading...</p>
+            {/* Applications Stats */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-green-600" />
+                </div>
+                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  +{stats.applications.thisWeek} this week
+                </span>
+        </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {stats.applications.total}
+              </div>
+              <div className="text-sm text-gray-600 mb-3">Total Applications</div>
+              <div className="text-xs text-gray-500">
+                {stats.applications.thisMonth} this month
+              </div>
+            </div>
+
+            {/* Early Access Stats */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <Clock className="w-6 h-6 text-orange-600" />
+                </div>
+                {stats.earlyAccess.expiringSoon > 0 && (
+                  <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                    {stats.earlyAccess.expiringSoon} expiring soon
+                  </span>
+                )}
           </div>
-        ) : filteredOpportunities.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">
-              {viewFilter === 'unlinked' 
-                ? '🎉 All opportunities are linked to companies!' 
-                : 'No opportunities found'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredOpportunities.map((opp) => (
-              <motion.div
-                key={opp.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`bg-white rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow border-l-4 ${
-                  !opp.companyId ? 'border-orange-500' : 'border-green-500'
-                }`}
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {stats.earlyAccess.active}
+        </div>
+              <div className="text-sm text-gray-600 mb-3">Early Access Active</div>
+              <Link 
+                href="/admin/octoparse-upload?tab=manage"
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{opp.title}</h3>
-                      {/* Type Badge */}
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${
-                        opp.type === 'internal' 
-                          ? 'bg-blue-100 text-blue-700' 
-                          : 'bg-indigo-100 text-indigo-700'
-                      }`}>
-                        {opp.type === 'internal' ? '🏢 Bidaaya' : '🌐 External'}
-                      </span>
-                      {opp.isPremium && (
-                        <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
-                          <Crown className="inline w-3 h-3" />
-                        </span>
-                      )}
-                      {opp.isActive ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
-                          Live
-                        </span>
+                Manage <ArrowRight className="w-3 h-3" />
+              </Link>
+          </div>
+          </div>
+        )}
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Users */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Recent Users
+              </h3>
+              <Link 
+                href="/admin/users"
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+              >
+                View All <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {recentUsers.slice(0, 5).map((user) => (
+                <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      {user.role === 'STUDENT' ? (
+                        <Users className="w-5 h-5 text-blue-600" />
                       ) : (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                          {opp.status || 'Hidden'}
-                        </span>
+                        <Building2 className="w-5 h-5 text-purple-600" />
                       )}
                     </div>
-
-                    <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
-                      <span className="flex items-center gap-1">
-                        <Building2 className="w-4 h-4" />
-                        {opp.companyData?.companyName || opp.company}
-                      </span>
-                      {opp.location && (
-                        <span className="text-gray-500">• {opp.location}</span>
-                      )}
-                      {opp.category && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                          {opp.category}
-                        </span>
-                      )}
-                      {opp.applicationCount !== undefined && opp.applicationCount > 0 && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                          {opp.applicationCount} apps
-                        </span>
-                      )}
-                    </div>
-
-                    {opp.description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-1">{opp.description}</p>
-                    )}
-
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Clock className="w-3 h-3" />
-                      Added {new Date(opp.addedAt).toLocaleDateString()}
+                    <div>
+                      <div className="font-medium text-gray-900">{user.name || 'Unnamed'}</div>
+                      <div className="text-xs text-gray-500">{user.email}</div>
                     </div>
                   </div>
-
-                  <div className="flex flex-col gap-2">
-                    {/* Company link button - only for external opps without company */}
-                    {opp.type === 'external' && !opp.companyId ? (
-                      <button
-                        onClick={() => openLinkModal(opp)}
-                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 text-sm"
-                      >
-                        <LinkIcon className="w-4 h-4" />
-                        Link Company
-                      </button>
-                    ) : opp.companyId ? (
-                      <button
-                        onClick={() => router.push(`/admin/companies/${opp.companyId}`)}
-                        className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2 text-sm"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        View Company
-                      </button>
-                    ) : null}
-
-                    {/* Toggle visibility - only for external */}
-                    {opp.type === 'external' && (
-                      <button
-                        onClick={() => handleToggleActive(opp.id, opp.isActive)}
-                        className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${
-                          opp.isActive
-                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {opp.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        {opp.isActive ? 'Hide' : 'Show'}
-                      </button>
-                    )}
-
-                    {/* View link */}
-                    <a
-                      href={opp.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      {opp.type === 'internal' ? 'View Project' : 'View Link'}
-                    </a>
+                  <div className="text-right">
+                    <div className={`text-xs font-medium px-2 py-1 rounded ${
+                      user.role === 'STUDENT' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      {user.role}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
-              </motion.div>
             ))}
+            </div>
           </div>
-        )}
 
-        {/* Link Company Modal */}
-        {showLinkModal && selectedOpportunity && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Link to Company
-              </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Opportunity: <strong>{selectedOpportunity.title}</strong>
-              </p>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Existing Company
-                  </label>
-                  <select
-                    value={selectedCompanyId}
-                    onChange={(e) => setSelectedCompanyId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
-                  >
-                    <option value="">Choose a company...</option>
-                    {companies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.companyName} {company.industry && `(${company.industry})`}
-                      </option>
-                    ))}
-                  </select>
+          {/* Recent Opportunities */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Briefcase className="w-5 h-5" />
+                Recent Opportunities
+              </h3>
+              <Link 
+                href="/admin/external-opportunities"
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+              >
+                View All <ArrowRight className="w-4 h-4" />
+              </Link>
                 </div>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300" />
+            <div className="space-y-3">
+              {recentOpportunities.slice(0, 5).map((opp) => (
+                <div key={opp.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{opp.title}</div>
+                    <div className="text-xs text-gray-500">{opp.company}</div>
                   </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">OR</span>
+                  <div className="flex items-center gap-2">
+                    {opp.isActive ? (
+                      <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                        <Eye className="w-3 h-3" />
+                        Live
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-200 px-2 py-1 rounded">
+                        Hidden
+                      </span>
+                    )}
                   </div>
                 </div>
-
-                <button
-                  onClick={() => {
-                    setNewCompanyData({ companyName: selectedOpportunity.company, companyWebsite: '' })
-                    setShowLinkModal(false)
-                    setShowCreateCompanyModal(true)
-                  }}
-                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create New Company
-                </button>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowLinkModal(false)
-                      setSelectedOpportunity(null)
-                    }}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleLinkToCompany}
-                    disabled={!selectedCompanyId || isSubmitting}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Linking...' : 'Link Company'}
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        )}
+                </div>
 
-        {/* Create Minimal Company Modal */}
-        {showCreateCompanyModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Create Minimal Company
-              </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Just the essentials - you can add more details later
+        {/* Admin Tools */}
+        <div className="mt-8 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-white/10 rounded-lg">
+              <Shield className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg mb-2">Admin Tools</h3>
+              <p className="text-gray-300 text-sm mb-4">
+                Quick access to admin management features and system tools
               </p>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Company Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newCompanyData.companyName}
-                    onChange={(e) => setNewCompanyData({...newCompanyData, companyName: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    placeholder="e.g., Acme Corp"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Website (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={newCompanyData.companyWebsite}
-                    onChange={(e) => setNewCompanyData({...newCompanyData, companyWebsite: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    placeholder="https://company.com"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowCreateCompanyModal(false)
-                      setNewCompanyData({ companyName: '', companyWebsite: '' })
-                    }}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreateMinimalCompany}
-                    disabled={!newCompanyData.companyName || isSubmitting}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create & Link'}
-                  </button>
-                </div>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/admin/users"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Manage Users
+                </Link>
+                <Link
+                  href="/admin/companies"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Manage Companies
+                </Link>
+                <Link
+                  href="/admin/analytics"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+                >
+                  View Analytics
+                </Link>
+                <Link
+                  href="/dashboard/browse-opportunities"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Student View
+                </Link>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Bulk Upload Modal */}
-        {showBulkUploadModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Smart Bulk Upload
-              </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Paste JSON array. System will auto-match company names to existing companies.
-              </p>
-
-              <textarea
-                value={bulkData}
-                onChange={(e) => setBulkData(e.target.value)}
-                rows={12}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm text-gray-900 mb-4"
-                placeholder={`[
-  {
-    "title": "Marketing Intern",
-    "company": "JP Morgan",
-    "applicationUrl": "https://...",
-    "location": "Dubai",
-    "category": "Marketing"
-  }
-]`}
-              />
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-blue-800">
-                  💡 <strong>Smart Matching:</strong> If company name matches existing company, it will auto-link. Otherwise, a minimal company profile will be created.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowBulkUploadModal(false)
-                    setBulkData('')
-                  }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={cleanJSON}
-                  disabled={!bulkData}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  🧹 Clean JSON
-                </button>
-                <button
-                  onClick={handleBulkUpload}
-                  disabled={!bulkData || isSubmitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? 'Uploading...' : 'Upload & Auto-Match'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )
 }
-

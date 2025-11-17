@@ -728,6 +728,7 @@ model ExternalOpportunity {
   title           String
   company         String   // Display name (keep for backward compatibility)
   companyId       String?  // Link to User table (Company)
+  companyLogoUrl  String?  // Company logo image URL from scraping
   description     String?
   location        String?
   applicationUrl  String   // External website link where students apply

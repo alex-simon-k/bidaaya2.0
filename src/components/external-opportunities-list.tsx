@@ -18,6 +18,7 @@ interface ExternalOpportunity {
   id: string
   title: string
   company: string
+  companyLogoUrl?: string
   description?: string
   location?: string
   applicationUrl: string
@@ -196,7 +197,30 @@ export function ExternalOpportunitiesList({
               opp.isPremium ? 'border-2 border-purple-200' : 'border border-gray-200'
             }`}
           >
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start gap-4 mb-3">
+              {/* Company Logo */}
+              {opp.companyLogoUrl ? (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={opp.companyLogoUrl} 
+                    alt={`${opp.company} logo`}
+                    className="w-12 h-12 rounded-lg object-contain bg-white border border-gray-200"
+                    onError={(e) => {
+                      // Fallback to icon if image fails to load
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                    }}
+                  />
+                  <div className="hidden w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-gray-400" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-gray-400" />
+                </div>
+              )}
+              
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -216,7 +240,6 @@ export function ExternalOpportunitiesList({
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Building2 className="w-4 h-4" />
                   <span className="font-medium">{opp.company}</span>
                 </div>
               </div>

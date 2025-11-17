@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
       title,
       company,
       companyId,
+      companyLogoUrl,
       createNewCompany, // If true, create company inline
       newCompanyData, // Data for new company if creating inline
       description,
@@ -199,6 +200,7 @@ export async function POST(request: NextRequest) {
         title: title.trim(),
         company: company.trim(),
         companyId: finalCompanyId || null,
+        companyLogoUrl: companyLogoUrl?.trim() || null,
         description: description?.trim() || null,
         location: location?.trim() || null,
         applicationUrl: applicationUrl.trim(),

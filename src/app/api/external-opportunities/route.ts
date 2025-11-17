@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
           id: true,
           title: true,
           company: true,
+          companyLogoUrl: true,
           description: true,
           location: true,
           applicationUrl: true,

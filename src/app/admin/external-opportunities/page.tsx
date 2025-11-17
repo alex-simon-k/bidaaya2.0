@@ -30,6 +30,7 @@ interface ExternalOpportunity {
   id: string
   title: string
   company: string
+  companyLogoUrl?: string
   description?: string
   location?: string
   applicationUrl: string
@@ -86,6 +87,7 @@ export default function AdminExternalOpportunitiesPage() {
     title: '',
     company: '',
     companyId: '',
+    companyLogoUrl: '',
     description: '',
     location: '',
     applicationUrl: '',
@@ -285,6 +287,7 @@ export default function AdminExternalOpportunitiesPage() {
       title: '',
       company: '',
       companyId: '',
+      companyLogoUrl: '',
       description: '',
       location: '',
       applicationUrl: '',
