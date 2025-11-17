@@ -124,22 +124,31 @@ export function OpportunityDetailModal({
 
                     {/* Title & Company */}
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-bidaaya-light mb-2">
-                        {opportunity.title}
-                      </h2>
-                      <p className="text-bidaaya-light/70 flex items-center gap-2 mb-2">
-                        <Building2 className="h-4 w-4" />
-                        {opportunity.company}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-bidaaya-light/60">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {opportunity.location}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {formatDate(opportunity.postedDate)}
-                        </span>
+                      <div className="relative">
+                        {opportunity.isLocked && opportunity.type === 'early_access' && (
+                          <div className="absolute inset-0 backdrop-blur-md bg-bidaaya-dark/40 rounded-lg flex items-center justify-center z-10">
+                            <Lock className="h-8 w-8 text-bidaaya-accent" />
+                          </div>
+                        )}
+                        <div className={cn("", opportunity.isLocked && opportunity.type === 'early_access' && "blur-sm select-none")}>
+                          <h2 className="text-2xl font-bold text-bidaaya-light mb-2">
+                            {opportunity.title}
+                          </h2>
+                          <p className="text-bidaaya-light/70 flex items-center gap-2 mb-2">
+                            <Building2 className="h-4 w-4" />
+                            {opportunity.company}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-bidaaya-light/60">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3.5 w-3.5" />
+                              {opportunity.location}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              {formatDate(opportunity.postedDate)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -185,56 +194,71 @@ export function OpportunityDetailModal({
 
               {/* Content */}
               <div className="p-6 space-y-6">
-                {/* Description */}
-                {opportunity.description && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-bidaaya-light/80 mb-2 uppercase tracking-wide">
-                      About this opportunity
-                    </h3>
-                    <p className="text-bidaaya-light/70 leading-relaxed">
-                      {opportunity.description}
-                    </p>
-                  </div>
-                )}
+                <div className="relative">
+                  {opportunity.isLocked && opportunity.type === 'early_access' && (
+                    <div className="absolute inset-0 backdrop-blur-md bg-bidaaya-dark/40 rounded-lg flex items-center justify-center z-10">
+                      <div className="text-center">
+                        <Lock className="h-12 w-12 text-bidaaya-accent mx-auto mb-3" />
+                        <p className="text-bidaaya-light font-semibold mb-1">Unlock to View Details</p>
+                        <p className="text-bidaaya-light/60 text-sm">Use {opportunity.unlockCredits || 7} credits to see full opportunity</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className={cn("space-y-6", opportunity.isLocked && opportunity.type === 'early_access' && "blur-sm select-none")}>
+                    {/* Description */}
+                    {opportunity.description && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-bidaaya-light/80 mb-2 uppercase tracking-wide">
+                          About this opportunity
+                        </h3>
+                        <p className="text-bidaaya-light/70 leading-relaxed">
+                          {opportunity.description}
+                        </p>
+                      </div>
+                    )}
 
-                {/* Requirements */}
-                {opportunity.requirements && opportunity.requirements.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-bidaaya-light/80 mb-3 uppercase tracking-wide">
-                      Requirements
-                    </h3>
-                    <ul className="space-y-2">
-                      {opportunity.requirements.map((req, index) => (
-                        <li key={index} className="flex items-start gap-2 text-bidaaya-light/70">
-                          <CheckCircle2 className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
-                          <span>{req}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {/* Requirements */}
+                    {opportunity.requirements && opportunity.requirements.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-bidaaya-light/80 mb-3 uppercase tracking-wide">
+                          Requirements
+                        </h3>
+                        <ul className="space-y-2">
+                          {opportunity.requirements.map((req, index) => (
+                            <li key={index} className="flex items-start gap-2 text-bidaaya-light/70">
+                              <CheckCircle2 className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                              <span>{req}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {/* Action Buttons */}
                 <div className="space-y-3 pt-4 border-t border-bidaaya-light/10">
-                  {/* Main Actions */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      onClick={onGenerateCV}
-                      variant="outline"
-                      className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Custom CV
-                    </Button>
-                    <Button
-                      onClick={onGenerateCoverLetter}
-                      variant="outline"
-                      className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Cover Letter
-                    </Button>
-                  </div>
+                  {/* Main Actions - Hide if locked */}
+                  {!(opportunity.isLocked && opportunity.type === 'early_access') && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        onClick={onGenerateCV}
+                        variant="outline"
+                        className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Custom CV
+                      </Button>
+                      <Button
+                        onClick={onGenerateCoverLetter}
+                        variant="outline"
+                        className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Cover Letter
+                      </Button>
+                    </div>
+                  )}
 
                   {/* Apply Button or Unlock Button */}
                   {opportunity.isLocked && opportunity.type === 'early_access' && onUnlock ? (
