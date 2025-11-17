@@ -22,35 +22,77 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Fetch all external applications for this user (we track external applications)
-    const applications = await prisma.externalApplication.findMany({
+    // Fetch external opportunity applications (from marking opportunities as applied)
+    const externalOpportunityApps = await prisma.externalOpportunityApplication.findMany({
       where: {
         userId: user.id,
       },
+      include: {
+        externalOpportunity: true,
+      },
       orderBy: {
-        appliedDate: 'desc',
+        appliedAt: 'desc',
       },
     });
 
-    // Transform applications to the expected format
-    const formattedApplications = applications.map((app) => ({
+    // Fetch internal/bidaaya project applications
+    const projectApps = await prisma.projectApplication.findMany({
+      where: {
+        userId: user.id,
+      },
+      include: {
+        project: {
+          include: {
+            company: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Transform external opportunity applications
+    const formattedExternal = externalOpportunityApps.map((app) => ({
       id: app.id,
-      opportunityId: app.id, // Use the application ID as the opportunity ID
-      title: app.jobTitle,
-      company: app.company,
-      companyLogo: undefined, // External applications don't have logos stored
-      location: app.location || 'Unknown',
+      opportunityId: app.externalOpportunityId,
+      title: app.externalOpportunity.title,
+      company: app.externalOpportunity.company,
+      companyLogo: app.externalOpportunity.companyLogoUrl || undefined,
+      location: app.externalOpportunity.location || 'Remote',
       type: 'external' as const,
-      appliedDate: app.appliedDate,
-      status: app.status.toLowerCase(), // Convert enum to lowercase
-      matchScore: undefined, // External applications don't have match scores
+      appliedDate: app.appliedAt,
+      status: app.status.toLowerCase() as 'applied' | 'interview' | 'rejected',
+      matchScore: undefined,
       notes: app.notes,
-      applicationUrl: app.jobUrl,
+      applicationUrl: app.externalOpportunity.applicationUrl,
     }));
 
+    // Transform project applications
+    const formattedProjects = projectApps.map((app) => ({
+      id: app.id,
+      opportunityId: app.projectId,
+      title: app.project.title,
+      company: app.project.company?.companyName || 'Bidaaya Partner',
+      companyLogo: undefined,
+      location: app.project.location || 'Remote',
+      type: 'internal' as const,
+      appliedDate: app.createdAt,
+      status: app.status.toLowerCase() as 'applied' | 'interview' | 'rejected',
+      matchScore: undefined,
+      notes: undefined,
+      applicationUrl: undefined,
+    }));
+
+    // Combine and sort by date
+    const allApplications = [...formattedExternal, ...formattedProjects]
+      .sort((a, b) => new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime());
+
+    console.log(`📊 Applications API: Returning ${allApplications.length} applications (${formattedExternal.length} external + ${formattedProjects.length} internal)`);
+
     return NextResponse.json({
-      applications: formattedApplications,
-      total: formattedApplications.length,
+      applications: allApplications,
+      total: allApplications.length,
     });
   } catch (error) {
     console.error('Error fetching applications:', error);
