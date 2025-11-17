@@ -236,8 +236,11 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
   const userPlan = (session?.user as any)?.subscriptionPlan || 'FREE';
   const earlyAccessOpportunity = opportunities.find(opp => opp.type === 'early_access');
-  const bidaayaOpportunities = opportunities.filter(opp => opp.type === 'internal').slice(0, 2);
-  const externalOpportunities = opportunities.filter(opp => opp.type === 'external').slice(0, 2);
+  const earlyAccessOpportunities = opportunities.filter(opp => opp.type === 'early_access');
+  const bidaayaOpportunities = opportunities.filter(opp => opp.type === 'internal');
+  const externalOpportunities = opportunities.filter(opp => opp.type === 'external');
+  
+  console.log(`📊 Frontend Display: ${earlyAccessOpportunities.length} early access, ${bidaayaOpportunities.length} internal, ${externalOpportunities.length} external`);
 
   return (
     <div className="min-h-screen bg-[#0B0F1A]">

@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         ]
       },
       orderBy: { addedAt: 'desc' },
-      take: 200, // Show up to 200 opportunities
+      take: 500, // Show up to 500 opportunities
     });
 
     console.log(`📊 Found ${regularOpps.length} regular opportunities`);
