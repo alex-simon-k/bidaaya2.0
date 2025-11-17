@@ -194,22 +194,22 @@ export function OpportunityDetailModal({
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-6">
+              <div className={cn("p-6", opportunity.isLocked && opportunity.type === 'early_access' ? "py-8" : "space-y-6")}>
                 {opportunity.isLocked && opportunity.type === 'early_access' ? (
-                  /* Locked State - Clean Centered Design */
-                  <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                    <div className="w-20 h-20 rounded-full bg-bidaaya-accent/10 flex items-center justify-center mb-6">
-                      <Lock className="h-10 w-10 text-bidaaya-accent" />
+                  /* Locked State - Compact Design */
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 rounded-full bg-bidaaya-accent/10 flex items-center justify-center mb-4">
+                      <Lock className="h-8 w-8 text-bidaaya-accent" />
                     </div>
-                    <h3 className="text-xl font-bold text-bidaaya-light mb-2">
+                    <h3 className="text-lg font-bold text-bidaaya-light mb-2">
                       Early Access Opportunity
                     </h3>
-                    <p className="text-bidaaya-light/60 mb-6 max-w-md">
-                      This opportunity is available for early access. Unlock it now to view full details and apply before it goes public.
+                    <p className="text-sm text-bidaaya-light/60 mb-1 max-w-sm">
+                      Unlock to view full details and apply early
                     </p>
-                    <div className="flex items-center gap-2 text-sm text-bidaaya-light/50 mb-2">
-                      <Sparkles className="h-4 w-4" />
-                      <span>3x better success rate for early applicants</span>
+                    <div className="flex items-center gap-1.5 text-xs text-bidaaya-light/50">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>3x better success rate</span>
                     </div>
                   </div>
                 ) : (
@@ -247,7 +247,7 @@ export function OpportunityDetailModal({
                 )}
 
                 {/* Action Buttons */}
-                <div className="space-y-3 pt-4 border-t border-bidaaya-light/10">
+                <div className={cn("space-y-3", !(opportunity.isLocked && opportunity.type === 'early_access') && "pt-4 border-t border-bidaaya-light/10")}>
                   {/* Main Actions - Hide if locked */}
                   {!(opportunity.isLocked && opportunity.type === 'early_access') && (
                     <div className="grid grid-cols-2 gap-3">
@@ -272,27 +272,24 @@ export function OpportunityDetailModal({
 
                   {/* Apply Button or Unlock Button */}
                   {opportunity.isLocked && opportunity.type === 'early_access' && onUnlock ? (
-                    <div className="space-y-2">
+                    <div className="mt-6">
                       {userPlan === 'STUDENT_PRO' ? (
                         <Button
                           onClick={() => onUnlock(opportunity.id, 'external')}
-                          className="w-full bg-green-500 hover:bg-green-600 text-white"
+                          className="w-full bg-green-500 hover:bg-green-600 text-white py-6 text-base font-semibold"
                         >
-                          <Unlock className="h-4 w-4 mr-2" />
+                          <Unlock className="h-5 w-5 mr-2" />
                           Unlock Free (Pro Member)
                         </Button>
                       ) : (
                         <Button
                           onClick={() => onUnlock(opportunity.id, 'external')}
-                          className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+                          className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white py-6 text-base font-semibold"
                         >
-                          <Lock className="h-4 w-4 mr-2" />
+                          <Lock className="h-5 w-5 mr-2" />
                           Unlock Now ({opportunity.unlockCredits || 7} Credits)
                         </Button>
                       )}
-                      <p className="text-xs text-center text-bidaaya-light/60">
-                        This is an early access opportunity
-                      </p>
                     </div>
                   ) : !hasApplied ? (
                     <Button
