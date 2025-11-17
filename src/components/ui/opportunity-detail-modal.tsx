@@ -15,7 +15,8 @@ import {
   XCircle,
   Trophy,
   Lock,
-  Unlock
+  Unlock,
+  Sparkles
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -110,44 +111,44 @@ export function OpportunityDetailModal({
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
                     {/* Company Logo */}
-                    <div className="w-16 h-16 rounded-xl bg-bidaaya-light/10 flex items-center justify-center overflow-hidden border border-bidaaya-light/10 flex-shrink-0">
-                      {opportunity.companyLogo ? (
-                        <img 
-                          src={opportunity.companyLogo} 
-                          alt={opportunity.company}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Building2 className="h-8 w-8 text-bidaaya-light/60" />
+                    <div className="w-16 h-16 rounded-xl bg-bidaaya-light/10 flex items-center justify-center overflow-hidden border border-bidaaya-light/10 flex-shrink-0 relative">
+                      <div className={cn("w-full h-full", opportunity.isLocked && opportunity.type === 'early_access' && "blur-md")}>
+                        {opportunity.companyLogo ? (
+                          <img 
+                            src={opportunity.companyLogo} 
+                            alt={opportunity.company}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Building2 className="h-8 w-8 text-bidaaya-light/60" />
+                        )}
+                      </div>
+                      {opportunity.isLocked && opportunity.type === 'early_access' && (
+                        <div className="absolute inset-0 bg-bidaaya-dark/40 flex items-center justify-center">
+                          <Lock className="h-5 w-5 text-bidaaya-accent" />
+                        </div>
                       )}
                     </div>
 
                     {/* Title & Company */}
                     <div className="flex-1">
-                      <div className="relative">
-                        {opportunity.isLocked && opportunity.type === 'early_access' && (
-                          <div className="absolute inset-0 backdrop-blur-md bg-bidaaya-dark/40 rounded-lg flex items-center justify-center z-10">
-                            <Lock className="h-8 w-8 text-bidaaya-accent" />
-                          </div>
-                        )}
-                        <div className={cn("", opportunity.isLocked && opportunity.type === 'early_access' && "blur-sm select-none")}>
-                          <h2 className="text-2xl font-bold text-bidaaya-light mb-2">
-                            {opportunity.title}
-                          </h2>
-                          <p className="text-bidaaya-light/70 flex items-center gap-2 mb-2">
-                            <Building2 className="h-4 w-4" />
-                            {opportunity.company}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-bidaaya-light/60">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {opportunity.location}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3.5 w-3.5" />
-                              {formatDate(opportunity.postedDate)}
-                            </span>
-                          </div>
+                      <div className={cn("", opportunity.isLocked && opportunity.type === 'early_access' && "blur-md select-none")}>
+                        <h2 className="text-2xl font-bold text-bidaaya-light mb-2">
+                          {opportunity.title}
+                        </h2>
+                        <p className="text-bidaaya-light/70 flex items-center gap-2 mb-2">
+                          <Building2 className="h-4 w-4" />
+                          {opportunity.company}
+                        </p>
+                        <div className="flex items-center gap-4 text-sm text-bidaaya-light/60">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {opportunity.location}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {formatDate(opportunity.postedDate)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -194,17 +195,26 @@ export function OpportunityDetailModal({
 
               {/* Content */}
               <div className="p-6 space-y-6">
-                <div className="relative">
-                  {opportunity.isLocked && opportunity.type === 'early_access' && (
-                    <div className="absolute inset-0 backdrop-blur-md bg-bidaaya-dark/40 rounded-lg flex items-center justify-center z-10">
-                      <div className="text-center">
-                        <Lock className="h-12 w-12 text-bidaaya-accent mx-auto mb-3" />
-                        <p className="text-bidaaya-light font-semibold mb-1">Unlock to View Details</p>
-                        <p className="text-bidaaya-light/60 text-sm">Use {opportunity.unlockCredits || 7} credits to see full opportunity</p>
-                      </div>
+                {opportunity.isLocked && opportunity.type === 'early_access' ? (
+                  /* Locked State - Clean Centered Design */
+                  <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                    <div className="w-20 h-20 rounded-full bg-bidaaya-accent/10 flex items-center justify-center mb-6">
+                      <Lock className="h-10 w-10 text-bidaaya-accent" />
                     </div>
-                  )}
-                  <div className={cn("space-y-6", opportunity.isLocked && opportunity.type === 'early_access' && "blur-sm select-none")}>
+                    <h3 className="text-xl font-bold text-bidaaya-light mb-2">
+                      Early Access Opportunity
+                    </h3>
+                    <p className="text-bidaaya-light/60 mb-6 max-w-md">
+                      This opportunity is available for early access. Unlock it now to view full details and apply before it goes public.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-bidaaya-light/50 mb-2">
+                      <Sparkles className="h-4 w-4" />
+                      <span>3x better success rate for early applicants</span>
+                    </div>
+                  </div>
+                ) : (
+                  /* Unlocked State - Normal Content */
+                  <div className="space-y-6">
                     {/* Description */}
                     {opportunity.description && (
                       <div>
@@ -234,7 +244,7 @@ export function OpportunityDetailModal({
                       </div>
                     )}
                   </div>
-                </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="space-y-3 pt-4 border-t border-bidaaya-light/10">
@@ -307,8 +317,8 @@ export function OpportunityDetailModal({
                     </div>
                   )}
 
-                  {/* Mark as Applied Button (after clicking Apply) */}
-                  {!hasApplied && onMarkAsApplied && (
+                  {/* Mark as Applied Button (after clicking Apply) - Hide if locked */}
+                  {!hasApplied && onMarkAsApplied && !(opportunity.isLocked && opportunity.type === 'early_access') && (
                     <Button
                       onClick={onMarkAsApplied}
                       variant="outline"
