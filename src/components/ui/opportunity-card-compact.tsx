@@ -89,8 +89,8 @@ export function OpportunityCardCompact({
         <span className="line-clamp-1">{opportunity.location}</span>
       </div>
 
-      {/* Match Score */}
-      {opportunity.matchScore !== undefined && (
+      {/* Match Score - HIDDEN FOR NOW */}
+      {false && opportunity.matchScore !== undefined && (
         <div className="flex items-center justify-between">
           <span className="text-[10px] sm:text-xs text-bidaaya-light/60">Match</span>
           <div className="flex items-center gap-1.5 sm:gap-2">
