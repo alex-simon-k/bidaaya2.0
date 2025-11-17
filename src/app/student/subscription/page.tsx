@@ -26,6 +26,7 @@ export default function StudentSubscription() {
   const [loading, setLoading] = useState(true)
   const [userSub, setUserSub] = useState<UserSubscription | null>(null)
   const [upgrading, setUpgrading] = useState(false)
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month')
 
   useEffect(() => {
     fetchSubscriptionInfo()
@@ -53,9 +54,21 @@ export default function StudentSubscription() {
     setUpgrading(true)
     const params = new URLSearchParams({
       plan: planId,
-      interval: 'month'
+      interval: billingInterval
     })
     window.location.href = `/subscription?${params.toString()}`
+  }
+
+  // Calculate yearly pricing (17% discount)
+  const getYearlyPrice = (monthlyPrice: number) => {
+    return Math.round(monthlyPrice * 10) // 2 months free
+  }
+
+  const getDisplayPrice = (plan: any) => {
+    if (billingInterval === 'year') {
+      return getYearlyPrice(plan.price)
+    }
+    return plan.price
   }
 
   const handleManageSubscription = async () => {
@@ -161,6 +174,33 @@ export default function StudentSubscription() {
           )}
         </div>
 
+        {/* Monthly/Yearly Toggle */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <button
+            onClick={() => setBillingInterval('month')}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+              billingInterval === 'month'
+                ? 'bg-bidaaya-accent text-white'
+                : 'bg-white/[0.04] text-bidaaya-light/60 hover:bg-white/[0.08]'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingInterval('year')}
+            className={`px-6 py-2 rounded-lg font-medium transition-all relative ${
+              billingInterval === 'year'
+                ? 'bg-bidaaya-accent text-white'
+                : 'bg-white/[0.04] text-bidaaya-light/60 hover:bg-white/[0.08]'
+            }`}
+          >
+            Yearly
+            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+              Save 17%
+            </span>
+          </button>
+        </div>
+
         {/* Plans Grid */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {plans.map((plan, index) => {
@@ -200,9 +240,14 @@ export default function StudentSubscription() {
                     <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
                     <p className="text-white/90 text-sm mb-4">{plan.displayName} Plan</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold">£{plan.price}</span>
-                      <span className="text-white/80">/month</span>
+                      <span className="text-4xl font-bold">£{getDisplayPrice(plan)}</span>
+                      <span className="text-white/80">/{billingInterval === 'year' ? 'year' : 'month'}</span>
                     </div>
+                    {billingInterval === 'year' && (
+                      <p className="text-xs text-white/70 mt-1">
+                        £{plan.price}/month billed annually
+                      </p>
+                    )}
                     <div className="mt-3 flex items-center gap-2 text-sm bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 w-fit">
                       <Zap className="h-4 w-4" />
                       <span className="font-semibold">{plan.credits} credits/month</span>

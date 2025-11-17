@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const isActive = searchParams.get('isActive')
+    const earlyAccess = searchParams.get('earlyAccess')
     const search = searchParams.get('search')
     const limit = parseInt(searchParams.get('limit') || '1000') // Admin can see all opportunities
     const offset = parseInt(searchParams.get('offset') || '0')
@@ -32,6 +33,15 @@ export async function GET(request: NextRequest) {
 
     if (isActive !== null && isActive !== undefined) {
       where.isActive = isActive === 'true'
+    }
+
+    // Filter for early access opportunities
+    if (earlyAccess === 'true') {
+      const now = new Date()
+      where.isNewOpportunity = true
+      where.earlyAccessUntil = {
+        gte: now // Only show opportunities with early access still active
+      }
     }
 
     if (search) {

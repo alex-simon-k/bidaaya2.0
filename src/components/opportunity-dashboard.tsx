@@ -406,6 +406,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 opportunity={earlyAccessOpportunity}
                 onDismiss={() => setEarlyAccessDismissed(true)}
                 onClick={() => handleOpportunityClick(earlyAccessOpportunity)}
+                isLocked={earlyAccessOpportunity.isLocked}
               />
             )}
 
