@@ -11,7 +11,7 @@ import {
   ExternalLink,
   ArrowRight
 } from 'lucide-react'
-import { PRICING_PLANS } from '@/lib/subscription-manager'
+import { PRICING_PLANS } from '@/lib/pricing'
 import Link from 'next/link'
 
 interface UserSubscription {
