@@ -21,18 +21,23 @@ GROUP BY "isActive";
 -- OPTIONAL: Enable Early Access (Uncomment to use)
 -- ========================================
 -- This makes opportunities show with "Unlock for 7 credits" prompt
--- Uncomment the lines below if you want to test early access:
+-- Run this to enable early access on 20 opportunities:
 
-/*
+-- Enable early access for 20 opportunities
 UPDATE "ExternalOpportunity"
 SET 
   "isNewOpportunity" = true,
   "publishedAt" = NOW(),
   "earlyAccessUntil" = NOW() + INTERVAL '24 hours',
   "unlockCredits" = 7
-WHERE "isActive" = true
-LIMIT 10;  -- Start with just 10 to test
-*/
+WHERE "id" IN (
+  SELECT "id" 
+  FROM "ExternalOpportunity" 
+  WHERE "isActive" = true 
+    AND ("isNewOpportunity" = false OR "isNewOpportunity" IS NULL)
+  ORDER BY "addedAt" DESC
+  LIMIT 20
+);
 
 -- ========================================
 -- What This Does:
