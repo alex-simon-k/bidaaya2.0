@@ -35,24 +35,8 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Fetch internal/bidaaya project applications
-    const projectApps = await prisma.projectApplication.findMany({
-      where: {
-        userId: user.id,
-      },
-      include: {
-        project: {
-          include: {
-            company: true,
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    // Transform external opportunity applications
+    // For now, just show external opportunity applications
+    // Internal project applications use a different table structure
     const formattedExternal = externalOpportunityApps.map((app) => ({
       id: app.id,
       opportunityId: app.externalOpportunityId,
@@ -68,24 +52,8 @@ export async function GET(req: NextRequest) {
       applicationUrl: app.opportunity.applicationUrl,
     }));
 
-    // Transform project applications
-    const formattedProjects = projectApps.map((app) => ({
-      id: app.id,
-      opportunityId: app.projectId,
-      title: app.project.title,
-      company: app.project.company?.companyName || 'Bidaaya Partner',
-      companyLogo: undefined,
-      location: app.project.location || 'Remote',
-      type: 'internal' as const,
-      appliedDate: app.createdAt,
-      status: app.status.toLowerCase() as 'applied' | 'interview' | 'rejected',
-      matchScore: undefined,
-      notes: undefined,
-      applicationUrl: undefined,
-    }));
-
-    // Combine and sort by date
-    const allApplications = [...formattedExternal, ...formattedProjects]
+    // Sort by date
+    const allApplications = formattedExternal
       .sort((a, b) => new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime());
 
     console.log(`📊 Applications API: Returning ${allApplications.length} applications (${formattedExternal.length} external + ${formattedProjects.length} internal)`);
