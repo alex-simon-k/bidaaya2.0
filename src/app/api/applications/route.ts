@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
         userId: user.id,
       },
       include: {
-        externalOpportunity: true,
+        opportunity: true,
       },
       orderBy: {
         appliedAt: 'desc',
@@ -56,16 +56,16 @@ export async function GET(req: NextRequest) {
     const formattedExternal = externalOpportunityApps.map((app) => ({
       id: app.id,
       opportunityId: app.externalOpportunityId,
-      title: app.externalOpportunity.title,
-      company: app.externalOpportunity.company,
-      companyLogo: app.externalOpportunity.companyLogoUrl || undefined,
-      location: app.externalOpportunity.location || 'Remote',
+      title: app.opportunity.title,
+      company: app.opportunity.company,
+      companyLogo: app.opportunity.companyLogoUrl || undefined,
+      location: app.opportunity.location || 'Remote',
       type: 'external' as const,
       appliedDate: app.appliedAt,
       status: app.status.toLowerCase() as 'applied' | 'interview' | 'rejected',
       matchScore: undefined,
       notes: app.notes,
-      applicationUrl: app.externalOpportunity.applicationUrl,
+      applicationUrl: app.opportunity.applicationUrl,
     }));
 
     // Transform project applications
