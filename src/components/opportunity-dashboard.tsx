@@ -118,10 +118,24 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       });
 
       if (response.ok) {
-        loadDashboardData(); // Refresh
+        const data = await response.json();
+        
+        // Close the modal
+        setDetailModalOpen(false);
+        setSelectedOpportunity(null);
+        
+        // Refresh dashboard to get updated data
+        await loadDashboardData();
+        
+        // Show success message
+        alert(data.message || 'Opportunity unlocked! You can now view full details and apply.');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to unlock opportunity');
       }
     } catch (error) {
       console.error('Failed to unlock opportunity:', error);
+      alert('Failed to unlock opportunity. Please try again.');
     }
   };
 
