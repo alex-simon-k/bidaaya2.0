@@ -228,7 +228,7 @@ export async function GET(request: NextRequest) {
         id: opp.id,
         title: opp.title,
         company: opp.company,
-        companyLogo: undefined, // External opportunities don't have logos yet
+        companyLogo: opp.companyLogoUrl || undefined,
         location: opp.location || 'Remote',
         type: 'external' as const,
         matchScore: match.score,
@@ -242,7 +242,15 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Sort by match score and take top 2 of each
+    // Mix opportunities by match score for better diversity
+    // Instead of separating, combine and show best matches overall
+    const allOpportunities = [...scoredBidaaya, ...scoredExternal]
+      .sort((a, b) => b.matchScore - a.matchScore);
+    
+    // Take top 6 overall (for the grid display)
+    const topMatches = allOpportunities.slice(0, 6);
+    
+    // Also maintain separate lists for backward compatibility
     const topBidaaya = scoredBidaaya
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, 2);
@@ -269,7 +277,7 @@ export async function GET(request: NextRequest) {
         id: opp.id,
         title: opp.title,
         company: opp.company,
-        companyLogo: undefined, // External opportunities don't have logos yet
+        companyLogo: opp.companyLogoUrl || undefined,
         location: opp.location || 'Remote',
         type: 'early_access' as const,
         matchScore: match.score,
@@ -286,11 +294,10 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Combine all opportunities
+    // Use the mixed top matches instead of separate lists
     let opportunities = [
       ...(earlyAccessOpp ? [earlyAccessOpp] : []),
-      ...topBidaaya,
-      ...topExternal,
+      ...topMatches,
     ];
 
     // IF NO OPPORTUNITIES IN DATABASE, USE MOCK DATA FOR DEMONSTRATION
@@ -369,8 +376,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       opportunities,
+      topMatches, // Also return the mixed list separately for different views
       earlyAccessUnlocksRemaining: user.earlyAccessUnlocksRemaining || 0,
       userPlan: user.subscriptionPlan,
+      userCredits: user.credits || 0,
     });
 
   } catch (error) {
