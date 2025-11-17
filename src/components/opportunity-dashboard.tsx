@@ -178,6 +178,14 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
       if (response.ok) {
         setAppliedOpportunities(prev => new Set(prev).add(opportunityId));
+        
+        // Close modal if it's open
+        setDetailModalOpen(false);
+        setSelectedOpportunity(null);
+        
+        // Refresh dashboard to show next early access opportunity
+        await loadDashboardData();
+        
         alert('Application tracked! View it in My Applications.');
       } else {
         const data = await response.json();

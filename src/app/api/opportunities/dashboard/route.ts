@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user profile
+    // Get user profile with applications
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {
@@ -119,6 +119,11 @@ export async function GET(request: NextRequest) {
           include: {
             project: true,
             externalOpportunity: true,
+          }
+        },
+        externalOpportunityApplications: {
+          select: {
+            externalOpportunityId: true
           }
         }
       }
@@ -130,11 +135,14 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
 
+    // Get IDs of opportunities user has already applied to
+    const appliedOpportunityIds = user.externalOpportunityApplications.map(app => app.externalOpportunityId);
+
     // Find early access opportunity (Today's Pick)
     // Look for opportunities published in last 48 hours
     const earlyAccessCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
-    // Get external opportunities that are new
+    // Get external opportunities that are new and NOT already applied to
     const newExternalOpps = await prisma.externalOpportunity.findMany({
       where: {
         isActive: true,
@@ -144,6 +152,12 @@ export async function GET(request: NextRequest) {
         },
         earlyAccessUntil: {
           gte: now,
+        },
+        // Exclude opportunities user has already applied to
+        NOT: {
+          id: {
+            in: appliedOpportunityIds.length > 0 ? appliedOpportunityIds : ['']
+          }
         }
       },
       orderBy: {

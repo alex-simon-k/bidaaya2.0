@@ -317,7 +317,7 @@ export function OpportunityDetailModal({
                     </div>
                   )}
 
-                  {/* Mark as Applied Button (after clicking Apply) - Hide if locked */}
+                  {/* Mark as Applied Button (after clicking Apply) - Hide if locked or already applied */}
                   {!hasApplied && onMarkAsApplied && !(opportunity.isLocked && opportunity.type === 'early_access') && (
                     <Button
                       onClick={onMarkAsApplied}
@@ -328,6 +328,14 @@ export function OpportunityDetailModal({
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       Mark as Applied
                     </Button>
+                  )}
+                  
+                  {/* Already Applied Indicator */}
+                  {hasApplied && (
+                    <div className="w-full py-3 bg-green-500/10 border border-green-500/30 rounded-lg text-center text-green-400 text-sm font-medium">
+                      <CheckCircle2 className="h-4 w-4 inline mr-2" />
+                      Already Applied
+                    </div>
                   )}
                 </div>
               </div>
