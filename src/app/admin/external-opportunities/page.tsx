@@ -76,6 +76,7 @@ export default function AdminExternalOpportunitiesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showIrrelevantOnly, setShowIrrelevantOnly] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
   const [selectedOpportunities, setSelectedOpportunities] = useState<string[]>([])
@@ -304,13 +305,23 @@ export default function AdminExternalOpportunitiesPage() {
     })
   }
 
+  // Helper function to check if opportunity is relevant (contains intern/graduate keywords)
+  const isRelevantOpportunity = (opp: ExternalOpportunity) => {
+    const relevantKeywords = ['intern', 'internship', 'graduate', 'apprentice', 'trainee']
+    const searchText = `${opp.title} ${opp.description || ''}`.toLowerCase()
+    return relevantKeywords.some(keyword => searchText.includes(keyword))
+  }
+
   const filteredOpportunities = opportunities.filter(opp => {
     const matchesSearch = searchTerm === '' || 
       opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       opp.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (opp.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     
-    return matchesSearch
+    // If showing irrelevant only, filter to only NON-relevant opportunities
+    const matchesRelevanceFilter = !showIrrelevantOnly || !isRelevantOpportunity(opp)
+    
+    return matchesSearch && matchesRelevanceFilter
   })
 
   if (session?.user?.role !== 'ADMIN') {
@@ -370,6 +381,18 @@ export default function AdminExternalOpportunitiesPage() {
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
               </select>
+
+              {/* Irrelevant Filter Toggle */}
+              <button
+                onClick={() => setShowIrrelevantOnly(!showIrrelevantOnly)}
+                className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                  showIrrelevantOnly
+                    ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {showIrrelevantOnly ? '✓ ' : ''}Irrelevant Only
+              </button>
             </div>
 
             {/* Action Buttons */}
@@ -418,6 +441,34 @@ export default function AdminExternalOpportunitiesPage() {
                 >
                   <Eye className="w-4 h-4" />
                   Show Selected
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Are you sure you want to DELETE ${selectedOpportunities.length} opportunities? This cannot be undone!`)) {
+                      return
+                    }
+                    try {
+                      const response = await fetch('/api/admin/external-opportunities/bulk', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ids: selectedOpportunities })
+                      })
+                      if (response.ok) {
+                        alert('✅ Opportunities deleted successfully')
+                        fetchOpportunities()
+                        setSelectedOpportunities([])
+                      } else {
+                        alert('❌ Failed to delete opportunities')
+                      }
+                    } catch (error) {
+                      console.error('Error deleting:', error)
+                      alert('❌ Error deleting opportunities')
+                    }
+                  }}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Selected
                 </button>
                 <button
                   onClick={async () => {
