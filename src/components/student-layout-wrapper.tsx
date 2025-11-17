@@ -123,7 +123,7 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
             >
               <div className="flex items-center gap-3">
                 <CreditCard className="h-5 w-5" />
-                <span className="font-medium">Upgrade</span>
+                <span className="font-medium">Land an Internship Faster</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
@@ -134,7 +134,7 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
             >
               <div className="flex items-center gap-3">
                 <Settings className="h-5 w-5" />
-                <span className="font-medium">Settings</span>
+                <span className="font-medium">Settings & Credits</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>

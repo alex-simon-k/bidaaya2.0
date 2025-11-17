@@ -12,6 +12,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { PRICING_PLANS } from '@/lib/pricing'
+import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
 import Link from 'next/link'
 
 interface UserSubscription {
@@ -119,15 +120,16 @@ export default function StudentSubscription() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-bidaaya-dark flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bidaaya-accent"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-pink-50/30 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <StudentLayoutWrapper>
+      <div className="min-h-screen bg-bidaaya-dark py-12 px-4 sm:px-6 lg:px-8 pb-24">
+        <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <motion.div
@@ -137,9 +139,9 @@ export default function StudentSubscription() {
           >
             <div className="flex items-center justify-center gap-2 mb-4">
               <Crown className="h-8 w-8 text-bidaaya-accent" />
-              <h1 className="text-4xl font-bold text-gray-900">Upgrade Your Plan</h1>
+              <h1 className="text-4xl font-bold text-bidaaya-light">Land an Internship Faster</h1>
             </div>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-bidaaya-light/70 max-w-2xl mx-auto">
               Get more credits, unlock early access, and boost your job search
             </p>
           </motion.div>
@@ -149,7 +151,7 @@ export default function StudentSubscription() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full"
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full"
             >
               <Check className="h-4 w-4" />
               <span className="font-medium">
@@ -171,7 +173,7 @@ export default function StudentSubscription() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`relative bg-white rounded-2xl shadow-xl overflow-hidden ${
+                className={`relative bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-xl overflow-hidden ${
                   plan.highlight ? 'ring-2 ring-bidaaya-accent' : ''
                 }`}
               >
@@ -213,21 +215,21 @@ export default function StudentSubscription() {
                   <ul className="space-y-3 mb-6">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{feature}</span>
+                        <Check className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+                        <span className="text-bidaaya-light/90">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
                   {/* CTA Button */}
                   {isCurrentPlan ? (
-                    <div className="text-center py-3 bg-gray-100 rounded-lg text-gray-600 font-medium">
+                    <div className="text-center py-3 bg-white/10 rounded-lg text-bidaaya-light/80 font-medium">
                       Your Current Plan
                     </div>
                   ) : isDowngrade ? (
                     <button
                       onClick={handleManageSubscription}
-                      className="w-full py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3 border-2 border-white/20 text-bidaaya-light rounded-lg font-semibold hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
                     >
                       Downgrade to {plan.displayName}
                       <ArrowRight className="h-4 w-4" />
@@ -258,7 +260,7 @@ export default function StudentSubscription() {
           >
             <button
               onClick={handleManageSubscription}
-              className="inline-flex items-center gap-2 text-bidaaya-accent hover:text-purple-700 font-medium"
+              className="inline-flex items-center gap-2 text-bidaaya-accent hover:text-purple-400 font-medium"
             >
               <ExternalLink className="h-4 w-4" />
               Manage Subscription & Billing
@@ -270,13 +272,14 @@ export default function StudentSubscription() {
         <div className="text-center mt-8">
           <Link
             href="/student/settings"
-            className="text-gray-600 hover:text-gray-900 underline"
+            className="text-bidaaya-light/60 hover:text-bidaaya-light underline"
           >
             Go to Settings & Credit Management
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </StudentLayoutWrapper>
   )
 }
 
