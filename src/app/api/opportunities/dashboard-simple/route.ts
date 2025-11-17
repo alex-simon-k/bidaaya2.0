@@ -62,19 +62,19 @@ export async function GET(request: NextRequest) {
     console.log(`📊 Found ${earlyAccessOpps.length} early access opportunities`);
 
     // Fetch ALL regular external opportunities (NOT early access)
-    const regularOpps = await prisma.externalOpportunity.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { isNewOpportunity: false },
-          { earlyAccessUntil: { lt: now } },
-        ]
-      },
-      orderBy: { addedAt: 'desc' },
-      take: 500, // Show up to 500 opportunities
-    });
+    // Use raw query with ORDER BY RANDOM() for variety on each refresh
+    const regularOpps = await prisma.$queryRaw<any[]>`
+      SELECT 
+        id, title, company, "companyLogoUrl", description, location, 
+        "applicationUrl", "addedAt", deadline, "isActive", "isNewOpportunity"
+      FROM "ExternalOpportunity"
+      WHERE "isActive" = true
+        AND ("isNewOpportunity" = false OR "earlyAccessUntil" < NOW())
+      ORDER BY RANDOM()
+      LIMIT 500
+    `;
 
-    console.log(`📊 Found ${regularOpps.length} regular opportunities`);
+    console.log(`📊 Found ${regularOpps.length} regular opportunities (randomized)`);
 
     // Format early access opportunities
     const formattedEarlyAccess = earlyAccessOpps.map(opp => {
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Format regular opportunities
+    // Format regular opportunities (convert from raw query)
     const formattedRegular = regularOpps.map(opp => ({
       id: opp.id,
       title: opp.title,
@@ -117,9 +117,9 @@ export async function GET(request: NextRequest) {
         positive: ['Available opportunity'],
         warnings: [],
       },
-      postedAt: opp.addedAt,
-      postedDate: opp.addedAt,
-      deadline: opp.deadline,
+      postedAt: opp.addedAt ? new Date(opp.addedAt) : new Date(),
+      postedDate: opp.addedAt ? new Date(opp.addedAt) : new Date(),
+      deadline: opp.deadline ? new Date(opp.deadline) : null,
       applicationUrl: opp.applicationUrl,
     }));
 
