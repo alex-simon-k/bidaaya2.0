@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     
     let usedCredit = false;
     let updatedUser;
+    let creditsUsed = 0;
 
     if (hasProPlan) {
       // STUDENT_PRO gets unlimited early access
@@ -83,7 +84,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Opportunity not found' }, { status: 404 });
       }
 
-      const creditsRequired = (opportunity as any).unlockCredits || 5;
+      const creditsRequired = (opportunity as any).unlockCredits || 7;
+      creditsUsed = creditsRequired;
 
       if (user.credits < creditsRequired) {
         return NextResponse.json({ 
@@ -139,8 +141,6 @@ export async function POST(request: NextRequest) {
     await prisma.earlyAccessUnlock.create({
       data: unlockData,
     });
-
-    const creditsUsed = usedCredit ? ((opportunity as any).unlockCredits || 7) : 0;
     
     return NextResponse.json({
       success: true,
