@@ -81,10 +81,11 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Load opportunities
-      const oppResponse = await fetch('/api/opportunities/dashboard');
+      // Load opportunities - USE SIMPLIFIED API
+      const oppResponse = await fetch('/api/opportunities/dashboard-simple');
       if (oppResponse.ok) {
         const data = await oppResponse.json();
+        console.log(`📊 Frontend: Received ${data.opportunities?.length || 0} opportunities`);
         setOpportunities(data.opportunities || []);
         setEarlyAccessUnlocksRemaining(data.earlyAccessUnlocksRemaining || 0);
       }
