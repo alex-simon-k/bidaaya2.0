@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth-config'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { CREDIT_COSTS, canAccessEarlyForFree } from '@/lib/credits'
+
+const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
