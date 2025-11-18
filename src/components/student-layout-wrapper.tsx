@@ -13,6 +13,7 @@ import {
   Building,
   ChevronRight,
   Briefcase,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -85,23 +86,15 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
             </button>
 
             <button 
-              onClick={() => { router.push('/dashboard/projects'); setShowSidebar(false); }}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Briefcase className="h-5 w-5" />
-                <span className="font-medium">Internships</span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
-            </button>
-
-            <button 
-              onClick={() => { router.push('/dashboard/companies'); setShowSidebar(false); }}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+              onClick={() => { 
+                alert('🔒 Companies feature coming soon! Send personalized proposals to Bidaaya partner companies using credits.');
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <Building className="h-5 w-5" />
                 <span className="font-medium">Companies</span>
+                <Lock className="h-3 w-3 ml-1" />
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
