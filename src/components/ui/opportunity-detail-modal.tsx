@@ -252,18 +252,20 @@ export function OpportunityDetailModal({
                   {!(opportunity.isLocked && opportunity.type === 'early_access') && (
                     <div className="grid grid-cols-2 gap-3">
                       <Button
-                        onClick={onGenerateCV}
+                        onClick={() => alert('🔒 Custom CV feature coming soon! (5 credits)')}
                         variant="outline"
-                        className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                        className="border-bidaaya-light/20 text-bidaaya-light/60 hover:bg-bidaaya-light/5 cursor-not-allowed"
                       >
+                        <Lock className="h-3 w-3 mr-1" />
                         <FileText className="h-4 w-4 mr-2" />
                         Custom CV
                       </Button>
                       <Button
-                        onClick={onGenerateCoverLetter}
+                        onClick={() => alert('🔒 Custom Cover Letter feature coming soon! (3 credits)')}
                         variant="outline"
-                        className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                        className="border-bidaaya-light/20 text-bidaaya-light/60 hover:bg-bidaaya-light/5 cursor-not-allowed"
                       >
+                        <Lock className="h-3 w-3 mr-1" />
                         <Mail className="h-4 w-4 mr-2" />
                         Cover Letter
                       </Button>
