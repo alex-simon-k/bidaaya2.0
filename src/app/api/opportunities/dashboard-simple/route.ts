@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { PrismaClient } from '@prisma/client';
+import { calculateMatchScore } from '@/lib/ai-opportunity-matcher';
 
 const prisma = new PrismaClient();
 
@@ -61,12 +62,13 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 Found ${earlyAccessOpps.length} early access opportunities`);
 
-    // Fetch ALL regular external opportunities (NOT early access)
+    // Fetch ALL regular external opportunities (NOT early access) with AI categorization
     // Use raw query with ORDER BY RANDOM() for variety on each refresh
     const regularOpps = await prisma.$queryRaw<any[]>`
       SELECT 
         id, title, company, "companyLogoUrl", description, location, 
-        "applicationUrl", "addedAt", deadline, "isActive", "isNewOpportunity"
+        "applicationUrl", "addedAt", deadline, "isActive", "isNewOpportunity",
+        "aiCategory", "aiMatchKeywords", "aiEducationMatch", "aiSkillsRequired", "aiIndustryTags"
       FROM "ExternalOpportunity"
       WHERE "isActive" = true
         AND ("isNewOpportunity" = false OR "earlyAccessUntil" < NOW())
@@ -76,12 +78,38 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 Found ${regularOpps.length} regular opportunities (randomized)`);
 
-    // Format early access opportunities
+    // Build student profile for matching
+    const studentProfile = {
+      major: user.major || undefined,
+      university: user.university || undefined,
+      fieldsOfInterest: user.interests || undefined,
+      skills: user.skills || undefined,
+      location: user.location || undefined,
+      educationLevel: user.educationStatus || undefined,
+      graduationYear: user.graduationYear || undefined
+    };
+
+    console.log(`📊 Student Profile: major=${studentProfile.major}, interests=${studentProfile.fieldsOfInterest?.length || 0}`);
+
+    // Format early access opportunities with AI match scores
     const formattedEarlyAccess = earlyAccessOpps.map(opp => {
       const hasUnlocked = user.earlyAccessUnlocks.some(
         unlock => unlock.externalOpportunityId === opp.id
       );
       const isLocked = !hasUnlocked && user.subscriptionPlan !== 'STUDENT_PRO';
+
+      // Calculate AI-powered match score
+      const matchResult = calculateMatchScore(studentProfile, {
+        title: opp.title,
+        company: opp.company,
+        description: opp.description || undefined,
+        location: opp.location || undefined,
+        aiCategory: opp.aiCategory || undefined,
+        aiMatchKeywords: opp.aiMatchKeywords || undefined,
+        aiEducationMatch: opp.aiEducationMatch || undefined,
+        aiSkillsRequired: opp.aiSkillsRequired || undefined,
+        aiIndustryTags: opp.aiIndustryTags || undefined
+      });
 
       return {
         id: opp.id,
@@ -90,10 +118,10 @@ export async function GET(request: NextRequest) {
         companyLogo: opp.companyLogoUrl || undefined,
         location: opp.location || 'Remote',
         type: 'early_access' as const,
-        matchScore: 90, // Default high score for early access
+        matchScore: matchResult.score,
         matchReasons: {
-          positive: ['New opportunity - early access available'],
-          warnings: [],
+          positive: matchResult.reasons,
+          warnings: matchResult.warnings,
         },
         postedAt: opp.publishedAt,
         postedDate: opp.publishedAt,
@@ -104,24 +132,39 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Format regular opportunities (convert from raw query)
-    const formattedRegular = regularOpps.map(opp => ({
-      id: opp.id,
-      title: opp.title,
-      company: opp.company,
-      companyLogo: opp.companyLogoUrl || undefined,
-      location: opp.location || 'Remote',
-      type: 'external' as const,
-      matchScore: 75, // Default score
-      matchReasons: {
-        positive: ['Available opportunity'],
-        warnings: [],
-      },
-      postedAt: opp.addedAt ? new Date(opp.addedAt) : new Date(),
-      postedDate: opp.addedAt ? new Date(opp.addedAt) : new Date(),
-      deadline: opp.deadline ? new Date(opp.deadline) : null,
-      applicationUrl: opp.applicationUrl,
-    }));
+    // Format regular opportunities with AI match scores (convert from raw query)
+    const formattedRegular = regularOpps.map(opp => {
+      // Calculate AI-powered match score
+      const matchResult = calculateMatchScore(studentProfile, {
+        title: opp.title,
+        company: opp.company,
+        description: opp.description || undefined,
+        location: opp.location || undefined,
+        aiCategory: opp.aiCategory || undefined,
+        aiMatchKeywords: opp.aiMatchKeywords || undefined,
+        aiEducationMatch: opp.aiEducationMatch || undefined,
+        aiSkillsRequired: opp.aiSkillsRequired || undefined,
+        aiIndustryTags: opp.aiIndustryTags || undefined
+      });
+
+      return {
+        id: opp.id,
+        title: opp.title,
+        company: opp.company,
+        companyLogo: opp.companyLogoUrl || undefined,
+        location: opp.location || 'Remote',
+        type: 'external' as const,
+        matchScore: matchResult.score,
+        matchReasons: {
+          positive: matchResult.reasons,
+          warnings: matchResult.warnings,
+        },
+        postedAt: opp.addedAt ? new Date(opp.addedAt) : new Date(),
+        postedDate: opp.addedAt ? new Date(opp.addedAt) : new Date(),
+        deadline: opp.deadline ? new Date(opp.deadline) : null,
+        applicationUrl: opp.applicationUrl,
+      };
+    });
 
     // Combine: 2 early access at top, then all regular
     const opportunities = [
