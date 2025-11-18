@@ -747,6 +747,16 @@ model ExternalOpportunity {
   earlyAccessUntil DateTime?
   unlockCredits    Int       @default(7) // Credits required to unlock if not paid tier
   
+  // AI Categorization & Matching
+  aiCategory          String[]  @default([])  // ["Finance", "Banking", "Investment"]
+  aiMatchKeywords     String[]  @default([])  // Keywords for matching
+  aiIndustryTags      String[]  @default([])  // Industry classifications
+  aiSkillsRequired    String[]  @default([])  // Required skills
+  aiEducationMatch    String[]  @default([])  // Matching education fields (e.g., ["Economics", "Finance"])
+  aiConfidenceScore   Float?                  // AI confidence (0-1)
+  aiLastCategorized   DateTime?               // When last categorized
+  aiModel             String?                 // Which AI model was used (gpt-4, deepseek-chat)
+  
   // Student Matching & Categorization fields (for AI/GPT-based filtering)
   requiredDegrees      String[]  @default([]) // e.g., ["Business", "Computer Science", "Engineering"]
   preferredMajors      String[]  @default([]) // More specific fields of study
@@ -780,6 +790,8 @@ model ExternalOpportunity {
   @@index([addedAt])
   @@index([deadline])
   @@index([companyId])
+  @@index([aiCategory])
+  @@index([aiLastCategorized])
 }
 
 // Track when students click through to apply to external opportunities
