@@ -21,7 +21,7 @@ interface CategorizationStatus {
   percentage: number
 }
 
-export default function AICategorization Page() {
+export default function AICategorializationPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [status, setStatus] = useState<CategorizationStatus | null>(null)
