@@ -134,12 +134,14 @@ export function calculateMatchScore(
   reasons: string[]
   warnings: string[]
 } {
-  let score = 0
+  let totalPossible = 0
+  let totalEarned = 0
   const reasons: string[] = []
   const warnings: string[] = []
 
-  // 1. Education/Major Match (40% weight)
+  // 1. Education/Major Match (40 points possible)
   if (student.major && opportunity.aiEducationMatch && opportunity.aiEducationMatch.length > 0) {
+    totalPossible += 40
     const majorLower = student.major.toLowerCase()
     const educationMatches = opportunity.aiEducationMatch.filter(field =>
       field.toLowerCase().includes(majorLower) ||
@@ -147,21 +149,19 @@ export function calculateMatchScore(
     )
     
     if (educationMatches.length > 0) {
-      score += 40
+      totalEarned += 40
       reasons.push(`${student.major} matches this ${opportunity.aiCategory?.join('/')} role`)
     } else {
       // Partial match - still give some points
-      score += 15
+      totalEarned += 15
       warnings.push(`Your major may not directly match, but skills can transfer`)
     }
-  } else {
-    // No major or no categorization - give benefit of doubt
-    score += 20
   }
 
-  // 2. Field of Interest Match (30% weight)
+  // 2. Field of Interest Match (30 points possible)
   if (student.fieldsOfInterest && student.fieldsOfInterest.length > 0 && 
       opportunity.aiCategory && opportunity.aiCategory.length > 0) {
+    totalPossible += 30
     const interestMatches = student.fieldsOfInterest.filter(interest =>
       opportunity.aiCategory!.some(cat =>
         cat.toLowerCase().includes(interest.toLowerCase()) ||
@@ -170,7 +170,7 @@ export function calculateMatchScore(
     )
     
     if (interestMatches.length > 0) {
-      score += 30
+      totalEarned += 30
       reasons.push(`Aligns with your interest in ${interestMatches.join(', ')}`)
     } else {
       // Check keywords for softer match
@@ -180,19 +180,18 @@ export function calculateMatchScore(
         )
       )
       if (keywordMatches.length > 0) {
-        score += 15
+        totalEarned += 15
         reasons.push(`Related to your interests`)
       } else {
-        score += 5
+        totalEarned += 5
       }
     }
-  } else {
-    score += 15
   }
 
-  // 3. Skills Match (20% weight)
+  // 3. Skills Match (20 points possible)
   if (student.skills && student.skills.length > 0 && 
       opportunity.aiSkillsRequired && opportunity.aiSkillsRequired.length > 0) {
+    totalPossible += 20
     const skillMatches = student.skills.filter(skill =>
       opportunity.aiSkillsRequired!.some(req =>
         req.toLowerCase().includes(skill.toLowerCase()) ||
@@ -202,37 +201,44 @@ export function calculateMatchScore(
     
     if (skillMatches.length > 0) {
       const skillScore = Math.min(20, (skillMatches.length / opportunity.aiSkillsRequired.length) * 20)
-      score += skillScore
+      totalEarned += skillScore
       reasons.push(`${skillMatches.length} of your skills match`)
     } else {
-      score += 5
+      totalEarned += 5
       warnings.push(`May need to develop new skills`)
     }
-  } else {
-    score += 10
   }
 
-  // 4. Location Match (10% weight)
+  // 4. Location Match (10 points possible)
   if (student.location && opportunity.location) {
+    totalPossible += 10
     const studentLoc = student.location.toLowerCase()
     const oppLoc = opportunity.location.toLowerCase()
     
     if (oppLoc.includes(studentLoc) || studentLoc.includes(oppLoc)) {
-      score += 10
+      totalEarned += 10
       reasons.push(`Location matches: ${opportunity.location}`)
     } else if (oppLoc.includes('remote') || oppLoc.includes('hybrid')) {
-      score += 10
+      totalEarned += 10
       reasons.push('Remote/Hybrid work available')
     } else {
-      score += 3
+      totalEarned += 3
       warnings.push(`Location: ${opportunity.location}`)
     }
+  }
+
+  // Calculate proportional score (fair for incomplete profiles)
+  let score = 0
+  if (totalPossible > 0) {
+    score = Math.round((totalEarned / totalPossible) * 100)
   } else {
-    score += 5
+    // No matching data available - give neutral score
+    score = 50
+    warnings.push('Complete your profile for accurate match scores')
   }
 
   // Ensure score is within 0-100
-  score = Math.max(0, Math.min(100, Math.round(score)))
+  score = Math.max(0, Math.min(100, score))
 
   // Ensure we always have at least one reason
   if (reasons.length === 0) {

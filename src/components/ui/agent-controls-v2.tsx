@@ -281,10 +281,11 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-bidaaya-dark border border-white/[0.08] rounded-xl shadow-2xl z-[99999]"
+                        className="absolute top-full left-0 right-0 mt-2 bg-bidaaya-dark border border-white/[0.08] rounded-xl shadow-2xl z-[99999] overflow-hidden"
+                        style={{ maxHeight: '60vh' }}
                       >
                         {/* Search Input */}
-                        <div className="p-3 border-b border-white/[0.05]">
+                        <div className="p-3 border-b border-white/[0.05] flex-shrink-0">
                           <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-bidaaya-light/40" />
                             <input
@@ -298,9 +299,10 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
                           </div>
                         </div>
 
-                        {/* Options */}
+                        {/* Options - Now properly scrollable */}
                         <div 
-                          className="overflow-y-scroll max-h-[300px]"
+                          className="overflow-y-auto overscroll-contain"
+                          style={{ maxHeight: 'calc(60vh - 80px)' }}
                         >
                           {filteredFields.length === 0 ? (
                             <div className="p-4 text-center text-sm text-bidaaya-light/40">
@@ -312,14 +314,14 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
                                 key={option.value}
                                 onClick={() => handleFieldSelect(option.value)}
                                 className={cn(
-                                  "w-full px-4 py-3 flex items-center gap-3 hover:bg-white/[0.06] transition-colors",
+                                  "w-full px-4 py-3 flex items-center gap-3 hover:bg-white/[0.06] transition-colors border-b border-white/[0.02] last:border-0",
                                   field === option.value && "bg-bidaaya-accent/10"
                                 )}
                               >
-                                <span className="text-xl">{option.icon}</span>
-                                <div className="flex-1 text-left">
-                                  <div className="text-sm text-bidaaya-light font-medium">{option.label}</div>
-                                  <div className="text-xs text-bidaaya-light/50">{option.description}</div>
+                                <span className="text-xl flex-shrink-0">{option.icon}</span>
+                                <div className="flex-1 text-left min-w-0">
+                                  <div className="text-sm text-bidaaya-light font-medium truncate">{option.label}</div>
+                                  <div className="text-xs text-bidaaya-light/50 truncate">{option.description}</div>
                                 </div>
                               </button>
                             ))
