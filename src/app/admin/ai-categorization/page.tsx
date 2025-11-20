@@ -22,7 +22,7 @@ interface CategorizationStatus {
 }
 
 export default function AICategorializationPage() {
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const router = useRouter()
   const [status, setStatus] = useState<CategorizationStatus | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -30,12 +30,17 @@ export default function AICategorializationPage() {
   const [result, setResult] = useState<any>(null)
 
   useEffect(() => {
-    if (session?.user?.role !== 'ADMIN') {
+    // Wait for session to load
+    if (sessionStatus === 'loading') return
+    
+    // Check if user is admin
+    if (!session?.user || session?.user?.role !== 'ADMIN') {
       router.push('/dashboard')
       return
     }
+    
     fetchStatus()
-  }, [session])
+  }, [session, sessionStatus, router])
 
   const fetchStatus = async () => {
     try {
@@ -82,7 +87,20 @@ export default function AICategorializationPage() {
     }
   }
 
-  if (session?.user?.role !== 'ADMIN') {
+  // Show loading while session loads
+  if (sessionStatus === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-2" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect if not admin (this shouldn't show due to useEffect redirect)
+  if (!session?.user || session?.user?.role !== 'ADMIN') {
     return null
   }
 
