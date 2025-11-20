@@ -148,7 +148,7 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Education</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard')} // TODO: Open education form
+              onClick={() => router.push('/dashboard/profile?edit=education')}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
@@ -196,7 +196,7 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Experience</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard')} // TODO: Open experience form
+              onClick={() => router.push('/dashboard/profile?edit=experience')}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
@@ -238,7 +238,7 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Projects</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard')} // TODO: Open projects form
+              onClick={() => router.push('/dashboard/profile?edit=projects')}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
@@ -288,7 +288,7 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Skills</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard')} // TODO: Open skills form
+              onClick={() => router.push('/dashboard/profile?edit=skills')}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
