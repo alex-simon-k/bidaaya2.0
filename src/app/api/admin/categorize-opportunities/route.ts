@@ -48,9 +48,18 @@ export async function POST(request: NextRequest) {
 
     console.log(`📊 Starting AI categorization of ${opportunities.length} opportunities...`)
 
+    // Map opportunities to correct format (convert null to undefined for TypeScript)
+    const opportunitiesToCategorize = opportunities.map(opp => ({
+      id: opp.id,
+      title: opp.title,
+      company: opp.company,
+      description: opp.description || undefined,
+      location: opp.location || undefined
+    }))
+
     // Batch categorize using AI
     const results = await batchCategorizeOpportunities(
-      opportunities,
+      opportunitiesToCategorize,
       (current, total, title) => {
         console.log(`Progress: ${current}/${total} - ${title}`)
       }
