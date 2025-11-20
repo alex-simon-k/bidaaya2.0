@@ -148,7 +148,10 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Education</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard/profile?edit=education')}
+              onClick={() => {
+                // Route to AI CV builder to add education
+                router.push('/dashboard?cv_edit=education')
+              }}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
@@ -196,7 +199,10 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Experience</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard/profile?edit=experience')}
+              onClick={() => {
+                // Route to AI CV builder to add experience
+                router.push('/dashboard?cv_edit=experience')
+              }}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
@@ -238,7 +244,10 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Projects</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard/profile?edit=projects')}
+              onClick={() => {
+                // Route to AI CV builder to add projects
+                router.push('/dashboard?cv_edit=projects')
+              }}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
@@ -288,7 +297,10 @@ export default function CVProfilePage() {
               <h2 className="text-xl font-semibold text-bidaaya-light">Skills</h2>
             </div>
             <Button
-              onClick={() => router.push('/dashboard/profile?edit=skills')}
+              onClick={() => {
+                // Route to AI CV builder to add skills
+                router.push('/dashboard?cv_edit=skills')
+              }}
               variant="ghost"
               size="sm"
               className="text-bidaaya-accent hover:bg-bidaaya-accent/10"
