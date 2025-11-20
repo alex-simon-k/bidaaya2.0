@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       fieldsOfInterest: user.interests || undefined,
       skills: user.skills || undefined,
       location: user.location || undefined,
-      educationLevel: user.educationStatus || undefined,
+      educationLevel: user.education || undefined,
       graduationYear: user.graduationYear || undefined
     };
 
