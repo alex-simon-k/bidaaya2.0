@@ -6,7 +6,7 @@ import { batchCategorizeOpportunities } from '@/lib/ai-opportunity-matcher'
 
 const prisma = new PrismaClient()
 
-export const maxDuration = 300 // 5 minutes for long-running categorization
+export const maxDuration = 300 // 5 minutes for long-running categorization (Vercel limit)
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         description: true,
         location: true
       },
-      take: limit || 100,
+      take: limit || 30, // Reduced to 30 to stay under 5-min timeout
       orderBy: { addedAt: 'desc' }
     })
 

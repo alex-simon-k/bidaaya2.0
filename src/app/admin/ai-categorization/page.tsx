@@ -44,7 +44,12 @@ export default function AICategorializationPage() {
 
   const fetchStatus = async () => {
     try {
-      const response = await fetch('/api/admin/categorize-opportunities')
+      const response = await fetch('/api/admin/categorize-opportunities', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setStatus(data)
@@ -55,7 +60,7 @@ export default function AICategorializationPage() {
   }
 
   const handleCategorize = async (mode: 'uncategorized' | 'all', limit?: number) => {
-    if (!confirm(`Categorize ${mode === 'all' ? 'ALL' : 'uncategorized'} opportunities? This will use AI API credits.`)) {
+    if (!confirm(`Categorize ${mode === 'all' ? 'ALL' : 'uncategorized'} opportunities (${limit} at a time)?\n\nThis will use AI API credits (~$0.01 per batch with DeepSeek).`)) {
       return
     }
 
@@ -73,15 +78,19 @@ export default function AICategorializationPage() {
       if (response.ok) {
         const data = await response.json()
         setResult(data)
-        setProgress('✅ Categorization complete!')
-        fetchStatus()
+        setProgress(`✅ Categorization complete!\n\n${data.successful}/${data.total} opportunities categorized successfully.`)
+        
+        // Refresh status after a short delay to let DB update
+        setTimeout(() => {
+          fetchStatus()
+        }, 1000)
       } else {
         const error = await response.json()
         setProgress(`❌ Error: ${error.error}`)
       }
     } catch (error) {
       console.error('Error categorizing:', error)
-      setProgress('❌ Failed to categorize')
+      setProgress('❌ Failed to categorize - possibly timed out. Check logs.')
     } finally {
       setIsLoading(false)
     }
@@ -169,7 +178,7 @@ export default function AICategorializationPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => handleCategorize('uncategorized', 100)}
+            onClick={() => handleCategorize('uncategorized', 30)}
             disabled={isLoading || status?.uncategorized === 0}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
           >
@@ -178,13 +187,13 @@ export default function AICategorializationPage() {
             ) : (
               <TrendingUp className="h-5 w-5" />
             )}
-            Categorize Uncategorized (Up to 100)
+            Categorize Uncategorized (30 at a time)
           </motion.button>
 
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => handleCategorize('all', 100)}
+            onClick={() => handleCategorize('all', 30)}
             disabled={isLoading}
             className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
           >
@@ -193,7 +202,7 @@ export default function AICategorializationPage() {
             ) : (
               <Sparkles className="h-5 w-5" />
             )}
-            Re-categorize All (Up to 100)
+            Re-categorize All (30 at a time)
           </motion.button>
         </div>
 
