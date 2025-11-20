@@ -157,7 +157,8 @@ export default function DashboardPage() {
   // Student Dashboard - Three-Phase Onboarding
   if (userRole === 'STUDENT') {
     // Phase 2: CV Building Chat (Conversational, with sidebar unlocked but features locked)
-    if (onboardingPhase === 'cv_building') {
+    // Also show CV builder if user clicked "+" to edit CV from CV page
+    if (onboardingPhase === 'cv_building' || cvEditParam) {
       return (
         <>
           <div className="flex h-screen w-screen overflow-hidden bg-bidaaya-dark fixed inset-0">
