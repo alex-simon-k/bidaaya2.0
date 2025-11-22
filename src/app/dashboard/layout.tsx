@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { OnboardingSessionManager } from '@/lib/onboarding-session-manager'
 import { ChevronDown } from 'lucide-react'
-import { StudentBottomNav } from '@/components/student-bottom-nav'
 import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
 
 
@@ -522,8 +521,7 @@ export default function DashboardLayout({
         {children}
       </main>
 
-      {/* Student Bottom Navigation - Mobile Only */}
-      {session?.user?.role === 'STUDENT' && <StudentBottomNav />}
+      {/* Bottom navigation removed - using hamburger menu instead */}
     </div>
   )
 } 

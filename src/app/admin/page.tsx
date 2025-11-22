@@ -26,7 +26,6 @@ import {
   ExternalLink
 } from 'lucide-react'
 import EnhancedAdminProjectManagement from '@/components/enhanced-admin-project-management'
-import OnboardingAnalyticsDashboard from '@/components/onboarding-analytics-dashboard'
 import ApplicationSessionDashboard from '@/components/application-session-dashboard'
 
 interface Project {
@@ -675,9 +674,11 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Onboarding Analytics Tab Content */}
+        {/* Onboarding Analytics Tab - Removed */}
         {activeTab === 'onboarding' && (
-          <OnboardingAnalyticsDashboard />
+          <div className="bg-white rounded-lg shadow p-6">
+            <p className="text-gray-600">Onboarding analytics moved to new admin dashboard.</p>
+          </div>
         )}
 
         {/* Admin Tools Tab Content */}
