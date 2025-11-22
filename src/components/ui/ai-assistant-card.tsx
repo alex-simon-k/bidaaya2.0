@@ -383,7 +383,10 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
               });
             });
         }}
-        onCancel={() => setShowStructuredForm(false)}
+        onCancel={() => {
+          // Redirect to dashboard instead of showing welcome screen
+          window.location.href = '/dashboard';
+        }}
       />
     );
   }
