@@ -609,19 +609,19 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                     variant="secondary"
                     className={cn(
                       "h-10 gap-2 text-sm rounded-full px-5 relative",
-                      cvProgress && cvProgress.overallScore >= 60
+                      cvProgress?.overallScore && cvProgress.overallScore >= 60
                         ? "cursor-pointer bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20 border-bidaaya-light/20"
                         : "cursor-not-allowed bg-bidaaya-light/5 text-bidaaya-light/40 border-bidaaya-light/10 opacity-60"
                     )}
                     onClick={() => {
-                      if (cvProgress && cvProgress.overallScore >= 60) {
+                      if (cvProgress?.overallScore && cvProgress.overallScore >= 60) {
                         handleQuickPrompt("Help me build a custom CV and cover letter")
                       } else {
                         alert("🔒 Complete your profile to 60% to unlock custom CV generation!")
                       }
                     }}
                   >
-                    {cvProgress && cvProgress.overallScore < 60 && (
+                    {cvProgress?.overallScore && cvProgress.overallScore < 60 && (
                       <span className="text-xs">🔒</span>
                     )}
                     <FileText className="h-4 w-4 text-green-400" />
