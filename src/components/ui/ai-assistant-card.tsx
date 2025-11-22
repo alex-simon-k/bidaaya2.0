@@ -479,23 +479,23 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
             </button>
 
             <button 
-              onClick={() => router.push('/pricing')}
+              onClick={() => router.push('/student/subscription')}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <CreditCard className="h-5 w-5" />
-                <span className="font-medium">Upgrade</span>
+                <span className="font-medium">Land an Internship Faster</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
             <button 
-              onClick={() => router.push('/dashboard/settings')}
+              onClick={() => router.push('/student/settings')}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <Settings className="h-5 w-5" />
-                <span className="font-medium">Settings</span>
+                <span className="font-medium">Settings & Credits</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
