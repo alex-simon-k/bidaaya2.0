@@ -28,7 +28,6 @@ import { AIAssistantCard } from '@/components/ui/ai-assistant-card'
 import { OpportunityDashboard } from '@/components/opportunity-dashboard'
 import { ChatWidget } from '@/components/ui/chat-widget'
 import { BottomNavigation } from '@/components/ui/bottom-navigation'
-import { StructuredOnboardingChat } from '@/components/ui/structured-onboarding-chat'
 
 interface DashboardStats {
   applications: number
@@ -188,14 +187,7 @@ export default function DashboardPage() {
           onSidebarClick={() => setShowSidebar(!showSidebar)}
         />
 
-        {/* Phase 1: Structured Onboarding Chat Modal Overlay */}
-        {onboardingPhase === 'structured_chat' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-bidaaya-dark/80 backdrop-blur-md">
-            <div className="w-full max-w-2xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden m-4">
-              <StructuredOnboardingChat onComplete={handlePhase1Complete} />
-            </div>
-          </div>
-        )}
+        {/* Phase 1 removed - users go directly to Phase 2 (CV builder) or Phase 3 (dashboard) */}
 
         {/* Chat Widget - ONLY show when NOT in Phase 1 */}
         {onboardingPhase !== 'structured_chat' && (
