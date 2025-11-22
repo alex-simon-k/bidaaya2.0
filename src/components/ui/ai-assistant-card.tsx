@@ -546,8 +546,9 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto px-4 pt-16 pb-2 safe-top safe-bottom">
           <div className="max-w-3xl mx-auto">
-            {showWelcome ? (
-              /* Welcome Screen */
+            {/* Welcome screen removed - users go directly to structured form or chat */}
+            {false ? (
+              /* Old Welcome Screen - REMOVED */
               <div className="flex flex-col items-center justify-center min-h-full py-4">
                 {/* AI Avatar - Voice Powered Orb */}
                 <div className="relative mb-8">
