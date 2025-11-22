@@ -147,8 +147,8 @@ export default withAuth(
           console.log('🛡️ ❌ Company role but profile incomplete, redirecting to company onboarding from:', pathname);
           return NextResponse.redirect(new URL("/onboarding/company", req.url));
         } else if (token.role === 'STUDENT') {
-          console.log('🛡️ ✅ Student role with incomplete profile, allowing dashboard access (Phase 1 modal will appear)');
-          return NextResponse.next(); // Let them access dashboard where Phase 1 modal appears
+          console.log('🛡️ ✅ Student role with incomplete profile, allowing dashboard access');
+          return NextResponse.next(); // Let them access dashboard
         }
        }
     }
