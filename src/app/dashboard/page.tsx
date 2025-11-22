@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
@@ -38,6 +39,8 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { data: session, status, update } = useSession()
+  const searchParams = useSearchParams()
+  const cvEditParam = searchParams.get('cv_edit') // Check if user wants to edit CV
   const [stats, setStats] = useState<DashboardStats>({
     applications: 0,
     projects: 0,
