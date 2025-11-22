@@ -49,17 +49,31 @@ export default function DashboardPage() {
   const [showMembershipPopup, setShowMembershipPopup] = useState(false)
   // Get onboarding phase from session first, fallback to state
   const sessionOnboardingPhase = (session?.user as any)?.onboardingPhase
-  const [onboardingPhase, setOnboardingPhase] = useState<string>(sessionOnboardingPhase || 'structured_chat')
+  // Skip Phase 1 - go directly to complete (dashboard)
+  const [onboardingPhase, setOnboardingPhase] = useState<string>(
+    sessionOnboardingPhase === 'structured_chat' ? 'complete' : (sessionOnboardingPhase || 'complete')
+  )
   const [chatWidgetOpen, setChatWidgetOpen] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
 
   const userRole = (session?.user as any)?.role
   
-  // Sync local state with session onboarding phase
+  // Sync local state with session onboarding phase (skip Phase 1)
   useEffect(() => {
     if (sessionOnboardingPhase) {
       console.log('📌 Dashboard: Syncing onboarding phase from session:', sessionOnboardingPhase)
-      setOnboardingPhase(sessionOnboardingPhase)
+      // Skip Phase 1 - auto-complete it
+      const phase = sessionOnboardingPhase === 'structured_chat' ? 'complete' : sessionOnboardingPhase
+      setOnboardingPhase(phase)
+      
+      // If user was on Phase 1, update DB to skip it
+      if (sessionOnboardingPhase === 'structured_chat') {
+        fetch('/api/user/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ onboardingPhase: 'complete' })
+        }).then(() => console.log('✅ Auto-skipped Phase 1, updated to complete'))
+      }
     }
   }, [sessionOnboardingPhase])
 
@@ -83,13 +97,25 @@ export default function DashboardPage() {
       const response = await fetch('/api/user/profile')
       if (response.ok) {
         const data = await response.json()
-        const dbPhase = data.profile.onboardingPhase || 'structured_chat'
+        const dbPhase = data.profile.onboardingPhase || 'complete'
         console.log('📊 Fetched onboarding phase from DB:', dbPhase)
-        setOnboardingPhase(dbPhase)
+        // Skip Phase 1 - auto-complete it
+        const phase = dbPhase === 'structured_chat' ? 'complete' : dbPhase
+        setOnboardingPhase(phase)
+        
+        // Update DB if user was on Phase 1
+        if (dbPhase === 'structured_chat') {
+          await fetch('/api/user/profile', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ onboardingPhase: 'complete' })
+          })
+          console.log('✅ Auto-skipped Phase 1, updated to complete')
+        }
       }
     } catch (error) {
       console.error('Failed to check onboarding phase:', error)
-      setOnboardingPhase('structured_chat')
+      setOnboardingPhase('complete')
     }
   }
 
@@ -112,14 +138,8 @@ export default function DashboardPage() {
   }
 
   // Show membership popup every 30 minutes for students and companies
-  // BUT NOT during Phase 1 onboarding
   useEffect(() => {
     if (session?.user?.role === 'STUDENT' || session?.user?.role === 'COMPANY') {
-      // Don't show popup during Phase 1 onboarding
-      if (onboardingPhase === 'structured_chat') {
-        return
-      }
-      
       const lastShownKey = `membership_popup_last_shown_${session.user.email}`
       const lastShown = localStorage.getItem(lastShownKey)
       const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000) // 30 minutes in milliseconds
@@ -189,23 +209,19 @@ export default function DashboardPage() {
 
         {/* Phase 1 removed - users go directly to Phase 2 (CV builder) or Phase 3 (dashboard) */}
 
-        {/* Chat Widget - ONLY show when NOT in Phase 1 */}
-        {onboardingPhase !== 'structured_chat' && (
-          <ChatWidget
-            isOpen={chatWidgetOpen}
-            onToggle={() => setChatWidgetOpen(!chatWidgetOpen)}
-          />
-        )}
+        {/* Chat Widget */}
+        <ChatWidget
+          isOpen={chatWidgetOpen}
+          onToggle={() => setChatWidgetOpen(!chatWidgetOpen)}
+        />
 
-        {/* Membership Popup - ONLY show when NOT in Phase 1 */}
-        {onboardingPhase !== 'structured_chat' && (
-          <MembershipSelectionPopup
-            isOpen={showMembershipPopup}
-            onClose={() => setShowMembershipPopup(false)}
-            userRole="STUDENT"
-            userName={session?.user?.name?.split(' ')[0] || 'Student'}
-          />
-        )}
+        {/* Membership Popup */}
+        <MembershipSelectionPopup
+          isOpen={showMembershipPopup}
+          onClose={() => setShowMembershipPopup(false)}
+          userRole="STUDENT"
+          userName={session?.user?.name?.split(' ')[0] || 'Student'}
+        />
       </>
     )
   }
