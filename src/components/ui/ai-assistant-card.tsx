@@ -61,6 +61,12 @@ interface AIAssistantCardProps {
 export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const { data: session, update } = useSession();
   const router = useRouter();
+  
+  // Check if user is coming from CV page to edit (skip welcome screen)
+  const cvEditParam = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search).get('cv_edit')
+    : null;
+  
   const [showSidebar, setShowSidebar] = useState(false);
   const [showVoiceInput, setShowVoiceInput] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -74,7 +80,8 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const recognitionRef = useRef<any>(null);
   const [voiceTranscript, setVoiceTranscript] = useState<string>('');
   const [isListening, setIsListening] = useState(false);
-  const [showStructuredForm, setShowStructuredForm] = useState(false);
+  // Auto-show structured form if coming from CV page edit
+  const [showStructuredForm, setShowStructuredForm] = useState(!!cvEditParam);
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
