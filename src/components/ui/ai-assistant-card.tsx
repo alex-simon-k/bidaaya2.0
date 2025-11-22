@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Send,
   Mic,
+  Lock,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
