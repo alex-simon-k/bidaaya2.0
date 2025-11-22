@@ -305,65 +305,90 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1">
-            <a
-              href="/dashboard"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-bidaaya-accent/10 text-bidaaya-accent"
+            <button 
+              onClick={() => { window.location.href = '/dashboard'; setShowSidebar(false); }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
-              <Home className="h-5 w-5" />
-              <span className="font-medium">Dashboard</span>
-            </a>
-            <a
-              href="/dashboard/applications"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5" />
+                <span className="font-medium">Dashboard</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => { 
+                alert('🔒 Companies feature coming soon! Send personalized proposals to Bidaaya partner companies using credits.');
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/10 transition-colors"
             >
-              <FileText className="h-5 w-5" />
-              <span>My Applications</span>
-            </a>
-            <a
-              href="/dashboard/projects"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+              <div className="flex items-center gap-3">
+                <Building className="h-5 w-5" />
+                <span className="font-medium">Companies</span>
+                <Lock className="h-3 w-3 ml-1" />
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => { window.location.href = '/dashboard/profile'; setShowSidebar(false); }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
-              <Briefcase className="h-5 w-5" />
-              <span>Internships</span>
-            </a>
-            <a
-              href="/dashboard/companies"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5" />
+                <span className="font-medium">Profile</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => { window.location.href = '/student/subscription'; setShowSidebar(false); }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
-              <Building className="h-5 w-5" />
-              <span>Companies</span>
-            </a>
-            <a
-              href="/dashboard/cv"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-5 w-5" />
+                <span className="font-medium">Land an Internship Faster</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => { window.location.href = '/student/settings'; setShowSidebar(false); }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
-              <User className="h-5 w-5" />
-              <span>My Profile</span>
-            </a>
-            <a
-              href="/student/settings"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
-            >
-              <Settings className="h-5 w-5" />
-              <span>Settings</span>
-            </a>
-            <a
-              href="/student/subscription"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/5"
-            >
-              <TrendingUp className="h-5 w-5" />
-              <span>Land an Internship Faster</span>
-            </a>
+              <div className="flex items-center gap-3">
+                <Settings className="h-5 w-5" />
+                <span className="font-medium">Settings & Credits</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
           </nav>
 
-          {/* Sign Out */}
-          <button
-            onClick={() => window.location.href = '/api/auth/signout'}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 mt-4"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Sign Out</span>
-          </button>
+          {/* User Profile Footer */}
+          <div className="border-t border-bidaaya-light/10 pt-4 mt-4">
+            <div className="flex items-center gap-3 px-4 py-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-bidaaya-accent flex items-center justify-center">
+                <span className="text-white text-sm font-medium">
+                  {session?.user?.name?.charAt(0) || 'U'}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-bidaaya-light truncate">
+                  {session?.user?.name || 'User'}
+                </p>
+                <p className="text-xs text-bidaaya-light/60 truncate">
+                  {session?.user?.email}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => window.location.href = '/api/auth/signout'}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/80 hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Sign out</span>
+            </button>
+          </div>
         </div>
       </div>
 
