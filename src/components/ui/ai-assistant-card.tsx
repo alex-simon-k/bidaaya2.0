@@ -468,7 +468,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
             </button>
 
             <button 
-              onClick={() => router.push('/dashboard/profile')}
+              onClick={() => router.push('/dashboard/cv')}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">

@@ -331,7 +331,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             </button>
 
             <button 
-              onClick={() => { window.location.href = '/dashboard/profile'; setShowSidebar(false); }}
+              onClick={() => { window.location.href = '/dashboard/cv'; setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
