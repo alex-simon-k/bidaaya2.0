@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -22,6 +22,17 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
   const { data: session } = useSession();
   const router = useRouter();
   const [showSidebar, setShowSidebar] = useState(false);
+  const [credits, setCredits] = useState<number>(0);
+
+  // Fetch credits when sidebar opens
+  useEffect(() => {
+    if (showSidebar) {
+      fetch('/api/credits/balance')
+        .then(res => res.json())
+        .then(data => setCredits(data.credits || 0))
+        .catch(err => console.error('Error fetching credits:', err));
+    }
+  }, [showSidebar]);
 
   return (
     <div className="fixed inset-0 w-full h-full bg-bidaaya-dark overflow-hidden">
@@ -66,7 +77,7 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-bidaaya-light/60">Available Credits</p>
-                <p className="text-2xl font-bold text-bidaaya-light">20</p>
+                <p className="text-2xl font-bold text-bidaaya-light">{credits}</p>
               </div>
               <CreditCard className="h-5 w-5 text-bidaaya-accent" />
             </div>

@@ -17,7 +17,8 @@ import {
   Plus,
   Edit2,
   ArrowLeft,
-  CheckCircle
+  CheckCircle,
+  Trash2
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -69,6 +70,54 @@ export default function CVProfilePage() {
     if (!dateString) return 'Present'
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  }
+
+  const handleDeleteEducation = async (id: string) => {
+    if (!confirm('Delete this education entry?')) return
+    try {
+      const response = await fetch(`/api/cv/education/${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        fetchCVData() // Refresh the data
+      }
+    } catch (error) {
+      console.error('Error deleting education:', error)
+    }
+  }
+
+  const handleDeleteExperience = async (id: string) => {
+    if (!confirm('Delete this experience entry?')) return
+    try {
+      const response = await fetch(`/api/cv/experience/${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        fetchCVData() // Refresh the data
+      }
+    } catch (error) {
+      console.error('Error deleting experience:', error)
+    }
+  }
+
+  const handleDeleteProject = async (id: string) => {
+    if (!confirm('Delete this project?')) return
+    try {
+      const response = await fetch(`/api/cv/projects/${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        fetchCVData() // Refresh the data
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error)
+    }
+  }
+
+  const handleDeleteSkill = async (id: string) => {
+    if (!confirm('Delete this skill?')) return
+    try {
+      const response = await fetch(`/api/cv/skills/${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        fetchCVData() // Refresh the data
+      }
+    } catch (error) {
+      console.error('Error deleting skill:', error)
+    }
   }
 
   if (isLoading) {
@@ -165,7 +214,15 @@ export default function CVProfilePage() {
           ) : (
             <div className="space-y-4">
               {education.map((edu, idx) => (
-                <div key={idx} className="border-l-2 border-bidaaya-accent/30 pl-4">
+                <div key={idx} className="border-l-2 border-bidaaya-accent/30 pl-4 relative group">
+                  <Button
+                    onClick={() => handleDeleteEducation(edu.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                   <h3 className="font-semibold text-bidaaya-light">{edu.degreeTitle || edu.program}</h3>
                   <p className="text-sm text-bidaaya-light/60">{edu.institution}</p>
                   <p className="text-xs text-bidaaya-light/40 mt-1">
@@ -216,7 +273,15 @@ export default function CVProfilePage() {
           ) : (
             <div className="space-y-4">
               {experience.map((exp, idx) => (
-                <div key={idx} className="border-l-2 border-bidaaya-accent/30 pl-4">
+                <div key={idx} className="border-l-2 border-bidaaya-accent/30 pl-4 relative group">
+                  <Button
+                    onClick={() => handleDeleteExperience(exp.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                   <h3 className="font-semibold text-bidaaya-light">{exp.title}</h3>
                   <p className="text-sm text-bidaaya-light/60">{exp.employer}</p>
                   <p className="text-xs text-bidaaya-light/40 mt-1">
@@ -261,7 +326,15 @@ export default function CVProfilePage() {
           ) : (
             <div className="space-y-4">
               {projects.map((proj, idx) => (
-                <div key={idx} className="border-l-2 border-bidaaya-accent/30 pl-4">
+                <div key={idx} className="border-l-2 border-bidaaya-accent/30 pl-4 relative group">
+                  <Button
+                    onClick={() => handleDeleteProject(proj.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                   <h3 className="font-semibold text-bidaaya-light">{proj.name}</h3>
                   {proj.techStack && proj.techStack.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
@@ -316,9 +389,15 @@ export default function CVProfilePage() {
               {skills.map((skill, idx) => (
                 <span
                   key={idx}
-                  className="px-3 py-1.5 bg-bidaaya-accent/20 text-bidaaya-accent rounded-full text-sm"
+                  className="px-3 py-1.5 bg-bidaaya-accent/20 text-bidaaya-accent rounded-full text-sm flex items-center gap-2 group relative"
                 >
-                  {skill.skillName}
+                  <span>{skill.skillName}</span>
+                  <button
+                    onClick={() => handleDeleteSkill(skill.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 rounded-full p-0.5 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 </span>
               ))}
             </div>
