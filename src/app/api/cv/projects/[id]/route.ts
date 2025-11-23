@@ -25,7 +25,7 @@ export async function DELETE(
     }
 
     // Delete the project entry if it belongs to the user
-    const project = await prisma.userProject.findUnique({
+    const project = await prisma.cVProject.findUnique({
       where: { id: params.id }
     })
 
@@ -37,7 +37,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await prisma.userProject.delete({
+    await prisma.cVProject.delete({
       where: { id: params.id }
     })
 

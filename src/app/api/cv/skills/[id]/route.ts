@@ -25,7 +25,7 @@ export async function DELETE(
     }
 
     // Delete the skill entry if it belongs to the user
-    const skill = await prisma.skill.findUnique({
+    const skill = await prisma.cVSkill.findUnique({
       where: { id: params.id }
     })
 
@@ -37,7 +37,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await prisma.skill.delete({
+    await prisma.cVSkill.delete({
       where: { id: params.id }
     })
 

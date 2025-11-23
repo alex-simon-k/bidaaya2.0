@@ -25,7 +25,7 @@ export async function DELETE(
     }
 
     // Delete the education entry if it belongs to the user
-    const education = await prisma.education.findUnique({
+    const education = await prisma.cVEducation.findUnique({
       where: { id: params.id }
     })
 
@@ -37,7 +37,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await prisma.education.delete({
+    await prisma.cVEducation.delete({
       where: { id: params.id }
     })
 

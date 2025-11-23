@@ -25,7 +25,7 @@ export async function DELETE(
     }
 
     // Delete the experience entry if it belongs to the user
-    const experience = await prisma.experience.findUnique({
+    const experience = await prisma.cVExperience.findUnique({
       where: { id: params.id }
     })
 
@@ -37,7 +37,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await prisma.experience.delete({
+    await prisma.cVExperience.delete({
       where: { id: params.id }
     })
 
