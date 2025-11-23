@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Flame, TrendingUp, X, Sparkles, ChevronRight } from 'lucide-react'
+import { Flame, TrendingUp, X, Sparkles, ChevronRight, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { OpportunityDetailModal } from '@/components/ui/opportunity-detail-modal'
