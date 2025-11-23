@@ -95,7 +95,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
     if (showSidebar) {
       fetch('/api/credits/balance')
         .then(res => res.json())
-        .then(data => setCredits(data.credits || 0))
+        .then(data => setCredits(data.balance || 0))
         .catch(err => console.error('Error fetching credits:', err));
     }
   }, [showSidebar]);
