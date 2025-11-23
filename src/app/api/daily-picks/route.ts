@@ -51,14 +51,14 @@ export async function GET(request: NextRequest) {
     // Check if we need to generate new daily picks
     const needsNewPicks = !lastPicksDate || lastPicksDate.getTime() !== today.getTime()
 
+    // Get applied and unlocked opportunity IDs (needed in both branches)
+    const appliedIds = user.externalOpportunityApps.map(app => app.externalOpportunityId)
+    const unlockedIds = user.earlyAccessUnlocks.map(unlock => unlock.externalOpportunityId).filter(Boolean) as string[]
+
     let dailyOpportunities: any[] = []
 
     if (needsNewPicks) {
       console.log('🎯 Generating new daily picks for user:', userId)
-
-      // Get applied opportunity IDs
-      const appliedIds = user.externalOpportunityApps.map(app => app.externalOpportunityId)
-      const unlockedIds = user.earlyAccessUnlocks.map(unlock => unlock.externalOpportunityId).filter(Boolean) as string[]
 
       // Fetch 1 early access opportunity (highest match, not applied)
       const earlyAccessOpp = await prisma.$queryRaw<any[]>`
