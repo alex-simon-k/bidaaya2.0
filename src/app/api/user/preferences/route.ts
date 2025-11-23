@@ -30,16 +30,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Get user with primaryGoal
+    const fullUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        agentPreferences: true,
+        primaryGoal: true,
+      },
+    });
+
     // Parse agentPreferences JSON or return defaults
-    const preferences = user.agentPreferences
-      ? (typeof user.agentPreferences === 'string' 
-          ? JSON.parse(user.agentPreferences) 
-          : user.agentPreferences)
+    const preferences = fullUser?.agentPreferences
+      ? (typeof fullUser.agentPreferences === 'string' 
+          ? JSON.parse(fullUser.agentPreferences) 
+          : fullUser.agentPreferences)
       : {
-          commitmentLevel: 'flexible',
           field: 'best_for_you',
           agentActive: false,
         };
+
+    // Add primaryGoal to preferences
+    preferences.goal = fullUser?.primaryGoal || 'Get Employed';
 
     return NextResponse.json({
       success: true,
@@ -69,10 +80,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { commitmentLevel, field, agentActive } = body;
+    const { goal, field, agentActive } = body;
 
     // Validate inputs
-    const validCommitmentLevels = ['full_time', 'flexible'];
+    const validGoals = ['Get Employed', 'Get Experience'];
     const validFields = [
       'best_for_you', 
       'technology', 
@@ -89,9 +100,9 @@ export async function PATCH(request: NextRequest) {
       'any'
     ];
 
-    if (commitmentLevel && !validCommitmentLevels.includes(commitmentLevel)) {
+    if (goal && !validGoals.includes(goal)) {
       return NextResponse.json(
-        { error: "Invalid commitment level" },
+        { error: "Invalid goal" },
         { status: 400 }
       );
     }
@@ -115,21 +126,33 @@ export async function PATCH(request: NextRequest) {
           : user.agentPreferences)
       : {};
 
-    // Merge with new preferences
+    // Merge with new preferences (excluding goal which goes to separate field)
     const updatedPreferences = {
       ...currentPreferences,
-      ...(commitmentLevel && { commitmentLevel }),
       ...(field && { field }),
       ...(agentActive !== undefined && { agentActive }),
     };
 
+    // Prepare update data
+    const updateData: any = {
+      agentPreferences: updatedPreferences,
+    };
+
+    // Update primaryGoal separately if provided
+    if (goal) {
+      updateData.primaryGoal = goal;
+    }
+
     // Update user
     await prisma.user.update({
       where: { id: session.user.id },
-      data: {
-        agentPreferences: updatedPreferences,
-      },
+      data: updateData,
     });
+
+    // Add goal back to response
+    if (goal) {
+      updatedPreferences.goal = goal;
+    }
 
     return NextResponse.json({
       success: true,
