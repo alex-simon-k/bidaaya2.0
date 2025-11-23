@@ -69,6 +69,11 @@ export function StructuredCVEducationFormSimple({
     if (!formData.institution.trim()) newErrors.institution = "Institution required";
     if (!formData.country) newErrors.country = "Country required";
     if (!formData.startDate) newErrors.startDate = "Start date required";
+    
+    // Require at least 3 relevant modules for better CV quality
+    if (formData.modules.length < 3) {
+      newErrors.modules = "Add at least 3 relevant modules/courses (helps match you to opportunities!)";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -286,10 +291,11 @@ export function StructuredCVEducationFormSimple({
         </Label>
       </div>
 
-      {/* Key Modules (optional) */}
+      {/* Key Modules (REQUIRED) */}
       <div className="space-y-2">
         <Label className="text-bidaaya-light text-sm">
-          Key Courses/Modules <span className="text-bidaaya-light/60">(optional, max 4)</span>
+          Relevant Courses/Modules <span className="text-red-400">*</span>
+          <span className="text-bidaaya-light/60 ml-1">(minimum 3, max 6 - helps match you to roles!)</span>
         </Label>
         <div className="flex gap-2">
           <Input
@@ -301,19 +307,22 @@ export function StructuredCVEducationFormSimple({
                 addModule();
               }
             }}
-            placeholder="Add course"
-            disabled={formData.modules.length >= 4}
+            placeholder="e.g. Microeconomics, Financial Accounting, Python Programming"
+            disabled={formData.modules.length >= 6}
             className="flex-1 bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light text-sm"
           />
           <Button
             type="button"
             onClick={addModule}
-            disabled={!newModule.trim() || formData.modules.length >= 4}
+            disabled={!newModule.trim() || formData.modules.length >= 6}
             className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 px-3"
           >
             <Plus className="w-4 h-4" />
           </Button>
         </div>
+        {errors.modules && (
+          <p className="text-xs text-red-400">{errors.modules}</p>
+        )}
         {formData.modules.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {formData.modules.map((module, index) => (
