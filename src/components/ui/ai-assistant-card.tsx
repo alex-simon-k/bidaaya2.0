@@ -72,6 +72,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [cvProgress, setCvProgress] = useState<CVProgress | null>(null);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST_ITEMS);
+  const [credits, setCredits] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const [voiceTranscript, setVoiceTranscript] = useState<string>('');
@@ -434,7 +435,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-bidaaya-light/60">Available Credits</p>
-                <p className="text-2xl font-bold text-bidaaya-light">20</p>
+                <p className="text-2xl font-bold text-bidaaya-light">{credits}</p>
               </div>
               <CreditCard className="h-5 w-5 text-bidaaya-accent" />
             </div>
