@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     // Check if we need to generate new daily picks
     const needsNewPicks = !lastPicksDate || lastPicksDate.getTime() !== today.getTime()
 
-    let dailyOpportunities
+    let dailyOpportunities: any[] = []
 
     if (needsNewPicks) {
       console.log('🎯 Generating new daily picks for user:', userId)
