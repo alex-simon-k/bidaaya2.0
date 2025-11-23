@@ -6,7 +6,7 @@ import { Zap, Target, Briefcase, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AgentControlsV2Props {
-  onPreferencesChange?: (preferences: { commitmentLevel?: string; field?: string; agentActive?: boolean; isExpanded?: boolean }) => void
+  onPreferencesChange?: (preferences: { goal?: string; field?: string; agentActive?: boolean; isExpanded?: boolean }) => void
 }
 
 const FIELDS = [
@@ -25,9 +25,9 @@ const FIELDS = [
   { value: 'any', label: 'Open to All', icon: '🌟', description: 'Any field' },
 ]
 
-const COMMITMENT_OPTIONS = [
-  { value: 'flexible', label: 'Flexible' },
-  { value: 'full_time', label: 'Full-time' },
+const GOAL_OPTIONS = [
+  { value: 'Get Employed', label: 'Get Employed' },
+  { value: 'Get Experience', label: 'Get Experience' },
 ]
 
 const ACTIVITY_MESSAGES = [
@@ -38,7 +38,7 @@ const ACTIVITY_MESSAGES = [
 ]
 
 export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
-  const [commitmentLevel, setCommitmentLevel] = useState<string>('flexible')
+  const [goal, setGoal] = useState<string>('Get Employed')
   const [field, setField] = useState<string>('best_for_you')
   const [isActive, setIsActive] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -83,7 +83,7 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
       if (response.ok) {
         const data = await response.json()
         if (data.preferences) {
-          setCommitmentLevel(data.preferences.commitmentLevel || 'flexible')
+          setGoal(data.preferences.goal || 'Get Employed')
           setField(data.preferences.field || 'any')
           setIsActive(data.preferences.agentActive || false)
         }
@@ -93,9 +93,9 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
     }
   }
 
-  const savePreferences = async (newCommitment?: string, newField?: string, newActive?: boolean) => {
+  const savePreferences = async (newGoal?: string, newField?: string, newActive?: boolean) => {
     const preferences = {
-      commitmentLevel: newCommitment || commitmentLevel,
+      goal: newGoal || goal,
       field: newField || field,
       agentActive: newActive !== undefined ? newActive : isActive,
     }

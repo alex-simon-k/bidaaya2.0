@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Target, Flame, TrendingUp, X, Sparkles, ChevronRight } from 'lucide-react'
+import { Flame, TrendingUp, X, Sparkles, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { OpportunityDetailModal } from '@/components/ui/opportunity-detail-modal'
@@ -134,37 +134,18 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
         {/* Content */}
         <div className="relative p-6">
           {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-bidaaya-accent/20 rounded-lg">
-                <Target className="h-6 w-6 text-bidaaya-accent" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-bidaaya-light">Daily Objective</h3>
-                <p className="text-sm text-bidaaya-light/60">{goal}</p>
-              </div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-bidaaya-light">Objective - {goal}</h3>
             </div>
 
             {/* Streak Badge */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-full">
-              <Flame className="h-4 w-4 text-orange-400" />
-              <span className="text-sm font-bold text-orange-400">{streak} day streak</span>
-            </div>
-          </div>
-
-          {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="p-3 bg-bidaaya-light/5 rounded-lg border border-bidaaya-light/10">
-              <p className="text-xs text-bidaaya-light/60 mb-1">Today's Progress</p>
-              <p className="text-xl font-bold text-bidaaya-light">{appliedCount}/{dailyPicks.length}</p>
-            </div>
-            <div className="p-3 bg-bidaaya-light/5 rounded-lg border border-bidaaya-light/10">
-              <p className="text-xs text-bidaaya-light/60 mb-1">Best Streak</p>
-              <p className="text-xl font-bold text-green-400">{longestStreak} days</p>
-            </div>
-            <div className="p-3 bg-bidaaya-light/5 rounded-lg border border-bidaaya-light/10">
-              <p className="text-xs text-bidaaya-light/60 mb-1">Daily Picks</p>
-              <p className="text-xl font-bold text-blue-400">{dailyPicks.length}</p>
+            <div className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-orange-400" />
+              <span className="text-2xl font-bold text-orange-400">{streak}</span>
+              {longestStreak > 0 && longestStreak > streak && (
+                <span className="text-xs text-green-400/60 ml-1">(best: {longestStreak})</span>
+              )}
             </div>
           </div>
 
