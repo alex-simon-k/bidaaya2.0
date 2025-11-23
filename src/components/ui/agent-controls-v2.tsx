@@ -118,8 +118,8 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
     }
   }
 
-  const handleCommitmentChange = (value: string) => {
-    setCommitmentLevel(value)
+  const handleGoalChange = (value: string) => {
+    setGoal(value)
     savePreferences(value, undefined, undefined)
   }
 
@@ -226,26 +226,26 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 space-y-4">
-                {/* Commitment Segmented Control */}
+                {/* Goal Segmented Control */}
                 <div>
-                  <label className="text-xs text-bidaaya-light/60 mb-2 block">Commitment Level</label>
+                  <label className="text-xs text-bidaaya-light/60 mb-2 block">Goal</label>
                   <div className="relative bg-white/[0.03] rounded-xl p-1 flex">
-                    {COMMITMENT_OPTIONS.map((option) => (
+                    {GOAL_OPTIONS.map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => handleCommitmentChange(option.value)}
+                        onClick={() => handleGoalChange(option.value)}
                         disabled={isSaving}
                         className={cn(
                           "relative flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                          commitmentLevel === option.value
+                          goal === option.value
                             ? "text-bidaaya-light"
                             : "text-bidaaya-light/50 hover:text-bidaaya-light/70",
                           isSaving && "opacity-50 cursor-not-allowed"
                         )}
                       >
-                        {commitmentLevel === option.value && (
+                        {goal === option.value && (
                           <motion.div
-                            layoutId="commitment-bg"
+                            layoutId="goal-bg"
                             className="absolute inset-0 bg-bidaaya-accent/20 border border-bidaaya-accent/30 rounded-lg"
                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                           />
