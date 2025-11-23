@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
           select: { skillName: true },
         },
         cvEducation: {
-          select: { degree: true, fieldOfStudy: true },
+          select: { degreeType: true, degreeTitle: true, fieldOfStudy: true, institution: true },
         },
         cvExperience: {
-          select: { jobTitle: true, companyName: true, description: true },
+          select: { title: true, employer: true, location: true, summary: true },
         },
         
         externalOpportunityApps: {

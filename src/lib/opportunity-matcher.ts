@@ -10,8 +10,8 @@ interface StudentProfile {
   education?: string | null
   goal: string[]
   cvSkills?: Array<{ skillName: string }>
-  cvEducation?: Array<{ degree: string; fieldOfStudy: string }>
-  cvExperience?: Array<{ jobTitle: string; companyName: string; description: string }>
+  cvEducation?: Array<{ degreeType: string; degreeTitle: string; fieldOfStudy: string; institution: string }>
+  cvExperience?: Array<{ title: string; employer: string; location?: string | null; summary?: string | null }>
 }
 
 interface Opportunity {
@@ -69,12 +69,14 @@ export function calculateMatchScore(
     student.major || '',
     student.education || '',
     ...(student.cvEducation?.map(e => e.fieldOfStudy) || []),
-    ...(student.cvEducation?.map(e => e.degree) || []),
+    ...(student.cvEducation?.map(e => e.degreeType) || []),
+    ...(student.cvEducation?.map(e => e.degreeTitle) || []),
+    ...(student.cvEducation?.map(e => e.institution) || []),
   ]).filter(Boolean)
 
   const studentExperience = normalizeArray([
-    ...(student.cvExperience?.map(e => e.jobTitle) || []),
-    ...(student.cvExperience?.map(e => e.companyName) || []),
+    ...(student.cvExperience?.map(e => e.title) || []),
+    ...(student.cvExperience?.map(e => e.employer) || []),
   ])
 
   // Opportunity data
