@@ -190,9 +190,13 @@ export class CVWordExportV2 {
       if (edu.grade) {
         paragraphs.push(
           new Paragraph({
-            text: `Predicted Grade: ${edu.grade}`,
-            font: 'Times New Roman',
-            size: 21,
+            children: [
+              new TextRun({
+                text: `Predicted Grade: ${edu.grade}`,
+                font: 'Times New Roman',
+                size: 21,
+              })
+            ],
             spacing: { after: 50 },
           })
         )
@@ -203,9 +207,13 @@ export class CVWordExportV2 {
         const formattedModules = TextFormatter.formatCourseNames(edu.highlights)
         paragraphs.push(
           new Paragraph({
-            text: `Relevant Modules: ${formattedModules.join(', ')}`,
-            font: 'Times New Roman',
-            size: 21,
+            children: [
+              new TextRun({
+                text: `Relevant Modules: ${formattedModules.join(', ')}`,
+                font: 'Times New Roman',
+                size: 21,
+              })
+            ],
             spacing: { after: index < education.length - 1 ? 100 : 200 },
           })
         )
@@ -302,9 +310,13 @@ export class CVWordExportV2 {
       exp.achievements.forEach((achievement: string, achIndex: number) => {
         paragraphs.push(
           new Paragraph({
-            text: TextFormatter.formatBulletPoint(achievement),
-            font: 'Times New Roman',
-            size: 21,
+            children: [
+              new TextRun({
+                text: TextFormatter.formatBulletPoint(achievement),
+                font: 'Times New Roman',
+                size: 21,
+              })
+            ],
             spacing: { after: achIndex === exp.achievements.length - 1 ? 150 : 50 },
           })
         )
@@ -363,9 +375,13 @@ export class CVWordExportV2 {
       // Description
       paragraphs.push(
         new Paragraph({
-          text: TextFormatter.formatBulletPoint(ach.description),
-          font: 'Times New Roman',
-          size: 21,
+          children: [
+            new TextRun({
+              text: TextFormatter.formatBulletPoint(ach.description),
+              font: 'Times New Roman',
+              size: 21,
+            })
+          ],
           spacing: { after: 150 },
         })
       )
@@ -409,9 +425,13 @@ export class CVWordExportV2 {
       const langList = languages.map(l => TextFormatter.toTitleCase(l.language)).join(', ')
       paragraphs.push(
         new Paragraph({
-          text: `Languages: ${langList}`,
-          font: 'Times New Roman',
-          size: 21,
+          children: [
+            new TextRun({
+              text: `Languages: ${langList}`,
+              font: 'Times New Roman',
+              size: 21,
+            })
+          ],
           spacing: { after: 50 },
         })
       )
@@ -423,9 +443,13 @@ export class CVWordExportV2 {
       const techList = TextFormatter.formatList(technicalSkills.map(s => s.name)).join(', ')
       paragraphs.push(
         new Paragraph({
-          text: `Technical Skills: ${techList}`,
-          font: 'Times New Roman',
-          size: 21,
+          children: [
+            new TextRun({
+              text: `Technical Skills: ${techList}`,
+              font: 'Times New Roman',
+              size: 21,
+            })
+          ],
           spacing: { after: 50 },
         })
       )
@@ -437,9 +461,13 @@ export class CVWordExportV2 {
       const actList = TextFormatter.formatList(activitySkills.map(s => s.name)).join(', ')
       paragraphs.push(
         new Paragraph({
-          text: `Activities: ${actList}`,
-          font: 'Times New Roman',
-          size: 21,
+          children: [
+            new TextRun({
+              text: `Activities: ${actList}`,
+              font: 'Times New Roman',
+              size: 21,
+            })
+          ],
           spacing: { after: 50 },
         })
       )
@@ -448,9 +476,13 @@ export class CVWordExportV2 {
     // Interests (placeholder - can be populated from user data later)
     paragraphs.push(
       new Paragraph({
-        text: 'Interests: ',
-        font: 'Times New Roman',
-        size: 21,
+        children: [
+          new TextRun({
+            text: 'Interests: ',
+            font: 'Times New Roman',
+            size: 21,
+          })
+        ],
         spacing: { after: 50 },
       })
     )
