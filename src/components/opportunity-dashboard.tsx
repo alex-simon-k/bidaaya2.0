@@ -32,6 +32,7 @@ import { OpportunityCardV2 } from "@/components/ui/opportunity-card-v2";
 import { OpportunityCardCompact } from "@/components/ui/opportunity-card-compact";
 import { OpportunityDetailModal } from "@/components/ui/opportunity-detail-modal";
 import { EarlyAccessBanner } from "@/components/ui/early-access-banner";
+import { DailyPicksCard } from "@/components/ui/daily-picks-card";
 import { cn } from "@/lib/utils";
 
 interface Opportunity {
@@ -435,6 +436,11 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             }
             // TODO: Refresh opportunities based on new preferences
           }} />
+        </div>
+
+        {/* Daily Picks Card - Prominent */}
+        <div className="mb-6">
+          <DailyPicksCard />
         </div>
 
         {loading ? (

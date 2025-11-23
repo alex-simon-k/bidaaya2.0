@@ -112,6 +112,14 @@ model User {
   lifetimeCreditsUsed      Int                    @default(0)
   creditTransactions       CreditTransaction[]
   
+  // Goal and Streak system
+  goal                     String?                @default("Get Employed") // "Get Employed" or "Get Experience"
+  currentStreak            Int                    @default(0)
+  longestStreak            Int                    @default(0)
+  lastStreakDate           DateTime?
+  dailyPicksDate           DateTime?
+  dailyPicksOpportunities  String[]               // Today's daily picks (opportunity IDs)
+  
   // Early Access system (for paid tiers)
   earlyAccessUnlocksRemaining Int                 @default(0)
   earlyAccessUnlocksResetAt   DateTime?
