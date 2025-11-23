@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { User, GraduationCap, Briefcase, FolderKanban, Award, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
+import { User, GraduationCap, Briefcase, FolderKanban, Award, CheckCircle2, ArrowRight, ArrowLeft, Trash2 } from "lucide-react";
 import { StructuredCVEducationFormSimple } from "./structured-cv-education-form-simple";
 import { StructuredCVProfileForm } from "./structured-cv-profile-form";
 import { StructuredCVExperienceForm } from "./structured-cv-experience-form";
@@ -388,9 +388,36 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
               <div className="mb-4 space-y-2">
                 <p className="text-sm text-bidaaya-light font-semibold">Your Education:</p>
                 {savedItems.education.map((edu: any, idx: number) => (
-                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg">
-                    <p className="text-sm text-bidaaya-light font-medium">{edu.degreeTitle || edu.program}</p>
-                    <p className="text-xs text-bidaaya-light/60">{edu.institution}</p>
+                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-bidaaya-light font-medium">{edu.degreeTitle || edu.program}</p>
+                      <p className="text-xs text-bidaaya-light/60">{edu.institution}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          if (confirm('Delete this education entry?')) {
+                            try {
+                              const response = await fetch(`/api/cv/education/${edu.id}`, { method: 'DELETE' });
+                              if (response.ok) {
+                                setSavedItems(prev => ({
+                                  ...prev,
+                                  education: prev.education.filter(e => e.id !== edu.id)
+                                }));
+                              }
+                            } catch (error) {
+                              console.error('Error deleting education:', error);
+                            }
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -453,9 +480,36 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
               <div className="mb-4 space-y-2">
                 <p className="text-sm text-bidaaya-light font-semibold">Your Experience:</p>
                 {savedItems.experience.map((exp: any, idx: number) => (
-                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg">
-                    <p className="text-sm text-bidaaya-light font-medium">{exp.title}</p>
-                    <p className="text-xs text-bidaaya-light/60">{exp.employer}</p>
+                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-bidaaya-light font-medium">{exp.title}</p>
+                      <p className="text-xs text-bidaaya-light/60">{exp.employer}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          if (confirm('Delete this experience entry?')) {
+                            try {
+                              const response = await fetch(`/api/cv/experience/${exp.id}`, { method: 'DELETE' });
+                              if (response.ok) {
+                                setSavedItems(prev => ({
+                                  ...prev,
+                                  experience: prev.experience.filter(e => e.id !== exp.id)
+                                }));
+                              }
+                            } catch (error) {
+                              console.error('Error deleting experience:', error);
+                            }
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -497,17 +551,44 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
               <div className="mb-4 space-y-2">
                 <p className="text-sm text-bidaaya-light font-semibold">Your Projects:</p>
                 {savedItems.projects.map((proj: any, idx: number) => (
-                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg">
-                    <p className="text-sm text-bidaaya-light font-medium">{proj.name}</p>
-                    {proj.techStack && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {proj.techStack.slice(0, 3).map((tech: string, i: number) => (
-                          <span key={i} className="text-xs text-bidaaya-light/60 bg-bidaaya-light/5 px-2 py-0.5 rounded">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                  <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-bidaaya-light font-medium">{proj.name}</p>
+                      {proj.techStack && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {proj.techStack.slice(0, 3).map((tech: string, i: number) => (
+                            <span key={i} className="text-xs text-bidaaya-light/60 bg-bidaaya-light/5 px-2 py-0.5 rounded">
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          if (confirm('Delete this project?')) {
+                            try {
+                              const response = await fetch(`/api/cv/projects/${proj.id}`, { method: 'DELETE' });
+                              if (response.ok) {
+                                setSavedItems(prev => ({
+                                  ...prev,
+                                  projects: prev.projects.filter(p => p.id !== proj.id)
+                                }));
+                              }
+                            } catch (error) {
+                              console.error('Error deleting project:', error);
+                            }
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -552,9 +633,30 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
                   {savedItems.skills.map((skill: any, idx: number) => (
                     <div
                       key={idx}
-                      className="px-2 py-1 bg-bidaaya-accent/20 rounded-full text-xs text-bidaaya-light"
+                      className="px-2 py-1 bg-bidaaya-accent/20 rounded-full text-xs text-bidaaya-light flex items-center gap-1"
                     >
-                      {skill.skillName}
+                      <span>{skill.skillName}</span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (confirm('Delete this skill?')) {
+                            try {
+                              const response = await fetch(`/api/cv/skills/${skill.id}`, { method: 'DELETE' });
+                              if (response.ok) {
+                                setSavedItems(prev => ({
+                                  ...prev,
+                                  skills: prev.skills.filter(s => s.id !== skill.id)
+                                }));
+                              }
+                            } catch (error) {
+                              console.error('Error deleting skill:', error);
+                            }
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full p-0.5"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
                     </div>
                   ))}
                 </div>
