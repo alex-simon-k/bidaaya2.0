@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         
         // CV data for enhanced matching
         cvSkills: {
-          select: { name: true },
+          select: { skillName: true },
         },
         cvEducation: {
           select: { degree: true, fieldOfStudy: true },

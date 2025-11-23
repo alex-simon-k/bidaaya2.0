@@ -9,7 +9,7 @@ interface StudentProfile {
   major?: string | null
   education?: string | null
   goal: string[]
-  cvSkills?: Array<{ name: string }>
+  cvSkills?: Array<{ skillName: string }>
   cvEducation?: Array<{ degree: string; fieldOfStudy: string }>
   cvExperience?: Array<{ jobTitle: string; companyName: string; description: string }>
 }
@@ -60,7 +60,7 @@ export function calculateMatchScore(
   // Combine all student data
   const studentSkills = normalizeArray([
     ...student.skills,
-    ...(student.cvSkills?.map(s => s.name) || []),
+    ...(student.cvSkills?.map(s => s.skillName) || []),
   ])
   
   const studentInterests = normalizeArray(student.interests)
