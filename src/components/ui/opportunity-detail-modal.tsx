@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { CVEnhancementModal } from '@/components/ui/cv-enhancement-modal'
 
 interface OpportunityDetailModalProps {
   isOpen: boolean
@@ -59,6 +60,64 @@ export function OpportunityDetailModal({
   onUnlock,
   userPlan
 }: OpportunityDetailModalProps) {
+  const [showCVModal, setShowCVModal] = useState(false)
+  const [isGeneratingCV, setIsGeneratingCV] = useState(false)
+
+  const handleCVComplete = async (answers: any[]) => {
+    setIsGeneratingCV(true)
+    try {
+      // Generate custom CV
+      const response = await fetch('/api/cv/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opportunityId: opportunity.id,
+          opportunityType: 'external',
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Download the CV as Word document
+        const downloadResponse = await fetch('/api/cv/export/docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            opportunityId: opportunity.id,
+            opportunityType: 'external',
+          }),
+        })
+
+        if (downloadResponse.ok) {
+          const blob = await downloadResponse.blob()
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `CV_${opportunity.company}_${opportunity.title.replace(/[^a-z0-9]/gi, '_')}.docx`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          window.URL.revokeObjectURL(url)
+
+          alert(`✅ Custom CV generated and downloaded! ${data.creditsDeducted} credits deducted.`)
+        }
+      } else {
+        const error = await response.json()
+        if (error.error === 'Insufficient credits') {
+          alert(`❌ Insufficient credits! You need ${error.required} credits but have ${error.current}.`)
+        } else {
+          alert('❌ Failed to generate CV. Please try again.')
+        }
+      }
+    } catch (error) {
+      console.error('Error generating CV:', error)
+      alert('❌ Failed to generate CV. Please try again.')
+    } finally {
+      setIsGeneratingCV(false)
+      setShowCVModal(false)
+    }
+  }
   const handleApply = () => {
     // Treat early_access type as external since they're external opportunities with early access
     if ((opportunity.type === 'external' || opportunity.type === 'early_access') && opportunity.applicationUrl) {
@@ -252,13 +311,13 @@ export function OpportunityDetailModal({
                   {!(opportunity.isLocked && opportunity.type === 'early_access') && (
                     <div className="grid grid-cols-2 gap-3">
                       <Button
-                        onClick={() => alert('🔒 Custom CV feature coming soon! (5 credits)')}
+                        onClick={() => setShowCVModal(true)}
                         variant="outline"
-                        className="border-bidaaya-light/20 text-bidaaya-light/60 hover:bg-bidaaya-light/5 cursor-not-allowed"
+                        className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
+                        disabled={isGeneratingCV}
                       >
-                        <Lock className="h-3 w-3 mr-1" />
                         <FileText className="h-4 w-4 mr-2" />
-                        Custom CV
+                        Custom CV (5 credits)
                       </Button>
                       <Button
                         onClick={() => alert('🔒 Custom Cover Letter feature coming soon! (3 credits)')}
@@ -342,6 +401,17 @@ export function OpportunityDetailModal({
           </motion.div>
         </>
       )}
+      
+      {/* CV Enhancement Modal */}
+      <CVEnhancementModal
+        isOpen={showCVModal}
+        onClose={() => setShowCVModal(false)}
+        opportunityId={opportunity.id}
+        opportunityTitle={opportunity.title}
+        opportunityDescription={opportunity.description || ''}
+        opportunityCategory={opportunity.type}
+        onComplete={handleCVComplete}
+      />
     </AnimatePresence>
   )
 }

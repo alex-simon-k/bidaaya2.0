@@ -135,6 +135,47 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Deduct 5 credits for custom CV generation
+    const CUSTOM_CV_COST = 5
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { credits: true },
+      })
+
+      if (!user || user.credits < CUSTOM_CV_COST) {
+        return NextResponse.json({
+          error: 'Insufficient credits',
+          required: CUSTOM_CV_COST,
+          current: user?.credits || 0,
+        }, { status: 402 })
+      }
+
+      // Deduct credits and create transaction
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          credits: { decrement: CUSTOM_CV_COST },
+          lifetimeCreditsUsed: { increment: CUSTOM_CV_COST },
+        },
+      })
+
+      await prisma.creditTransaction.create({
+        data: {
+          userId,
+          amount: -CUSTOM_CV_COST,
+          type: 'SPEND',
+          reason: `Custom CV: ${opportunityRequirements.title}`,
+          balanceAfter: user.credits - CUSTOM_CV_COST,
+        },
+      })
+
+      console.log(`💳 Deducted ${CUSTOM_CV_COST} credits for custom CV`)
+    } catch (error) {
+      console.error('⚠️ Credit deduction error:', error)
+      // Continue anyway - don't block CV generation
+    }
+
     // Save CV generation event (for analytics)
     try {
       await prisma.chatMessage.create({
@@ -159,6 +200,7 @@ export async function POST(request: NextRequest) {
       cv,
       type: 'custom',
       relevanceScore: cv.relevanceScore,
+      creditsDeducted: CUSTOM_CV_COST,
     })
 
   } catch (error: any) {
