@@ -33,6 +33,7 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null)
   const [currentPickIndex, setCurrentPickIndex] = useState(0)
+  const [showCelebration, setShowCelebration] = useState(false)
 
   // Fetch daily picks
   useEffect(() => {
@@ -90,10 +91,12 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
           setStreak(streakData.streak)
           setLongestStreak(streakData.longestStreak)
           
+          // Show celebration
+          setShowCelebration(true)
+          setTimeout(() => setShowCelebration(false), 3000)
+          
           if (streakData.isNewRecord) {
-            alert(`🎉 New record! ${streakData.streak} day streak!`)
-          } else {
-            alert(streakData.message)
+            alert(`🎉 Amazing! New record: ${streakData.streak} day streak!`)
           }
         }
 
@@ -132,6 +135,24 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
   // Calculate progress
   const appliedCount = dailyPicks.filter(p => p.hasApplied).length
   const progressPercent = dailyPicks.length > 0 ? (appliedCount / dailyPicks.length) * 100 : 0
+  const completedToday = appliedCount > 0
+  
+  // Motivational messages
+  const getMotivationalMessage = () => {
+    if (completedToday) {
+      return streak > 0 ? `🎉 Awesome! You're on fire with ${streak} days!` : "Great job today! Keep the momentum going!"
+    }
+    if (streak === 0) {
+      return "Start your streak today! Apply to 1 opportunity."
+    }
+    if (streak >= 7) {
+      return `You're on a roll! ${streak} days strong — keep it up!`
+    }
+    if (streak >= 3) {
+      return `Nice work! Apply to 1 today to keep your ${streak}-day streak alive.`
+    }
+    return `Day ${streak + 1} awaits! Apply to 1 opportunity to continue.`
+  }
 
   return (
     <>
@@ -139,62 +160,91 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={cn(
-          "relative overflow-hidden rounded-2xl border bg-gradient-to-br from-bidaaya-accent/20 via-purple-500/10 to-blue-500/20 border-bidaaya-accent/30",
+          "relative overflow-hidden rounded-2xl border shadow-lg shadow-bidaaya-accent/20",
+          completedToday 
+            ? "bg-gradient-to-br from-green-500/20 via-bidaaya-accent/10 to-blue-500/20 border-green-500/40"
+            : "bg-gradient-to-br from-bidaaya-accent/20 via-purple-500/10 to-blue-500/20 border-bidaaya-accent/30",
           className
         )}
       >
         {/* Background Glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-bidaaya-accent/10 to-transparent blur-3xl" />
+        
+        {/* Celebration Confetti Effect */}
+        {showCelebration && (
+          <motion.div
+            initial={{ opacity: 1, scale: 0 }}
+            animate={{ opacity: 0, scale: 2 }}
+            transition={{ duration: 1 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+          >
+            <div className="text-6xl">🎉</div>
+          </motion.div>
+        )}
 
         {/* Content */}
         <div className="relative p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className="text-lg font-bold text-bidaaya-light">Objective - {goal}</h3>
+              <p className="text-xs text-bidaaya-light/60 mt-0.5">{getMotivationalMessage()}</p>
             </div>
 
-            {/* Streak Badge */}
-            <div className="flex items-center gap-2">
+            {/* Streak Badge with Animation */}
+            <motion.div 
+              className="flex items-center gap-2 px-3 py-2 bg-orange-500/20 border border-orange-500/40 rounded-full"
+              animate={showCelebration ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.5 }}
+            >
               <Flame className="h-5 w-5 text-orange-400" />
               <span className="text-2xl font-bold text-orange-400">{streak}</span>
               {longestStreak > 0 && longestStreak > streak && (
-                <span className="text-xs text-green-400/60 ml-1">(best: {longestStreak})</span>
+                <span className="text-xs text-green-400/70 ml-1">best: {longestStreak}</span>
               )}
-            </div>
+            </motion.div>
           </div>
 
-          {/* Progress Bar */}
+          {/* Progress Bar with Weekly Goal */}
           <div className="mb-4">
-            <div className="h-2 bg-bidaaya-light/10 rounded-full overflow-hidden">
+            <div className="flex items-center justify-between text-xs text-bidaaya-light/60 mb-2">
+              <span>Today's picks</span>
+              <span className="font-medium">{appliedCount}/{dailyPicks.length}</span>
+            </div>
+            <div className="h-2.5 bg-bidaaya-light/10 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-bidaaya-accent to-purple-500"
+                className={cn(
+                  "h-full",
+                  completedToday 
+                    ? "bg-gradient-to-r from-green-400 to-emerald-500"
+                    : "bg-gradient-to-r from-bidaaya-accent to-purple-500"
+                )}
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 0.5 }}
               />
             </div>
-            <p className="text-xs text-bidaaya-light/60 mt-1">
-              {appliedCount > 0
-                ? `Great! ${appliedCount === dailyPicks.length ? "All done for today! 🎉" : "Keep going!"}`
-                : "Apply to 1 opportunity to maintain your streak"}
-            </p>
           </div>
 
           {/* CTA Button */}
           <Button
             onClick={handleOpenPicks}
-            disabled={isLoading || dailyPicks.length === 0}
-            className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white h-12 text-base font-semibold"
+            disabled={isLoading || dailyPicks.length === 0 || completedToday}
+            className={cn(
+              "w-full h-12 text-base font-semibold transition-all",
+              completedToday
+                ? "bg-green-500/20 border-2 border-green-500/40 text-green-400 cursor-default"
+                : "bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+            )}
           >
             {isLoading ? (
               "Loading..."
             ) : dailyPicks.length === 0 ? (
               "No picks available"
-            ) : appliedCount === dailyPicks.length ? (
+            ) : completedToday ? (
               <>
                 <Sparkles className="h-5 w-5 mr-2" />
-                All Done Today! Come Back Tomorrow
+                Streak Active! 🔥 See you tomorrow
               </>
             ) : (
               <>
