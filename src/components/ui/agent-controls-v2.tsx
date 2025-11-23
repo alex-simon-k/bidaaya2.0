@@ -121,6 +121,9 @@ export function AgentControlsV2({ onPreferencesChange }: AgentControlsV2Props) {
   const handleGoalChange = (value: string) => {
     setGoal(value)
     savePreferences(value, undefined, undefined)
+    
+    // Trigger a custom event to notify Daily Picks card
+    window.dispatchEvent(new CustomEvent('goalChanged', { detail: { goal: value } }))
   }
 
   const handleFieldSelect = (value: string) => {

@@ -39,13 +39,19 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
     fetchDailyPicks()
   }, [])
 
-  // Poll for goal changes every 2 seconds when card is visible
+  // Listen for goal changes from AI Agent
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchDailyPicks()
-    }, 2000)
+    const handleGoalChange = (event: any) => {
+      const newGoal = event.detail?.goal
+      if (newGoal) {
+        setGoal(newGoal)
+        // Optionally refresh daily picks when goal changes
+        fetchDailyPicks()
+      }
+    }
 
-    return () => clearInterval(interval)
+    window.addEventListener('goalChanged', handleGoalChange)
+    return () => window.removeEventListener('goalChanged', handleGoalChange)
   }, [])
 
   const fetchDailyPicks = async () => {
