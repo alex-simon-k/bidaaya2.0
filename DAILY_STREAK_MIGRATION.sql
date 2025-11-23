@@ -1,8 +1,8 @@
 -- Migration: Add daily streak and goal tracking
 -- Run this in your database
 
--- Add goal field to User table
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "goal" TEXT DEFAULT 'Get Employed';
+-- Add primaryGoal field to User table (renamed from 'goal' to avoid conflict)
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "primaryGoal" TEXT DEFAULT 'Get Employed';
 -- Options: 'Get Employed', 'Get Experience'
 
 -- Add streak tracking fields

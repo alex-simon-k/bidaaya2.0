@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
-        goal: true,
+        primaryGoal: true,
         currentStreak: true,
         longestStreak: true,
         lastStreakDate: true,
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
         longest: user.longestStreak,
         lastDate: user.lastStreakDate,
       },
-      goal: user.goal || 'Get Employed',
+      goal: user.primaryGoal || 'Get Employed',
     })
 
   } catch (error: any) {
