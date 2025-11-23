@@ -505,10 +505,10 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <div className="flex items-center gap-3">
                 <img 
                   src="/icons/top-matches.svg" 
-                  alt="Top Matches"
+                  alt="Other Opportunities"
                   className="h-6 w-6 sm:h-7 sm:w-7 object-contain"
                 />
-                <h2 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Top Matches</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-bidaaya-light">Other Opportunities</h2>
               </div>
               <Button
                 variant="outline"

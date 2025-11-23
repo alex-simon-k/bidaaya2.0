@@ -39,6 +39,15 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
     fetchDailyPicks()
   }, [])
 
+  // Poll for goal changes every 2 seconds when card is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDailyPicks()
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const fetchDailyPicks = async () => {
     setIsLoading(true)
     try {
