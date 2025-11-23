@@ -259,51 +259,141 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
 
       {/* Daily Picks Modal */}
       {selectedOpportunity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <motion.div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           {/* Progress Indicator */}
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-bidaaya-dark border border-bidaaya-light/20 rounded-full">
-            {dailyPicks.map((_, idx) => (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-bidaaya-dark border border-bidaaya-light/20 rounded-full z-[60]">
+            {dailyPicks.map((pick, idx) => (
               <div
                 key={idx}
                 className={cn(
-                  "h-2 w-2 rounded-full transition-all",
+                  "h-2 w-2 rounded-full transition-all relative",
                   idx === currentPickIndex
                     ? "bg-bidaaya-accent w-8"
-                    : idx < currentPickIndex
+                    : pick.hasApplied
                     ? "bg-green-500"
                     : "bg-bidaaya-light/20"
                 )}
-              />
+              >
+                {pick.isLocked && idx === currentPickIndex && (
+                  <Lock className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400" />
+                )}
+              </div>
             ))}
             <span className="text-sm text-bidaaya-light ml-2">
               {currentPickIndex + 1} of {dailyPicks.length}
             </span>
           </div>
 
-          {/* Opportunity Detail Modal */}
-          <OpportunityDetailModal
-            isOpen={true}
-            onClose={() => {
-              setIsExpanded(false)
-              setSelectedOpportunity(null)
-            }}
-            opportunity={selectedOpportunity}
-            hasApplied={selectedOpportunity.hasApplied}
-            onMarkAsApplied={() => handleMarkAsApplied(selectedOpportunity.id)}
-            userPlan="FREE"
-          />
+          {/* Blur Overlay for Locked Early Access */}
+          {selectedOpportunity.isLocked && (
+            <div className="absolute inset-0 z-[51] flex items-center justify-center pointer-events-none">
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
+              <motion.div 
+                className="relative z-10 text-center p-8 pointer-events-auto"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+              >
+                <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/40 rounded-2xl p-8 backdrop-blur-xl">
+                  <Lock className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-bidaaya-light mb-2">Early Access 🚀</h3>
+                  <p className="text-bidaaya-light/70 mb-4">
+                    Unlock this exclusive opportunity to see full details
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-bidaaya-light/60 text-sm mb-6">
+                    <Sparkles className="h-4 w-4" />
+                    <span>24-hour early access period</span>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      // Handle unlock - will be implemented in OpportunityDetailModal
+                      console.log('Unlock early access')
+                    }}
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold"
+                  >
+                    Unlock for {selectedOpportunity.unlockCredits} Credits
+                  </Button>
+                  <p className="text-xs text-bidaaya-light/50 mt-3">
+                    Get ahead of other applicants
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          )}
 
-          {/* Navigation Buttons */}
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
+          {/* Opportunity Detail Modal */}
+          <motion.div
+            key={currentPickIndex}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.3 }}
+            className="relative z-[52]"
+          >
+            <OpportunityDetailModal
+              isOpen={true}
+              onClose={() => {
+                setIsExpanded(false)
+                setSelectedOpportunity(null)
+              }}
+              opportunity={selectedOpportunity}
+              hasApplied={selectedOpportunity.hasApplied}
+              onMarkAsApplied={() => handleMarkAsApplied(selectedOpportunity.id)}
+              userPlan="FREE"
+            />
+          </motion.div>
+
+          {/* Navigation Arrows - Left/Right */}
+          {!selectedOpportunity.isLocked && (
+            <>
+              {currentPickIndex > 0 && (
+                <Button
+                  onClick={() => {
+                    const newIndex = currentPickIndex - 1
+                    setCurrentPickIndex(newIndex)
+                    setSelectedOpportunity(dailyPicks[newIndex])
+                  }}
+                  variant="ghost"
+                  className="fixed left-4 top-1/2 transform -translate-y-1/2 z-[60] bg-bidaaya-dark/80 hover:bg-bidaaya-dark border border-bidaaya-light/20 text-bidaaya-light h-12 w-12 rounded-full p-0"
+                >
+                  <ChevronRight className="h-6 w-6 rotate-180" />
+                </Button>
+              )}
+
+              {currentPickIndex < dailyPicks.length - 1 && (
+                <Button
+                  onClick={handleSkipPick}
+                  variant="ghost"
+                  className="fixed right-4 top-1/2 transform -translate-y-1/2 z-[60] bg-bidaaya-dark/80 hover:bg-bidaaya-dark border border-bidaaya-light/20 text-bidaaya-light h-12 w-12 rounded-full p-0"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Button>
+              )}
+            </>
+          )}
+
+          {/* Bottom Navigation */}
+          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 z-[60]">
             <Button
               onClick={handleSkipPick}
               variant="outline"
-              className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10"
+              className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10 bg-bidaaya-dark/80 backdrop-blur-sm"
             >
-              {currentPickIndex < dailyPicks.length - 1 ? "Skip to Next" : "Close"}
+              {currentPickIndex < dailyPicks.length - 1 ? (
+                <>
+                  Skip to Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </>
+              ) : (
+                "Close"
+              )}
             </Button>
           </div>
-        </div>
+        </motion.div>
       )}
     </>
   )

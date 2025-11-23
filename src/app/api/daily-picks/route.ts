@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
+import { selectDailyPicks } from '@/lib/opportunity-matcher'
 
 const prisma = new PrismaClient()
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id
 
-    // Fetch user with streak data
+    // Fetch user with complete profile data for matching
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -27,8 +28,25 @@ export async function GET(request: NextRequest) {
         lastStreakDate: true,
         dailyPicksDate: true,
         dailyPicksOpportunities: true,
+        
+        // Profile data for matching
+        skills: true,
         interests: true,
         education: true,
+        major: true,
+        goal: true,
+        
+        // CV data for enhanced matching
+        cvSkills: {
+          select: { name: true },
+        },
+        cvEducation: {
+          select: { degree: true, fieldOfStudy: true },
+        },
+        cvExperience: {
+          select: { jobTitle: true, companyName: true, description: true },
+        },
+        
         externalOpportunityApps: {
           select: { externalOpportunityId: true },
         },
@@ -60,39 +78,60 @@ export async function GET(request: NextRequest) {
     if (needsNewPicks) {
       console.log('🎯 Generating new daily picks for user:', userId)
 
-      // Fetch 1 early access opportunity (highest match, not applied)
-      const earlyAccessOpp = await prisma.$queryRaw<any[]>`
-        SELECT 
-          id, title, company, location, description,
-          "postedDate", "isNewOpportunity", "earlyAccessUntil",
-          "aiCategory", "aiMatchKeywords"
-        FROM "ExternalOpportunity"
-        WHERE 
-          "isActive" = true
-          AND "isNewOpportunity" = true
-          AND "earlyAccessUntil" > NOW()
-          AND id NOT IN (${appliedIds.length > 0 ? appliedIds.join("','") : "''"})
-        ORDER BY RANDOM()
-        LIMIT 1
-      `
+      // Fetch ALL active opportunities for matching
+      const allOpportunities = await prisma.externalOpportunity.findMany({
+        where: {
+          isActive: true,
+        },
+        select: {
+          id: true,
+          title: true,
+          company: true,
+          location: true,
+          description: true,
+          category: true,
+          addedAt: true,
+          isNewOpportunity: true,
+          earlyAccessUntil: true,
+          
+          // AI categorization fields
+          aiCategory: true,
+          aiMatchKeywords: true,
+          aiSkillsRequired: true,
+          aiEducationMatch: true,
+          aiIndustryTags: true,
+          
+          // Manual matching fields
+          requiredDegrees: true,
+          preferredMajors: true,
+          requiredSkills: true,
+          industries: true,
+          matchingTags: true,
+        },
+      })
 
-      // Fetch 2 regular opportunities (highest match, not applied)
-      const regularOpps = await prisma.$queryRaw<any[]>`
-        SELECT 
-          id, title, company, location, description,
-          "postedDate", "isNewOpportunity", "earlyAccessUntil",
-          "aiCategory", "aiMatchKeywords"
-        FROM "ExternalOpportunity"
-        WHERE 
-          "isActive" = true
-          AND ("isNewOpportunity" = false OR "earlyAccessUntil" IS NULL OR "earlyAccessUntil" < NOW())
-          AND id NOT IN (${appliedIds.length > 0 ? appliedIds.join("','") : "''"})
-        ORDER BY RANDOM()
-        LIMIT 2
-      `
+      console.log(`📊 Found ${allOpportunities.length} active opportunities to match against`)
 
-      // Combine opportunities
-      dailyOpportunities = [...earlyAccessOpp, ...regularOpps]
+      // Build student profile for matching
+      const studentProfile = {
+        skills: user.skills,
+        interests: user.interests,
+        major: user.major,
+        education: user.education,
+        goal: user.goal,
+        cvSkills: user.cvSkills,
+        cvEducation: user.cvEducation,
+        cvExperience: user.cvExperience,
+      }
+
+      // Use matching algorithm to select best daily picks
+      const picks = selectDailyPicks(studentProfile, allOpportunities as any, appliedIds)
+
+      // Combine early access + regular
+      dailyOpportunities = [
+        ...(picks.earlyAccess ? [picks.earlyAccess] : []),
+        ...picks.regular,
+      ]
 
       // Store the daily picks in the database
       const oppIds = dailyOpportunities.map(opp => opp.id)
@@ -104,7 +143,12 @@ export async function GET(request: NextRequest) {
         },
       })
 
-      console.log(`✅ Generated ${dailyOpportunities.length} daily picks (${earlyAccessOpp.length} early access + ${regularOpps.length} regular)`)
+      console.log(`✅ Generated ${dailyOpportunities.length} daily picks:`)
+      console.log(`   - Early Access: ${picks.earlyAccess ? 1 : 0}`)
+      console.log(`   - Regular: ${picks.regular.length}`)
+      dailyOpportunities.forEach((opp: any) => {
+        console.log(`   - ${opp.title} (Match: ${opp.matchScore}%) - ${opp.matchReasons.join(', ')}`)
+      })
     } else {
       console.log('📋 Using existing daily picks for user:', userId)
 
@@ -120,11 +164,24 @@ export async function GET(request: NextRequest) {
             company: true,
             location: true,
             description: true,
+            category: true,
             addedAt: true,
             isNewOpportunity: true,
             earlyAccessUntil: true,
+            
+            // AI fields
             aiCategory: true,
             aiMatchKeywords: true,
+            aiSkillsRequired: true,
+            aiEducationMatch: true,
+            aiIndustryTags: true,
+            
+            // Manual fields
+            requiredDegrees: true,
+            preferredMajors: true,
+            requiredSkills: true,
+            industries: true,
+            matchingTags: true,
           },
         })
       } else {
@@ -148,7 +205,8 @@ export async function GET(request: NextRequest) {
         type: isEarlyAccess ? 'early_access' : 'external',
         isLocked: isEarlyAccess && !hasUnlocked,
         unlockCredits: 7,
-        matchScore: 85, // Placeholder - implement proper matching
+        matchScore: opp.matchScore || 75, // From matching algorithm
+        matchReasons: opp.matchReasons || [],
         hasApplied,
       }
     })
