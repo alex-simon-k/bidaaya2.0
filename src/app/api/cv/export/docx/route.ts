@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { CVGenerator } from '@/lib/cv-generator'
-import { CVWordExport } from '@/lib/cv-word-export'
+import { CVWordExportV2 } from '@/lib/cv-word-export-v2'
 import { Packer } from 'docx'
 
 export const dynamic = 'force-dynamic'
@@ -51,17 +51,16 @@ export async function POST(request: NextRequest) {
 
     console.log('📝 Generating Word document...')
 
-    // Generate Word document
-    const doc = await CVWordExport.generateWordDocument(cv)
+    // Generate Word document using V2 (exact template format)
+    const doc = await CVWordExportV2.generateWordDocument(cv)
 
     // Convert to buffer
     const buffer = await Packer.toBuffer(doc)
 
     // Generate filename
-    const filename = CVWordExport.generateFilename(
-      cv.profile.name,
-      cv.customizedFor !== 'General Purpose' ? cv.customizedFor : undefined
-    )
+    const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
+    const customPart = cv.customizedFor !== 'General Purpose' ? `_${cv.customizedFor.replace(/[^a-z0-9]/gi, '_')}` : ''
+    const filename = `CV_${sanitizedName}${customPart}.docx`
 
     console.log('✅ Word document generated:', filename)
 
@@ -104,10 +103,11 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Generate Word document
-    const doc = await CVWordExport.generateWordDocument(cv)
+    // Generate Word document using V2
+    const doc = await CVWordExportV2.generateWordDocument(cv)
     const buffer = await Packer.toBuffer(doc)
-    const filename = CVWordExport.generateFilename(cv.profile.name)
+    const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
+    const filename = `CV_${sanitizedName}.docx`
 
     return new NextResponse(buffer, {
       status: 200,

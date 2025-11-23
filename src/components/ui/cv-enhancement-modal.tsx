@@ -173,25 +173,30 @@ export function CVEnhancementModal({
                 </div>
               ) : currentStep === 0 ? (
                 // Intro screen
-                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                  <FileText className="h-16 w-16 text-bidaaya-accent" />
-                  <h3 className="text-2xl font-bold text-bidaaya-light">Let's Tailor Your CV!</h3>
-                  <p className="text-bidaaya-light/70 max-w-md">
-                    Answer a few quick questions to help us highlight the most relevant parts of your experience for this {opportunityTitle} role.
-                  </p>
-                  <div className="flex gap-3 mt-6">
+                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 py-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-bidaaya-accent/20 blur-3xl rounded-full" />
+                    <FileText className="h-20 w-20 text-bidaaya-accent relative" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold text-bidaaya-light">Let's Tailor Your CV!</h3>
+                    <p className="text-bidaaya-light/70 max-w-md text-sm">
+                      Answer a few quick questions to help us create a customized CV that highlights your most relevant experience for this role.
+                    </p>
+                  </div>
+                  <div className="w-full max-w-sm space-y-3">
+                    <Button
+                      onClick={handleNext}
+                      className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white h-12 text-base"
+                    >
+                      Get Started ({questions.length} Questions)
+                    </Button>
                     <Button
                       onClick={handleSkip}
                       variant="ghost"
-                      className="text-bidaaya-light/60 hover:text-bidaaya-light"
+                      className="w-full text-bidaaya-light/60 hover:text-bidaaya-light h-10"
                     >
                       Skip for Now
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      className="bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white px-8"
-                    >
-                      Get Started ({questions.length} Questions)
                     </Button>
                   </div>
                 </div>
