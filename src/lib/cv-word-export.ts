@@ -29,14 +29,24 @@ export class CVWordExport {
   static async generateWordDocument(cv: GeneratedCV): Promise<Document> {
     
     const doc = new Document({
+      styles: {
+        default: {
+          document: {
+            run: {
+              font: 'Times New Roman',
+              size: 21, // 10.5pt
+            },
+          },
+        },
+      },
       sections: [{
         properties: {
           page: {
             margin: {
-              top: convertInchesToTwip(0.5),
-              right: convertInchesToTwip(0.75),
-              bottom: convertInchesToTwip(0.5),
-              left: convertInchesToTwip(0.75),
+              top: convertInchesToTwip(1),
+              right: convertInchesToTwip(1),
+              bottom: convertInchesToTwip(1),
+              left: convertInchesToTwip(1),
             },
           },
         },
@@ -76,12 +86,13 @@ export class CVWordExport {
    * Based on Sasha's CV format: Name + LinkedIn on first line, then contact details
    */
   private static createHeader(profile: GeneratedCV['profile']): Paragraph[] {
-    // First line: Name and LinkedIn
+    // First line: Name (centered)
     const firstLine: TextRun[] = [
       new TextRun({
         text: profile.name,
         bold: true,
-        size: 28, // 14pt
+        font: 'Times New Roman',
+        size: 29, // 14.5pt
       })
     ]
     
@@ -156,12 +167,21 @@ export class CVWordExport {
       new Paragraph({
         children: [
           new TextRun({
-            text: 'Education',
+            text: 'EDUCATION',
             bold: true,
-            size: 24, // 12pt
+            font: 'Times New Roman',
+            size: 21, // 10.5pt
           })
         ],
         spacing: { before: 200, after: 100 },
+        border: {
+          bottom: {
+            color: '000000',
+            space: 1,
+            style: BorderStyle.SINGLE,
+            size: 6,
+          },
+        },
       }),
     ]
 

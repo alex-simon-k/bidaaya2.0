@@ -132,6 +132,7 @@ model User {
   cvLanguages              CVLanguage[]
   cvAchievements           CVAchievement[]
   cvSkills                 CVSkill[]
+  cvEnhancements           CVEnhancement[]
 }
 
 model UserSession {
@@ -1114,6 +1115,26 @@ model CVSkill {
   @@index([userId])
   @@index([category])
   @@index([proficiency])
+}
+
+// CV Enhancement - stores additional context from custom CV questions
+model CVEnhancement {
+  id              String   @id @default(cuid())
+  userId          String
+  opportunityId   String?  // If specific to an opportunity (ExternalOpportunity ID)
+  category        String   // "relevant_coursework", "projects", "achievements", "leadership", "other"
+  question        String   // The question that was asked
+  answer          String   // Student's answer (can be long form)
+  relevantFor     String[] // Tags for quick filtering: ["marketing", "finance", "tech", "leadership"]
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([category])
+  @@index([relevantFor])
 }
 
 // Early Access Unlock Tracking

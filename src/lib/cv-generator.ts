@@ -309,7 +309,7 @@ export class CVGenerator {
   /**
    * Fetch complete CV data for a user
    */
-  private static async fetchCompleteCV(userId: string) {
+  private static async fetchCompleteCV(userId: string, opportunityId?: string) {
     const [
       user,
       cvProfile,
@@ -319,7 +319,8 @@ export class CVGenerator {
       skills,
       certifications,
       languages,
-      achievements
+      achievements,
+      enhancements
     ] = await Promise.all([
       prisma.user.findUnique({ 
         where: { id: userId },
@@ -355,6 +356,20 @@ export class CVGenerator {
       prisma.cVAchievement.findMany({ 
         where: { userId },
         orderBy: { date: 'desc' }
+      }),
+      // Fetch CV enhancements (prioritize opportunity-specific ones)
+      prisma.cVEnhancement.findMany({
+        where: {
+          userId,
+          // If opportunityId provided, include both opportunity-specific and general ones
+          ...(opportunityId ? {
+            OR: [
+              { opportunityId },
+              { opportunityId: null }
+            ]
+          } : {})
+        },
+        orderBy: { createdAt: 'desc' }
       })
     ])
 
@@ -367,7 +382,8 @@ export class CVGenerator {
       skills,
       certifications,
       languages,
-      achievements
+      achievements,
+      enhancements
     }
   }
 
