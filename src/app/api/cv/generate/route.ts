@@ -164,8 +164,10 @@ export async function POST(request: NextRequest) {
         data: {
           userId,
           amount: -CUSTOM_CV_COST,
-          type: 'SPEND',
-          reason: `Custom CV: ${opportunityRequirements.title}`,
+          type: 'spent',
+          action: 'customCV',
+          description: `Custom CV: ${opportunityRequirements.title}`,
+          balanceBefore: user.credits,
           balanceAfter: user.credits - CUSTOM_CV_COST,
         },
       })
