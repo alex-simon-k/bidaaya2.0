@@ -227,141 +227,34 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
           </div>
 
           {/* CTA Button */}
-          {completedToday ? (
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
             <Button
-              disabled
-              className="w-full h-14 text-base font-bold bg-green-500/20 border-2 border-green-500/40 text-green-400 cursor-default relative overflow-hidden"
+              onClick={handleOpenPicks}
+              disabled={isLoading || dailyPicks.length === 0 || completedToday}
+              className={cn(
+                "w-full h-12 text-base font-semibold transition-all",
+                completedToday
+                  ? "bg-green-500/20 border-2 border-green-500/40 text-green-400 cursor-default"
+                  : "bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white shadow-lg hover:shadow-xl"
+              )}
             >
-              <Sparkles className="h-5 w-5 mr-2" />
-              Streak Active! 🔥 See you tomorrow
+              {isLoading ? (
+                "Loading..."
+              ) : dailyPicks.length === 0 ? (
+                "No picks available"
+              ) : completedToday ? (
+                "Streak Active — Come back tomorrow"
+              ) : (
+                <>
+                  Apply to Daily Picks
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </>
+              )}
             </Button>
-          ) : (
-            <motion.div
-              className="relative w-full"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {/* Animated background glow */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-bidaaya-accent via-purple-500 to-pink-500 opacity-75 blur-xl animate-pulse" />
-              
-              {/* Shine effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                initial={{ x: '-100%' }}
-                animate={{ x: '200%' }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 3,
-                  ease: 'linear',
-                }}
-              />
-              
-              <Button
-                onClick={handleOpenPicks}
-                disabled={isLoading || dailyPicks.length === 0}
-                className={cn(
-                  "relative w-full h-14 text-lg font-black tracking-wide transition-all duration-300",
-                  "bg-gradient-to-r from-bidaaya-accent via-purple-600 to-pink-600",
-                  "hover:from-bidaaya-accent/90 hover:via-purple-500 hover:to-pink-500",
-                  "text-white shadow-2xl shadow-bidaaya-accent/50",
-                  "border-2 border-white/20",
-                  "overflow-hidden",
-                  "uppercase"
-                )}
-              >
-                {isLoading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <Sparkles className="h-6 w-6" />
-                  </motion.div>
-                ) : dailyPicks.length === 0 ? (
-                  "No picks available"
-                ) : (
-                  <div className="flex items-center justify-center gap-3 relative z-10">
-                    <motion.div
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 10, -10, 0]
-                      }}
-                      transition={{ 
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut'
-                      }}
-                    >
-                      <Flame className="h-6 w-6 text-orange-300" />
-                    </motion.div>
-                    <span className="text-shadow-lg drop-shadow-[0_2px_10px_rgba(255,255,255,0.5)]">
-                      Apply Now! {dailyPicks.length} Hot {dailyPicks.length === 1 ? 'Pick' : 'Picks'} Waiting
-                    </span>
-                    <motion.div
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ 
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: 'easeInOut'
-                      }}
-                    >
-                      <ChevronRight className="h-6 w-6" />
-                    </motion.div>
-                  </div>
-                )}
-                
-                {/* Particle effects */}
-                {!isLoading && dailyPicks.length > 0 && (
-                  <>
-                    <motion.div
-                      className="absolute top-2 left-4 text-2xl"
-                      animate={{ 
-                        y: [-5, -15, -5],
-                        opacity: [0.5, 1, 0.5],
-                        scale: [0.8, 1.2, 0.8]
-                      }}
-                      transition={{ 
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: 0,
-                      }}
-                    >
-                      ✨
-                    </motion.div>
-                    <motion.div
-                      className="absolute top-3 right-6 text-xl"
-                      animate={{ 
-                        y: [-5, -12, -5],
-                        opacity: [0.5, 1, 0.5],
-                        scale: [0.8, 1.1, 0.8]
-                      }}
-                      transition={{ 
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: 0.5,
-                      }}
-                    >
-                      💼
-                    </motion.div>
-                    <motion.div
-                      className="absolute bottom-2 left-1/3 text-xl"
-                      animate={{ 
-                        y: [5, 15, 5],
-                        opacity: [0.5, 1, 0.5],
-                        scale: [0.8, 1.1, 0.8]
-                      }}
-                      transition={{ 
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: 1,
-                      }}
-                    >
-                      🚀
-                    </motion.div>
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          )}
+          </motion.div>
         </div>
       </motion.div>
 
