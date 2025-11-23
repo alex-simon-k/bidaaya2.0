@@ -61,7 +61,28 @@ export function OpportunityDetailModal({
   userPlan
 }: OpportunityDetailModalProps) {
   const [showCVModal, setShowCVModal] = useState(false)
+  const [showCreditConfirm, setShowCreditConfirm] = useState(false)
   const [isGeneratingCV, setIsGeneratingCV] = useState(false)
+  const [userCredits, setUserCredits] = useState<number | null>(null)
+
+  // Fetch user credits when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      fetch('/api/credits/balance')
+        .then(res => res.json())
+        .then(data => setUserCredits(data.balance))
+        .catch(() => setUserCredits(null))
+    }
+  }, [isOpen])
+
+  const handleCVClick = () => {
+    setShowCreditConfirm(true)
+  }
+
+  const handleCreditConfirm = () => {
+    setShowCreditConfirm(false)
+    setShowCVModal(true)
+  }
 
   const handleCVComplete = async (answers: any[]) => {
     setIsGeneratingCV(true)
@@ -311,16 +332,16 @@ export function OpportunityDetailModal({
                   {!(opportunity.isLocked && opportunity.type === 'early_access') && (
                     <div className="grid grid-cols-2 gap-3">
                       <Button
-                        onClick={() => setShowCVModal(true)}
+                        onClick={handleCVClick}
                         variant="outline"
                         className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
                         disabled={isGeneratingCV}
                       >
                         <FileText className="h-4 w-4 mr-2" />
-                        Custom CV (5 credits)
+                        Custom CV
                       </Button>
                       <Button
-                        onClick={() => alert('🔒 Custom Cover Letter feature coming soon! (3 credits)')}
+                        onClick={() => alert('🔒 Custom Cover Letter feature coming soon!')}
                         variant="outline"
                         className="border-bidaaya-light/20 text-bidaaya-light/60 hover:bg-bidaaya-light/5 cursor-not-allowed"
                       >
@@ -400,6 +421,81 @@ export function OpportunityDetailModal({
             </div>
           </motion.div>
         </>
+      )}
+
+      {/* Credit Confirmation Modal */}
+      {showCreditConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md bg-bidaaya-dark border border-bidaaya-light/20 rounded-2xl shadow-2xl overflow-hidden"
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-bidaaya-light/10">
+              <h3 className="text-xl font-bold text-bidaaya-light flex items-center gap-2">
+                <FileText className="h-5 w-5 text-bidaaya-accent" />
+                Custom CV Generator
+              </h3>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-bidaaya-accent/10 border border-bidaaya-accent/20 rounded-lg">
+                <Sparkles className="h-5 w-5 text-bidaaya-accent mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-bidaaya-light font-medium mb-1">
+                    Tailored CV for {opportunity.company}
+                  </p>
+                  <p className="text-xs text-bidaaya-light/60">
+                    Answer 3-5 quick questions to create a CV customized for this {opportunity.title} role
+                  </p>
+                </div>
+              </div>
+
+              {/* Credit Info */}
+              <div className="flex items-center justify-between p-4 bg-bidaaya-light/5 rounded-lg">
+                <div>
+                  <p className="text-sm text-bidaaya-light/60">Cost</p>
+                  <p className="text-2xl font-bold text-bidaaya-accent">5 Credits</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-bidaaya-light/60">Your Balance</p>
+                  <p className="text-2xl font-bold text-bidaaya-light">
+                    {userCredits !== null ? userCredits : '...'} Credits
+                  </p>
+                </div>
+              </div>
+
+              {/* Warning if insufficient credits */}
+              {userCredits !== null && userCredits < 5 && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-sm text-red-400">
+                    ⚠️ Insufficient credits. You need 5 credits but have {userCredits}.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 pb-6 flex gap-3">
+              <Button
+                onClick={() => setShowCreditConfirm(false)}
+                variant="ghost"
+                className="flex-1 text-bidaaya-light/60 hover:text-bidaaya-light"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreditConfirm}
+                disabled={userCredits !== null && userCredits < 5}
+                className="flex-1 bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white"
+              >
+                Continue
+              </Button>
+            </div>
+          </motion.div>
+        </div>
       )}
       
       {/* CV Enhancement Modal */}
