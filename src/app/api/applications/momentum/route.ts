@@ -31,7 +31,9 @@ export async function GET(req: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysToShow);
 
-    // Fetch all application types
+    console.log('📊 Fetching application momentum data for user:', user.id);
+
+    // Fetch all application types (REAL DATA from database)
     const [bidaayaApps, externalApps, opportunityApps] = await Promise.all([
       // Bidaaya internal applications
       prisma.application.findMany({
@@ -126,10 +128,21 @@ export async function GET(req: NextRequest) {
     const hasRecentActivity = data.slice(-7).some(d => d.applications > 0);
     const displayData = hasRecentActivity ? data.slice(-7) : data.slice(-14);
 
+    const totalApps = Array.from(applicationsByDate.values()).reduce((sum, count) => sum + count, 0);
+    
+    console.log('✅ Application momentum data:', {
+      bidaayaApps: bidaayaApps.length,
+      externalApps: externalApps.length,
+      opportunityApps: opportunityApps.length,
+      totalApplications: totalApps,
+      dateRange: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
+      dataPoints: displayData.length,
+    });
+
     return NextResponse.json({
       data: displayData,
       goal: user.primaryGoal || 'Get Employed',
-      totalApplications: Array.from(applicationsByDate.values()).reduce((sum, count) => sum + count, 0),
+      totalApplications: totalApps,
     });
 
   } catch (error) {

@@ -43,6 +43,9 @@ export function ApplicationMomentumChart({
   const avgApplications = chartData.length > 0 ? (totalApplications / chartData.length).toFixed(1) : '0';
   const maxApplications = Math.max(...chartData.map(d => d.applications), 0);
   const trend = calculateTrend(chartData);
+  
+  // Calculate the position for the dashed line (75% through the data)
+  const dashLinePosition = Math.floor(chartData.length * 0.75);
 
   return (
     <Card className={cn(
@@ -111,12 +114,19 @@ export function ApplicationMomentumChart({
                 domain={[0, Math.max(maxApplications + 2, 5)]}
               />
               
-              {/* Goal Reference Line */}
+              {/* Goal Reference Line - Dashed vertical line at 75% */}
               <ReferenceLine
-                x={chartData.length - 1}
-                stroke="hsl(var(--border))"
-                strokeDasharray="5 5"
-                strokeWidth={2}
+                x={dashLinePosition}
+                stroke="#fbbf24"
+                strokeDasharray="8 4"
+                strokeWidth={2.5}
+                label={{
+                  value: "Goal Ahead →",
+                  position: "top",
+                  fill: "#f59e0b",
+                  fontSize: 10,
+                  fontWeight: "bold",
+                }}
               />
               
               <ChartTooltip
@@ -150,17 +160,23 @@ export function ApplicationMomentumChart({
             </LineChart>
           </ChartContainer>
 
-          {/* Goal Marker Overlay */}
-          <div className="absolute top-1/2 right-2 -translate-y-1/2 flex flex-col items-center gap-1 pointer-events-none">
+          {/* Goal Marker Overlay - Positioned after the dashed line */}
+          <div className="absolute top-1/2 right-8 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-none">
             <div className="relative">
-              <div className="absolute inset-0 animate-ping opacity-75">
-                <Target className="h-8 w-8 text-yellow-500" />
+              {/* Pulsing outer ring */}
+              <div className="absolute inset-0 animate-ping opacity-60">
+                <div className="h-10 w-10 rounded-full bg-yellow-500/40"></div>
               </div>
-              <Target className="h-8 w-8 text-yellow-500 drop-shadow-lg relative z-10" />
+              {/* Target icon with glow */}
+              <div className="relative z-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-1.5 shadow-lg shadow-yellow-500/50">
+                <Target className="h-6 w-6 text-white drop-shadow-md" />
+              </div>
             </div>
-            <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
-              {goal}
-            </span>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-[9px] font-bold text-yellow-600 dark:text-yellow-400 bg-white/95 dark:bg-gray-900/95 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap border border-yellow-500/30">
+                {goal}
+              </span>
+            </div>
           </div>
         </div>
 
