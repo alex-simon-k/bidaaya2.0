@@ -45,7 +45,8 @@ export function ApplicationMomentumChart({
   const trend = calculateTrend(chartData);
   
   // Calculate the position for the dashed line (75% through the data)
-  const dashLinePosition = Math.floor(chartData.length * 0.75);
+  const dashLineIndex = Math.floor(chartData.length * 0.75);
+  const dashLinePosition = chartData[dashLineIndex]?.displayDate || chartData[chartData.length - 1]?.displayDate;
 
   return (
     <Card className={cn(
@@ -115,21 +116,23 @@ export function ApplicationMomentumChart({
               />
               
               {/* Goal Reference Line - Dashed vertical line at 75% mark */}
-              <ReferenceLine
-                x={dashLinePosition}
-                stroke="#fbbf24"
-                strokeDasharray="6 6"
-                strokeWidth={3}
-                opacity={0.9}
-                label={{
-                  value: "→ Goal",
-                  position: "top",
-                  fill: "#f59e0b",
-                  fontSize: 11,
-                  fontWeight: "bold",
-                  offset: 10,
-                }}
-              />
+              {dashLinePosition && (
+                <ReferenceLine
+                  x={dashLinePosition}
+                  stroke="#fbbf24"
+                  strokeDasharray="8 8"
+                  strokeWidth={3.5}
+                  strokeOpacity={1}
+                  label={{
+                    value: "│ GOAL",
+                    position: "insideTopRight",
+                    fill: "#fbbf24",
+                    fontSize: 12,
+                    fontWeight: "900",
+                    offset: -5,
+                  }}
+                />
+              )}
               
               <ChartTooltip
                 content={
