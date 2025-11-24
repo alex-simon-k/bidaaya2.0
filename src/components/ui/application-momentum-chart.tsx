@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis, ReferenceLine } from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis, ReferenceLine, Area, ComposedChart } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -28,7 +28,7 @@ interface ApplicationMomentumChartProps {
 const chartConfig: ChartConfig = {
   applications: {
     label: "Applications",
-    color: "#3b82f6",
+    color: "#10b981", // Vibrant green
   },
 };
 
@@ -79,7 +79,7 @@ export function ApplicationMomentumChart({
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold tracking-tight tabular-nums text-bidaaya-dark dark:text-bidaaya-light">
+              <span className="text-2xl font-bold tracking-tight tabular-nums text-emerald-400 animate-pulse">
                 {totalApplications}
               </span>
               <span className="text-sm font-medium text-muted-foreground">
@@ -91,17 +91,17 @@ export function ApplicationMomentumChart({
             </p>
           </div>
 
-          {/* Trend Indicator */}
+          {/* Trend Indicator - Stock style */}
           <div className={cn(
-            "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold tracking-tight whitespace-nowrap",
+            "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold tracking-tight whitespace-nowrap animate-pulse",
             trend > 0 
-              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400"
+              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
               : trend < 0
-                ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                ? "bg-red-500/20 text-red-400 border border-red-500/40"
+                : "bg-gray-500/20 text-gray-400 border border-gray-500/40"
           )}>
             <TrendingUp className={cn(
-              "h-3.5 w-3.5",
+              "h-3.5 w-3.5 animate-bounce",
               trend < 0 && "rotate-180"
             )} />
             {trend > 0 ? '+' : ''}{trend}%
@@ -114,7 +114,7 @@ export function ApplicationMomentumChart({
             config={chartConfig}
             className="aspect-auto h-[180px] w-full"
           >
-            <LineChart 
+            <ComposedChart 
               data={chartData}
               margin={{ top: 10, right: 40, left: 10, bottom: 10 }}
             >
@@ -136,26 +136,35 @@ export function ApplicationMomentumChart({
                 domain={[0, (dataMax: number) => Math.max(dataMax * 1.3, 5)]}
               />
               
-              {/* Today Reference Line - Shows current day */}
+              {/* Today Reference Line - Animated marker */}
               {todayPosition && (
-                <ReferenceLine
-                  x={todayPosition}
-                  stroke="#60a5fa"
-                  strokeDasharray="5 5"
-                  strokeWidth={2.5}
-                  label={{
-                    value: "TODAY",
-                    position: "insideTopLeft",
-                    fill: "#ffffff",
-                    fontSize: 11,
-                    fontWeight: "bold",
-                    style: {
-                      backgroundColor: '#60a5fa',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                    }
-                  }}
-                />
+                <>
+                  <ReferenceLine
+                    x={todayPosition}
+                    stroke="#10b981"
+                    strokeDasharray="3 3"
+                    strokeWidth={2}
+                    strokeOpacity={0.8}
+                  />
+                  <ReferenceLine
+                    x={todayPosition}
+                    stroke="#10b981"
+                    strokeWidth={0.5}
+                    strokeOpacity={0.3}
+                    label={{
+                      value: "TODAY",
+                      position: "top",
+                      fill: "#ffffff",
+                      fontSize: 10,
+                      fontWeight: "bold",
+                      style: {
+                        backgroundColor: '#10b981',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                      }
+                    }}
+                  />
+                </>
               )}
               
               {/* Goal Reference Line - Dashed vertical line at far right */}
@@ -193,22 +202,46 @@ export function ApplicationMomentumChart({
                 cursor={{ stroke: "#3b82f6", strokeWidth: 1 }}
               />
               
-              {/* Main data line - only shows real data up to today */}
+              {/* Main data line - vibrant green like a stock chart */}
               <Line
                 type="monotone"
                 dataKey={(entry: any) => entry.isFuture ? null : entry.applications}
-                stroke="#3b82f6"
-                strokeWidth={3}
+                stroke="url(#greenGradient)"
+                strokeWidth={3.5}
                 dot={false}
                 activeDot={{
-                  r: 5,
-                  fill: "#3b82f6",
+                  r: 6,
+                  fill: "#10b981",
                   stroke: "#ffffff",
-                  strokeWidth: 2,
+                  strokeWidth: 2.5,
+                  className: "animate-pulse",
                 }}
                 connectNulls={false}
+                animationDuration={1500}
+                animationEasing="ease-in-out"
               />
-            </LineChart>
+              
+              {/* Gradient definition for line */}
+              <defs>
+                <linearGradient id="greenGradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#059669" />
+                  <stop offset="50%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#34d399" />
+                </linearGradient>
+                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              {/* Area fill under the line for stock chart effect */}
+              <Area
+                type="monotone"
+                dataKey={(entry: any) => entry.isFuture ? null : entry.applications}
+                fill="url(#areaGradient)"
+                stroke="none"
+                animationDuration={1500}
+              />
+            </ComposedChart>
           </ChartContainer>
 
         </div>
