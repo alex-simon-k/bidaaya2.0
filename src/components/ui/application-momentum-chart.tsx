@@ -16,6 +16,7 @@ interface ApplicationMomentumData {
   date: string;
   applications: number;
   displayDate: string;
+  isFuture?: boolean;
 }
 
 interface ApplicationMomentumChartProps {
@@ -37,16 +38,36 @@ export function ApplicationMomentumChart({
   className 
 }: ApplicationMomentumChartProps) {
   // If no data, generate sample data
-  const chartData = data.length > 0 ? data : generateSampleData();
+  const rawData = data.length > 0 ? data : generateSampleData();
   
-  const totalApplications = chartData.reduce((sum, d) => sum + d.applications, 0);
-  const avgApplications = chartData.length > 0 ? (totalApplications / chartData.length).toFixed(1) : '0';
-  const maxApplications = Math.max(...chartData.map(d => d.applications), 0);
-  const trend = calculateTrend(chartData);
+  // Add future days (empty space between today and goal)
+  const futureDaysToAdd = 3; // Days between today and goal line
+  const today = new Date();
+  const extendedData = [...rawData];
   
-  // Calculate the position for the dashed line (75% through the data)
-  const dashLineIndex = Math.floor(chartData.length * 0.75);
-  const dashLinePosition = chartData[dashLineIndex]?.displayDate || chartData[chartData.length - 1]?.displayDate;
+  // Add future empty days
+  for (let i = 1; i <= futureDaysToAdd; i++) {
+    const futureDate = new Date(today);
+    futureDate.setDate(futureDate.getDate() + i);
+    extendedData.push({
+      date: futureDate.toISOString(),
+      applications: 0,
+      displayDate: futureDate.toLocaleDateString('en-US', { weekday: 'short' }),
+      isFuture: true,
+    });
+  }
+  
+  const chartData = extendedData;
+  const todayIndex = rawData.length - 1; // Last data point with real data is "today"
+  
+  const totalApplications = rawData.reduce((sum, d) => sum + d.applications, 0);
+  const avgApplications = rawData.length > 0 ? (totalApplications / rawData.length).toFixed(1) : '0';
+  const maxApplications = Math.max(...rawData.map(d => d.applications), 0);
+  const trend = calculateTrend(rawData);
+  
+  // Goal line is at the far right
+  const goalLinePosition = chartData[chartData.length - 1]?.displayDate;
+  const todayPosition = chartData[todayIndex]?.displayDate;
 
   return (
     <Card className={cn(
@@ -112,24 +133,41 @@ export function ApplicationMomentumChart({
               />
               <YAxis 
                 hide 
-                domain={[0, Math.max(maxApplications + 2, 5)]}
+                domain={[0, (dataMax: number) => Math.max(dataMax * 1.3, 5)]}
               />
               
-              {/* Goal Reference Line - Dashed vertical line at 75% mark */}
-              {dashLinePosition && (
+              {/* Today Reference Line - Shows current day */}
+              {todayPosition && (
                 <ReferenceLine
-                  x={dashLinePosition}
+                  x={todayPosition}
+                  stroke="#60a5fa"
+                  strokeDasharray="4 4"
+                  strokeWidth={2}
+                  strokeOpacity={0.6}
+                  label={{
+                    value: "TODAY",
+                    position: "top",
+                    fill: "#60a5fa",
+                    fontSize: 10,
+                    fontWeight: "bold",
+                  }}
+                />
+              )}
+              
+              {/* Goal Reference Line - Dashed vertical line at far right */}
+              {goalLinePosition && (
+                <ReferenceLine
+                  x={goalLinePosition}
                   stroke="#fbbf24"
                   strokeDasharray="8 8"
-                  strokeWidth={3.5}
+                  strokeWidth={4}
                   strokeOpacity={1}
                   label={{
-                    value: "│ GOAL",
-                    position: "insideTopRight",
+                    value: "GOAL",
+                    position: "top",
                     fill: "#fbbf24",
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: "900",
-                    offset: -5,
                   }}
                 />
               )}
@@ -149,6 +187,7 @@ export function ApplicationMomentumChart({
                 cursor={{ stroke: "#3b82f6", strokeWidth: 1 }}
               />
               
+              {/* Main data line - only shows real data */}
               <Line
                 type="monotone"
                 dataKey="applications"
@@ -161,24 +200,39 @@ export function ApplicationMomentumChart({
                   stroke: "#ffffff",
                   strokeWidth: 2,
                 }}
+                connectNulls={false}
               />
+              
+              {/* Projection line - faint line showing momentum */}
+              {avgApplications && parseFloat(avgApplications) > 0 && (
+                <Line
+                  type="monotone"
+                  dataKey={(entry: any) => entry.isFuture ? parseFloat(avgApplications) : null}
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  strokeOpacity={0.3}
+                  dot={false}
+                  connectNulls={true}
+                />
+              )}
             </LineChart>
           </ChartContainer>
 
-          {/* Goal Marker Overlay - Positioned after the dashed line */}
-          <div className="absolute top-1/2 right-8 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-none">
+          {/* Goal Marker Overlay - Positioned at far right */}
+          <div className="absolute top-1/2 right-2 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-none">
             <div className="relative">
               {/* Pulsing outer ring */}
               <div className="absolute inset-0 animate-ping opacity-60">
-                <div className="h-10 w-10 rounded-full bg-yellow-500/40"></div>
+                <div className="h-12 w-12 rounded-full bg-yellow-500/40"></div>
               </div>
               {/* Target icon with glow */}
-              <div className="relative z-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-1.5 shadow-lg shadow-yellow-500/50">
-                <Target className="h-6 w-6 text-white drop-shadow-md" />
+              <div className="relative z-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-2 shadow-xl shadow-yellow-500/60">
+                <Target className="h-7 w-7 text-white drop-shadow-md" />
               </div>
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <span className="text-[9px] font-bold text-yellow-600 dark:text-yellow-400 bg-white/95 dark:bg-gray-900/95 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap border border-yellow-500/30">
+              <span className="text-[10px] font-extrabold text-yellow-600 dark:text-yellow-400 bg-white/95 dark:bg-gray-900/95 px-2.5 py-1 rounded-full shadow-md whitespace-nowrap border-2 border-yellow-500/40">
                 {goal}
               </span>
             </div>
