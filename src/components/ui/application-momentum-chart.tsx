@@ -9,7 +9,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ApplicationMomentumData {
@@ -71,52 +70,19 @@ export function ApplicationMomentumChart({
 
   return (
     <Card className={cn(
-      "flex w-full flex-col gap-4 p-4 shadow-none border-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20",
+      "flex w-full flex-col gap-2 p-3 shadow-none border-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20",
       className
     )}>
-      <CardContent className="flex flex-col gap-4 p-0">
-        {/* Header Stats */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold tracking-tight tabular-nums text-emerald-400 animate-pulse">
-                {totalApplications}
-              </span>
-              <span className="text-sm font-medium text-muted-foreground">
-                applications
-              </span>
-            </div>
-            <p className="text-xs font-normal tracking-tight text-muted-foreground uppercase">
-              Building momentum
-            </p>
-          </div>
-
-          {/* Trend Indicator - Stock style */}
-          <div className={cn(
-            "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold tracking-tight whitespace-nowrap animate-pulse",
-            trend > 0 
-              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-              : trend < 0
-                ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                : "bg-gray-500/20 text-gray-400 border border-gray-500/40"
-          )}>
-            <TrendingUp className={cn(
-              "h-3.5 w-3.5 animate-bounce",
-              trend < 0 && "rotate-180"
-            )} />
-            {trend > 0 ? '+' : ''}{trend}%
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div className="relative">
+      <CardContent className="flex flex-col gap-1 p-0">
+        {/* Chart - Full focus, larger size */}
+        <div className="relative -mx-2">
           <ChartContainer
             config={chartConfig}
-            className="aspect-auto h-[180px] w-full"
+            className="aspect-auto h-[220px] w-full"
           >
             <ComposedChart 
               data={chartData}
-              margin={{ top: 10, right: 40, left: 10, bottom: 10 }}
+              margin={{ top: 20, right: 15, left: 5, bottom: 5 }}
             >
               <CartesianGrid 
                 vertical={false} 
@@ -136,35 +102,25 @@ export function ApplicationMomentumChart({
                 domain={[0, (dataMax: number) => Math.max(dataMax * 1.3, 5)]}
               />
               
-              {/* Today Reference Line - Animated marker */}
+              {/* Today Reference Line - Clear visible marker */}
               {todayPosition && (
-                <>
-                  <ReferenceLine
-                    x={todayPosition}
-                    stroke="#10b981"
-                    strokeDasharray="3 3"
-                    strokeWidth={2}
-                    strokeOpacity={0.8}
-                  />
-                  <ReferenceLine
-                    x={todayPosition}
-                    stroke="#10b981"
-                    strokeWidth={0.5}
-                    strokeOpacity={0.3}
-                    label={{
-                      value: "TODAY",
-                      position: "top",
-                      fill: "#ffffff",
-                      fontSize: 10,
-                      fontWeight: "bold",
-                      style: {
-                        backgroundColor: '#10b981',
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                      }
-                    }}
-                  />
-                </>
+                <ReferenceLine
+                  x={todayPosition}
+                  stroke="#10b981"
+                  strokeDasharray="4 4"
+                  strokeWidth={3}
+                  label={{
+                    value: "TODAY",
+                    position: "top",
+                    fill: "#ffffff",
+                    fontSize: 11,
+                    fontWeight: "900",
+                    offset: 5,
+                    style: {
+                      textShadow: '0 0 10px rgba(16, 185, 129, 0.8)',
+                    }
+                  }}
+                />
               )}
               
               {/* Goal Reference Line - Dashed vertical line at far right */}
