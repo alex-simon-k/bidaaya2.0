@@ -16,6 +16,7 @@ interface ApplicationMomentumData {
   applications: number;
   displayDate: string;
   isFuture?: boolean;
+  isToday?: boolean;
 }
 
 interface ApplicationMomentumChartProps {
@@ -59,14 +60,20 @@ export function ApplicationMomentumChart({
   const chartData = extendedData;
   const todayIndex = rawData.length - 1; // Last data point with real data is "today"
   
+  // Mark today in the data for visual identification
+  chartData.forEach((item, idx) => {
+    if (idx === todayIndex) {
+      item.isToday = true;
+    }
+  });
+  
   const totalApplications = rawData.reduce((sum, d) => sum + d.applications, 0);
   const avgApplications = rawData.length > 0 ? (totalApplications / rawData.length).toFixed(1) : '0';
   const maxApplications = Math.max(...rawData.map(d => d.applications), 0);
   const trend = calculateTrend(rawData);
   
-  // Goal line is at the far right
-  const goalLinePosition = chartData[chartData.length - 1]?.displayDate;
-  const todayPosition = chartData[todayIndex]?.displayDate;
+  // Goal line is at the far right  
+  const todayPosition = todayIndex; // Use index for ReferenceLine
 
   return (
     <Card className={cn(
@@ -102,26 +109,21 @@ export function ApplicationMomentumChart({
                 domain={[0, (dataMax: number) => Math.max(dataMax * 1.3, 5)]}
               />
               
-              {/* Today Reference Line - Clear visible marker */}
-              {todayPosition && (
-                <ReferenceLine
-                  x={todayPosition}
-                  stroke="#10b981"
-                  strokeDasharray="4 4"
-                  strokeWidth={3}
-                  label={{
-                    value: "TODAY",
-                    position: "top",
-                    fill: "#ffffff",
-                    fontSize: 11,
-                    fontWeight: "900",
-                    offset: 5,
-                    style: {
-                      textShadow: '0 0 10px rgba(16, 185, 129, 0.8)',
-                    }
-                  }}
-                />
-              )}
+              {/* Today Reference Line - Clear visible marker using index */}
+              <ReferenceLine
+                x={todayPosition}
+                stroke="#10b981"
+                strokeWidth={3}
+                strokeDasharray="5 5"
+                label={{
+                  value: "▼ TODAY",
+                  position: "top",
+                  fill: "#10b981",
+                  fontSize: 12,
+                  fontWeight: "900",
+                  offset: 0,
+                }}
+              />
               
               {/* Goal Reference Line - Dashed vertical line at far right */}
               <ReferenceLine
@@ -164,13 +166,23 @@ export function ApplicationMomentumChart({
                 dataKey={(entry: any) => entry.isFuture ? null : entry.applications}
                 stroke="url(#greenGradient)"
                 strokeWidth={3.5}
-                dot={false}
+                dot={(props: any) => {
+                  const { cx, cy, payload } = props;
+                  if (payload.isToday) {
+                    return (
+                      <g>
+                        <circle cx={cx} cy={cy} r={8} fill="#10b981" stroke="#ffffff" strokeWidth={3} className="animate-pulse" />
+                        <circle cx={cx} cy={cy} r={4} fill="#ffffff" />
+                      </g>
+                    );
+                  }
+                  return null;
+                }}
                 activeDot={{
                   r: 6,
                   fill: "#10b981",
                   stroke: "#ffffff",
                   strokeWidth: 2.5,
-                  className: "animate-pulse",
                 }}
                 connectNulls={false}
                 animationDuration={1500}
