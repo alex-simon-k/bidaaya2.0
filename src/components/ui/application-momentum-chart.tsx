@@ -9,7 +9,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { Target, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ApplicationMomentumData {
@@ -41,18 +41,18 @@ export function ApplicationMomentumChart({
   const rawData = data.length > 0 ? data : generateSampleData();
   
   // Add future days (empty space between today and goal)
-  const futureDaysToAdd = 3; // Days between today and goal line
+  const futureDaysToAdd = 2; // Days between today and goal line
   const today = new Date();
   const extendedData = [...rawData];
   
-  // Add future empty days
+  // Add future empty days (no labels, just space)
   for (let i = 1; i <= futureDaysToAdd; i++) {
     const futureDate = new Date(today);
     futureDate.setDate(futureDate.getDate() + i);
     extendedData.push({
       date: futureDate.toISOString(),
       applications: 0,
-      displayDate: futureDate.toLocaleDateString('en-US', { weekday: 'short' }),
+      displayDate: '', // No label for future dates
       isFuture: true,
     });
   }
@@ -141,36 +141,42 @@ export function ApplicationMomentumChart({
                 <ReferenceLine
                   x={todayPosition}
                   stroke="#60a5fa"
-                  strokeDasharray="4 4"
-                  strokeWidth={2}
-                  strokeOpacity={0.6}
+                  strokeDasharray="5 5"
+                  strokeWidth={2.5}
                   label={{
                     value: "TODAY",
-                    position: "top",
-                    fill: "#60a5fa",
-                    fontSize: 10,
+                    position: "insideTopLeft",
+                    fill: "#ffffff",
+                    fontSize: 11,
                     fontWeight: "bold",
+                    style: {
+                      backgroundColor: '#60a5fa',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                    }
                   }}
                 />
               )}
               
               {/* Goal Reference Line - Dashed vertical line at far right */}
-              {goalLinePosition && (
-                <ReferenceLine
-                  x={goalLinePosition}
-                  stroke="#fbbf24"
-                  strokeDasharray="8 8"
-                  strokeWidth={4}
-                  strokeOpacity={1}
-                  label={{
-                    value: "GOAL",
-                    position: "top",
-                    fill: "#fbbf24",
-                    fontSize: 13,
-                    fontWeight: "900",
-                  }}
-                />
-              )}
+              <ReferenceLine
+                x={chartData.length - 1}
+                stroke="#fbbf24"
+                strokeDasharray="6 6"
+                strokeWidth={3}
+                label={{
+                  value: "GOAL",
+                  position: "insideTopRight",
+                  fill: "#ffffff",
+                  fontSize: 11,
+                  fontWeight: "bold",
+                  style: {
+                    backgroundColor: '#fbbf24',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                  }
+                }}
+              />
               
               <ChartTooltip
                 content={
@@ -187,10 +193,10 @@ export function ApplicationMomentumChart({
                 cursor={{ stroke: "#3b82f6", strokeWidth: 1 }}
               />
               
-              {/* Main data line - only shows real data */}
+              {/* Main data line - only shows real data up to today */}
               <Line
                 type="monotone"
-                dataKey="applications"
+                dataKey={(entry: any) => entry.isFuture ? null : entry.applications}
                 stroke="#3b82f6"
                 strokeWidth={3}
                 dot={false}
@@ -202,58 +208,9 @@ export function ApplicationMomentumChart({
                 }}
                 connectNulls={false}
               />
-              
-              {/* Projection line - faint line showing momentum */}
-              {avgApplications && parseFloat(avgApplications) > 0 && (
-                <Line
-                  type="monotone"
-                  dataKey={(entry: any) => entry.isFuture ? parseFloat(avgApplications) : null}
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  strokeOpacity={0.3}
-                  dot={false}
-                  connectNulls={true}
-                />
-              )}
             </LineChart>
           </ChartContainer>
 
-          {/* Goal Marker Overlay - Positioned at far right */}
-          <div className="absolute top-1/2 right-2 -translate-y-1/2 flex flex-col items-center gap-1.5 pointer-events-none">
-            <div className="relative">
-              {/* Pulsing outer ring */}
-              <div className="absolute inset-0 animate-ping opacity-60">
-                <div className="h-12 w-12 rounded-full bg-yellow-500/40"></div>
-              </div>
-              {/* Target icon with glow */}
-              <div className="relative z-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-2 shadow-xl shadow-yellow-500/60">
-                <Target className="h-7 w-7 text-white drop-shadow-md" />
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-[10px] font-extrabold text-yellow-600 dark:text-yellow-400 bg-white/95 dark:bg-gray-900/95 px-2.5 py-1 rounded-full shadow-md whitespace-nowrap border-2 border-yellow-500/40">
-                {goal}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="flex w-full -space-x-[1.5px] divide-x overflow-hidden rounded-lg border bg-white dark:bg-gray-900">
-          <div className="relative flex h-10 flex-1 items-center justify-center bg-transparent text-sm tracking-tight">
-            <span className="font-normal text-muted-foreground">Avg</span>
-            <span className="ml-1.5 font-semibold text-foreground">
-              {avgApplications}/day
-            </span>
-          </div>
-
-          <div className="relative flex h-10 flex-1 items-center justify-center bg-transparent text-sm tracking-tight">
-            <span className="font-normal text-muted-foreground">Peak</span>
-            <span className="ml-1.5 font-semibold text-foreground">
-              {maxApplications}
-            </span>
-          </div>
         </div>
       </CardContent>
     </Card>
