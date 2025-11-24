@@ -33,61 +33,31 @@ export async function GET(req: NextRequest) {
 
     console.log('📊 Fetching application momentum data for user:', user.id);
 
-    // Fetch all application types (REAL DATA from database)
-    const [bidaayaApps, externalApps, opportunityApps] = await Promise.all([
-      // Bidaaya internal applications
-      prisma.application.findMany({
-        where: {
-          userId: user.id,
-          createdAt: {
-            gte: startDate,
-            lte: endDate,
+    // ONLY track when students mark opportunities as "Applied" in the Applications page
+    // This is from ExternalOpportunityApplication table
+    const opportunityApps = await prisma.externalOpportunityApplication.findMany({
+      where: {
+        userId: user.id,
+        appliedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        appliedAt: true,
+        opportunity: {
+          select: {
+            title: true,
+            company: true,
           },
         },
-        select: {
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: 'asc',
-        },
-      }),
-      
-      // External applications
-      prisma.externalApplication.findMany({
-        where: {
-          userId: user.id,
-          appliedDate: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-        select: {
-          appliedDate: true,
-        },
-        orderBy: {
-          appliedDate: 'asc',
-        },
-      }),
-      
-      // External opportunity applications
-      prisma.externalOpportunityApplication.findMany({
-        where: {
-          userId: user.id,
-          appliedAt: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-        select: {
-          appliedAt: true,
-        },
-        orderBy: {
-          appliedAt: 'asc',
-        },
-      }),
-    ]);
+      },
+      orderBy: {
+        appliedAt: 'asc',
+      },
+    });
 
-    // Aggregate by date
+    // Aggregate by date - ONLY count when students mark as "Applied"
     const applicationsByDate = new Map<string, number>();
     
     // Initialize all dates with 0
@@ -98,17 +68,7 @@ export async function GET(req: NextRequest) {
       applicationsByDate.set(dateKey, 0);
     }
 
-    // Count applications by date
-    bidaayaApps.forEach(app => {
-      const dateKey = app.createdAt.toISOString().split('T')[0];
-      applicationsByDate.set(dateKey, (applicationsByDate.get(dateKey) || 0) + 1);
-    });
-
-    externalApps.forEach(app => {
-      const dateKey = app.appliedDate.toISOString().split('T')[0];
-      applicationsByDate.set(dateKey, (applicationsByDate.get(dateKey) || 0) + 1);
-    });
-
+    // Count applications by date (from when student marked as "Applied")
     opportunityApps.forEach(app => {
       const dateKey = app.appliedAt.toISOString().split('T')[0];
       applicationsByDate.set(dateKey, (applicationsByDate.get(dateKey) || 0) + 1);
@@ -130,13 +90,16 @@ export async function GET(req: NextRequest) {
 
     const totalApps = Array.from(applicationsByDate.values()).reduce((sum, count) => sum + count, 0);
     
-    console.log('✅ Application momentum data:', {
-      bidaayaApps: bidaayaApps.length,
-      externalApps: externalApps.length,
-      opportunityApps: opportunityApps.length,
+    console.log('✅ Application momentum data (from Applications page only):', {
+      totalApplicationsMarkedAsApplied: opportunityApps.length,
       totalApplications: totalApps,
       dateRange: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
       dataPoints: displayData.length,
+      sampleApplications: opportunityApps.slice(0, 3).map(app => ({
+        company: app.opportunity.company,
+        title: app.opportunity.title,
+        appliedAt: app.appliedAt,
+      })),
     });
 
     return NextResponse.json({

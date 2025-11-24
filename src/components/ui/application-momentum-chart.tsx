@@ -114,18 +114,20 @@ export function ApplicationMomentumChart({
                 domain={[0, Math.max(maxApplications + 2, 5)]}
               />
               
-              {/* Goal Reference Line - Dashed vertical line at 75% */}
+              {/* Goal Reference Line - Dashed vertical line at 75% mark */}
               <ReferenceLine
                 x={dashLinePosition}
                 stroke="#fbbf24"
-                strokeDasharray="8 4"
-                strokeWidth={2.5}
+                strokeDasharray="6 6"
+                strokeWidth={3}
+                opacity={0.9}
                 label={{
-                  value: "Goal Ahead →",
+                  value: "→ Goal",
                   position: "top",
                   fill: "#f59e0b",
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: "bold",
+                  offset: 10,
                 }}
               />
               

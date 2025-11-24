@@ -805,11 +805,12 @@ model ExternalOpportunity {
 
 // Track when students click through to apply to external opportunities
 model ExternalOpportunityApplication {
-  id                    String   @id @default(cuid())
+  id                    String                     @id @default(cuid())
   userId                String
   externalOpportunityId String
-  appliedAt             DateTime @default(now())
-  notes                 String?  // Optional student notes
+  appliedAt             DateTime                   @default(now())
+  notes                 String?                    // Optional student notes
+  status                ExternalApplicationStatus  @default(APPLIED) // Track application progress
   
   user                  User                @relation(fields: [userId], references: [id])
   opportunity           ExternalOpportunity @relation(fields: [externalOpportunityId], references: [id], onDelete: Cascade)

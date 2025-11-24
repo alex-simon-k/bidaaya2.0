@@ -44,7 +44,8 @@ export async function PATCH(
     };
 
     // Verify the application belongs to the user
-    const application = await prisma.externalApplication.findFirst({
+    // Check ExternalOpportunityApplication (from Applications page)
+    const application = await prisma.externalOpportunityApplication.findFirst({
       where: {
         id: applicationId,
         userId: user.id,
@@ -58,8 +59,8 @@ export async function PATCH(
       );
     }
 
-    // Update the external application (using ExternalApplication model)
-    const updatedApplication = await prisma.externalApplication.update({
+    // Update the external opportunity application status
+    const updatedApplication = await prisma.externalOpportunityApplication.update({
       where: { id: applicationId },
       data: {
         status: statusMap[status] as any,

@@ -35,8 +35,15 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // For now, just show external opportunity applications
-    // Internal project applications use a different table structure
+    // Map database status to frontend format
+    const statusMap: Record<string, 'applied' | 'interview' | 'rejected'> = {
+      'APPLIED': 'applied',
+      'INTERVIEW_SCHEDULED': 'interview',
+      'INTERVIEWED': 'interview',
+      'REJECTED': 'rejected',
+    };
+
+    // Format external opportunity applications for display
     const formattedExternal = externalOpportunityApps.map((app) => ({
       id: app.id,
       opportunityId: app.externalOpportunityId,
@@ -46,7 +53,7 @@ export async function GET(req: NextRequest) {
       location: app.opportunity.location || 'Remote',
       type: 'external' as const,
       appliedDate: app.appliedAt,
-      status: 'applied' as 'applied' | 'interview' | 'rejected', // ExternalOpportunityApplication doesn't have status field yet
+      status: statusMap[app.status] || 'applied',
       matchScore: undefined,
       notes: app.notes,
       applicationUrl: app.opportunity.applicationUrl,
