@@ -168,15 +168,15 @@ export function ApplicationMomentumChart({
                 strokeWidth={3.5}
                 dot={(props: any) => {
                   const { cx, cy, payload } = props;
-                  if (payload.isToday) {
+                  if (payload?.isToday) {
                     return (
-                      <g>
+                      <svg>
                         <circle cx={cx} cy={cy} r={8} fill="#10b981" stroke="#ffffff" strokeWidth={3} className="animate-pulse" />
                         <circle cx={cx} cy={cy} r={4} fill="#ffffff" />
-                      </g>
+                      </svg>
                     );
                   }
-                  return null;
+                  return <svg />;
                 }}
                 activeDot={{
                   r: 6,
