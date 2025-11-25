@@ -52,6 +52,7 @@ export class CVTextEnhancer {
    * Enhance all CV text fields using DeepSeek AI
    */
   static async enhanceAll(input: CVTextEnhancementInput): Promise<CVTextEnhancementOutput> {
+    // Quick fallback if API key not configured
     if (!DEEPSEEK_API_KEY) {
       console.warn('⚠️ DeepSeek API key not configured, using basic formatting only')
       return this.basicFormatting(input)
@@ -61,9 +62,16 @@ export class CVTextEnhancer {
       const prompt = this.buildEnhancementPrompt(input)
       const response = await this.callDeepSeek(prompt)
       
+      console.log('✅ AI enhancement successful')
       return response
-    } catch (error) {
-      console.error('❌ CV text enhancement failed, falling back to basic formatting:', error)
+    } catch (error: any) {
+      // Log but don't block - fallback to basic formatting
+      const errorMsg = error?.message || String(error)
+      if (errorMsg.includes('timeout')) {
+        console.warn('⏱️ AI enhancement timeout, using basic formatting')
+      } else {
+        console.warn('⚠️ AI enhancement failed, using basic formatting:', errorMsg)
+      }
       return this.basicFormatting(input)
     }
   }
@@ -107,31 +115,40 @@ Return the enhanced JSON now:`
   }
 
   /**
-   * Call DeepSeek API
+   * Call DeepSeek API with timeout protection
    */
   private static async callDeepSeek(prompt: string): Promise<CVTextEnhancementOutput> {
-    const response = await fetch(DEEPSEEK_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional CV formatter. Return ONLY valid JSON responses with no additional text or markdown formatting.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3, // Lower temperature for more consistent formatting
-        max_tokens: 2000,
-      }),
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('DeepSeek API timeout after 8 seconds')), 8000)
     })
+
+    // Race between API call and timeout
+    const response = await Promise.race([
+      fetch(DEEPSEEK_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional CV formatter. Return ONLY valid JSON responses with no additional text or markdown formatting.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3, // Lower temperature for more consistent formatting
+          max_tokens: 2000,
+        }),
+      }),
+      timeoutPromise
+    ])
 
     if (!response.ok) {
       const errorText = await response.text()
