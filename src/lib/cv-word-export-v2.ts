@@ -19,7 +19,7 @@ import { TextFormatter } from './text-formatter'
 export class CVWordExportV2 {
   
   /**
-   * Generate a Word document from CV data - EXACT template match
+   * Generate a Word document from CV data - Modern "Bronzor" Style
    */
   static async generateWordDocument(cv: GeneratedCV): Promise<Document> {
     
@@ -28,8 +28,13 @@ export class CVWordExportV2 {
         default: {
           document: {
             run: {
-              font: 'Times New Roman',
-              size: 21, // 10.5pt
+              font: 'Arial',
+              size: 22, // 11pt
+            },
+            paragraph: {
+              spacing: {
+                line: 240, // 1.0 line spacing
+              },
             },
           },
         },
@@ -38,10 +43,10 @@ export class CVWordExportV2 {
         properties: {
           page: {
             margin: {
-              top: convertInchesToTwip(1),
-              right: convertInchesToTwip(1),
-              bottom: convertInchesToTwip(1),
-              left: convertInchesToTwip(1),
+              top: convertInchesToTwip(0.5),
+              right: convertInchesToTwip(0.5),
+              bottom: convertInchesToTwip(0.5),
+              left: convertInchesToTwip(0.5),
             },
           },
         },
@@ -50,10 +55,10 @@ export class CVWordExportV2 {
           new Paragraph({
             children: [
               new TextRun({
-                text: cv.profile.name,
+                text: cv.profile.name.toUpperCase(),
                 bold: true,
-                font: 'Times New Roman',
-                size: 29, // 14.5pt
+                font: 'Arial',
+                size: 36, // 18pt
               })
             ],
             alignment: AlignmentType.CENTER,
@@ -65,12 +70,20 @@ export class CVWordExportV2 {
             children: [
               new TextRun({
                 text: this.formatContactLine(cv.profile),
-                font: 'Times New Roman',
-                size: 21, // 10.5pt
+                font: 'Arial',
+                size: 20, // 10pt
               })
             ],
             alignment: AlignmentType.CENTER,
-            spacing: { after: 200 },
+            spacing: { after: 300 },
+            border: {
+              bottom: {
+                color: '000000',
+                space: 1,
+                style: BorderStyle.SINGLE,
+                size: 6,
+              },
+            },
           }),
           
           // EDUCATION Section
@@ -84,7 +97,7 @@ export class CVWordExportV2 {
           ...(cv.achievements && cv.achievements.length > 0 ?
             this.createExtracurricularsSection(cv.achievements) : []),
           
-          // SKILLS, ACTIVITIES & INTERESTS Section
+          // SKILLS Section
           ...this.createSkillsSection(cv.skills, cv.languages),
         ],
       }],
@@ -101,56 +114,55 @@ export class CVWordExportV2 {
     
     if (profile.phone) parts.push(profile.phone)
     if (profile.email) parts.push(profile.email)
+    if (profile.location) parts.push(profile.location)
+    if (profile.linkedin) parts.push('LinkedIn')
     
     return parts.join('  |  ')
   }
 
   /**
-   * Create EDUCATION section - EXACT template format
+   * Create EDUCATION section - Modern Format
    */
   private static createEducationSection(education: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
-      // Section Header: EDUCATION with underline
+      // Section Header: EDUCATION
       new Paragraph({
         children: [
           new TextRun({
             text: 'EDUCATION',
             bold: true,
-            font: 'Times New Roman',
-            size: 21, // 10.5pt
+            font: 'Arial',
+            size: 24, // 12pt
           })
         ],
-        spacing: { before: 0, after: 50 },
+        spacing: { before: 200, after: 100 },
         border: {
           bottom: {
             color: '000000',
-            space: 3,
+            space: 1,
             style: BorderStyle.SINGLE,
-            size: 12,
+            size: 6,
           },
         },
       }),
-      
-      // Empty line
-      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
     education.forEach((edu, index) => {
-      // University	Location (on same line, location right-aligned using tab) - BOTH BOLD
+      // Institution (Left) | Location (Right)
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: TextFormatter.formatCompanyName(edu.institution),
-              font: 'Times New Roman',
-              size: 21,
-              bold: true,  // BOLD
+              text: TextFormatter.formatCompanyName(edu.institution).toUpperCase(),
+              font: 'Arial',
+              size: 22,
+              bold: true,
             }),
             new TextRun({
               text: `\t${TextFormatter.formatLocation(edu.location || '')}`,
-              font: 'Times New Roman',
-              size: 21,
-              bold: true,  // BOLD
+              font: 'Arial',
+              size: 22,
+              bold: true,
             }),
           ],
           tabStops: [
@@ -159,25 +171,23 @@ export class CVWordExportV2 {
               position: TabStopPosition.MAX,
             },
           ],
-          spacing: { after: 50 },
+          spacing: { after: 0 }, // Tight spacing
         })
       )
 
-      // Course	Sep 2023 – Jun 2026 (on same line, dates right-aligned) - BOTH ITALIC
+      // Degree (Left) | Dates (Right)
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
               text: TextFormatter.toTitleCase(edu.degree),
-              font: 'Times New Roman',
-              size: 21,
-              italics: true,  // ITALIC
+              font: 'Arial',
+              size: 22,
             }),
             new TextRun({
               text: `\t${edu.dates}`,
-              font: 'Times New Roman',
-              size: 21,
-              italics: true,  // ITALIC
+              font: 'Arial',
+              size: 22,
             }),
           ],
           tabStops: [
@@ -196,9 +206,9 @@ export class CVWordExportV2 {
           new Paragraph({
             children: [
               new TextRun({
-                text: `Predicted Grade: ${edu.grade}`,
-                font: 'Times New Roman',
-                size: 21,
+                text: `Grade: ${edu.grade}`,
+                font: 'Arial',
+                size: 22,
               })
             ],
             spacing: { after: 50 },
@@ -206,19 +216,25 @@ export class CVWordExportV2 {
         )
       }
 
-      // Relevant Modules: x, y, z (capitalized properly)
+      // Relevant Modules: x, y, z
       if (edu.highlights && edu.highlights.length > 0) {
         const formattedModules = TextFormatter.formatCourseNames(edu.highlights)
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: `Relevant Modules: ${formattedModules.join(', ')}`,
-                font: 'Times New Roman',
-                size: 21,
+                text: 'Relevant Coursework: ',
+                font: 'Arial',
+                size: 22,
+                bold: true,
+              }),
+              new TextRun({
+                text: formattedModules.join(', '),
+                font: 'Arial',
+                size: 22,
               })
             ],
-            spacing: { after: index < education.length - 1 ? 100 : 200 },
+            spacing: { after: index < education.length - 1 ? 200 : 0 },
           })
         )
       }
@@ -228,7 +244,7 @@ export class CVWordExportV2 {
   }
 
   /**
-   * Create EXPERIENCE section - EXACT template format
+   * Create EXPERIENCE section - Modern Format
    */
   private static createExperienceSection(experiences: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
@@ -238,41 +254,65 @@ export class CVWordExportV2 {
           new TextRun({
             text: 'EXPERIENCE',
             bold: true,
-            font: 'Times New Roman',
-            size: 21,
+            font: 'Arial',
+            size: 24, // 12pt
           })
         ],
-        spacing: { before: 0, after: 50 },
+        spacing: { before: 200, after: 100 },
         border: {
           bottom: {
             color: '000000',
-            space: 3,
+            space: 1,
             style: BorderStyle.SINGLE,
-            size: 12,
+            size: 6,
           },
         },
       }),
-      
-      // Empty line
-      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
     experiences.forEach((exp, index) => {
-      // Company Name	Location - BOTH BOLD
+      // Employer (Left) | Location (Right)
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: TextFormatter.formatCompanyName(exp.employer),
-              font: 'Times New Roman',
-              size: 21,
+              text: TextFormatter.formatCompanyName(exp.employer).toUpperCase(),
+              font: 'Arial',
+              size: 22,
               bold: true,
             }),
             new TextRun({
               text: `\t${TextFormatter.formatLocation(exp.location || '')}`,
-              font: 'Times New Roman',
-              size: 21,
-              bold: true,  // BOLD
+              font: 'Arial',
+              size: 22,
+              bold: true,
+            }),
+          ],
+          tabStops: [
+            {
+              type: TabStopType.RIGHT,
+              position: TabStopPosition.MAX,
+            },
+          ],
+          spacing: { after: 0 },
+        })
+      )
+
+      // Title (Left) | Dates (Right)
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: TextFormatter.formatRoleTitle(exp.title),
+              font: 'Arial',
+              size: 22,
+              italics: true,
+            }),
+            new TextRun({
+              text: `\t${exp.dates}`,
+              font: 'Arial',
+              size: 22,
+              italics: true,
             }),
           ],
           tabStops: [
@@ -285,49 +325,38 @@ export class CVWordExportV2 {
         })
       )
 
-      // Role - Team	Jun 2025 – Aug 2025 - BOTH ITALIC
-      const roleText = exp.summary ? `${exp.title} - ${exp.summary}` : exp.title
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: TextFormatter.formatRoleTitle(roleText),
-              font: 'Times New Roman',
-              size: 21,
-              italics: true, // ITALIC
-            }),
-            new TextRun({
-              text: `\t${exp.dates}`,
-              font: 'Times New Roman',
-              size: 21,
-              italics: true,  // ITALIC
-            }),
-          ],
-          tabStops: [
-            {
-              type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
-            },
-          ],
-          spacing: { after: 100 }, // More space before bullets
-        })
-      )
-
-      // Bullet points with • symbol
-      exp.achievements.forEach((achievement: string, achIndex: number) => {
-        paragraphs.push(
+      // Summary (if present)
+      if (exp.summary) {
+         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: `•   ${TextFormatter.formatBulletPoint(achievement)}`,
-                font: 'Times New Roman',
-                size: 21,
+                text: exp.summary,
+                font: 'Arial',
+                size: 22,
               })
             ],
-            spacing: { after: achIndex === exp.achievements.length - 1 ? 200 : 75 },
+            spacing: { after: 50 },
+          })
+        )
+      }
+
+      // Bullet points
+      exp.achievements.forEach((achievement: string, achIndex: number) => {
+        paragraphs.push(
+          new Paragraph({
+            text: TextFormatter.formatBulletPoint(achievement),
+            bullet: {
+              level: 0,
+            },
+            style: 'ListParagraph', // Use built-in list style
+            spacing: { after: 0 },
           })
         )
       })
+      
+      // Add spacing after experience item
+      paragraphs.push(new Paragraph({ text: "", spacing: { after: 100 } }))
     })
 
     return paragraphs
@@ -342,99 +371,79 @@ export class CVWordExportV2 {
       new Paragraph({
         children: [
           new TextRun({
-            text: 'EXTRACURRICULARS',
+            text: 'EXTRACURRICULARS & PROJECTS',
             bold: true,
-            font: 'Times New Roman',
-            size: 21,
+            font: 'Arial',
+            size: 24, // 12pt
           })
         ],
-        spacing: { before: 0, after: 50 },
+        spacing: { before: 200, after: 100 },
         border: {
           bottom: {
             color: '000000',
-            space: 3,
+            space: 1,
             style: BorderStyle.SINGLE,
-            size: 12,
+            size: 6,
           },
         },
       }),
-      
-      // Empty line
-      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
     achievements.forEach((ach, index) => {
-      // Organization Name	Location (if available) - BOTH BOLD
+      // Organization/Project Name (Left) | Location/Date (Right)
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: TextFormatter.toTitleCase(ach.name),
-              font: 'Times New Roman',
-              size: 21,
+              text: TextFormatter.toTitleCase(ach.name).toUpperCase(),
+              font: 'Arial',
+              size: 22,
               bold: true,
             }),
-            ...(ach.location ? [
+            ...(ach.date ? [
               new TextRun({
-                text: `\t${TextFormatter.formatLocation(ach.location)}`,
-                font: 'Times New Roman',
-                size: 21,
-                bold: true,  // BOLD
+                text: `\t${ach.date}`,
+                font: 'Arial',
+                size: 22,
+                bold: true,
               })
             ] : []),
           ],
-          tabStops: ach.location ? [
+          tabStops: [
             {
               type: TabStopType.RIGHT,
               position: TabStopPosition.MAX,
             },
-          ] : [],
-          spacing: { after: 50 },
+          ],
+          spacing: { after: 0 },
         })
       )
 
-      // Role	Date range - BOTH ITALIC
-      if (ach.role || ach.date) {
+      // Role (if exists)
+      if (ach.role) {
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: ach.role || 'Role',
-                font: 'Times New Roman',
-                size: 21,
+                text: ach.role,
+                font: 'Arial',
+                size: 22,
                 italics: true,
               }),
-              ...(ach.date ? [
-                new TextRun({
-                  text: `\t${ach.date}`,
-                  font: 'Times New Roman',
-                  size: 21,
-                  italics: true,  // ITALIC
-                })
-              ] : []),
             ],
-            tabStops: ach.date ? [
-              {
-                type: TabStopType.RIGHT,
-                position: TabStopPosition.MAX,
-              },
-            ] : [],
-            spacing: { after: 100 },
+            spacing: { after: 50 },
           })
         )
       }
 
-      // Description as bullet point
+      // Description
       paragraphs.push(
         new Paragraph({
-          children: [
-            new TextRun({
-              text: `•   ${TextFormatter.formatBulletPoint(ach.description)}`,
-              font: 'Times New Roman',
-              size: 21,
-            })
-          ],
-          spacing: { after: index === achievements.length - 1 ? 200 : 150 },
+          text: TextFormatter.formatBulletPoint(ach.description),
+          bullet: {
+            level: 0,
+          },
+          spacing: { after: index === achievements.length - 1 ? 0 : 100 },
         })
       )
     })
@@ -443,7 +452,7 @@ export class CVWordExportV2 {
   }
 
   /**
-   * Create SKILLS, ACTIVITIES & INTERESTS section
+   * Create SKILLS section
    */
   private static createSkillsSection(skills: any[], languages?: any[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
@@ -451,139 +460,64 @@ export class CVWordExportV2 {
       new Paragraph({
         children: [
           new TextRun({
-            text: 'SKILLS, ACTIVITIES & INTERESTS',
+            text: 'SKILLS',
             bold: true,
-            font: 'Times New Roman',
-            size: 21,
+            font: 'Arial',
+            size: 24,
           })
         ],
-        spacing: { before: 0, after: 50 },
+        spacing: { before: 200, after: 100 },
         border: {
           bottom: {
             color: '000000',
-            space: 3,
+            space: 1,
             style: BorderStyle.SINGLE,
-            size: 12,
+            size: 6,
           },
         },
       }),
-      
-      // Empty line
-      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
-    // Languages (bold + italic label)
-    const langList = languages && languages.length > 0 
-      ? languages.map(l => TextFormatter.toTitleCase(l.language)).join(', ')
-      : ''
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'Languages: ',
-            font: 'Times New Roman',
-            size: 21,
-            bold: true,
-            italics: true,
-          }),
-          new TextRun({
-            text: langList,
-            font: 'Times New Roman',
-            size: 21,
+    // Helper to add skill line
+    const addSkillLine = (label: string, items: string[]) => {
+      if (items.length > 0) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${label}: `,
+                font: 'Arial',
+                size: 22,
+                bold: true,
+              }),
+              new TextRun({
+                text: items.join(', '),
+                font: 'Arial',
+                size: 22,
+              })
+            ],
+            spacing: { after: 50 },
           })
-        ],
-        spacing: { after: 75 },
-      })
-    )
-
-    // Activities (bold + italic label)
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'Activities: ',
-            font: 'Times New Roman',
-            size: 21,
-            bold: true,
-            italics: true,
-          })
-        ],
-        spacing: { after: 75 },
-      })
-    )
-
-    // Technical Skills (bold + italic label)
-    const technicalSkills = skills.filter(s => s.category === 'hard_skill' || s.category === 'tool')
-    const techList = technicalSkills.length > 0
-      ? TextFormatter.formatList(technicalSkills.map(s => s.name)).join(', ')
-      : ''
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'Technical Skills: ',
-            font: 'Times New Roman',
-            size: 21,
-            bold: true,
-            italics: true,
-          }),
-          new TextRun({
-            text: techList,
-            font: 'Times New Roman',
-            size: 21,
-          })
-        ],
-        spacing: { after: 75 },
-      })
-    )
-
-    // Interests (bold + italic label)
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'Interests: ',
-            font: 'Times New Roman',
-            size: 21,
-            bold: true,
-            italics: true,
-          })
-        ],
-        spacing: { after: 0 },
-      })
-    )
-
-    // Activities (from soft skills or general skills)
-    const activitySkills = skills.filter(s => s.category === 'soft_skill').slice(0, 3)
-    if (activitySkills.length > 0) {
-      const actList = TextFormatter.formatList(activitySkills.map(s => s.name)).join(', ')
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Activities: ${actList}`,
-              font: 'Times New Roman',
-              size: 21,
-            })
-          ],
-          spacing: { after: 50 },
-        })
-      )
+        )
+      }
     }
 
-    // Interests (placeholder - can be populated from user data later)
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'Interests: ',
-            font: 'Times New Roman',
-            size: 21,
-          })
-        ],
-        spacing: { after: 50 },
-      })
-    )
+    // Languages
+    if (languages && languages.length > 0) {
+      addSkillLine('Languages', languages.map(l => TextFormatter.toTitleCase(l.language)))
+    }
+
+    // Technical Skills
+    const technicalSkills = skills
+      .filter(s => s.category === 'hard_skill' || s.category === 'tool')
+      .map(s => s.name)
+    addSkillLine('Technical Skills', TextFormatter.formatList(technicalSkills))
+
+    // Soft Skills / Activities
+    const softSkills = skills
+      .filter(s => s.category === 'soft_skill')
+      .map(s => s.name)
+    addSkillLine('Interests & Activities', TextFormatter.formatList(softSkills))
 
     return paragraphs
   }
