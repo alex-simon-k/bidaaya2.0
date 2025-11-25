@@ -38,7 +38,7 @@ export function StructuredCVProjectsForm({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "Project name required";
-    if (formData.techStack.length === 0) newErrors.techStack = "Add at least 1 tech";
+    if (formData.techStack.length === 0) newErrors.techStack = "Add at least 1 skill or tool you used";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -96,6 +96,13 @@ export function StructuredCVProjectsForm({
         <h3 className="text-base sm:text-lg font-semibold text-bidaaya-light">Add Project</h3>
       </div>
 
+      {/* Friendly Description */}
+      <div className="px-3 sm:px-4 pb-2">
+        <p className="text-xs text-bidaaya-light/70">
+          📚 University project • 🎨 Hobby project • 💡 Fun side project — anything goes!
+        </p>
+      </div>
+
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-4 space-y-3 pb-3">
 
@@ -108,7 +115,7 @@ export function StructuredCVProjectsForm({
           id="name"
           value={formData.name}
           onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-          placeholder="e.g., Bidaaya Platform"
+          placeholder="e.g., Personal Finance Tracker, Research Project, etc."
           className={cn(
             "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light",
             errors.name && "border-red-400"
@@ -121,8 +128,11 @@ export function StructuredCVProjectsForm({
       {/* Tech Stack */}
       <div className="space-y-2">
         <Label className="text-bidaaya-light text-sm">
-          Technologies <span className="text-red-400">*</span> <span className="text-bidaaya-light/60">(max 6)</span>
+          Key Skills/Tools Used <span className="text-red-400">*</span> <span className="text-bidaaya-light/60">(max 6)</span>
         </Label>
+        <p className="text-xs text-bidaaya-light/60">
+          Technologies, tools, or skills you used (e.g., Python, Excel, Research, Design)
+        </p>
         <div className="flex gap-2">
           <Input
             value={newTech}
@@ -133,7 +143,7 @@ export function StructuredCVProjectsForm({
                 handleAddTech();
               }
             }}
-            placeholder="Add tech"
+            placeholder="e.g., Python, Excel, Figma..."
             className="flex-1 bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light text-sm"
             disabled={formData.techStack.length >= 6}
           />

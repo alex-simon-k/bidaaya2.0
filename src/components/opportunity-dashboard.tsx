@@ -191,16 +191,16 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       } else {
         // For internal opportunities, use generic tracking
         response = await fetch('/api/applications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            opportunityTitle: opportunity.title,
-            opportunityCompany: opportunity.company,
-            opportunityUrl: opportunity.applicationUrl,
-            opportunityLocation: opportunity.location,
-            notes: `Match score: ${opportunity.matchScore || 0}%`,
-          }),
-        });
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opportunityTitle: opportunity.title,
+          opportunityCompany: opportunity.company,
+          opportunityUrl: opportunity.applicationUrl,
+          opportunityLocation: opportunity.location,
+          notes: `Match score: ${opportunity.matchScore || 0}%`,
+        }),
+      });
       }
 
       if (response.ok) {
@@ -223,7 +223,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           setSelectedOpportunity(null);
           await loadDashboardData();
         } else {
-          alert(data.error || 'Failed to mark as applied');
+        alert(data.error || 'Failed to mark as applied');
         }
       }
     } catch (error) {
@@ -312,7 +312,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             >
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5" />
-                <span className="font-medium">Dashboard</span>
+              <span className="font-medium">Dashboard</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
@@ -369,7 +369,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <Settings className="h-5 w-5" />
+              <Settings className="h-5 w-5" />
                 <span className="font-medium">Settings & Credits</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
@@ -393,13 +393,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => window.location.href = '/api/auth/signout'}
+          <button
+            onClick={() => window.location.href = '/api/auth/signout'}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/80 hover:bg-bidaaya-light/10 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
+          >
+            <LogOut className="h-5 w-5" />
               <span className="font-medium">Sign out</span>
-            </button>
+          </button>
           </div>
         </div>
       </div>

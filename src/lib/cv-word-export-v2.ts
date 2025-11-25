@@ -120,19 +120,19 @@ export class CVWordExportV2 {
             size: 21, // 10.5pt
           })
         ],
-        spacing: { before: 0, after: 100 },
+        spacing: { before: 0, after: 50 },
         border: {
           bottom: {
             color: '000000',
-            space: 1,
+            space: 3,
             style: BorderStyle.SINGLE,
-            size: 6,
+            size: 12,
           },
         },
       }),
       
       // Empty line
-      new Paragraph({ text: '', spacing: { after: 50 } }),
+      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
     education.forEach((edu, index) => {
@@ -238,19 +238,19 @@ export class CVWordExportV2 {
             size: 21,
           })
         ],
-        spacing: { before: 0, after: 100 },
+        spacing: { before: 0, after: 50 },
         border: {
           bottom: {
             color: '000000',
-            space: 1,
+            space: 3,
             style: BorderStyle.SINGLE,
-            size: 6,
+            size: 12,
           },
         },
       }),
       
       // Empty line
-      new Paragraph({ text: '', spacing: { after: 50 } }),
+      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
     experiences.forEach((exp, index) => {
@@ -342,19 +342,19 @@ export class CVWordExportV2 {
             size: 21,
           })
         ],
-        spacing: { before: 0, after: 100 },
+        spacing: { before: 0, after: 50 },
         border: {
           bottom: {
             color: '000000',
-            space: 1,
+            space: 3,
             style: BorderStyle.SINGLE,
-            size: 6,
+            size: 12,
           },
         },
       }),
       
       // Empty line
-      new Paragraph({ text: '', spacing: { after: 50 } }),
+      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
     achievements.forEach((ach, index) => {
@@ -449,19 +449,19 @@ export class CVWordExportV2 {
             size: 21,
           })
         ],
-        spacing: { before: 0, after: 100 },
+        spacing: { before: 0, after: 50 },
         border: {
           bottom: {
             color: '000000',
-            space: 1,
+            space: 3,
             style: BorderStyle.SINGLE,
-            size: 6,
+            size: 12,
           },
         },
       }),
       
       // Empty line
-      new Paragraph({ text: '', spacing: { after: 50 } }),
+      new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
     // Languages (italic label)
