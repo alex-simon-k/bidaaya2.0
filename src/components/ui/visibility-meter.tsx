@@ -86,12 +86,10 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
   }
   
   const config = levelConfig[visibilityLevel]
-  const radius = 45
-  const circumference = 2 * Math.PI * radius
-  const halfCircumference = circumference / 2
-  const strokeDasharray = `${halfCircumference} ${halfCircumference}`
-  const progress = (normalizedStreak / maxStreak) * halfCircumference
-  const strokeDashoffset = -progress
+  // Calculate arc progress (starts empty, fills as streak increases)
+  const arcLength = 220 // Length of the path arc in SVG units
+  const progress = (normalizedStreak / maxStreak) // 0 to 1
+  const strokeDashoffset = arcLength - (progress * arcLength) // Starts at arcLength (empty), goes to 0 (full)
   
   // Animate score counting up
   useEffect(() => {
@@ -115,25 +113,25 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
     requestAnimationFrame(animate)
   }, [streak])
   
-  // Animate stroke
+  // Animate stroke - starts FULL (empty) and fills down to actual progress
   useEffect(() => {
     if (!strokeRef.current) return
     
     const animation = strokeRef.current.animate(
       [
-        { strokeDashoffset: "0" },
-        { strokeDashoffset: "0", offset: 0.3 },
-        { strokeDashoffset: strokeDashoffset.toString() }
+        { strokeDashoffset: arcLength.toString() }, // Start empty
+        { strokeDashoffset: arcLength.toString(), offset: 0.2 },
+        { strokeDashoffset: strokeDashoffset.toString() } // Fill to actual progress
       ],
       {
-        duration: 1500,
-        easing: "cubic-bezier(0.65, 0, 0.35, 1)",
+        duration: 1800,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
         fill: "forwards"
       }
     )
     
     return () => animation.cancel()
-  }, [strokeDashoffset])
+  }, [strokeDashoffset, arcLength])
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -150,11 +148,11 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
         </div>
       </div>
       
-      {/* Half-circle gauge - Beautiful gradient arc */}
-      <div className="relative h-40 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
+      {/* Progress bar arc - fills as streak increases */}
+      <div className="relative h-48 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
         <svg 
           className="block mx-auto w-full h-full" 
-          viewBox="0 0 200 110" 
+          viewBox="0 0 200 120" 
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
@@ -168,7 +166,7 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
               ))}
             </linearGradient>
             <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
               <feMerge>
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
@@ -176,42 +174,38 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
             </filter>
           </defs>
           
-          {/* Background track with subtle glow */}
+          {/* Background track */}
           <path
-            d="M 30 100 A 70 70 0 0 1 170 100"
+            d="M 30 105 A 70 70 0 0 1 170 105"
             fill="none"
-            stroke="rgba(255, 255, 255, 0.1)"
-            strokeWidth="14"
+            stroke="rgba(255, 255, 255, 0.08)"
+            strokeWidth="18"
             strokeLinecap="round"
           />
           
-          {/* Gradient progress arc with glow */}
+          {/* Gradient progress arc - FILLS as streak increases */}
           <path
             ref={strokeRef}
-            d="M 30 100 A 70 70 0 0 1 170 100"
+            d="M 30 105 A 70 70 0 0 1 170 105"
             fill="none"
             stroke={`url(#${gradIdRef.current})`}
-            strokeWidth="16"
+            strokeWidth="20"
             strokeLinecap="round"
-            strokeDasharray={`${halfCircumference} ${halfCircumference}`}
-            strokeDashoffset="0"
+            strokeDasharray={arcLength}
+            strokeDashoffset={arcLength}
             filter="url(#glow)"
-            style={{
-              transform: 'rotate(0deg)',
-              transformOrigin: '100px 100px'
-            }}
           />
         </svg>
         
         {/* Streak number display - centered in gauge */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-0.5">
-            <Flame className={cn("h-7 w-7", config.textColor, streak > 0 && "animate-pulse")} />
-            <div className={cn("text-5xl font-black tabular-nums", config.textColor)}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3 text-center">
+          <div className="flex items-center justify-center gap-3 mb-1">
+            <Flame className={cn("h-8 w-8", config.textColor, streak > 0 && "animate-pulse")} />
+            <div className={cn("text-6xl font-black tabular-nums", config.textColor)}>
               {animatedScore}
             </div>
           </div>
-          <div className="text-xs text-bidaaya-light/50 uppercase tracking-widest font-semibold">
+          <div className="text-xs text-bidaaya-light/50 uppercase tracking-widest font-bold">
             DAY STREAK
           </div>
         </div>
