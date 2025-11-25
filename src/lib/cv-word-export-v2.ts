@@ -280,7 +280,7 @@ export class CVWordExportV2 {
         })
       )
 
-      // Role - Team	Jun 2025 – Aug 2025
+      // Role - Team	Jun 2025 – Aug 2025 (Italic role)
       const roleText = exp.summary ? `${exp.title} - ${exp.summary}` : exp.title
       paragraphs.push(
         new Paragraph({
@@ -289,6 +289,7 @@ export class CVWordExportV2 {
               text: TextFormatter.formatRoleTitle(roleText),
               font: 'Times New Roman',
               size: 21,
+              italics: true, // Italic for role titles
             }),
             new TextRun({
               text: `\t${exp.dates}`,
@@ -302,22 +303,22 @@ export class CVWordExportV2 {
               position: TabStopPosition.MAX,
             },
           ],
-          spacing: { after: 50 },
+          spacing: { after: 100 }, // More space before bullets
         })
       )
 
-      // Bullet points (as paragraphs, not actual bullets)
+      // Bullet points with • symbol
       exp.achievements.forEach((achievement: string, achIndex: number) => {
         paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: TextFormatter.formatBulletPoint(achievement),
+                text: `•   ${TextFormatter.formatBulletPoint(achievement)}`,
                 font: 'Times New Roman',
                 size: 21,
               })
             ],
-            spacing: { after: achIndex === exp.achievements.length - 1 ? 150 : 50 },
+            spacing: { after: achIndex === exp.achievements.length - 1 ? 200 : 75 },
           })
         )
       })
@@ -356,7 +357,7 @@ export class CVWordExportV2 {
       new Paragraph({ text: '', spacing: { after: 50 } }),
     ]
 
-    achievements.forEach((ach) => {
+    achievements.forEach((ach, index) => {
       // Organization Name	Location (if available)
       paragraphs.push(
         new Paragraph({
@@ -367,22 +368,65 @@ export class CVWordExportV2 {
               size: 21,
               bold: true,
             }),
+            ...(ach.location ? [
+              new TextRun({
+                text: `\t${TextFormatter.formatLocation(ach.location)}`,
+                font: 'Times New Roman',
+                size: 21,
+              })
+            ] : []),
           ],
+          tabStops: ach.location ? [
+            {
+              type: TabStopType.RIGHT,
+              position: TabStopPosition.MAX,
+            },
+          ] : [],
           spacing: { after: 50 },
         })
       )
 
-      // Description
+      // Role	Date range (italic)
+      if (ach.role || ach.date) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: ach.role || 'Role',
+                font: 'Times New Roman',
+                size: 21,
+                italics: true,
+              }),
+              ...(ach.date ? [
+                new TextRun({
+                  text: `\t${ach.date}`,
+                  font: 'Times New Roman',
+                  size: 21,
+                })
+              ] : []),
+            ],
+            tabStops: ach.date ? [
+              {
+                type: TabStopType.RIGHT,
+                position: TabStopPosition.MAX,
+              },
+            ] : [],
+            spacing: { after: 100 },
+          })
+        )
+      }
+
+      // Description as bullet point
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: TextFormatter.formatBulletPoint(ach.description),
+              text: `•   ${TextFormatter.formatBulletPoint(ach.description)}`,
               font: 'Times New Roman',
               size: 21,
             })
           ],
-          spacing: { after: 150 },
+          spacing: { after: index === achievements.length - 1 ? 200 : 150 },
         })
       )
     })
@@ -420,40 +464,82 @@ export class CVWordExportV2 {
       new Paragraph({ text: '', spacing: { after: 50 } }),
     ]
 
-    // Languages
-    if (languages && languages.length > 0) {
-      const langList = languages.map(l => TextFormatter.toTitleCase(l.language)).join(', ')
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Languages: ${langList}`,
-              font: 'Times New Roman',
-              size: 21,
-            })
-          ],
-          spacing: { after: 50 },
-        })
-      )
-    }
+    // Languages (italic label)
+    const langList = languages && languages.length > 0 
+      ? languages.map(l => TextFormatter.toTitleCase(l.language)).join(', ')
+      : ''
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'Languages: ',
+            font: 'Times New Roman',
+            size: 21,
+            italics: true,
+          }),
+          new TextRun({
+            text: langList,
+            font: 'Times New Roman',
+            size: 21,
+          })
+        ],
+        spacing: { after: 75 },
+      })
+    )
 
-    // Technical Skills (hard skills)
+    // Activities (empty placeholder with italic label)
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'Activities: ',
+            font: 'Times New Roman',
+            size: 21,
+            italics: true,
+          })
+        ],
+        spacing: { after: 75 },
+      })
+    )
+
+    // Technical Skills (italic label)
     const technicalSkills = skills.filter(s => s.category === 'hard_skill' || s.category === 'tool')
-    if (technicalSkills.length > 0) {
-      const techList = TextFormatter.formatList(technicalSkills.map(s => s.name)).join(', ')
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Technical Skills: ${techList}`,
-              font: 'Times New Roman',
-              size: 21,
-            })
-          ],
-          spacing: { after: 50 },
-        })
-      )
-    }
+    const techList = technicalSkills.length > 0
+      ? TextFormatter.formatList(technicalSkills.map(s => s.name)).join(', ')
+      : ''
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'Technical Skills: ',
+            font: 'Times New Roman',
+            size: 21,
+            italics: true,
+          }),
+          new TextRun({
+            text: techList,
+            font: 'Times New Roman',
+            size: 21,
+          })
+        ],
+        spacing: { after: 75 },
+      })
+    )
+
+    // Interests (empty placeholder with italic label)
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'Interests: ',
+            font: 'Times New Roman',
+            size: 21,
+            italics: true,
+          })
+        ],
+        spacing: { after: 0 },
+      })
+    )
 
     // Activities (from soft skills or general skills)
     const activitySkills = skills.filter(s => s.category === 'soft_skill').slice(0, 3)
