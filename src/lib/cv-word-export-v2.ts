@@ -1,6 +1,6 @@
 /**
  * CV Word Export Service V2
- * Simple, reliable DOCX generation without tables
+ * Uses invisible borderless tables for reliable cross-platform alignment
  */
 
 import { 
@@ -10,8 +10,11 @@ import {
   AlignmentType,
   BorderStyle,
   convertInchesToTwip,
-  TabStopType,
-  TabStopPosition,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  VerticalAlign,
 } from 'docx'
 import { GeneratedCV } from './cv-generator'
 import { TextFormatter } from './text-formatter'
@@ -20,6 +23,7 @@ export class CVWordExportV2 {
   
   /**
    * Generate a Word document from CV data
+   * Uses borderless tables for reliable alignment across all platforms
    */
   static async generateWordDocument(cv: GeneratedCV): Promise<Document> {
     
@@ -118,10 +122,83 @@ export class CVWordExportV2 {
   }
 
   /**
+   * Create a borderless table for left-right alignment
+   */
+  private static createAlignmentTable(leftText: string, rightText: string, leftBold = false, leftItalic = false, rightBold = false, spacing = { before: 0, after: 40 }): Table {
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+              },
+              verticalAlign: VerticalAlign.TOP,
+              margins: { top: 0, bottom: 0, left: 0, right: 0 },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: leftText,
+                      bold: leftBold,
+                      italics: leftItalic,
+                      font: 'Arial',
+                      size: 22,
+                    })
+                  ],
+                  spacing: spacing,
+                })
+              ],
+            }),
+            new TableCell({
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+              },
+              verticalAlign: VerticalAlign.TOP,
+              margins: { top: 0, bottom: 0, left: 0, right: 0 },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: rightText,
+                      bold: rightBold,
+                      font: 'Arial',
+                      size: 22,
+                    })
+                  ],
+                  alignment: AlignmentType.RIGHT,
+                  spacing: spacing,
+                })
+              ],
+            }),
+          ],
+        }),
+      ],
+    })
+  }
+
+  /**
    * Create EDUCATION section
    */
-  private static createEducationSection(education: any[]): Paragraph[] {
-    const elements: Paragraph[] = [
+  private static createEducationSection(education: any[]): (Paragraph | Table)[] {
+    const elements: (Paragraph | Table)[] = [
       // Section Header
       new Paragraph({
         children: [
@@ -145,54 +222,29 @@ export class CVWordExportV2 {
     ]
 
     education.forEach((edu, index) => {
-      // Institution and Location (on same line with tab)
-      elements.push(new Paragraph({
-        children: [
-          new TextRun({
-            text: TextFormatter.formatCompanyName(edu.institution).toUpperCase(),
-            bold: true,
-            font: 'Arial',
-            size: 22,
-          }),
-          new TextRun({
-            text: '\t' + TextFormatter.formatLocation(edu.location || ''),
-            bold: true,
-            font: 'Arial',
-            size: 22,
-          }),
-        ],
-        spacing: { before: index === 0 ? 100 : 200, after: 40 },
-        tabStops: [
-          {
-            type: TabStopType.RIGHT,
-            position: TabStopPosition.MAX,
-          },
-        ],
-      }))
+      // Institution (Left) | Location (Right)
+      elements.push(
+        this.createAlignmentTable(
+          TextFormatter.formatCompanyName(edu.institution).toUpperCase(),
+          TextFormatter.formatLocation(edu.location || ''),
+          true, // left bold
+          false, // left italic
+          true, // right bold
+          { before: index === 0 ? 100 : 200, after: 40 }
+        )
+      )
 
-      // Degree and Dates (on same line with tab)
-      elements.push(new Paragraph({
-        children: [
-          new TextRun({
-            text: TextFormatter.toTitleCase(edu.degree),
-            italics: true,
-            font: 'Arial',
-            size: 22,
-          }),
-          new TextRun({
-            text: '\t' + edu.dates,
-            font: 'Arial',
-            size: 22,
-          }),
-        ],
-        spacing: { after: 40 },
-        tabStops: [
-          {
-            type: TabStopType.RIGHT,
-            position: TabStopPosition.MAX,
-          },
-        ],
-      }))
+      // Degree (Left) | Dates (Right)
+      elements.push(
+        this.createAlignmentTable(
+          TextFormatter.toTitleCase(edu.degree),
+          edu.dates,
+          false, // left bold
+          true, // left italic
+          false, // right bold
+          { before: 0, after: 40 }
+        )
+      )
 
       // Grade (if exists)
       if (edu.grade) {
@@ -257,8 +309,8 @@ export class CVWordExportV2 {
   /**
    * Create EXPERIENCE section
    */
-  private static createExperienceSection(experience: any[]): Paragraph[] {
-    const elements: Paragraph[] = [
+  private static createExperienceSection(experience: any[]): (Paragraph | Table)[] {
+    const elements: (Paragraph | Table)[] = [
       // Section Header
       new Paragraph({
         children: [
@@ -282,54 +334,29 @@ export class CVWordExportV2 {
     ]
 
     experience.forEach((exp, index) => {
-      // Company and Location
-      elements.push(new Paragraph({
-        children: [
-          new TextRun({
-            text: TextFormatter.formatCompanyName(exp.company).toUpperCase(),
-            bold: true,
-            font: 'Arial',
-            size: 22,
-          }),
-          new TextRun({
-            text: '\t' + TextFormatter.formatLocation(exp.location || ''),
-            bold: true,
-            font: 'Arial',
-            size: 22,
-          }),
-        ],
-        spacing: { before: index === 0 ? 100 : 200, after: 40 },
-        tabStops: [
-          {
-            type: TabStopType.RIGHT,
-            position: TabStopPosition.MAX,
-          },
-        ],
-      }))
+      // Company (Left) | Location (Right)
+      elements.push(
+        this.createAlignmentTable(
+          TextFormatter.formatCompanyName(exp.company).toUpperCase(),
+          TextFormatter.formatLocation(exp.location || ''),
+          true, // left bold
+          false, // left italic
+          true, // right bold
+          { before: index === 0 ? 100 : 200, after: 40 }
+        )
+      )
 
-      // Role and Dates
-      elements.push(new Paragraph({
-        children: [
-          new TextRun({
-            text: TextFormatter.toTitleCase(exp.role),
-            italics: true,
-            font: 'Arial',
-            size: 22,
-          }),
-          new TextRun({
-            text: '\t' + exp.dates,
-            font: 'Arial',
-            size: 22,
-          }),
-        ],
-        spacing: { after: 60 },
-        tabStops: [
-          {
-            type: TabStopType.RIGHT,
-            position: TabStopPosition.MAX,
-          },
-        ],
-      }))
+      // Role (Left) | Dates (Right)
+      elements.push(
+        this.createAlignmentTable(
+          TextFormatter.toTitleCase(exp.role),
+          exp.dates,
+          false, // left bold
+          true, // left italic
+          false, // right bold
+          { before: 0, after: 60 }
+        )
+      )
 
       // Description
       if (exp.description) {
@@ -368,8 +395,8 @@ export class CVWordExportV2 {
   /**
    * Create EXTRACURRICULARS section
    */
-  private static createExtracurricularsSection(achievements: any[]): Paragraph[] {
-    const elements: Paragraph[] = [
+  private static createExtracurricularsSection(achievements: any[]): (Paragraph | Table)[] {
+    const elements: (Paragraph | Table)[] = [
       // Section Header
       new Paragraph({
         children: [
@@ -393,54 +420,29 @@ export class CVWordExportV2 {
     ]
 
     achievements.forEach((ach, index) => {
-      // Organization and Location
-      elements.push(new Paragraph({
-        children: [
-          new TextRun({
-            text: TextFormatter.formatCompanyName(ach.organization || ach.title).toUpperCase(),
-            bold: true,
-            font: 'Arial',
-            size: 22,
-          }),
-          new TextRun({
-            text: '\t' + TextFormatter.formatLocation(ach.location || ''),
-            bold: true,
-            font: 'Arial',
-            size: 22,
-          }),
-        ],
-        spacing: { before: index === 0 ? 100 : 200, after: 40 },
-        tabStops: [
-          {
-            type: TabStopType.RIGHT,
-            position: TabStopPosition.MAX,
-          },
-        ],
-      }))
+      // Organization (Left) | Location (Right)
+      elements.push(
+        this.createAlignmentTable(
+          TextFormatter.formatCompanyName(ach.organization || ach.title).toUpperCase(),
+          TextFormatter.formatLocation(ach.location || ''),
+          true, // left bold
+          false, // left italic
+          true, // right bold
+          { before: index === 0 ? 100 : 200, after: 40 }
+        )
+      )
 
-      // Role and Dates
-      elements.push(new Paragraph({
-        children: [
-          new TextRun({
-            text: TextFormatter.toTitleCase(ach.role || ach.category || 'Member'),
-            italics: true,
-            font: 'Arial',
-            size: 22,
-          }),
-          new TextRun({
-            text: '\t' + (ach.dates || ach.date || ''),
-            font: 'Arial',
-            size: 22,
-          }),
-        ],
-        spacing: { after: 60 },
-        tabStops: [
-          {
-            type: TabStopType.RIGHT,
-            position: TabStopPosition.MAX,
-          },
-        ],
-      }))
+      // Role (Left) | Dates (Right)
+      elements.push(
+        this.createAlignmentTable(
+          TextFormatter.toTitleCase(ach.role || ach.category || 'Member'),
+          ach.dates || ach.date || '',
+          false, // left bold
+          true, // left italic
+          false, // right bold
+          { before: 0, after: 60 }
+        )
+      )
 
       // Description
       if (ach.description) {
