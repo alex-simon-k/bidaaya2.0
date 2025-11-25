@@ -20,7 +20,16 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized - Students only' }, { status: 401 })
     }
 
-    const { notes } = await request.json()
+    // Notes are optional - some clients may not send a JSON body
+    let notes: string | undefined = undefined
+    try {
+      const body = await request.json().catch(() => null)
+      if (body && typeof body.notes === 'string') {
+        notes = body.notes
+      }
+    } catch {
+      notes = undefined
+    }
 
     // Check if opportunity exists
     const opportunity = await prisma.externalOpportunity.findUnique({

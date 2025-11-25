@@ -24,10 +24,6 @@ export async function POST(request: NextRequest) {
         currentStreak: true,
         longestStreak: true,
         lastStreakDate: true,
-        dailyPicksOpportunities: true,
-        externalOpportunityApps: {
-          select: { externalOpportunityId: true },
-        },
       },
     })
 
@@ -38,19 +34,41 @@ export async function POST(request: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
+    const startOfToday = new Date(today)
+    const endOfToday = new Date(today)
+    endOfToday.setDate(endOfToday.getDate() + 1)
+
     const lastStreakDate = user.lastStreakDate ? new Date(user.lastStreakDate) : null
     lastStreakDate?.setHours(0, 0, 0, 0)
 
-    // Check if user has applied to at least one daily pick today
-    const appliedIds = user.externalOpportunityApps.map(app => app.externalOpportunityId)
-    const dailyPickIds = user.dailyPicksOpportunities || []
-    
-    const hasAppliedToDaily = dailyPickIds.some(pickId => appliedIds.includes(pickId))
+    // Check if user has applied to at least one opportunity today
+    const [trackedBoardApplications, manualExternalApplications] = await Promise.all([
+      prisma.externalOpportunityApplication.count({
+        where: {
+          userId,
+          appliedAt: {
+            gte: startOfToday,
+            lt: endOfToday,
+          },
+        },
+      }),
+      prisma.externalApplication.count({
+        where: {
+          userId,
+          appliedDate: {
+            gte: startOfToday,
+            lt: endOfToday,
+          },
+        },
+      }),
+    ])
 
-    if (!hasAppliedToDaily) {
+    const hasAppliedToday = trackedBoardApplications + manualExternalApplications > 0
+
+    if (!hasAppliedToday) {
       return NextResponse.json({
         success: false,
-        message: 'Apply to at least one daily pick to maintain your streak!',
+        message: 'Apply to at least one opportunity today to grow your streak.',
         streak: user.currentStreak,
       })
     }
