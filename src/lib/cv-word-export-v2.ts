@@ -136,7 +136,7 @@ export class CVWordExportV2 {
     ]
 
     education.forEach((edu, index) => {
-      // University	Location (on same line, location right-aligned using tab)
+      // University	Location (on same line, location right-aligned using tab) - BOTH BOLD
       paragraphs.push(
         new Paragraph({
           children: [
@@ -144,11 +144,13 @@ export class CVWordExportV2 {
               text: TextFormatter.formatCompanyName(edu.institution),
               font: 'Times New Roman',
               size: 21,
+              bold: true,  // BOLD
             }),
             new TextRun({
               text: `\t${TextFormatter.formatLocation(edu.location || '')}`,
               font: 'Times New Roman',
               size: 21,
+              bold: true,  // BOLD
             }),
           ],
           tabStops: [
@@ -161,7 +163,7 @@ export class CVWordExportV2 {
         })
       )
 
-      // Course	Sep 2023 – Jun 2026 (on same line, dates right-aligned)
+      // Course	Sep 2023 – Jun 2026 (on same line, dates right-aligned) - BOTH ITALIC
       paragraphs.push(
         new Paragraph({
           children: [
@@ -169,11 +171,13 @@ export class CVWordExportV2 {
               text: TextFormatter.toTitleCase(edu.degree),
               font: 'Times New Roman',
               size: 21,
+              italics: true,  // ITALIC
             }),
             new TextRun({
               text: `\t${edu.dates}`,
               font: 'Times New Roman',
               size: 21,
+              italics: true,  // ITALIC
             }),
           ],
           tabStops: [
@@ -254,7 +258,7 @@ export class CVWordExportV2 {
     ]
 
     experiences.forEach((exp, index) => {
-      // Company Name	Location
+      // Company Name	Location - BOTH BOLD
       paragraphs.push(
         new Paragraph({
           children: [
@@ -268,6 +272,7 @@ export class CVWordExportV2 {
               text: `\t${TextFormatter.formatLocation(exp.location || '')}`,
               font: 'Times New Roman',
               size: 21,
+              bold: true,  // BOLD
             }),
           ],
           tabStops: [
@@ -280,7 +285,7 @@ export class CVWordExportV2 {
         })
       )
 
-      // Role - Team	Jun 2025 – Aug 2025 (Italic role)
+      // Role - Team	Jun 2025 – Aug 2025 - BOTH ITALIC
       const roleText = exp.summary ? `${exp.title} - ${exp.summary}` : exp.title
       paragraphs.push(
         new Paragraph({
@@ -289,12 +294,13 @@ export class CVWordExportV2 {
               text: TextFormatter.formatRoleTitle(roleText),
               font: 'Times New Roman',
               size: 21,
-              italics: true, // Italic for role titles
+              italics: true, // ITALIC
             }),
             new TextRun({
               text: `\t${exp.dates}`,
               font: 'Times New Roman',
               size: 21,
+              italics: true,  // ITALIC
             }),
           ],
           tabStops: [
@@ -358,7 +364,7 @@ export class CVWordExportV2 {
     ]
 
     achievements.forEach((ach, index) => {
-      // Organization Name	Location (if available)
+      // Organization Name	Location (if available) - BOTH BOLD
       paragraphs.push(
         new Paragraph({
           children: [
@@ -373,6 +379,7 @@ export class CVWordExportV2 {
                 text: `\t${TextFormatter.formatLocation(ach.location)}`,
                 font: 'Times New Roman',
                 size: 21,
+                bold: true,  // BOLD
               })
             ] : []),
           ],
@@ -386,7 +393,7 @@ export class CVWordExportV2 {
         })
       )
 
-      // Role	Date range (italic)
+      // Role	Date range - BOTH ITALIC
       if (ach.role || ach.date) {
         paragraphs.push(
           new Paragraph({
@@ -402,6 +409,7 @@ export class CVWordExportV2 {
                   text: `\t${ach.date}`,
                   font: 'Times New Roman',
                   size: 21,
+                  italics: true,  // ITALIC
                 })
               ] : []),
             ],
@@ -464,7 +472,7 @@ export class CVWordExportV2 {
       new Paragraph({ text: '', spacing: { after: 100 } }),
     ]
 
-    // Languages (italic label)
+    // Languages (bold + italic label)
     const langList = languages && languages.length > 0 
       ? languages.map(l => TextFormatter.toTitleCase(l.language)).join(', ')
       : ''
@@ -475,6 +483,7 @@ export class CVWordExportV2 {
             text: 'Languages: ',
             font: 'Times New Roman',
             size: 21,
+            bold: true,
             italics: true,
           }),
           new TextRun({
@@ -487,7 +496,7 @@ export class CVWordExportV2 {
       })
     )
 
-    // Activities (empty placeholder with italic label)
+    // Activities (bold + italic label)
     paragraphs.push(
       new Paragraph({
         children: [
@@ -495,6 +504,7 @@ export class CVWordExportV2 {
             text: 'Activities: ',
             font: 'Times New Roman',
             size: 21,
+            bold: true,
             italics: true,
           })
         ],
@@ -502,7 +512,7 @@ export class CVWordExportV2 {
       })
     )
 
-    // Technical Skills (italic label)
+    // Technical Skills (bold + italic label)
     const technicalSkills = skills.filter(s => s.category === 'hard_skill' || s.category === 'tool')
     const techList = technicalSkills.length > 0
       ? TextFormatter.formatList(technicalSkills.map(s => s.name)).join(', ')
@@ -514,6 +524,7 @@ export class CVWordExportV2 {
             text: 'Technical Skills: ',
             font: 'Times New Roman',
             size: 21,
+            bold: true,
             italics: true,
           }),
           new TextRun({
@@ -526,7 +537,7 @@ export class CVWordExportV2 {
       })
     )
 
-    // Interests (empty placeholder with italic label)
+    // Interests (bold + italic label)
     paragraphs.push(
       new Paragraph({
         children: [
@@ -534,6 +545,7 @@ export class CVWordExportV2 {
             text: 'Interests: ',
             font: 'Times New Roman',
             size: 21,
+            bold: true,
             italics: true,
           })
         ],

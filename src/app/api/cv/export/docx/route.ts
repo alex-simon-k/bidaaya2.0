@@ -10,7 +10,9 @@ import { authOptions } from '@/lib/auth-config'
 import { CVGenerator } from '@/lib/cv-generator'
 import { CVWordExportV2 } from '@/lib/cv-word-export-v2'
 import { Packer } from 'docx'
+import { PrismaClient } from '@prisma/client'
 
+const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
 
 interface ExportRequest {
@@ -36,10 +38,72 @@ export async function POST(request: NextRequest) {
     // Generate CV (generic or custom)
     let cv
     if (!opportunityId && !projectId) {
+      // Generic CV
       cv = await CVGenerator.generateGenericCV(userId)
+    } else if (projectId) {
+      // Internal Bidaaya project
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: {
+          title: true,
+          description: true,
+          skillsRequired: true,
+          experienceLevel: true,
+          category: true,
+        },
+      })
+
+      if (project) {
+        const opportunityRequirements = {
+          title: project.title,
+          description: project.description,
+          required_skills: project.skillsRequired,
+          nice_to_have_skills: [],
+          role_type: project.category || 'general',
+          experience_level: project.experienceLevel || 'entry',
+        }
+        cv = await CVGenerator.generateCustomCV(userId, opportunityRequirements)
+      } else {
+        cv = await CVGenerator.generateGenericCV(userId)
+      }
+    } else if (opportunityId && opportunityType === 'external') {
+      // External opportunity - Generate CUSTOM CV
+      const opportunity = await prisma.externalOpportunity.findUnique({
+        where: { id: opportunityId },
+        select: {
+          title: true,
+          description: true,
+          category: true,
+          experienceLevel: true,
+        },
+      })
+
+      if (opportunity) {
+        // Extract skills from description
+        const description = opportunity.description || ''
+        const commonSkills = [
+          'python', 'javascript', 'react', 'node', 'java', 'sql', 'data analysis',
+          'marketing', 'communication', 'leadership', 'project management'
+        ]
+        const foundSkills = commonSkills.filter(skill =>
+          description.toLowerCase().includes(skill)
+        )
+
+        const opportunityRequirements = {
+          title: opportunity.title,
+          description: opportunity.description || '',
+          required_skills: foundSkills,
+          nice_to_have_skills: [],
+          role_type: opportunity.category || 'general',
+          experience_level: opportunity.experienceLevel || 'entry',
+        }
+
+        cv = await CVGenerator.generateCustomCV(userId, opportunityRequirements)
+        console.log(`✅ Generated CUSTOM CV for: ${opportunity.title}`)
+      } else {
+        cv = await CVGenerator.generateGenericCV(userId)
+      }
     } else {
-      // Build opportunity requirements (same logic as cv/generate/route.ts)
-      // For now, generate generic - can enhance later
       cv = await CVGenerator.generateGenericCV(userId)
     }
 
