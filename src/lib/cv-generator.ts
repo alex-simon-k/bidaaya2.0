@@ -250,7 +250,7 @@ export class CVGenerator {
         location: exp.location || undefined,
         dates: this.formatDateRange(exp.startDate, exp.endDate, exp.isCurrent),
         summary: exp.summary || undefined,
-        achievements: exp.impacts?.map(imp => imp.statement) || [],
+        achievements: exp.impacts?.map((imp: any) => imp.statement) || [],
         relevanceScore: 100  // Generic, so all are equally relevant
       }))
 
@@ -260,7 +260,7 @@ export class CVGenerator {
         dates: proj.startDate ? this.formatDateRange(proj.startDate, proj.endDate, proj.isCurrent) : undefined,
         description: proj.summary || '',
         technologies: proj.techStack,
-        outcomes: proj.impacts?.map(imp => imp.statement) || [],
+        outcomes: proj.impacts?.map((imp: any) => imp.statement) || [],
         relevanceScore: 100
       }))
 

@@ -135,14 +135,14 @@ export async function GET(request: NextRequest) {
           select: { externalOpportunityId: true }
         }).catch(() => []),
         prisma.earlyAccessUnlock.findMany({
-          where: {
-            userId: session.user.id,
-            externalOpportunityId: {
-              in: opportunities.map(o => o.id)
-            }
-          },
-          select: { externalOpportunityId: true }
-        }).catch(() => [])
+        where: {
+          userId: session.user.id,
+          externalOpportunityId: {
+            in: opportunities.map(o => o.id)
+          }
+        },
+        select: { externalOpportunityId: true }
+      }).catch(() => [])
       ])
 
       appliedOpportunityIds = applications.map(a => a.externalOpportunityId)
