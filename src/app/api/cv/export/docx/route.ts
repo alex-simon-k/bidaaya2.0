@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
-import { CVGenerator } from '@/lib/cv-generator'
+import { CVGenerator, GeneratedCV } from '@/lib/cv-generator'
 import { CVWordExportV2 } from '@/lib/cv-word-export-v2'
 import { Packer } from 'docx'
 import { PrismaClient } from '@prisma/client'
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.log('📄 Word Export Request:', { opportunityId, opportunityType, projectId, generatedCvId })
 
     // Generate CV (generic, custom, or from history)
-    let cv
+    let cv: GeneratedCV | null = null
     
     // 1. Try fetching from history if ID provided
     if (generatedCvId) {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         })
         
         if (record && record.userId === userId) {
-          cv = record.cvData
+          cv = record.cvData as GeneratedCV
           console.log('✅ Using saved GeneratedCV data:', generatedCvId)
         }
       } catch (e) {
