@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { CVGenerator, GeneratedCV } from '@/lib/cv-generator'
-import { CVWordExportV2 } from '@/lib/cv-word-export-v2'
+import { CVWordExportV3 } from '@/lib/cv-word-export-v3-template'
 import { Packer } from 'docx'
 import { PrismaClient } from '@prisma/client'
 
@@ -137,8 +137,8 @@ export async function POST(request: NextRequest) {
 
     console.log('📝 Generating Word document...')
 
-    // Generate Word document using V2 (exact template format)
-    const doc = await CVWordExportV2.generateWordDocument(cv)
+    // Generate Word document using V3 (simple, reliable approach)
+    const doc = await CVWordExportV3.generateWordDocument(cv)
 
     // Convert to buffer
     const buffer = await Packer.toBuffer(doc)
@@ -189,8 +189,8 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Generate Word document using V2
-    const doc = await CVWordExportV2.generateWordDocument(cv)
+    // Generate Word document using V3
+    const doc = await CVWordExportV3.generateWordDocument(cv)
     const buffer = await Packer.toBuffer(doc)
     const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
     const filename = `CV_${sanitizedName}.docx`
