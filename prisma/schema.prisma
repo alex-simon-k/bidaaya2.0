@@ -813,6 +813,7 @@ model ExternalOpportunity {
   companyUser     User?    @relation("CompanyExternalOpportunities", fields: [companyId], references: [id])
   earlyAccessUnlocks EarlyAccessUnlock[] @relation("ExternalOpportunityUnlocks")
   feedback        OpportunityFeedback[] @relation("ExternalOpportunityFeedback")
+  generatedCVs    GeneratedCV[]
   
   @@index([isActive, isPremium])
   @@index([isNewOpportunity, publishedAt])
