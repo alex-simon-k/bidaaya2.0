@@ -6,7 +6,7 @@ import { Flame, TrendingUp, X, Sparkles, ChevronRight, Lock } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { OpportunityDetailModal } from '@/components/ui/opportunity-detail-modal'
-import { ApplicationMomentumChart } from '@/components/ui/application-momentum-chart'
+import { VisibilityMeter } from '@/components/ui/visibility-meter'
 
 interface DailyPick {
   id: string
@@ -35,13 +35,10 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
   const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null)
   const [currentPickIndex, setCurrentPickIndex] = useState(0)
   const [showCelebration, setShowCelebration] = useState(false)
-  const [momentumData, setMomentumData] = useState<any[]>([])
-  const [momentumLoading, setMomentumLoading] = useState(true)
 
-  // Fetch daily picks and momentum data
+  // Fetch daily picks
   useEffect(() => {
     fetchDailyPicks()
-    fetchMomentumData()
   }, [])
 
   // Listen for goal changes from AI Agent
@@ -77,21 +74,6 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
     }
   }
 
-  const fetchMomentumData = async () => {
-    setMomentumLoading(true)
-    try {
-      const response = await fetch('/api/applications/momentum')
-      if (response.ok) {
-        const data = await response.json()
-        setMomentumData(data.data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching momentum data:', error)
-    } finally {
-      setMomentumLoading(false)
-    }
-  }
-
   const handleMarkAsApplied = async (opportunityId: string) => {
     // Mark as applied
     try {
@@ -119,9 +101,8 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
           }
         }
 
-        // Refresh daily picks and momentum data
+        // Refresh daily picks
         fetchDailyPicks()
-        fetchMomentumData()
         setSelectedOpportunity(null)
       }
     } catch (error) {
@@ -225,15 +206,10 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
             </motion.div>
           </div>
 
-          {/* Application Momentum Chart */}
-          {!momentumLoading && momentumData.length > 0 && (
-            <div className="mb-4">
-              <ApplicationMomentumChart 
-                data={momentumData}
-                goal={goal}
-              />
-            </div>
-          )}
+          {/* Visibility Meter - Shows streak-based employer visibility */}
+          <div className="mb-4">
+            <VisibilityMeter streak={streak} />
+          </div>
 
           {/* Progress Bar with Weekly Goal */}
           <div className="mb-4">
