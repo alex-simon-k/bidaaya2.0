@@ -197,8 +197,8 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
           />
         </svg>
 
-        {/* Streak number display - properly centered with more spacing */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pt-2">
+        {/* Streak number display - BELOW the progress bar */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center pb-2">
           <div className="flex items-center justify-center gap-3 mb-1.5">
             <Flame className={cn("h-8 w-8", config.textColor, streak > 0 && "animate-pulse")} />
             <div className={cn("text-6xl font-black tabular-nums", config.textColor)}>
