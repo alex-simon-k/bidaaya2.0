@@ -19,7 +19,7 @@ enum VisibilityLevel {
 
 export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
   const [animatedScore, setAnimatedScore] = useState(0)
-  const strokeRef = useRef<SVGCircleElement>(null)
+  const strokeRef = useRef<SVGPathElement>(null)
   const gradIdRef = useRef(`visibility-grad-${Math.random().toString(36).substr(2, 9)}`)
   
   const maxStreak = 100 // Goal: 100-day streak
@@ -113,30 +113,30 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
     requestAnimationFrame(animate)
   }, [streak])
   
-  // Animate stroke - starts FULL (empty) and fills down to actual progress
+  // Smoothly update arc fill when progress changes
   useEffect(() => {
-    if (!strokeRef.current) return
-    // If no streak, hide the progress arc completely
+    const path = strokeRef.current
+    if (!path) return
+
+    // Always ensure dasharray is set to the arc length
+    path.style.strokeDasharray = `${arcLength}`
+
+    // If streak is zero, keep arc hidden
     if (normalizedStreak === 0) {
-      strokeRef.current.style.strokeDashoffset = arcLength.toString()
+      path.style.transition = 'none'
+      path.style.strokeDashoffset = `${arcLength}`
       return
     }
-    
-    const animation = strokeRef.current.animate(
-      [
-        { strokeDashoffset: arcLength.toString() }, // Start empty
-        { strokeDashoffset: arcLength.toString(), offset: 0.2 },
-        { strokeDashoffset: strokeDashoffset.toString() } // Fill to actual progress
-      ],
-      {
-        duration: 1800,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        fill: "forwards"
-      }
-    )
-    
-    return () => animation.cancel()
-  }, [strokeDashoffset, arcLength])
+
+    const targetOffset = strokeDashoffset
+
+    // Trigger transition on next frame for smooth animation
+    requestAnimationFrame(() => {
+      if (!path) return
+      path.style.transition = 'stroke-dashoffset 800ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+      path.style.strokeDashoffset = `${targetOffset}`
+    })
+  }, [arcLength, normalizedStreak, strokeDashoffset])
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -189,19 +189,20 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
           />
           
           {/* Gradient progress arc - FILLS as streak increases - BIGGER */}
-          {normalizedStreak > 0 && (
-            <path
-              ref={strokeRef}
-              d="M 20 125 A 80 80 0 0 1 180 125"
-              fill="none"
-              stroke={`url(#${gradIdRef.current})`}
-              strokeWidth="22"
-              strokeLinecap="round"
-              strokeDasharray={arcLength}
-              strokeDashoffset={arcLength}
-              filter="url(#glow)"
-            />
-          )}
+          <path
+            ref={strokeRef}
+            d="M 20 125 A 80 80 0 0 1 180 125"
+            fill="none"
+            stroke={`url(#${gradIdRef.current})`}
+            strokeWidth="22"
+            strokeLinecap="round"
+            strokeDasharray={arcLength}
+            strokeDashoffset={arcLength}
+            filter="url(#glow)"
+            style={{
+              opacity: normalizedStreak === 0 ? 0 : 1,
+            }}
+          />
         </svg>
 
         {/* Streak number display - BELOW the progress bar */}
