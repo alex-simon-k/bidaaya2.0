@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
 import { selectDailyPicks } from '@/lib/opportunity-matcher'
+import { getVisualStreak } from '@/lib/streak'
 
 const prisma = new PrismaClient()
 
@@ -211,11 +212,15 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Calculate visual streak (decays gradually instead of resetting immediately)
+    const visualStreak = await getVisualStreak(prisma, userId)
+
     return NextResponse.json({
       success: true,
       dailyPicks: formattedOpportunities,
       streak: {
-        current: user.currentStreak,
+        current: visualStreak, // Use visual streak for smoother UX
+        actual: user.currentStreak, // Actual consecutive days
         longest: user.longestStreak,
         lastDate: user.lastStreakDate,
       },

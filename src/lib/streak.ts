@@ -20,6 +20,47 @@ type StreakErrorResult = {
   status?: number
 }
 
+/**
+ * Get the VISUAL streak for display (decays gradually instead of resetting immediately)
+ * This provides a "momentum" effect where missing days doesn't instantly kill all progress
+ */
+export async function getVisualStreak(prisma: PrismaClient, userId: string): Promise<number> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      currentStreak: true,
+      lastStreakDate: true,
+    },
+  })
+
+  if (!user || !user.lastStreakDate) {
+    return 0
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const lastStreakDate = new Date(user.lastStreakDate)
+  lastStreakDate.setHours(0, 0, 0, 0)
+
+  // Calculate days since last application
+  const daysDiff = Math.floor((today.getTime() - lastStreakDate.getTime()) / (1000 * 60 * 60 * 24))
+
+  if (daysDiff === 0) {
+    // Applied today - show current streak
+    return user.currentStreak || 0
+  }
+
+  // For each day missed, halve the visual streak (decay effect)
+  // Day 1 missed: streak * 0.5
+  // Day 2 missed: streak * 0.25
+  // Day 3 missed: streak * 0.125, etc.
+  const decayFactor = Math.pow(0.5, daysDiff)
+  const visualStreak = Math.floor((user.currentStreak || 0) * decayFactor)
+
+  return visualStreak
+}
+
 export async function updateUserStreak(prisma: PrismaClient, userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -66,10 +107,12 @@ export async function updateUserStreak(prisma: PrismaClient, userId: string) {
   const hasAppliedToday = trackedBoardApplications + manualExternalApplications > 0
 
   if (!hasAppliedToday) {
+    // Return current visual streak (which decays over time)
+    const visualStreak = await getVisualStreak(prisma, userId)
     return {
       success: false,
       message: 'Apply to at least one opportunity today to grow your streak.',
-      streak: user.currentStreak,
+      streak: visualStreak,
     } satisfies StreakFailureResult
   }
 
