@@ -54,34 +54,34 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
     textColor: string
   }> = {
     none: {
-      colors: ["hsl(220, 13%, 69%)", "hsl(220, 9%, 46%)"],
-      label: "Invisible",
+      colors: ["#6B7280", "#9CA3AF"], // Gray gradient
+      label: "INVISIBLE",
       bgColor: "bg-gray-500/20",
       textColor: "text-gray-400"
     },
     low: {
-      colors: ["hsl(0, 84%, 80%)", "hsl(0, 84%, 60%)", "hsl(0, 84%, 40%)"],
-      label: "Low Visibility",
+      colors: ["#EF4444", "#F87171", "#FCA5A5"], // Red gradient
+      label: "LOW VISIBILITY",
       bgColor: "bg-red-500/20",
       textColor: "text-red-400"
     },
     medium: {
-      colors: ["hsl(38, 92%, 80%)", "hsl(38, 92%, 60%)", "hsl(38, 92%, 40%)"],
-      label: "Getting Noticed",
+      colors: ["#F59E0B", "#FBBF24", "#FCD34D"], // Orange to yellow gradient
+      label: "GETTING NOTICED",
       bgColor: "bg-yellow-500/20",
       textColor: "text-yellow-400"
     },
     high: {
-      colors: ["hsl(142, 71%, 80%)", "hsl(142, 71%, 60%)", "hsl(142, 71%, 40%)"],
-      label: "Highly Visible",
+      colors: ["#10B981", "#34D399", "#6EE7B7"], // Green gradient
+      label: "HIGHLY VISIBLE",
       bgColor: "bg-green-500/20",
       textColor: "text-green-400"
     },
     elite: {
-      colors: ["hsl(200, 98%, 80%)", "hsl(200, 98%, 60%)", "hsl(200, 98%, 40%)"],
-      label: "Elite Status",
-      bgColor: "bg-cyan-500/20",
-      textColor: "text-cyan-400"
+      colors: ["#EC4899", "#A855F7", "#3B82F6"], // Pink to purple to blue (like the image!)
+      label: "ELITE STATUS",
+      bgColor: "bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20",
+      textColor: "text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400"
     }
   }
   
@@ -150,15 +150,15 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
         </div>
       </div>
       
-      {/* Half-circle gauge */}
-      <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
+      {/* Half-circle gauge - Beautiful gradient arc */}
+      <div className="relative h-40 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
         <svg 
-          className="block mx-auto w-full h-32" 
-          viewBox="0 0 100 50" 
-          aria-hidden="true"
+          className="block mx-auto w-full h-full" 
+          viewBox="0 0 200 110" 
+          preserveAspectRatio="xMidYMid meet"
         >
           <defs>
-            <linearGradient id={gradIdRef.current} x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id={gradIdRef.current} x1="0%" y1="0%" x2="100%" y2="0%">
               {config.colors.map((color, i) => (
                 <stop 
                   key={i} 
@@ -167,37 +167,52 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
                 />
               ))}
             </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
-          <g fill="none" strokeWidth="8" transform="translate(50, 50.5)">
-            {/* Background track */}
-            <circle 
-              className="stroke-bidaaya-light/10" 
-              r={radius}
-              strokeDasharray={strokeDasharray}
-            />
-            {/* Progress arc */}
-            <circle 
-              ref={strokeRef}
-              stroke={`url(#${gradIdRef.current})`}
-              strokeDasharray={strokeDasharray}
-              strokeDashoffset="0"
-              strokeLinecap="round"
-              r={radius}
-              className="transition-all duration-300"
-            />
-          </g>
+          
+          {/* Background track with subtle glow */}
+          <path
+            d="M 30 100 A 70 70 0 0 1 170 100"
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.1)"
+            strokeWidth="14"
+            strokeLinecap="round"
+          />
+          
+          {/* Gradient progress arc with glow */}
+          <path
+            ref={strokeRef}
+            d="M 30 100 A 70 70 0 0 1 170 100"
+            fill="none"
+            stroke={`url(#${gradIdRef.current})`}
+            strokeWidth="16"
+            strokeLinecap="round"
+            strokeDasharray={`${halfCircumference} ${halfCircumference}`}
+            strokeDashoffset="0"
+            filter="url(#glow)"
+            style={{
+              transform: 'rotate(0deg)',
+              transformOrigin: '100px 100px'
+            }}
+          />
         </svg>
         
-        {/* Streak number display */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center w-full">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <Flame className={cn("h-6 w-6", config.textColor, streak > 0 && "animate-pulse")} />
-            <div className="text-4xl font-bold text-bidaaya-light tabular-nums">
+        {/* Streak number display - centered in gauge */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-0.5">
+            <Flame className={cn("h-7 w-7", config.textColor, streak > 0 && "animate-pulse")} />
+            <div className={cn("text-5xl font-black tabular-nums", config.textColor)}>
               {animatedScore}
             </div>
           </div>
-          <div className="text-xs text-bidaaya-light/60 uppercase tracking-wide">
-            Day Streak
+          <div className="text-xs text-bidaaya-light/50 uppercase tracking-widest font-semibold">
+            DAY STREAK
           </div>
         </div>
       </div>
