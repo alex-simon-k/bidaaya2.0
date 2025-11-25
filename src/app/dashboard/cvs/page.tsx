@@ -3,7 +3,6 @@ import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import { CVHistoryClient } from './cv-history-client'
-import { MainNav } from '@/components/main-nav'
 import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
 
 const prisma = new PrismaClient()
