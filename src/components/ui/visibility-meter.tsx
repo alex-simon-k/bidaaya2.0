@@ -136,7 +136,7 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
   return (
     <div className={cn("relative w-full", className)}>
       {/* Header with level badge */}
-      <div className="flex items-center justify-between mb-4 animate-in fade-in slide-in-from-bottom-4 duration-800">
+      <div className="flex items-center justify-between mb-2 animate-in fade-in slide-in-from-bottom-4 duration-800">
         <h3 className="text-base font-semibold text-bidaaya-light">Employer Visibility</h3>
         <div className={cn(
           "px-3 py-1 rounded-full text-xs font-bold uppercase border animate-pulse",
@@ -148,11 +148,11 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
         </div>
       </div>
       
-      {/* Progress bar arc - fills as streak increases */}
-      <div className="relative h-52 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
+      {/* Progress bar arc - fills as streak increases - BIGGER */}
+      <div className="relative h-60 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
         <svg 
           className="block mx-auto w-full h-full" 
-          viewBox="0 0 200 130" 
+          viewBox="0 0 200 140" 
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
@@ -174,22 +174,22 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
             </filter>
           </defs>
           
-          {/* Background track */}
+          {/* Background track - BIGGER */}
           <path
-            d="M 30 115 A 70 70 0 0 1 170 115"
+            d="M 20 125 A 80 80 0 0 1 180 125"
             fill="none"
             stroke="rgba(255, 255, 255, 0.08)"
-            strokeWidth="18"
+            strokeWidth="20"
             strokeLinecap="round"
           />
           
-          {/* Gradient progress arc - FILLS as streak increases */}
+          {/* Gradient progress arc - FILLS as streak increases - BIGGER */}
           <path
             ref={strokeRef}
-            d="M 30 115 A 70 70 0 0 1 170 115"
+            d="M 20 125 A 80 80 0 0 1 180 125"
             fill="none"
             stroke={`url(#${gradIdRef.current})`}
-            strokeWidth="20"
+            strokeWidth="22"
             strokeLinecap="round"
             strokeDasharray={arcLength}
             strokeDashoffset={arcLength}
@@ -212,7 +212,7 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
       </div>
       
       {/* Visibility multiplier */}
-      <div className="mt-6 text-center space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-200">
+      <div className="mt-3 text-center space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-200">
         <div className="flex items-center justify-center gap-2">
           <span className="text-bidaaya-light/60 text-sm">Profile visibility:</span>
           <span className={cn(

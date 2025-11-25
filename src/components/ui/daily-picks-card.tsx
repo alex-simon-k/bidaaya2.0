@@ -186,12 +186,12 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
         {/* Content */}
         <div className="relative p-6">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-4">
             <h3 className="text-xl font-bold text-bidaaya-light">Objective - {goal}</h3>
           </div>
 
           {/* Visibility Meter - Shows streak-based employer visibility */}
-          <div className="mb-6">
+          <div className="mb-4">
             <VisibilityMeter streak={streak} />
           </div>
 
