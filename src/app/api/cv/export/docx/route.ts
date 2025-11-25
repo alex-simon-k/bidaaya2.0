@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         })
         
         if (record && record.userId === userId) {
-          cv = record.cvData as GeneratedCV
+          cv = record.cvData as unknown as GeneratedCV
           console.log('✅ Using saved GeneratedCV data:', generatedCvId)
         }
       } catch (e) {
