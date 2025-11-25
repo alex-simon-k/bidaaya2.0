@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
+import { updateUserStreak } from '@/lib/streak'
 
 
 export const dynamic = 'force-dynamic';
@@ -85,11 +86,19 @@ export async function POST(
       // Silent fail - analytics are not critical
     })
 
+    // Attempt to update streak server-side so any application counts
+    const streakResult = await updateUserStreak(prisma, session.user.id).catch((err) => {
+      console.error('Failed to auto-update streak after application:', err)
+      return null
+    })
+
     return NextResponse.json({
       success: true,
       application,
       applicationUrl: opportunity.applicationUrl,
-      message: 'Application tracked successfully. You will be redirected to the company website.'
+      message: 'Application tracked successfully. You will be redirected to the company website.',
+      streak: streakResult?.success ? streakResult.streak : undefined,
+      longestStreak: streakResult?.success ? streakResult.longestStreak : undefined,
     })
 
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
+import { updateUserStreak } from '@/lib/streak'
 
 const prisma = new PrismaClient()
 
@@ -17,107 +18,13 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id
 
-    // Fetch user's current streak data
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        currentStreak: true,
-        longestStreak: true,
-        lastStreakDate: true,
-      },
-    })
+    const result = await updateUserStreak(prisma, userId)
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if ('error' in result) {
+      return NextResponse.json({ error: result.error }, { status: result.status ?? 400 })
     }
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const startOfToday = new Date(today)
-    const endOfToday = new Date(today)
-    endOfToday.setDate(endOfToday.getDate() + 1)
-
-    const lastStreakDate = user.lastStreakDate ? new Date(user.lastStreakDate) : null
-    lastStreakDate?.setHours(0, 0, 0, 0)
-
-    // Check if user has applied to at least one opportunity today
-    const [trackedBoardApplications, manualExternalApplications] = await Promise.all([
-      prisma.externalOpportunityApplication.count({
-        where: {
-          userId,
-          appliedAt: {
-            gte: startOfToday,
-            lt: endOfToday,
-          },
-        },
-      }),
-      prisma.externalApplication.count({
-        where: {
-          userId,
-          appliedDate: {
-            gte: startOfToday,
-            lt: endOfToday,
-          },
-        },
-      }),
-    ])
-
-    const hasAppliedToday = trackedBoardApplications + manualExternalApplications > 0
-
-    if (!hasAppliedToday) {
-      return NextResponse.json({
-        success: false,
-        message: 'Apply to at least one opportunity today to grow your streak.',
-        streak: user.currentStreak,
-      })
-    }
-
-    // Check if already updated today
-    if (lastStreakDate && lastStreakDate.getTime() === today.getTime()) {
-      return NextResponse.json({
-        success: true,
-        message: 'Streak already updated today!',
-        streak: user.currentStreak,
-        alreadyUpdated: true,
-      })
-    }
-
-    // Calculate new streak
-    let newStreak = user.currentStreak || 0
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-
-    if (!lastStreakDate || lastStreakDate.getTime() === yesterday.getTime()) {
-      // Continue streak
-      newStreak += 1
-    } else if (lastStreakDate.getTime() < yesterday.getTime()) {
-      // Streak broken, start over
-      newStreak = 1
-    }
-
-    // Update longest streak if needed
-    const newLongest = Math.max(newStreak, user.longestStreak || 0)
-
-    // Update database
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        currentStreak: newStreak,
-        longestStreak: newLongest,
-        lastStreakDate: today,
-      },
-    })
-
-    console.log(`🔥 Streak updated for user ${userId}: ${newStreak} days`)
-
-    return NextResponse.json({
-      success: true,
-      message: `🔥 ${newStreak} day streak!`,
-      streak: newStreak,
-      longestStreak: newLongest,
-      isNewRecord: newStreak === newLongest && newStreak > 1,
-    })
+    return NextResponse.json(result)
 
   } catch (error: any) {
     console.error('❌ Streak update error:', error)
