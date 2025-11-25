@@ -6,6 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { CVTextEnhancer } from './cv-text-enhancer'
 
 const prisma = new PrismaClient()
 
@@ -373,17 +374,118 @@ export class CVGenerator {
       })
     ])
 
-    return {
-      user,
-      cvProfile,
+    // Enhance all CV text using AI (fix capitalization, spelling, formatting)
+    console.log('🤖 Enhancing CV text with AI...')
+    const enhancedData = await this.enhanceCVData({
       educations,
       experiences,
       projects,
-      skills,
+      skills
+    })
+
+    return {
+      user,
+      cvProfile,
+      educations: enhancedData.educations,
+      experiences: enhancedData.experiences,
+      projects: enhancedData.projects,
+      skills: enhancedData.skills,
       certifications,
       languages,
       achievements,
       enhancements
+    }
+  }
+
+  /**
+   * Enhance CV data using AI (fix capitalization, spelling, formatting)
+   */
+  private static async enhanceCVData(data: {
+    educations: any[]
+    experiences: any[]
+    projects: any[]
+    skills: any[]
+  }) {
+    try {
+      // Enhance education entries
+      const educations = await Promise.all(
+        data.educations.map(async (edu) => {
+          const enhanced = await CVTextEnhancer.enhanceEducation({
+            degreeType: edu.degreeType,
+            degreeTitle: edu.degreeTitle,
+            fieldOfStudy: edu.fieldOfStudy,
+            institution: edu.institution,
+            modules: edu.modules || [],
+          })
+          
+          return {
+            ...edu,
+            degreeTitle: enhanced.degreeTitle || edu.degreeTitle,
+            fieldOfStudy: enhanced.fieldOfStudy || edu.fieldOfStudy,
+            institution: enhanced.institution || edu.institution,
+            modules: enhanced.modules || edu.modules,
+          }
+        })
+      )
+
+      // Enhance experience entries
+      const experiences = await Promise.all(
+        data.experiences.map(async (exp) => {
+          const achievements = exp.impacts?.map((imp: any) => imp.statement) || []
+          const enhanced = await CVTextEnhancer.enhanceExperience({
+            title: exp.title,
+            employer: exp.employer,
+            summary: exp.summary,
+            achievements,
+          })
+          
+          return {
+            ...exp,
+            title: enhanced.jobTitle || exp.title,
+            employer: enhanced.companyName || exp.employer,
+            summary: enhanced.jobDescription || exp.summary,
+            // Update impacts with enhanced achievements
+            impacts: enhanced.achievements 
+              ? enhanced.achievements.map((statement, idx) => ({
+                  ...exp.impacts?.[idx],
+                  statement,
+                }))
+              : exp.impacts,
+          }
+        })
+      )
+
+      // Enhance project entries
+      const projects = await Promise.all(
+        data.projects.map(async (proj) => {
+          const enhanced = await CVTextEnhancer.enhanceProject({
+            title: proj.name,
+            description: proj.summary,
+            technologies: proj.techStack || [],
+          })
+          
+          return {
+            ...proj,
+            name: enhanced.projectTitle || proj.name,
+            summary: enhanced.projectDescription || proj.summary,
+            techStack: enhanced.technologies || proj.techStack,
+          }
+        })
+      )
+
+      // Enhance skills
+      const skillNames = data.skills.map((s) => s.skillName)
+      const enhancedSkillNames = await CVTextEnhancer.enhanceSkills(skillNames)
+      const skills = data.skills.map((skill, idx) => ({
+        ...skill,
+        skillName: enhancedSkillNames[idx] || skill.skillName,
+      }))
+
+      console.log('✅ CV text enhancement complete')
+      return { educations, experiences, projects, skills }
+    } catch (error) {
+      console.error('❌ CV text enhancement failed, using original data:', error)
+      return data
     }
   }
 
