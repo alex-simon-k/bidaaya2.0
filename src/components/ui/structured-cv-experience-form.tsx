@@ -57,6 +57,11 @@ export function StructuredCVExperienceForm({
     if (!formData.employer.trim()) newErrors.employer = "Company name is required";
     if (!formData.employmentType) newErrors.employmentType = "Type is required";
     if (!formData.startDate) newErrors.startDate = "Start date is required";
+    
+    // Require a meaningful description (minimum 50 characters)
+    if (!formData.summary || formData.summary.trim().length < 50) {
+      newErrors.summary = "Add a description of your role and achievements (at least 50 characters)";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -212,19 +217,32 @@ export function StructuredCVExperienceForm({
         </Label>
       </div>
 
-      {/* Summary (optional) */}
+      {/* Summary (REQUIRED for quality CVs) */}
       <div className="space-y-2">
         <Label htmlFor="summary" className="text-bidaaya-light text-sm">
-          Brief Description (optional)
+          Role Description <span className="text-red-400">*</span>
         </Label>
         <Textarea
           id="summary"
           value={formData.summary}
           onChange={(e) => setFormData((prev) => ({ ...prev, summary: e.target.value }))}
-          placeholder="1-2 sentences about your role (optional - we'll ask more details later!)"
-          rows={2}
-          className="bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light resize-none text-sm"
+          placeholder="Describe what you did in this role (min. 50 characters for a quality CV)"
+          rows={3}
+          className={cn(
+            "bg-bidaaya-light/10 border-bidaaya-light/20 text-bidaaya-light resize-none text-sm",
+            errors.summary && "border-red-400"
+          )}
+          required
         />
+        {formData.summary && (
+          <p className={cn(
+            "text-xs",
+            formData.summary.length >= 50 ? "text-green-400" : "text-bidaaya-light/60"
+          )}>
+            {formData.summary.length}/50 characters
+          </p>
+        )}
+        {errors.summary && <p className="text-xs text-red-400">{errors.summary}</p>}
       </div>
 
       </div>
