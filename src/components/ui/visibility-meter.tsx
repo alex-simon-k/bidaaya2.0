@@ -88,8 +88,8 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
   const config = levelConfig[visibilityLevel]
   // Calculate arc progress (starts empty, fills as streak increases)
   const arcLength = 220 // Length of the path arc in SVG units
-  const progress = (normalizedStreak / maxStreak) // 0 to 1
-  const strokeDashoffset = arcLength - (progress * arcLength) // Starts at arcLength (empty), goes to 0 (full)
+  const progress = normalizedStreak / maxStreak // 0 to 1
+  const strokeDashoffset = arcLength - progress * arcLength // Starts at arcLength (empty), goes to 0 (full)
   
   // Animate score counting up
   useEffect(() => {
@@ -116,6 +116,11 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
   // Animate stroke - starts FULL (empty) and fills down to actual progress
   useEffect(() => {
     if (!strokeRef.current) return
+    // If no streak, hide the progress arc completely
+    if (normalizedStreak === 0) {
+      strokeRef.current.style.strokeDashoffset = arcLength.toString()
+      return
+    }
     
     const animation = strokeRef.current.animate(
       [
@@ -184,17 +189,19 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
           />
           
           {/* Gradient progress arc - FILLS as streak increases - BIGGER */}
-          <path
-            ref={strokeRef}
-            d="M 20 125 A 80 80 0 0 1 180 125"
-            fill="none"
-            stroke={`url(#${gradIdRef.current})`}
-            strokeWidth="22"
-            strokeLinecap="round"
-            strokeDasharray={arcLength}
-            strokeDashoffset={arcLength}
-            filter="url(#glow)"
-          />
+          {normalizedStreak > 0 && (
+            <path
+              ref={strokeRef}
+              d="M 20 125 A 80 80 0 0 1 180 125"
+              fill="none"
+              stroke={`url(#${gradIdRef.current})`}
+              strokeWidth="22"
+              strokeLinecap="round"
+              strokeDasharray={arcLength}
+              strokeDashoffset={arcLength}
+              filter="url(#glow)"
+            />
+          )}
         </svg>
 
         {/* Streak number display - BELOW the progress bar */}
