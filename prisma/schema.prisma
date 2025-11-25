@@ -141,6 +141,27 @@ model User {
   cvAchievements           CVAchievement[]
   cvSkills                 CVSkill[]
   cvEnhancements           CVEnhancement[]
+  generatedCVs             GeneratedCV[]
+}
+
+model GeneratedCV {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  title          String    // e.g. "CV for Google"
+  opportunityId  String?   // Link to opportunity if applicable
+  opportunity    ExternalOpportunity? @relation(fields: [opportunityId], references: [id])
+  
+  // Data Snapshot
+  cvData         Json      // The full CV data object used to generate the file
+  
+  // Status
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime
+  
+  @@index([userId])
 }
 
 model UserSession {

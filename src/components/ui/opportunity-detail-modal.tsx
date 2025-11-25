@@ -116,6 +116,7 @@ export function OpportunityDetailModal({
 
       if (response.ok) {
         const data = await response.json()
+        const generatedCvId = data.generatedCvId
         
         // Update toast
         loadingToast.innerHTML = `
@@ -136,6 +137,7 @@ export function OpportunityDetailModal({
           body: JSON.stringify({
             opportunityId: opportunity.id,
             opportunityType: 'external',
+            generatedCvId,
           }),
         })
 

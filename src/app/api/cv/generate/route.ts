@@ -178,6 +178,26 @@ export async function POST(request: NextRequest) {
       // Continue anyway - don't block CV generation
     }
 
+    // Save GeneratedCV record (for history and re-download)
+    let generatedCv
+    try {
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 10) // 10 days expiry
+
+      generatedCv = await prisma.generatedCV.create({
+        data: {
+          userId,
+          title: opportunityRequirements.title || 'Custom CV',
+          opportunityId: opportunityId || null,
+          cvData: cv as any, // Store full JSON
+          expiresAt,
+        }
+      })
+      console.log('✅ Saved GeneratedCV record:', generatedCv.id)
+    } catch (e) {
+      console.error('⚠️ Failed to save GeneratedCV record:', e)
+    }
+
     // Save CV generation event (for analytics)
     try {
       await prisma.chatMessage.create({
@@ -200,6 +220,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       cv,
+      generatedCvId: generatedCv?.id,
       type: 'custom',
       relevanceScore: cv.relevanceScore,
       creditsDeducted: CUSTOM_CV_COST,

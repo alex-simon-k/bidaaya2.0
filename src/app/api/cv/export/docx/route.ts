@@ -19,6 +19,7 @@ interface ExportRequest {
   opportunityId?: string
   opportunityType?: 'internal' | 'external'
   projectId?: string
+  generatedCvId?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -31,17 +32,37 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id
     const body: ExportRequest = await request.json()
-    const { opportunityId, opportunityType, projectId } = body
+    const { opportunityId, opportunityType, projectId, generatedCvId } = body
 
-    console.log('📄 Word Export Request:', { opportunityId, opportunityType, projectId })
+    console.log('📄 Word Export Request:', { opportunityId, opportunityType, projectId, generatedCvId })
 
-    // Generate CV (generic or custom)
+    // Generate CV (generic, custom, or from history)
     let cv
-    if (!opportunityId && !projectId) {
-      // Generic CV
-      cv = await CVGenerator.generateGenericCV(userId)
-    } else if (projectId) {
-      // Internal Bidaaya project
+    
+    // 1. Try fetching from history if ID provided
+    if (generatedCvId) {
+      try {
+        // @ts-ignore - Prisma client might not be updated yet
+        const record = await prisma.generatedCV.findUnique({
+          where: { id: generatedCvId },
+        })
+        
+        if (record && record.userId === userId) {
+          cv = record.cvData
+          console.log('✅ Using saved GeneratedCV data:', generatedCvId)
+        }
+      } catch (e) {
+        console.warn('⚠️ Failed to fetch GeneratedCV:', e)
+      }
+    }
+
+    // 2. If not found, generate fresh
+    if (!cv) {
+      if (!opportunityId && !projectId) {
+        // Generic CV
+        cv = await CVGenerator.generateGenericCV(userId)
+      } else if (projectId) {
+        // Internal Bidaaya project
       const project = await prisma.project.findUnique({
         where: { id: projectId },
         select: {

@@ -127,8 +127,19 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5" />
+                <Briefcase className="h-5 w-5" />
                 <span className="font-medium">Applications</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => { router.push('/dashboard/cvs'); setShowSidebar(false); }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5" />
+                <span className="font-medium">My CVs</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>

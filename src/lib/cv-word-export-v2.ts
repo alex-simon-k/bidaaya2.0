@@ -10,8 +10,10 @@ import {
   AlignmentType,
   BorderStyle,
   convertInchesToTwip,
-  TabStopType,
-  TabStopPosition,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
 } from 'docx'
 import { GeneratedCV } from './cv-generator'
 import { TextFormatter } from './text-formatter'
@@ -20,6 +22,7 @@ export class CVWordExportV2 {
   
   /**
    * Generate a Word document from CV data - Modern "Bronzor" Style
+   * Uses Table-based layout for perfect alignment across Pages/Word/Docs
    */
   static async generateWordDocument(cv: GeneratedCV): Promise<Document> {
     
@@ -121,10 +124,10 @@ export class CVWordExportV2 {
   }
 
   /**
-   * Create EDUCATION section - Modern Format
+   * Create EDUCATION section - Modern Format (Table-based)
    */
-  private static createEducationSection(education: any[]): Paragraph[] {
-    const paragraphs: Paragraph[] = [
+  private static createEducationSection(education: any[]): (Paragraph | Table)[] {
+    const elements: (Paragraph | Table)[] = [
       // Section Header: EDUCATION
       new Paragraph({
         children: [
@@ -148,61 +151,105 @@ export class CVWordExportV2 {
     ]
 
     education.forEach((edu, index) => {
-      // Institution (Left) | Location (Right)
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: TextFormatter.formatCompanyName(edu.institution).toUpperCase(),
-              font: 'Arial',
-              size: 22,
-              bold: true,
-            }),
-            new TextRun({
-              text: `\t${TextFormatter.formatLocation(edu.location || '')}`,
-              font: 'Arial',
-              size: 22,
-              bold: true,
+      // Institution (Left) | Location (Right) - Using Table
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top: { style: BorderStyle.NONE },
+            bottom: { style: BorderStyle.NONE },
+            left: { style: BorderStyle.NONE },
+            right: { style: BorderStyle.NONE },
+            insideVertical: { style: BorderStyle.NONE },
+          },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: TextFormatter.formatCompanyName(edu.institution).toUpperCase(),
+                          bold: true,
+                          font: 'Arial',
+                          size: 22,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.RIGHT,
+                      children: [
+                        new TextRun({
+                          text: TextFormatter.formatLocation(edu.location || ''),
+                          bold: true,
+                          font: 'Arial',
+                          size: 22,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+              ],
             }),
           ],
-          tabStops: [
-            {
-              type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
-            },
-          ],
-          spacing: { after: 0 }, // Tight spacing
         })
       )
 
-      // Degree (Left) | Dates (Right)
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: TextFormatter.toTitleCase(edu.degree),
-              font: 'Arial',
-              size: 22,
-            }),
-            new TextRun({
-              text: `\t${edu.dates}`,
-              font: 'Arial',
-              size: 22,
+      // Degree (Left) | Dates (Right) - Using Table
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top: { style: BorderStyle.NONE },
+            bottom: { style: BorderStyle.NONE },
+            left: { style: BorderStyle.NONE },
+            right: { style: BorderStyle.NONE },
+            insideVertical: { style: BorderStyle.NONE },
+          },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: TextFormatter.toTitleCase(edu.degree),
+                          font: 'Arial',
+                          size: 22,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.RIGHT,
+                      children: [
+                        new TextRun({
+                          text: edu.dates,
+                          font: 'Arial',
+                          size: 22,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+              ],
             }),
           ],
-          tabStops: [
-            {
-              type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
-            },
-          ],
-          spacing: { after: 50 },
         })
       )
 
       // Predicted Grade (if exists)
       if (edu.grade) {
-        paragraphs.push(
+        elements.push(
           new Paragraph({
             children: [
               new TextRun({
@@ -216,10 +263,10 @@ export class CVWordExportV2 {
         )
       }
 
-      // Relevant Modules: x, y, z
+      // Relevant Modules
       if (edu.highlights && edu.highlights.length > 0) {
         const formattedModules = TextFormatter.formatCourseNames(edu.highlights)
-        paragraphs.push(
+        elements.push(
           new Paragraph({
             children: [
               new TextRun({
@@ -240,14 +287,14 @@ export class CVWordExportV2 {
       }
     })
 
-    return paragraphs
+    return elements
   }
 
   /**
-   * Create EXPERIENCE section - Modern Format
+   * Create EXPERIENCE section - Modern Format (Table-based)
    */
-  private static createExperienceSection(experiences: any[]): Paragraph[] {
-    const paragraphs: Paragraph[] = [
+  private static createExperienceSection(experiences: any[]): (Paragraph | Table)[] {
+    const elements: (Paragraph | Table)[] = [
       // Section Header
       new Paragraph({
         children: [
@@ -271,63 +318,107 @@ export class CVWordExportV2 {
     ]
 
     experiences.forEach((exp, index) => {
-      // Employer (Left) | Location (Right)
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: TextFormatter.formatCompanyName(exp.employer).toUpperCase(),
-              font: 'Arial',
-              size: 22,
-              bold: true,
-            }),
-            new TextRun({
-              text: `\t${TextFormatter.formatLocation(exp.location || '')}`,
-              font: 'Arial',
-              size: 22,
-              bold: true,
+      // Employer (Left) | Location (Right) - Using Table
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top: { style: BorderStyle.NONE },
+            bottom: { style: BorderStyle.NONE },
+            left: { style: BorderStyle.NONE },
+            right: { style: BorderStyle.NONE },
+            insideVertical: { style: BorderStyle.NONE },
+          },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: TextFormatter.formatCompanyName(exp.employer).toUpperCase(),
+                          bold: true,
+                          font: 'Arial',
+                          size: 22,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.RIGHT,
+                      children: [
+                        new TextRun({
+                          text: TextFormatter.formatLocation(exp.location || ''),
+                          bold: true,
+                          font: 'Arial',
+                          size: 22,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+              ],
             }),
           ],
-          tabStops: [
-            {
-              type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
-            },
-          ],
-          spacing: { after: 0 },
         })
       )
 
-      // Title (Left) | Dates (Right)
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: TextFormatter.formatRoleTitle(exp.title),
-              font: 'Arial',
-              size: 22,
-              italics: true,
-            }),
-            new TextRun({
-              text: `\t${exp.dates}`,
-              font: 'Arial',
-              size: 22,
-              italics: true,
+      // Title (Left) | Dates (Right) - Using Table
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top: { style: BorderStyle.NONE },
+            bottom: { style: BorderStyle.NONE },
+            left: { style: BorderStyle.NONE },
+            right: { style: BorderStyle.NONE },
+            insideVertical: { style: BorderStyle.NONE },
+          },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: TextFormatter.formatRoleTitle(exp.title),
+                          font: 'Arial',
+                          size: 22,
+                          italics: true,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.RIGHT,
+                      children: [
+                        new TextRun({
+                          text: exp.dates,
+                          font: 'Arial',
+                          size: 22,
+                          italics: true,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+              ],
             }),
           ],
-          tabStops: [
-            {
-              type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
-            },
-          ],
-          spacing: { after: 50 },
         })
       )
 
       // Summary (if present)
       if (exp.summary) {
-         paragraphs.push(
+         elements.push(
           new Paragraph({
             children: [
               new TextRun({
@@ -343,7 +434,7 @@ export class CVWordExportV2 {
 
       // Bullet points
       exp.achievements.forEach((achievement: string, achIndex: number) => {
-        paragraphs.push(
+        elements.push(
           new Paragraph({
             text: TextFormatter.formatBulletPoint(achievement),
             bullet: {
@@ -356,17 +447,17 @@ export class CVWordExportV2 {
       })
       
       // Add spacing after experience item
-      paragraphs.push(new Paragraph({ text: "", spacing: { after: 100 } }))
+      elements.push(new Paragraph({ text: "", spacing: { after: 100 } }))
     })
 
-    return paragraphs
+    return elements
   }
 
   /**
    * Create EXTRACURRICULARS section
    */
-  private static createExtracurricularsSection(achievements: any[]): Paragraph[] {
-    const paragraphs: Paragraph[] = [
+  private static createExtracurricularsSection(achievements: any[]): (Paragraph | Table)[] {
+    const elements: (Paragraph | Table)[] = [
       // Section Header
       new Paragraph({
         children: [
@@ -390,38 +481,60 @@ export class CVWordExportV2 {
     ]
 
     achievements.forEach((ach, index) => {
-      // Organization/Project Name (Left) | Location/Date (Right)
-      paragraphs.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: TextFormatter.toTitleCase(ach.name).toUpperCase(),
-              font: 'Arial',
-              size: 22,
-              bold: true,
+      // Organization/Project Name (Left) | Location/Date (Right) - Using Table
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top: { style: BorderStyle.NONE },
+            bottom: { style: BorderStyle.NONE },
+            left: { style: BorderStyle.NONE },
+            right: { style: BorderStyle.NONE },
+            insideVertical: { style: BorderStyle.NONE },
+          },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: TextFormatter.toTitleCase(ach.name).toUpperCase(),
+                          bold: true,
+                          font: 'Arial',
+                          size: 22,
+                        })
+                      ],
+                    })
+                  ],
+                }),
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.RIGHT,
+                      children: [
+                        ...(ach.date ? [
+                          new TextRun({
+                            text: ach.date,
+                            bold: true,
+                            font: 'Arial',
+                            size: 22,
+                          })
+                        ] : [])
+                      ],
+                    })
+                  ],
+                }),
+              ],
             }),
-            ...(ach.date ? [
-              new TextRun({
-                text: `\t${ach.date}`,
-                font: 'Arial',
-                size: 22,
-                bold: true,
-              })
-            ] : []),
           ],
-          tabStops: [
-            {
-              type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
-            },
-          ],
-          spacing: { after: 0 },
         })
       )
 
       // Role (if exists)
       if (ach.role) {
-        paragraphs.push(
+        elements.push(
           new Paragraph({
             children: [
               new TextRun({
@@ -437,7 +550,7 @@ export class CVWordExportV2 {
       }
 
       // Description
-      paragraphs.push(
+      elements.push(
         new Paragraph({
           text: TextFormatter.formatBulletPoint(ach.description),
           bullet: {
@@ -448,7 +561,7 @@ export class CVWordExportV2 {
       )
     })
 
-    return paragraphs
+    return elements
   }
 
   /**
