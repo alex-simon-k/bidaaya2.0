@@ -16,7 +16,8 @@ import {
   Trophy,
   Lock,
   Unlock,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -86,6 +87,22 @@ export function OpportunityDetailModal({
 
   const handleCVComplete = async (answers: any[]) => {
     setIsGeneratingCV(true)
+    
+    // Show initial feedback
+    const loadingToast = document.createElement('div')
+    loadingToast.className = 'fixed top-4 right-4 bg-bidaaya-dark border border-bidaaya-accent/30 text-bidaaya-light px-6 py-3 rounded-lg shadow-xl z-50 flex items-center gap-3'
+    loadingToast.innerHTML = `
+      <svg class="animate-spin h-5 w-5 text-bidaaya-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <div>
+        <div class="font-semibold">Generating Custom CV...</div>
+        <div class="text-sm text-bidaaya-light/70">This may take a few seconds</div>
+      </div>
+    `
+    document.body.appendChild(loadingToast)
+    
     try {
       // Generate custom CV
       const response = await fetch('/api/cv/generate', {
@@ -99,6 +116,18 @@ export function OpportunityDetailModal({
 
       if (response.ok) {
         const data = await response.json()
+        
+        // Update toast
+        loadingToast.innerHTML = `
+          <svg class="animate-spin h-5 w-5 text-bidaaya-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <div>
+            <div class="font-semibold">Exporting CV...</div>
+            <div class="text-sm text-bidaaya-light/70">Preparing download</div>
+          </div>
+        `
         
         // Download the CV as Word document
         const downloadResponse = await fetch('/api/cv/export/docx', {
@@ -121,19 +150,47 @@ export function OpportunityDetailModal({
           document.body.removeChild(a)
           window.URL.revokeObjectURL(url)
 
-          alert(`✅ Custom CV generated and downloaded! ${data.creditsDeducted} credits deducted.`)
+          // Success toast
+          loadingToast.innerHTML = `
+            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <div>
+              <div class="font-semibold">CV Downloaded!</div>
+              <div class="text-sm text-bidaaya-light/70">${data.creditsDeducted} credits used</div>
+            </div>
+          `
+          setTimeout(() => loadingToast.remove(), 3000)
         }
       } else {
         const error = await response.json()
-        if (error.error === 'Insufficient credits') {
-          alert(`❌ Insufficient credits! You need ${error.required} credits but have ${error.current}.`)
-        } else {
-          alert('❌ Failed to generate CV. Please try again.')
-        }
+        
+        // Error toast
+        loadingToast.innerHTML = `
+          <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <div class="font-semibold">Error</div>
+            <div class="text-sm text-bidaaya-light/70">${error.error === 'Insufficient credits' ? `Need ${error.required} credits, have ${error.current}` : 'Failed to generate CV'}</div>
+          </div>
+        `
+        setTimeout(() => loadingToast.remove(), 5000)
       }
     } catch (error) {
       console.error('Error generating CV:', error)
-      alert('❌ Failed to generate CV. Please try again.')
+      
+      // Error toast
+      loadingToast.innerHTML = `
+        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <div>
+          <div class="font-semibold">Error</div>
+          <div class="text-sm text-bidaaya-light/70">Failed to generate CV</div>
+        </div>
+      `
+      setTimeout(() => loadingToast.remove(), 5000)
     } finally {
       setIsGeneratingCV(false)
       setShowCVModal(false)
@@ -337,8 +394,17 @@ export function OpportunityDetailModal({
                         className="border-bidaaya-accent/30 text-bidaaya-accent hover:bg-bidaaya-accent/10"
                         disabled={isGeneratingCV}
                       >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Custom CV
+                        {isGeneratingCV ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="h-4 w-4 mr-2" />
+                            Custom CV
+                          </>
+                        )}
                       </Button>
                       <Button
                         onClick={() => alert('🔒 Custom Cover Letter feature coming soon!')}
