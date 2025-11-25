@@ -149,10 +149,10 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
       </div>
       
       {/* Progress bar arc - fills as streak increases */}
-      <div className="relative h-48 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
+      <div className="relative h-52 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-800 delay-100">
         <svg 
           className="block mx-auto w-full h-full" 
-          viewBox="0 0 200 120" 
+          viewBox="0 0 200 130" 
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
@@ -176,7 +176,7 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
           
           {/* Background track */}
           <path
-            d="M 30 105 A 70 70 0 0 1 170 105"
+            d="M 30 115 A 70 70 0 0 1 170 115"
             fill="none"
             stroke="rgba(255, 255, 255, 0.08)"
             strokeWidth="18"
@@ -186,7 +186,7 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
           {/* Gradient progress arc - FILLS as streak increases */}
           <path
             ref={strokeRef}
-            d="M 30 105 A 70 70 0 0 1 170 105"
+            d="M 30 115 A 70 70 0 0 1 170 115"
             fill="none"
             stroke={`url(#${gradIdRef.current})`}
             strokeWidth="20"
@@ -196,10 +196,10 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
             filter="url(#glow)"
           />
         </svg>
-        
-        {/* Streak number display - centered in gauge */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3 text-center">
-          <div className="flex items-center justify-center gap-3 mb-1">
+
+        {/* Streak number display - properly centered with more spacing */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pt-2">
+          <div className="flex items-center justify-center gap-3 mb-1.5">
             <Flame className={cn("h-8 w-8", config.textColor, streak > 0 && "animate-pulse")} />
             <div className={cn("text-6xl font-black tabular-nums", config.textColor)}>
               {animatedScore}

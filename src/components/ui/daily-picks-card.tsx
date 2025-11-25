@@ -186,28 +186,12 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
         {/* Content */}
         <div className="relative p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-lg font-bold text-bidaaya-light">Objective - {goal}</h3>
-              <p className="text-xs text-bidaaya-light/60 mt-0.5">{getMotivationalMessage()}</p>
-            </div>
-
-            {/* Streak Badge with Animation */}
-            <motion.div 
-              className="flex items-center gap-2 px-3 py-2 bg-orange-500/20 border border-orange-500/40 rounded-full"
-              animate={showCelebration ? { scale: [1, 1.2, 1] } : {}}
-              transition={{ duration: 0.5 }}
-            >
-              <Flame className="h-5 w-5 text-orange-400" />
-              <span className="text-2xl font-bold text-orange-400">{streak}</span>
-              {longestStreak > 0 && longestStreak > streak && (
-                <span className="text-xs text-green-400/70 ml-1">best: {longestStreak}</span>
-              )}
-            </motion.div>
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-bidaaya-light">Objective - {goal}</h3>
           </div>
 
           {/* Visibility Meter - Shows streak-based employer visibility */}
-          <div className="mb-4">
+          <div className="mb-6">
             <VisibilityMeter streak={streak} />
           </div>
 
