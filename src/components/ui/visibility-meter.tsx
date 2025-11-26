@@ -22,25 +22,24 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
   const strokeRef = useRef<SVGPathElement>(null)
   const gradIdRef = useRef(`visibility-grad-${Math.random().toString(36).substr(2, 9)}`)
   
-  const maxStreak = 100 // Goal: 100-day streak
+  const maxStreak = 10 // Goal: 10-day streak for maximum visibility
   const normalizedStreak = Math.min(streak, maxStreak)
   
-  // Calculate visibility multiplier based on streak
+  // Calculate visibility multiplier based on streak (10-day scale)
   const getVisibilityMultiplier = (streak: number): number => {
     if (streak === 0) return 1
-    if (streak < 7) return 2
-    if (streak < 14) return 3
-    if (streak < 30) return 5
-    if (streak < 60) return 8
-    if (streak < 90) return 12
-    return 15 // 100+ day streak
+    if (streak < 3) return 2
+    if (streak < 5) return 4
+    if (streak < 7) return 6
+    if (streak < 10) return 8
+    return 10 // 10+ day streak = maximum visibility (protected)
   }
   
   const getVisibilityLevel = (streak: number): VisibilityLevel => {
     if (streak === 0) return VisibilityLevel.None
-    if (streak < 7) return VisibilityLevel.Low
-    if (streak < 30) return VisibilityLevel.Medium
-    if (streak < 60) return VisibilityLevel.High
+    if (streak < 3) return VisibilityLevel.Low
+    if (streak < 5) return VisibilityLevel.Medium
+    if (streak < 7) return VisibilityLevel.High
     return VisibilityLevel.Elite
   }
   
@@ -235,15 +234,15 @@ export function VisibilityMeter({ streak, className }: VisibilityMeterProps) {
         <p className="text-xs text-bidaaya-light/50 max-w-xs mx-auto">
           {streak === 0 
             ? "Start your streak to become visible to employers"
+            : streak < 3
+            ? "Keep going! 3-day streak unlocks 4x visibility"
+            : streak < 5
+            ? "Great progress! 5-day streak unlocks 6x visibility"
             : streak < 7
-            ? "Keep going! 7-day streak unlocks 3x visibility"
-            : streak < 30
-            ? "Great progress! 30-day streak unlocks 5x visibility"
-            : streak < 60
-            ? "You're crushing it! 60-day streak unlocks 8x visibility"
-            : streak < 100
-            ? "Almost elite! 100-day streak unlocks maximum visibility"
-            : "🎉 Elite status! You're in the top 1% of applicants"
+            ? "You're on fire! 7-day streak unlocks 8x visibility"
+            : streak < 10
+            ? "Almost there! 10-day streak unlocks maximum visibility"
+            : "🎉 Elite status! Maximum visibility achieved + protected"
           }
         </p>
       </div>

@@ -127,8 +127,22 @@ export async function updateUserStreak(prisma: PrismaClient, userId: string) {
     // Continue streak
     newStreak += 1
   } else if (lastStreakDate.getTime() < yesterday.getTime()) {
-    // Streak broken, start over
-    newStreak = 1
+    // Streak broken - but apply protection if they reached 10+ days
+    const daysMissed = Math.floor((today.getTime() - lastStreakDate.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (newStreak >= 10) {
+      // PROTECTED: Decay gradually instead of resetting
+      // Each day missed: halve the streak
+      // Day 1: 10 → 5
+      // Day 2: 5 → 2
+      // Day 3: 2 → 1
+      // Day 4+: 1 (reset)
+      newStreak = Math.max(1, Math.floor(newStreak * Math.pow(0.5, daysMissed)))
+      console.log(`🛡️ Streak protection applied: ${user.currentStreak} → ${newStreak} (missed ${daysMissed} days)`)
+    } else {
+      // No protection - reset to 1
+      newStreak = 1
+    }
   }
 
   const newLongest = Math.max(newStreak, user.longestStreak || 0)

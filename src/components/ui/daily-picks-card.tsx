@@ -63,7 +63,8 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
       if (response.ok) {
         const data = await response.json()
         setDailyPicks(data.dailyPicks || [])
-        setStreak(data.streak?.current || 0)
+        // Use 'actual' streak instead of 'current' (visual) to prevent 0→2 jump
+        setStreak(data.streak?.actual || 0)
         setLongestStreak(data.streak?.longest || 0)
         setGoal(data.goal || 'Get Employed')
       }
