@@ -2,9 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
-import { batchCategorizeOpportunities } from '@/lib/ai-opportunity-matcher'
 
 const prisma = new PrismaClient()
+
+// Stub function - categorization feature temporarily disabled
+async function batchCategorizeOpportunities(
+  opportunities: Array<{ id: string; title: string; company: string; description?: string; location?: string }>,
+  progressCallback?: (current: number, total: number, title: string) => void
+): Promise<Array<{ id: string; success: boolean; categorization?: any; error?: string }>> {
+  console.log('⚠️ Batch categorization temporarily disabled - returning empty results')
+  return opportunities.map(opp => ({
+    id: opp.id,
+    success: false,
+    error: 'Categorization feature temporarily disabled'
+  }))
+}
 
 export const maxDuration = 300 // 5 minutes for long-running categorization (Vercel limit)
 

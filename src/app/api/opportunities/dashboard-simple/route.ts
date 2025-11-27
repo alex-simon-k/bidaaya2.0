@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { PrismaClient } from '@prisma/client';
-import { calculateMatchScore } from '@/lib/ai-opportunity-matcher';
+import { calculateMatchScore } from '@/lib/opportunity-matcher';
 
 const prisma = new PrismaClient();
 
