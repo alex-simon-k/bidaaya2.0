@@ -182,7 +182,13 @@ export function calculateMatchScore(
   // If no matches found, give a baseline score
   if (matchReasons.length === 0) {
     score = 30 // Baseline score
-    matchReasons.push('General match')
+    matchReasons.push('General opportunity')
+    
+    // Debug logging to understand why no matches
+    console.log(`⚠️ No matches for "${opportunity.title}":`)
+    console.log(`  Student skills: ${studentSkills.slice(0, 5).join(', ')}...`)
+    console.log(`  Student interests: ${studentInterests.slice(0, 5).join(', ')}...`)
+    console.log(`  Opp text: ${oppText.substring(0, 100)}...`)
   }
 
   return {
