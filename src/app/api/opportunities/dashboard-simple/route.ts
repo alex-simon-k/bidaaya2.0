@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       cvExperience: undefined
     };
 
-    console.log(`📊 Student Profile: major=${studentProfile.major}, interests=${studentProfile.fieldsOfInterest?.length || 0}`);
+    console.log(`📊 Student Profile: major=${studentProfile.major}, interests=${studentProfile.interests?.length || 0}`);
 
     // Format early access opportunities with AI match scores
     const formattedEarlyAccess = earlyAccessOpps.map(opp => {
