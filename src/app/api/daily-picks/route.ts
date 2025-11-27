@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-config'
 import { PrismaClient } from '@prisma/client'
 import { selectDailyPicks } from '@/lib/opportunity-matcher'
 import { getVisualStreak } from '@/lib/streak'
+import { calculateAIMatchScore, filterByField } from '@/lib/ai-opportunity-matcher'
 
 const prisma = new PrismaClient()
 
@@ -190,27 +191,62 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Format opportunities for frontend
-    const formattedOpportunities = dailyOpportunities.map(opp => {
-      const isEarlyAccess = opp.isNewOpportunity && opp.earlyAccessUntil && new Date(opp.earlyAccessUntil) > new Date()
-      const hasUnlocked = unlockedIds.includes(opp.id)
-      const hasApplied = appliedIds.includes(opp.id)
+    // Format opportunities for frontend with AI-powered match scores
+    const formattedOpportunities = await Promise.all(
+      dailyOpportunities.map(async (opp) => {
+        const isEarlyAccess = opp.isNewOpportunity && opp.earlyAccessUntil && new Date(opp.earlyAccessUntil) > new Date()
+        const hasUnlocked = unlockedIds.includes(opp.id)
+        const hasApplied = appliedIds.includes(opp.id)
 
-      return {
-        id: opp.id,
-        title: opp.title,
-        company: opp.company,
-        location: opp.location,
-        description: opp.description,
-        postedDate: opp.addedAt,
-        type: isEarlyAccess ? 'early_access' : 'external',
-        isLocked: isEarlyAccess && !hasUnlocked,
-        unlockCredits: 7,
-        matchScore: opp.matchScore || 75, // From matching algorithm
-        matchReasons: opp.matchReasons || [],
-        hasApplied,
-      }
-    })
+        // Use AI to calculate match score (with fallback to rule-based)
+        let matchScore = opp.matchScore || 75
+        let matchReasons = opp.matchReasons || []
+
+        try {
+          const aiMatch = await calculateAIMatchScore(
+            {
+              skills: user.skills,
+              interests: user.interests,
+              major: user.major,
+              education: user.education,
+              goal: user.goal,
+              fieldOfInterest: user.primaryGoal || undefined,
+              cvSkills: user.cvSkills,
+              cvEducation: user.cvEducation,
+              cvExperience: user.cvExperience,
+            },
+            {
+              id: opp.id,
+              title: opp.title,
+              company: opp.company,
+              description: opp.description,
+              category: opp.category,
+              location: opp.location,
+            }
+          )
+
+          matchScore = aiMatch.matchScore
+          matchReasons = aiMatch.matchReasons
+        } catch (error) {
+          console.error(`⚠️ AI match score failed for ${opp.title}, using fallback`)
+        }
+
+        return {
+          id: opp.id,
+          title: opp.title,
+          company: opp.company,
+          location: opp.location,
+          description: opp.description,
+          postedDate: opp.addedAt,
+          type: isEarlyAccess ? 'early_access' : 'external',
+          isLocked: isEarlyAccess && !hasUnlocked,
+          unlockCredits: 7,
+          matchScore,
+          matchReasons,
+          hasApplied,
+        }
+      })
+    )
 
     // Calculate visual streak (decays gradually instead of resetting immediately)
     const visualStreak = await getVisualStreak(prisma, userId)

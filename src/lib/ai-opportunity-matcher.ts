@@ -1,319 +1,315 @@
-import OpenAI from 'openai'
+/**
+ * AI-Powered Opportunity Matching System
+ * Uses DeepSeek API to intelligently match opportunities to student profiles
+ */
 
-// Initialize OpenAI client with DeepSeek or OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: process.env.DEEPSEEK_API_KEY ? 'https://api.deepseek.com' : undefined
-})
-
-const AI_MODEL = process.env.DEEPSEEK_API_KEY ? 'deepseek-chat' : 'gpt-4'
-
-export interface OpportunityCategorization {
-  category: string[]
-  matchKeywords: string[]
-  industryTags: string[]
-  skillsRequired: string[]
-  educationMatch: string[]
-  confidenceScore: number
+interface StudentProfile {
+  skills: string[]
+  interests: string[]
+  major?: string | null
+  education?: string | null
+  goal: string[]
+  fieldOfInterest?: string // Tech, Business, Marketing, Design, Finance, Consulting, Engineering
+  cvSkills?: Array<{ skillName: string }>
+  cvEducation?: Array<{ degreeType: string; degreeTitle: string; fieldOfStudy: string; institution: string }>
+  cvExperience?: Array<{ title: string; employer: string; location?: string | null; summary?: string | null }>
 }
 
-export interface StudentProfile {
-  major?: string
-  university?: string
-  fieldsOfInterest?: string[]
-  skills?: string[]
-  location?: string
-  educationLevel?: string
-  graduationYear?: number
-}
-
-export interface OpportunityData {
+interface Opportunity {
+  id: string
   title: string
   company: string
-  description?: string
-  location?: string
-  aiCategory?: string[]
-  aiMatchKeywords?: string[]
-  aiEducationMatch?: string[]
-  aiSkillsRequired?: string[]
-  aiIndustryTags?: string[]
+  description?: string | null
+  category?: string | null
+  location?: string | null
 }
 
+interface AIMatchResult {
+  matchScore: number // 0-100
+  matchReasons: string[]
+  fieldAlignment: number // How well it aligns with their field of interest (0-100)
+  careerRelevance: number // How relevant to their career goals (0-100)
+}
+
+const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions'
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
+
 /**
- * Categorize an opportunity using AI
+ * Use AI to calculate a smart match score
  */
-export async function categorizeOpportunity(
-  title: string,
-  company: string,
-  description?: string,
-  location?: string
-): Promise<OpportunityCategorization> {
-  const prompt = `Analyze this internship/job opportunity and categorize it for student matching:
+export async function calculateAIMatchScore(
+  student: StudentProfile,
+  opportunity: Opportunity
+): Promise<AIMatchResult> {
+  
+  // Build student profile summary
+  const studentSummary = buildStudentSummary(student)
+  
+  // Build opportunity summary
+  const opportunitySummary = `
+Title: ${opportunity.title}
+Company: ${opportunity.company}
+Location: ${opportunity.location || 'Not specified'}
+Description: ${opportunity.description || 'No description available'}
+Category: ${opportunity.category || 'General'}
+`.trim()
 
-Title: ${title}
-Company: ${company}
-Location: ${location || 'Not specified'}
-Description: ${description || 'N/A'}
+  // Build the prompt
+  const prompt = `You are an expert career advisor analyzing job opportunities for students.
 
-Provide JSON output with:
-1. category: Primary categories (e.g., ["Finance", "Banking", "Consulting"])
-2. matchKeywords: Keywords for matching (e.g., ["investment", "wealth management", "private banking"])
-3. industryTags: Industry classifications (e.g., ["Financial Services", "Professional Services"])
-4. skillsRequired: Key skills needed (e.g., ["Excel", "Financial Analysis", "Communication"])
-5. educationMatch: Relevant fields of study (e.g., ["Economics", "Finance", "Business"])
-6. confidenceScore: Confidence level (0-1)
+STUDENT PROFILE:
+${studentSummary}
 
-IMPORTANT RULES:
-- For Finance/Banking roles, always include economics, finance, business in educationMatch
-- For Tech roles, include computer science, engineering, mathematics
-- For Consulting roles, include business, economics, management
-- For Marketing roles, include marketing, business, communications
-- Be generous with educationMatch - students can learn!
-- confidenceScore should be between 0.7-0.95 for most roles
+OPPORTUNITY:
+${opportunitySummary}
 
-Example Output:
+TASK:
+Analyze how well this opportunity matches the student's profile. Consider:
+1. Skills alignment (do they have relevant skills?)
+2. Field of interest alignment (does it match their chosen field?)
+3. Career goals alignment (does it help them reach their goals?)
+4. Education/major relevance
+5. Experience level appropriateness
+
+Respond ONLY with a valid JSON object (no markdown, no explanation):
 {
-  "category": ["Finance", "Banking"],
-  "matchKeywords": ["investment banking", "financial analyst", "mergers acquisitions"],
-  "industryTags": ["Financial Services", "Investment Banking"],
-  "skillsRequired": ["Financial Modeling", "Excel", "Valuation"],
-  "educationMatch": ["Finance", "Economics", "Business", "Accounting"],
-  "confidenceScore": 0.92
-}`
+  "matchScore": <number 0-100>,
+  "matchReasons": [<array of 2-4 specific reasons as strings>],
+  "fieldAlignment": <number 0-100>,
+  "careerRelevance": <number 0-100>
+}
+
+Be realistic - not everything is a 90+ match. Use the full 0-100 scale.`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: AI_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert job categorization assistant. Analyze job opportunities and provide structured categorization for student matching. Always respond with valid JSON only.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.3,
-      response_format: { type: 'json_object' }
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10-second timeout
+
+    const response = await fetch(DEEPSEEK_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a career matching expert. Always respond with valid JSON only, no markdown formatting.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.3, // Lower temperature for more consistent scoring
+        max_tokens: 500,
+      }),
+      signal: controller.signal,
     })
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
-    
-    // Ensure we have the required fields with defaults
-    return {
-      category: result.category || [],
-      matchKeywords: result.matchKeywords || [],
-      industryTags: result.industryTags || [],
-      skillsRequired: result.skillsRequired || [],
-      educationMatch: result.educationMatch || [],
-      confidenceScore: result.confidenceScore || 0.75
-    } as OpportunityCategorization
-  } catch (error) {
-    console.error('Error categorizing opportunity:', error)
-    // Return default categorization if AI fails
-    return {
-      category: ['General'],
-      matchKeywords: [title.toLowerCase()],
-      industryTags: ['General'],
-      skillsRequired: [],
-      educationMatch: [],
-      confidenceScore: 0.5
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      console.error('❌ DeepSeek API error:', response.status, response.statusText)
+      return fallbackMatchScore(student, opportunity)
     }
+
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content
+
+    if (!content) {
+      console.error('❌ No content in DeepSeek response')
+      return fallbackMatchScore(student, opportunity)
+    }
+
+    // Parse JSON (handle potential markdown wrapping)
+    let jsonContent = content.trim()
+    if (jsonContent.startsWith('```json')) {
+      jsonContent = jsonContent.replace(/```json\n?/g, '').replace(/```\n?/g, '')
+    } else if (jsonContent.startsWith('```')) {
+      jsonContent = jsonContent.replace(/```\n?/g, '')
+    }
+
+    const result = JSON.parse(jsonContent) as AIMatchResult
+
+    // Validate result
+    if (
+      typeof result.matchScore !== 'number' ||
+      !Array.isArray(result.matchReasons) ||
+      typeof result.fieldAlignment !== 'number' ||
+      typeof result.careerRelevance !== 'number'
+    ) {
+      console.error('❌ Invalid AI match result structure:', result)
+      return fallbackMatchScore(student, opportunity)
+    }
+
+    console.log(`✅ AI Match Score for "${opportunity.title}": ${result.matchScore}%`)
+    
+    return result
+
+  } catch (error: any) {
+    console.error('❌ AI matching error:', error.message)
+    return fallbackMatchScore(student, opportunity)
   }
 }
 
 /**
- * Calculate match score between student profile and opportunity
+ * Build a concise student profile summary for the AI
  */
-export function calculateMatchScore(
-  student: StudentProfile,
-  opportunity: OpportunityData
-): {
-  score: number
-  reasons: string[]
-  warnings: string[]
-} {
-  let totalPossible = 0
-  let totalEarned = 0
+function buildStudentSummary(student: StudentProfile): string {
+  const parts: string[] = []
+
+  // Field of Interest
+  if (student.fieldOfInterest) {
+    parts.push(`Field of Interest: ${student.fieldOfInterest}`)
+  }
+
+  // Education
+  if (student.major) {
+    parts.push(`Major: ${student.major}`)
+  }
+  if (student.education) {
+    parts.push(`Education Level: ${student.education}`)
+  }
+  if (student.cvEducation && student.cvEducation.length > 0) {
+    const degrees = student.cvEducation.map(e => `${e.degreeType} in ${e.fieldOfStudy} from ${e.institution}`).join(', ')
+    parts.push(`Degrees: ${degrees}`)
+  }
+
+  // Skills
+  const allSkills = [
+    ...student.skills,
+    ...(student.cvSkills?.map(s => s.skillName) || []),
+  ].filter(Boolean)
+  if (allSkills.length > 0) {
+    parts.push(`Skills: ${allSkills.slice(0, 15).join(', ')}`)
+  }
+
+  // Interests
+  if (student.interests.length > 0) {
+    parts.push(`Interests: ${student.interests.join(', ')}`)
+  }
+
+  // Experience
+  if (student.cvExperience && student.cvExperience.length > 0) {
+    const experiences = student.cvExperience.map(e => `${e.title} at ${e.employer}`).join(', ')
+    parts.push(`Experience: ${experiences}`)
+  }
+
+  // Goals
+  if (student.goal.length > 0) {
+    parts.push(`Career Goals: ${student.goal.join(', ')}`)
+  }
+
+  return parts.join('\n')
+}
+
+/**
+ * Fallback to rule-based matching if AI fails
+ */
+function fallbackMatchScore(student: StudentProfile, opportunity: Opportunity): AIMatchResult {
+  let score = 50 // Start at 50 as baseline
   const reasons: string[] = []
-  const warnings: string[] = []
 
-  // 1. Education/Major Match (40 points possible)
-  if (student.major && opportunity.aiEducationMatch && opportunity.aiEducationMatch.length > 0) {
-    totalPossible += 40
-    const majorLower = student.major.toLowerCase()
-    const educationMatches = opportunity.aiEducationMatch.filter(field =>
-      field.toLowerCase().includes(majorLower) ||
-      majorLower.includes(field.toLowerCase())
-    )
-    
-    if (educationMatches.length > 0) {
-      totalEarned += 40
-      reasons.push(`${student.major} matches this ${opportunity.aiCategory?.join('/')} role`)
-    } else {
-      // Partial match - still give some points
-      totalEarned += 15
-      warnings.push(`Your major may not directly match, but skills can transfer`)
-    }
+  const normalize = (str: string) => str.toLowerCase().trim()
+  const oppText = normalize(`${opportunity.title} ${opportunity.company} ${opportunity.description || ''}`)
+
+  // Check skills
+  const allSkills = [
+    ...student.skills,
+    ...(student.cvSkills?.map(s => s.skillName) || []),
+  ]
+  const skillMatches = allSkills.filter(skill => oppText.includes(normalize(skill)))
+  if (skillMatches.length > 0) {
+    score += Math.min(20, skillMatches.length * 5)
+    reasons.push(`${skillMatches.length} skill${skillMatches.length > 1 ? 's' : ''} match`)
   }
 
-  // 2. Field of Interest Match (30 points possible)
-  if (student.fieldsOfInterest && student.fieldsOfInterest.length > 0 && 
-      opportunity.aiCategory && opportunity.aiCategory.length > 0) {
-    totalPossible += 30
-    const interestMatches = student.fieldsOfInterest.filter(interest =>
-      opportunity.aiCategory!.some(cat =>
-        cat.toLowerCase().includes(interest.toLowerCase()) ||
-        interest.toLowerCase().includes(cat.toLowerCase())
-      )
-    )
-    
-    if (interestMatches.length > 0) {
-      totalEarned += 30
-      reasons.push(`Aligns with your interest in ${interestMatches.join(', ')}`)
-    } else {
-      // Check keywords for softer match
-      const keywordMatches = student.fieldsOfInterest.filter(interest =>
-        opportunity.aiMatchKeywords?.some(keyword =>
-          keyword.toLowerCase().includes(interest.toLowerCase())
-        )
-      )
-      if (keywordMatches.length > 0) {
-        totalEarned += 15
-        reasons.push(`Related to your interests`)
-      } else {
-        totalEarned += 5
-      }
-    }
+  // Check interests
+  const interestMatches = student.interests.filter(interest => oppText.includes(normalize(interest)))
+  if (interestMatches.length > 0) {
+    score += Math.min(15, interestMatches.length * 5)
+    reasons.push(`Matches your interests`)
   }
 
-  // 3. Skills Match (20 points possible)
-  if (student.skills && student.skills.length > 0 && 
-      opportunity.aiSkillsRequired && opportunity.aiSkillsRequired.length > 0) {
-    totalPossible += 20
-    const skillMatches = student.skills.filter(skill =>
-      opportunity.aiSkillsRequired!.some(req =>
-        req.toLowerCase().includes(skill.toLowerCase()) ||
-        skill.toLowerCase().includes(req.toLowerCase())
-      )
-    )
-    
-    if (skillMatches.length > 0) {
-      const skillScore = Math.min(20, (skillMatches.length / opportunity.aiSkillsRequired.length) * 20)
-      totalEarned += skillScore
-      reasons.push(`${skillMatches.length} of your skills match`)
-    } else {
-      totalEarned += 5
-      warnings.push(`May need to develop new skills`)
-    }
+  // Check field of interest
+  let fieldAlignment = 50
+  if (student.fieldOfInterest && oppText.includes(normalize(student.fieldOfInterest))) {
+    score += 15
+    fieldAlignment = 85
+    reasons.push(`Aligns with ${student.fieldOfInterest} field`)
   }
 
-  // 4. Location Match (10 points possible)
-  if (student.location && opportunity.location) {
-    totalPossible += 10
-    const studentLoc = student.location.toLowerCase()
-    const oppLoc = opportunity.location.toLowerCase()
-    
-    if (oppLoc.includes(studentLoc) || studentLoc.includes(oppLoc)) {
-      totalEarned += 10
-      reasons.push(`Location matches: ${opportunity.location}`)
-    } else if (oppLoc.includes('remote') || oppLoc.includes('hybrid')) {
-      totalEarned += 10
-      reasons.push('Remote/Hybrid work available')
-    } else {
-      totalEarned += 3
-      warnings.push(`Location: ${opportunity.location}`)
-    }
+  // Check major
+  if (student.major && oppText.includes(normalize(student.major))) {
+    score += 10
+    reasons.push(`Relevant to your major`)
   }
 
-  // Calculate proportional score (fair for incomplete profiles)
-  let score = 0
-  if (totalPossible > 0) {
-    score = Math.round((totalEarned / totalPossible) * 100)
-  } else {
-    // No matching data available - give neutral score
-    score = 50
-    warnings.push('Complete your profile for accurate match scores')
-  }
-
-  // Ensure score is within 0-100
-  score = Math.max(0, Math.min(100, score))
-
-  // Ensure we always have at least one reason
   if (reasons.length === 0) {
-    reasons.push('New opportunity available')
+    reasons.push('General career opportunity')
   }
 
   return {
-    score,
-    reasons,
-    warnings
+    matchScore: Math.min(100, Math.max(0, Math.round(score))),
+    matchReasons: reasons,
+    fieldAlignment,
+    careerRelevance: score,
   }
 }
 
 /**
- * Batch categorize multiple opportunities
+ * Batch score multiple opportunities (with caching and rate limiting)
  */
-export async function batchCategorizeOpportunities(
-  opportunities: Array<{
-    id: string
-    title: string
-    company: string
-    description?: string
-    location?: string
-  }>,
-  onProgress?: (current: number, total: number, title: string) => void
-): Promise<Array<{
-  id: string
-  categorization: OpportunityCategorization
-  success: boolean
-  error?: string
-}>> {
-  const results = []
-  
-  for (let i = 0; i < opportunities.length; i++) {
-    const opp = opportunities[i]
+export async function batchScoreOpportunities(
+  student: StudentProfile,
+  opportunities: Opportunity[],
+  maxConcurrent: number = 3
+): Promise<Map<string, AIMatchResult>> {
+  const results = new Map<string, AIMatchResult>()
+
+  // Process in batches to avoid rate limits
+  for (let i = 0; i < opportunities.length; i += maxConcurrent) {
+    const batch = opportunities.slice(i, i + maxConcurrent)
     
-    if (onProgress) {
-      onProgress(i + 1, opportunities.length, opp.title)
-    }
-
-    try {
-      const categorization = await categorizeOpportunity(
-        opp.title,
-        opp.company,
-        opp.description,
-        opp.location
-      )
-      
-      results.push({
-        id: opp.id,
-        categorization,
-        success: true
+    const batchResults = await Promise.all(
+      batch.map(async (opp) => {
+        const result = await calculateAIMatchScore(student, opp)
+        return { id: opp.id, result }
       })
-    } catch (error) {
-      results.push({
-        id: opp.id,
-        categorization: {
-          category: [],
-          matchKeywords: [],
-          industryTags: [],
-          skillsRequired: [],
-          educationMatch: [],
-          confidenceScore: 0
-        },
-        success: false,
-        error: (error as Error).message
-      })
-    }
+    )
 
-    // Small delay to avoid rate limiting
-    if (i < opportunities.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 100))
+    batchResults.forEach(({ id, result }) => {
+      results.set(id, result)
+    })
+
+    // Small delay between batches
+    if (i + maxConcurrent < opportunities.length) {
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
   }
 
   return results
 }
 
+/**
+ * Filter opportunities by field of interest
+ */
+export function filterByField(
+  opportunities: Opportunity[],
+  fieldOfInterest: string
+): Opportunity[] {
+  if (!fieldOfInterest || fieldOfInterest === 'Best For You') {
+    return opportunities // No filtering
+  }
+
+  const normalize = (str: string) => str.toLowerCase().trim()
+  const field = normalize(fieldOfInterest)
+
+  return opportunities.filter(opp => {
+    const oppText = normalize(`${opp.title} ${opp.company} ${opp.description || ''} ${opp.category || ''}`)
+    return oppText.includes(field)
+  })
+}
