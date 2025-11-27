@@ -101,15 +101,22 @@ export async function GET(request: NextRequest) {
 
       // Calculate AI-powered match score
       const matchResult = calculateMatchScore(studentProfile, {
+        id: opp.id,
         title: opp.title,
         company: opp.company,
-        description: opp.description || undefined,
-        location: opp.location || undefined,
-        aiCategory: opp.aiCategory || undefined,
-        aiMatchKeywords: opp.aiMatchKeywords || undefined,
-        aiEducationMatch: opp.aiEducationMatch || undefined,
-        aiSkillsRequired: opp.aiSkillsRequired || undefined,
-        aiIndustryTags: opp.aiIndustryTags || undefined
+        description: opp.description || null,
+        category: opp.category || null,
+        addedAt: opp.addedAt,
+        aiCategory: opp.aiCategory || [],
+        aiMatchKeywords: opp.aiMatchKeywords || [],
+        aiEducationMatch: opp.aiEducationMatch || [],
+        aiSkillsRequired: opp.aiSkillsRequired || [],
+        aiIndustryTags: opp.aiIndustryTags || [],
+        requiredDegrees: opp.requiredDegrees || [],
+        preferredMajors: opp.preferredMajors || [],
+        requiredSkills: opp.requiredSkills || [],
+        industries: opp.industries || [],
+        matchingTags: opp.matchingTags || []
       });
 
       return {
@@ -137,15 +144,22 @@ export async function GET(request: NextRequest) {
     const formattedRegular = regularOpps.map(opp => {
       // Calculate AI-powered match score
       const matchResult = calculateMatchScore(studentProfile, {
+        id: opp.id,
         title: opp.title,
         company: opp.company,
-        description: opp.description || undefined,
-        location: opp.location || undefined,
-        aiCategory: opp.aiCategory || undefined,
-        aiMatchKeywords: opp.aiMatchKeywords || undefined,
-        aiEducationMatch: opp.aiEducationMatch || undefined,
-        aiSkillsRequired: opp.aiSkillsRequired || undefined,
-        aiIndustryTags: opp.aiIndustryTags || undefined
+        description: opp.description || null,
+        category: opp.category || null,
+        addedAt: opp.addedAt ? new Date(opp.addedAt) : new Date(),
+        aiCategory: opp.aiCategory || [],
+        aiMatchKeywords: opp.aiMatchKeywords || [],
+        aiEducationMatch: opp.aiEducationMatch || [],
+        aiSkillsRequired: opp.aiSkillsRequired || [],
+        aiIndustryTags: opp.aiIndustryTags || [],
+        requiredDegrees: opp.requiredDegrees || [],
+        preferredMajors: opp.preferredMajors || [],
+        requiredSkills: opp.requiredSkills || [],
+        industries: opp.industries || [],
+        matchingTags: opp.matchingTags || []
       });
 
       return {
