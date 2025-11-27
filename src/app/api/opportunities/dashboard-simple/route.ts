@@ -78,15 +78,16 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 Found ${regularOpps.length} regular opportunities (randomized)`);
 
-    // Build student profile for matching
+    // Build student profile for matching (matching old StudentProfile interface)
     const studentProfile = {
-      major: user.major || undefined,
-      university: user.university || undefined,
-      fieldsOfInterest: user.interests || undefined,
-      skills: user.skills || undefined,
-      location: user.location || undefined,
-      educationLevel: user.education || undefined,
-      graduationYear: user.graduationYear || undefined
+      skills: user.skills || [],
+      interests: user.interests || [],
+      major: user.major || null,
+      education: user.education || null,
+      goal: user.goal || [],
+      cvSkills: undefined,
+      cvEducation: undefined,
+      cvExperience: undefined
     };
 
     console.log(`📊 Student Profile: major=${studentProfile.major}, interests=${studentProfile.fieldsOfInterest?.length || 0}`);
