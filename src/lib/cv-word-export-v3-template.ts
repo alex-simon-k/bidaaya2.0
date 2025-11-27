@@ -174,8 +174,8 @@ export class CVWordExportV3 {
         )
       }
 
-      // Modules/Coursework
-      if (edu.modules && edu.modules.length > 0) {
+      // Highlights (modules/coursework)
+      if (edu.highlights && edu.highlights.length > 0) {
         sections.push(
           new Paragraph({
             children: [
@@ -187,29 +187,7 @@ export class CVWordExportV3 {
                 size: 22,
               }),
               new TextRun({
-                text: edu.modules.join(', '),
-                font: 'Arial',
-                size: 22,
-              })
-            ],
-            spacing: { after: 40 },
-          })
-        )
-      }
-
-      if (edu.coursework && edu.coursework.length > 0) {
-        sections.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Relevant Coursework: ',
-                bold: true,
-                italics: true,
-                font: 'Arial',
-                size: 22,
-              }),
-              new TextRun({
-                text: edu.coursework.join(', '),
+                text: edu.highlights.join(', '),
                 font: 'Arial',
                 size: 22,
               })
@@ -252,7 +230,7 @@ export class CVWordExportV3 {
           new Paragraph({
             children: [
               new TextRun({
-                text: TextFormatter.formatCompanyName(exp.company).toUpperCase(),
+                text: TextFormatter.formatCompanyName(exp.employer).toUpperCase(),
                 bold: true,
                 font: 'Arial',
                 size: 22,
@@ -280,12 +258,12 @@ export class CVWordExportV3 {
           )
         }
 
-        // Role - LEFT ALIGNED
+        // Role/Title - LEFT ALIGNED
         sections.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: TextFormatter.toTitleCase(exp.role),
+                text: TextFormatter.toTitleCase(exp.title),
                 italics: true,
                 font: 'Arial',
                 size: 22,
@@ -312,13 +290,13 @@ export class CVWordExportV3 {
           )
         }
 
-        // Description
-        if (exp.description) {
+        // Summary
+        if (exp.summary) {
           sections.push(
             new Paragraph({
               children: [
                 new TextRun({
-                  text: exp.description,
+                  text: exp.summary,
                   font: 'Arial',
                   size: 22,
                 })
@@ -328,14 +306,14 @@ export class CVWordExportV3 {
           )
         }
 
-        // Bullet points
-        if (exp.impacts && exp.impacts.length > 0) {
-          exp.impacts.forEach((impact: any) => {
+        // Achievements (bullet points)
+        if (exp.achievements && exp.achievements.length > 0) {
+          exp.achievements.forEach((achievement: string) => {
             sections.push(
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: '• ' + impact.statement,
+                    text: '• ' + achievement,
                     font: 'Arial',
                     size: 22,
                   })
@@ -375,12 +353,12 @@ export class CVWordExportV3 {
       )
 
       cv.achievements.forEach((ach, index) => {
-        // Organization - LEFT ALIGNED
+        // Achievement Name - LEFT ALIGNED
         sections.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: TextFormatter.formatCompanyName(ach.organization || ach.title).toUpperCase(),
+                text: TextFormatter.formatCompanyName(ach.name).toUpperCase(),
                 bold: true,
                 font: 'Arial',
                 size: 22,
@@ -390,46 +368,13 @@ export class CVWordExportV3 {
           })
         )
 
-        // Location - RIGHT ALIGNED
-        if (ach.location) {
+        // Date - RIGHT ALIGNED
+        if (ach.date) {
           sections.push(
             new Paragraph({
               children: [
                 new TextRun({
-                  text: TextFormatter.formatLocation(ach.location),
-                  bold: true,
-                  font: 'Arial',
-                  size: 22,
-                })
-              ],
-              alignment: AlignmentType.RIGHT,
-              spacing: { after: 40 },
-            })
-          )
-        }
-
-        // Role - LEFT ALIGNED
-        sections.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: TextFormatter.toTitleCase(ach.role || ach.category || 'Member'),
-                italics: true,
-                font: 'Arial',
-                size: 22,
-              })
-            ],
-            spacing: { after: 20 },
-          })
-        )
-
-        // Dates - RIGHT ALIGNED
-        if (ach.dates || ach.date) {
-          sections.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: ach.dates || ach.date || '',
+                  text: ach.date,
                   font: 'Arial',
                   size: 22,
                 })
