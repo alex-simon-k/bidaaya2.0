@@ -15,7 +15,7 @@ export const PersonalStep: React.FC<{ data: Profile; update: (d: Profile) => voi
   };
 
   return (
-    <div className="animate-fade-in pb-10">
+    <div className="animate-fade-in pb-32">
       <SectionHeader title="Your Details" description="Let's start with the basics." />
       
       <Input label="Full Name" name="fullName" value={data.fullName || ''} onChange={handleChange} placeholder="e.g. Ahmed Al Zarooni" required error={errors.fullName} />
@@ -102,7 +102,7 @@ export const EducationStep: React.FC<{
 
   if (isAdding) {
     return (
-      <div className="animate-fade-in pb-20">
+      <div className="animate-fade-in pb-32">
         <h2 className="text-2xl font-bold mb-5">Add Education</h2>
         <div className="space-y-1">
           <Select label="Level" value={current.level} onChange={e => setCurrent({...current, level: e.target.value})} options={EDUCATION_LEVELS} required />

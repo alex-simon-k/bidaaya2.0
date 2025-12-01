@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { UserData, Profile, Education, Experience, Project, Skill } from './orbit-types';
 import { PersonalStep, LinksStep, EducationStep, ExperienceStep, ProjectsStep, SkillsStep } from './StepViews';
 import { ChevronLeft, Sparkles, Loader2, ArrowRight, Wallet, MapPin, Mail, Phone } from 'lucide-react';
@@ -41,6 +42,11 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Reset scroll position on mount and step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [step]);
 
   // Fetch initial data
   useEffect(() => {
@@ -281,13 +287,13 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex justify-center selection:bg-emerald-500/30 overflow-y-auto h-full w-full">
+    <div className="fixed inset-0 bg-black text-white flex justify-center items-start selection:bg-emerald-500/30 overflow-y-auto overflow-x-hidden">
       
       {/* Background Ambience */}
       <div className="fixed top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-purple-900/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="fixed bottom-[-10%] left-[-20%] w-[80vw] h-[80vw] bg-emerald-900/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md px-5 pb-32 pt-6 relative z-10 flex flex-col">
+      <div className="w-full max-w-md px-5 pb-32 pt-6 relative z-10 flex flex-col min-h-full">
         
         {/* Navigation & Progress */}
         <div className="flex flex-col gap-4 mb-6 sticky top-0 pt-2 bg-black/80 backdrop-blur-xl z-20 -mx-5 px-5 pb-4 border-b border-white/5">
