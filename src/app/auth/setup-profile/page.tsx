@@ -248,7 +248,7 @@ export default function SetupProfilePage() {
           ...formData,
           email: session.user.email,
           profileCompleted: true,  // ✅ Mark profile as completed
-          onboardingPhase: 'cv_building'  // ✅ Set to Phase II
+          onboardingPhase: 'complete'  // ✅ Skip Phase II, go straight to dashboard
         }),
       });
       
@@ -257,9 +257,9 @@ export default function SetupProfilePage() {
         throw new Error(errorData.message || 'Failed to update profile');
       }
       
-      console.log('✅ Profile updated successfully with profileCompleted: true and onboardingPhase: cv_building');
-      
-      await update({ profileCompleted: true, onboardingPhase: 'cv_building' });
+      console.log('✅ Profile updated successfully with profileCompleted: true and onboardingPhase: complete');
+
+      await update({ profileCompleted: true, onboardingPhase: 'complete' });
       markProfileCompleted()
       updateStep('complete')
 
@@ -290,9 +290,8 @@ export default function SetupProfilePage() {
       setIsProfileComplete(true);
       
       setTimeout(() => {
-        console.log('🚀 Redirecting to CV builder (Phase II)');
-        // Add phase=2 parameter to bypass middleware check while session updates
-        window.location.href = '/dashboard?phase=cv_building';
+        console.log('🚀 Redirecting to dashboard');
+        window.location.href = '/dashboard';
       }, 2500);
       
     } catch (err) {
