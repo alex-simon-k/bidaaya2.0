@@ -291,7 +291,8 @@ export default function SetupProfilePage() {
       
       setTimeout(() => {
         console.log('🚀 Redirecting to CV builder (Phase II)');
-        window.location.href = '/dashboard';
+        // Add phase=2 parameter to bypass middleware check while session updates
+        window.location.href = '/dashboard?phase=cv_building';
       }, 2500);
       
     } catch (err) {

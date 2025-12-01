@@ -131,9 +131,15 @@ export default withAuth(
       
              // Redirect to role selection ONLY if they don't have a role yet OR trying to access dashboard
        if (pathname.startsWith("/dashboard")) {
-         // Check if this is the onboarding completion flow
          const url = new URL(req.url);
          const isOnboardingComplete = url.searchParams.get('onboarding_complete') === 'true';
+         const isPhase2Transition = url.searchParams.get('phase') === '2' || url.searchParams.get('phase') === 'cv_building';
+         
+         // Allow Phase 2 (CV builder) transition even if session hasn't updated yet
+         if (isPhase2Transition && token.role === 'STUDENT') {
+           console.log('🛡️ ✅ Allowing Phase II transition for student (session may not be updated yet)');
+           return NextResponse.next();
+         }
          
          if (isOnboardingComplete && pathname === '/dashboard/profile') {
            console.log('🛡️ ✅ Allowing onboarding completion flow to profile page');
