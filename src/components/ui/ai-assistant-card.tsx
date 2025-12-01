@@ -26,7 +26,7 @@ import { ChatMessage, TypingIndicator } from "@/components/ui/chat-message";
 import { OpportunityCard } from "@/components/ui/opportunity-card";
 import { ConversationLevelTracker } from "@/components/ui/conversation-level-tracker";
 import { ProfileCompletionChecklist, DEFAULT_CHECKLIST_ITEMS, ChecklistItem } from "@/components/ui/profile-completion-checklist";
-import { CVFormWizard } from "@/components/ui/cv-form-wizard";
+import OrbitProfileBuilder from "@/components/orbit/OrbitProfileBuilder";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -354,7 +354,7 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
   // Show structured form wizard if enabled
   if (showStructuredForm) {
     return (
-      <CVFormWizard
+      <OrbitProfileBuilder
         onComplete={async () => {
           setShowStructuredForm(false);
           
@@ -394,10 +394,6 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
                 skillsCount: data.skillsCount || 0,
               });
             });
-        }}
-        onCancel={() => {
-          // Redirect to dashboard instead of showing welcome screen
-          window.location.href = '/dashboard';
         }}
       />
     );

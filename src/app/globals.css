@@ -137,3 +137,50 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Safari and Chrome */
 }
+
+/* Orbit Profile Builder Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-input {
+  background: rgba(255, 255, 255, 0.05); /* Slightly lighter for better contrast */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+.glass-input:focus {
+  border-color: rgba(16, 185, 129, 0.5); /* Emerald 500 */
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+/* Date picker dark mode override */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Perspective for 3D card effect */
+.perspective-1000 {
+  perspective: 1000px;
+}
