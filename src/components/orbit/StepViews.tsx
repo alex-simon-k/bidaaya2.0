@@ -444,7 +444,7 @@ export const SkillsStep: React.FC<{
            <div key={skill.id} className="bg-white/5 rounded-2xl p-4 border border-white/10 flex justify-between items-center group">
               <div>
                 <div className="text-white font-medium text-base">{skill.name}</div>
-                <div className="text-xs text-emerald-400 uppercase tracking-wider mt-1">{skill.type} • {skill.level || 'Unspecified'}</div>
+                <div className="text-xs text-blue-400 uppercase tracking-wider mt-1">{skill.type} • {skill.level || 'Unspecified'}</div>
               </div>
               <button onClick={() => handleRemove(skill.id)} className="text-gray-500 hover:text-red-400 p-2">
                 <Trash2 className="w-5 h-5" />

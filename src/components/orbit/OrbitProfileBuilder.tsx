@@ -261,19 +261,20 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
 
   if (isLoading) {
       return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center">
-            <Loader2 className="animate-spin w-10 h-10 text-emerald-500" />
+        <div className="fixed inset-0 bg-black text-white flex flex-col items-center justify-center gap-4 z-50">
+            <Loader2 className="animate-spin w-12 h-12 text-blue-500" />
+            <p className="text-gray-400 text-sm">Loading your profile...</p>
         </div>
       );
   }
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden z-50 fixed inset-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.15),transparent_70%)] pointer-events-none" />
+      <div className="fixed inset-0 bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden z-50">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.15),transparent_70%)] pointer-events-none" />
         
-        <div className="glass-panel p-8 rounded-[2.5rem] max-w-sm w-full text-center border-emerald-500/20 shadow-[0_0_50px_-12px_rgba(16,185,129,0.3)] animate-scale-in">
-          <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-400">
+        <div className="glass-panel p-8 rounded-[2.5rem] max-w-sm w-full mx-auto text-center border-blue-500/20 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)] animate-scale-in relative z-10">
+          <div className="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-400">
              <Sparkles className="w-12 h-12" />
           </div>
           <h1 className="text-3xl font-bold mb-3 tracking-tight">Profile Ready</h1>
@@ -287,13 +288,13 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
   }
 
   return (
-    <div className="fixed inset-0 bg-black text-white flex justify-center items-start selection:bg-emerald-500/30 overflow-y-auto overflow-x-hidden">
+    <div className="fixed inset-0 bg-black text-white flex justify-center items-start selection:bg-blue-500/30 overflow-y-auto overflow-x-hidden">
       
       {/* Background Ambience */}
-      <div className="fixed top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-purple-900/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="fixed bottom-[-10%] left-[-20%] w-[80vw] h-[80vw] bg-emerald-900/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-indigo-900/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] left-[-20%] w-[80vw] h-[80vw] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md px-5 pb-32 pt-6 relative z-10 flex flex-col min-h-full">
+      <div className="w-full max-w-md mx-auto px-5 pb-32 pt-6 relative z-10 flex flex-col min-h-full">
         
         {/* Navigation & Progress */}
         <div className="flex flex-col gap-4 mb-6 sticky top-0 pt-2 bg-black/80 backdrop-blur-xl z-20 -mx-5 px-5 pb-4 border-b border-white/5">
@@ -303,8 +304,8 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
                 <div 
                   key={s.id} 
                   className={`h-1 flex-1 rounded-full transition-all duration-500 ${
-                    i < step ? 'bg-emerald-500' : 'bg-white/10'
-                  } ${i === step - 1 ? 'opacity-100 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'opacity-70'}`} 
+                    i < step ? 'bg-blue-500' : 'bg-white/10'
+                  } ${i === step - 1 ? 'opacity-100 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'opacity-70'}`} 
                 />
               ))}
            </div>
@@ -338,12 +339,12 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
               <div className="relative group perspective-1000">
                 {/* ID Card Look */}
                 <div className="glass-panel p-6 rounded-[2rem] border-white/10 bg-gradient-to-br from-white/10 to-white/5 shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 blur-[50px] rounded-full pointer-events-none"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 blur-[50px] rounded-full pointer-events-none"></div>
                   
                   <div className="flex justify-between items-start mb-6 relative">
                     <div>
                       <h3 className="text-2xl font-bold text-white leading-tight">{data.profile.fullName || 'Your Name'}</h3>
-                      <p className="text-emerald-400 font-medium text-sm mt-1">{data.education[0]?.program || 'Student'} @ {data.education[0]?.institution || 'University'}</p>
+                      <p className="text-blue-400 font-medium text-sm mt-1">{data.education[0]?.program || 'Student'} @ {data.education[0]?.institution || 'University'}</p>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
                       <Wallet className="w-6 h-6 text-white" />
@@ -384,7 +385,7 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
                 <div className="mt-8 space-y-3">
                   <div className="flex justify-between items-center px-2">
                      <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Top Skills</span>
-                     <button onClick={() => setStep(6)} className="text-xs text-emerald-400 hover:text-emerald-300">Edit</button>
+                     <button onClick={() => setStep(6)} className="text-xs text-blue-400 hover:text-blue-300">Edit</button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {data.skills.slice(0, 5).map(skill => (

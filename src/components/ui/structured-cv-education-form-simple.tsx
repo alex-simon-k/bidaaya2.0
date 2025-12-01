@@ -99,7 +99,12 @@ export function StructuredCVEducationFormSimple({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstErrorElement = document.querySelector('[class*="text-red"]');
+      firstErrorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -117,8 +122,12 @@ export function StructuredCVEducationFormSimple({
         modules: formData.modules,
         awards: [],
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving education:", error);
+      // Show error to user
+      const errorMessage = error?.message || "Failed to save education. Please check all required fields.";
+      setErrors({ submit: errorMessage });
+      alert(errorMessage);
     } finally {
       setIsSaving(false);
     }

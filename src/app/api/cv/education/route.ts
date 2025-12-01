@@ -46,6 +46,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate modules (minimum 3 required)
+    if (!modules || !Array.isArray(modules) || modules.length < 3) {
+      return NextResponse.json(
+        {
+          error: "Modules validation failed",
+          message: "Please add at least 3 relevant courses/modules to help match you to opportunities",
+          received: modules?.length || 0,
+          required: 3
+        },
+        { status: 400 }
+      );
+    }
+
     // Parse dates
     const startDateObj = new Date(startDate + "-01");
     const endDateObj = endDate ? new Date(endDate + "-01") : null;

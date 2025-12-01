@@ -161,15 +161,26 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save education");
+        const errorData = await response.json();
+        const errorMessage = errorData.error || errorData.message || "Failed to save education";
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
+      
+      // Validate result before adding to state
+      if (!result.education || typeof result.education !== 'object') {
+        throw new Error("Invalid response from server");
+      }
+      
       setSavedItems((prev) => ({
         ...prev,
-        education: [...prev.education, result.education]
+        education: [...prev.education.filter(Boolean), result.education]
       }));
       setCompletedSections((prev) => new Set([...prev, "education"]));
+      
+      // Reset form after successful save
+      setEducationFormKey(prev => prev + 1);
       
       // DON'T auto-move to next - allow adding more education entries
     } catch (error) {
@@ -387,11 +398,11 @@ export function CVFormWizard({ onComplete, onCancel }: CVFormWizardProps) {
             {savedItems.education.length > 0 && (
               <div className="mb-4 space-y-2">
                 <p className="text-sm text-bidaaya-light font-semibold">Your Education:</p>
-                {savedItems.education.map((edu: any, idx: number) => (
+                {savedItems.education.filter(Boolean).map((edu: any, idx: number) => (
                   <div key={idx} className="p-3 bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <p className="text-sm text-bidaaya-light font-medium">{edu.degreeTitle || edu.program}</p>
-                      <p className="text-xs text-bidaaya-light/60">{edu.institution}</p>
+                      <p className="text-sm text-bidaaya-light font-medium">{edu?.degreeTitle || edu?.program || 'Untitled Education'}</p>
+                      <p className="text-xs text-bidaaya-light/60">{edu?.institution || 'No institution specified'}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button

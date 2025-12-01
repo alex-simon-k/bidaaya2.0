@@ -10,7 +10,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }) => (
   <div className="mb-5">
     <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider pl-1">
-      {label} {props.required && <span className="text-emerald-500">*</span>}
+      {label} {props.required && <span className="text-blue-500">*</span>}
     </label>
     <input
       className={`glass-input w-full rounded-2xl px-4 py-3.5 text-base transition-all placeholder:text-gray-600 ${
@@ -31,7 +31,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 export const Textarea: React.FC<TextareaProps> = ({ label, error, className = '', ...props }) => (
   <div className="mb-5">
     <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider pl-1">
-      {label} {props.required && <span className="text-emerald-500">*</span>}
+      {label} {props.required && <span className="text-blue-500">*</span>}
     </label>
     <textarea
       className={`glass-input w-full rounded-2xl px-4 py-3.5 text-base transition-all placeholder:text-gray-600 min-h-[120px] resize-none ${
@@ -53,7 +53,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export const Select: React.FC<SelectProps> = ({ label, options, error, className = '', ...props }) => (
   <div className="mb-5">
     <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider pl-1">
-      {label} {props.required && <span className="text-emerald-500">*</span>}
+      {label} {props.required && <span className="text-blue-500">*</span>}
     </label>
     <div className="relative">
       <select
@@ -112,7 +112,7 @@ export const TagInput: React.FC<TagInputProps> = ({
   return (
     <div className="mb-5">
        <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider pl-1">
-        {label} {required && <span className="text-emerald-500">*</span>}
+        {label} {required && <span className="text-blue-500">*</span>}
         {minTags && <span className="normal-case font-normal text-gray-600 ml-2">(Min: {minTags})</span>}
       </label>
       <div className={`glass-input w-full rounded-2xl px-3 py-3 min-h-[56px] flex flex-wrap gap-2 items-center ${
@@ -156,7 +156,7 @@ interface CheckboxProps {
 export const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onChange }) => (
   <label className="flex items-center gap-4 cursor-pointer group mb-6 p-1">
     <div className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
-      checked ? 'bg-emerald-500 border-emerald-500' : 'border-gray-600 group-hover:border-gray-500 bg-white/5'
+      checked ? 'bg-blue-500 border-blue-500' : 'border-gray-600 group-hover:border-gray-500 bg-white/5'
     }`}>
       {checked && <Check className="w-4 h-4 text-white" />}
     </div>
