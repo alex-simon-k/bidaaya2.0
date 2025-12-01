@@ -47,10 +47,10 @@ export function GlassFrame({ logoUrl, color, companyName }: GlassFrameProps) {
         </div>
 
         {/* 4. Text Label (Status indicator) */}
-        <div className="absolute -bottom-2 left-0 right-0 text-center z-30 flex flex-col items-center justify-center">
-            <div className="flex items-center gap-1 px-2 py-0.5 bg-bidaaya-dark/60 backdrop-blur-md rounded-full border border-bidaaya-light/10 shadow-sm">
+        <div className="absolute -bottom-3 left-0 right-0 text-center z-30 flex flex-col items-center justify-center">
+            <div className="flex items-center gap-1 px-2.5 py-1 bg-bidaaya-dark/80 backdrop-blur-md rounded-full border border-bidaaya-light/10 shadow-sm">
                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: color }}></div>
-                <span className="text-[9px] font-semibold text-bidaaya-light uppercase tracking-wider">New</span>
+                <span className="text-[10px] font-semibold text-bidaaya-light uppercase tracking-wide">New</span>
             </div>
         </div>
 
