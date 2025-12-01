@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ProfileView } from '@/components/profile-viewer/ProfileView'
 import { UserData } from '@/components/profile-viewer/types'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export default function ProfilePage() {
   const { data: session } = useSession()
@@ -110,14 +110,8 @@ export default function ProfilePage() {
   if (!profileData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-                       <div className="text-center">
+        <div className="text-center">
           <p className="text-gray-400 mb-4">Failed to load profile data</p>
-                      <button 
-            onClick={() => router.push('/dashboard')}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors"
-          >
-            Back to Dashboard
-                      </button>
         </div>
       </div>
     )
@@ -130,16 +124,8 @@ export default function ProfilePage() {
       <div className="fixed bottom-[-10%] left-[-20%] w-[80vw] h-[80vw] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md px-5 py-10 relative z-10">
-        {/* Header with Back Button */}
+        {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back to Dashboard</span>
-          </button>
-          
           <h2 className="text-sm font-semibold text-blue-500 uppercase tracking-widest mb-2">Your Profile</h2>
           <p className="text-gray-400 text-sm">View and manage your professional information</p>
         </div>

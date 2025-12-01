@@ -64,7 +64,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
             <div className="relative group">
               <button
                 onClick={() => setIsAvatarSelectorOpen(true)}
-                className="w-16 h-16 rounded-full bg-blue-500/20 border-2 border-blue-500/30 overflow-hidden flex items-center justify-center ring-2 ring-blue-500/20 hover:ring-blue-500/40 transition-all"
+                className="w-16 h-16 rounded-full bg-blue-500/20 border-2 border-blue-500/30 overflow-hidden flex items-center justify-center ring-2 ring-blue-500/20 hover:ring-blue-500/40 transition-all relative"
               >
                 {profile.profilePicture ? (
                   <img src={profile.profilePicture} alt={profile.fullName} className="w-full h-full object-cover" />
@@ -73,10 +73,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
                     {profile.fullName?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 )}
+                <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center backdrop-blur-sm pointer-events-none">
+                  <span className="text-white text-xs font-medium text-center leading-tight">Change Avatar</span>
+                </div>
               </button>
-              <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center backdrop-blur-sm pointer-events-none">
-                <span className="text-white text-xs font-medium">Change Avatar</span>
-              </div>
             </div>
             <div className="flex-1">
              <h1 className="text-2xl font-bold text-white leading-tight tracking-tight">{profile.fullName || 'Your Name'}</h1>
