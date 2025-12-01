@@ -61,6 +61,7 @@ export function OpportunityDetailModal({
   onUnlock,
   userPlan
 }: OpportunityDetailModalProps) {
+  const { data: session } = useSession()
   // Credits & Unlocks State
   const [userCredits, setUserCredits] = useState<number | null>(null)
   const [isCVUnlocked, setIsCVUnlocked] = useState(false)
