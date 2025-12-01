@@ -358,19 +358,20 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
         onComplete={async () => {
           setShowStructuredForm(false);
           
-          // Update onboarding phase to 'complete' to show the opportunity dashboard
+          // Update onboarding phase to 'complete' AND set profileCompleted to true
           try {
             const response = await fetch('/api/user/profile', {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 onboardingPhase: 'complete',
+                profileCompleted: true,  // ✅ Mark profile as fully completed after Phase II
               }),
             });
 
             if (response.ok) {
-              // Update the session with new onboarding phase
-              await update({ onboardingPhase: 'complete' });
+              // Update the session with new onboarding phase and profileCompleted
+              await update({ onboardingPhase: 'complete', profileCompleted: true });
               
               // Force page reload to show the opportunity dashboard
               window.location.href = '/dashboard';
