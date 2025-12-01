@@ -406,36 +406,17 @@ export default function DashboardLayout({
               </>
             )}
             
-            {/* Student-specific navigation */}
+            {/* Student-specific navigation - Extensive menu matching student-layout-wrapper */}
             {session.user.role === 'STUDENT' && (
               <>
-                <Link 
-                  href="/dashboard/projects" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  💼 Browse Projects
-                </Link>
                 <Link 
                   href="/dashboard/companies" 
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="block px-3 py-3 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  🏢 Browse Companies
+                  🏢 Companies
+                  <span className="ml-2 text-xs">🔒</span>
                 </Link>
-                <Link 
-                  href="/dashboard/applications" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  📝 My Applications
-                </Link>
-              </>
-            )}
-            
-            {/* Student-only links */}
-            {session.user.role === 'STUDENT' && (
-              <>
                 <Link 
                   href="/dashboard/profile" 
                   onClick={() => setIsMenuOpen(false)}
@@ -443,29 +424,46 @@ export default function DashboardLayout({
                 >
                   👤 Profile
                 </Link>
-                <Link 
-                  href="/dashboard/discovery-quiz" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    alert('🔒 Jobless Meter feature coming soon! Compare your streaks and scores with friends, see who\'s leading, and stay motivated together.');
+                  }}
+                  className="block w-full text-left px-3 py-3 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  🧩 Discovery Quiz
+                  👥 Jobless Meter
+                  <span className="ml-2 text-xs">🔒</span>
+                </button>
+                <Link 
+                  href="/dashboard/applications" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  📝 Applications
                 </Link>
                 <Link 
-                  href="/dashboard/mentorship" 
+                  href="/dashboard/cvs" 
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  🎯 Book Mentorship
+                  📄 My CVs
+                </Link>
+                <Link 
+                  href="/student/subscription" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  💎 Land an Internship Faster
+                </Link>
+                <Link 
+                  href="/student/settings" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  ⚙️ Settings & Credits
                 </Link>
               </>
             )}
-            <Link 
-              href="/subscription" 
-              onClick={() => setIsMenuOpen(false)}
-              className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              💎 Subscription
-            </Link>
             {session.user.role === 'ADMIN' && (
               <>
                 <Link 

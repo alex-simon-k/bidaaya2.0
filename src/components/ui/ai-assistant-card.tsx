@@ -15,6 +15,7 @@ import {
   Send,
   Mic,
   Lock,
+  Users,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -482,6 +483,20 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5" />
                 <span className="font-medium">Profile</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
+            </button>
+
+            <button 
+              onClick={() => {
+                alert('🔒 Jobless Meter feature coming soon! Compare your streaks and scores with friends, see who\'s leading, and stay motivated together.');
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5" />
+                <span className="font-medium">Jobless Meter</span>
+                <Lock className="h-3 w-3 ml-1" />
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
