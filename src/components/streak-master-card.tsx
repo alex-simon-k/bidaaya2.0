@@ -109,9 +109,11 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
     setSelectedOpportunity(pick)
   }
 
-  const handleMarkAsApplied = async (opportunityId: string) => {
+  const handleMarkAsApplied = async () => {
+    if (!selectedOpportunity) return
+    
     try {
-      const response = await fetch(`/api/external-opportunities/${opportunityId}/apply`, {
+      const response = await fetch(`/api/external-opportunities/${selectedOpportunity.id}/apply`, {
         method: 'POST',
       })
 
@@ -316,7 +318,7 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
           opportunity={selectedOpportunity}
           isOpen={!!selectedOpportunity}
           onClose={() => setSelectedOpportunity(null)}
-          onApply={handleMarkAsApplied}
+          onMarkAsApplied={handleMarkAsApplied}
         />
       )}
     </>
