@@ -58,6 +58,11 @@ export async function getVisualStreak(prisma: PrismaClient, userId: string): Pro
   const decayFactor = Math.pow(0.5, daysDiff)
   const visualStreak = Math.floor((user.currentStreak || 0) * decayFactor)
 
+  // If visual streak drops below 1 after decay, reset to 0
+  if (visualStreak < 1) {
+    return 0
+  }
+
   return visualStreak
 }
 
