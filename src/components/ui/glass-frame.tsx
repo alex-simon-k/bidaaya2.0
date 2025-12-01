@@ -14,7 +14,7 @@ interface GlassFrameProps {
  */
 export function GlassFrame({ logoUrl, color, companyName }: GlassFrameProps) {
   return (
-    <div className="relative group w-32 h-32 mx-auto my-6 flex items-center justify-center">
+    <div className="relative group w-32 h-32 mx-auto mt-6 mb-10 flex items-center justify-center">
       
       {/* 1. Ambient Glow (Behind) */}
       <div 
@@ -47,7 +47,7 @@ export function GlassFrame({ logoUrl, color, companyName }: GlassFrameProps) {
         </div>
 
         {/* 4. Text Label (Status indicator) */}
-        <div className="absolute -bottom-3 left-0 right-0 text-center z-30 flex flex-col items-center justify-center">
+        <div className="absolute -bottom-5 left-0 right-0 text-center z-30 flex flex-col items-center justify-center">
             <div className="flex items-center gap-1 px-2.5 py-1 bg-bidaaya-dark/80 backdrop-blur-md rounded-full border border-bidaaya-light/10 shadow-sm">
                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: color }}></div>
                 <span className="text-[10px] font-semibold text-bidaaya-light uppercase tracking-wide">New</span>
