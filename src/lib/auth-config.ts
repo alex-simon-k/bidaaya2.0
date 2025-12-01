@@ -218,24 +218,27 @@ export const authOptions: NextAuthOptions = {
             console.log('🔄 User ID:', dbUser.id);
             console.log('🔄 User role:', dbUser.role);
             console.log('🔄 DB Profile completed flag:', dbUser.profileCompleted);
+            console.log('🔄 DB Onboarding phase:', dbUser.onboardingPhase);
             console.log('🔄 CV Counts - Edu:', dbUser._count.cvEducation, 'Exp:', dbUser._count.cvExperience, 'Skills:', dbUser._count.cvSkills);
 
-            // STRICTLY recalculate profile completion based on actual data
+            // Calculate Phase II completion based on CV data
             const hasEducation = dbUser._count.cvEducation > 0;
             const hasExperience = dbUser._count.cvExperience > 0;
             const hasSkills = dbUser._count.cvSkills > 0;
+            const isPhase2Complete = (hasEducation || hasExperience) && hasSkills;
             
-            // A profile is complete only if they have Education OR Experience AND Skills
-            // This forces the new Orbit Profile Builder flow if data is missing
-            const isProfileTrulyComplete = (hasEducation || hasExperience) && hasSkills;
-            
-            console.log('🔄 Calculated isProfileTrulyComplete:', isProfileTrulyComplete);
+            console.log('🔄 Calculated Phase II complete:', isPhase2Complete);
 
+            // CRITICAL: Respect onboardingPhase from DB
+            // If onboardingPhase is 'complete' or 'cv_building', Phase I is done
+            // Only set profileCompleted based on Phase II (CV data)
+            const phase1Complete = dbUser.onboardingPhase === 'complete' || dbUser.onboardingPhase === 'cv_building';
+            
             token.id = dbUser.id;
             token.role = dbUser.role;
             token.emailVerified = dbUser.emailVerified;
-            token.profileCompleted = isProfileTrulyComplete; // Override with calculated value
-            token.onboardingPhase = isProfileTrulyComplete ? 'complete' : 'cv_building'; // Sync phase
+            token.profileCompleted = isPhase2Complete; // Phase II completion (CV data)
+            token.onboardingPhase = dbUser.onboardingPhase || 'structured_chat'; // Use DB value
             token.bio = dbUser.bio;
             token.university = dbUser.university;
             token.highSchool = dbUser.highSchool;
@@ -247,9 +250,9 @@ export const authOptions: NextAuthOptions = {
             token.stripeSubscriptionId = dbUser.stripeSubscriptionId;
             
             console.log('🔄 JWT callback - Token updated with fresh database values');
-            console.log('🔄 Updated subscription plan:', dbUser.subscriptionPlan);
-            console.log('🔄 Updated subscription status:', dbUser.subscriptionStatus);
-            console.log('🔄 Updated onboarding phase:', token.onboardingPhase);
+            console.log('🔄 Phase I complete:', phase1Complete);
+            console.log('🔄 Phase II complete (profileCompleted):', isPhase2Complete);
+            console.log('🔄 Onboarding phase:', token.onboardingPhase);
           } else {
             console.log('🔄 JWT callback - No database user found for email:', email);
           }

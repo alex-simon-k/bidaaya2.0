@@ -114,8 +114,11 @@ export default withAuth(
     }
     
     // If user is verified but profile not completed, redirect to appropriate onboarding
+    // IMPORTANT: profileCompleted now means "Phase II complete" (has CV data)
+    // Phase I complete means they have onboardingPhase set and can access dashboard
     if (token && token.emailVerified && !token.profileCompleted) {
-      console.log('🛡️ ⚠️ User verified but profile NOT completed');
+      console.log('🛡️ ⚠️ User verified but Phase II NOT completed (profileCompleted: false)');
+      console.log('🛡️ Onboarding phase:', token.onboardingPhase);
       
       // Allow access to auth flow pages
       if (pathname.startsWith("/auth/")) {
@@ -129,23 +132,30 @@ export default withAuth(
         return NextResponse.next();
       }
       
-             // Redirect to role selection ONLY if they don't have a role yet OR trying to access dashboard
-       if (pathname.startsWith("/dashboard")) {
-         const url = new URL(req.url);
-         const isOnboardingComplete = url.searchParams.get('onboarding_complete') === 'true';
-         const isPhase2Transition = url.searchParams.get('phase') === '2' || url.searchParams.get('phase') === 'cv_building';
-         
-         // Allow Phase 2 (CV builder) transition even if session hasn't updated yet
-         if (isPhase2Transition && token.role === 'STUDENT') {
-           console.log('🛡️ ✅ Allowing Phase II transition for student (session may not be updated yet)');
-           return NextResponse.next();
-         }
-         
-         if (isOnboardingComplete && pathname === '/dashboard/profile') {
-           console.log('🛡️ ✅ Allowing onboarding completion flow to profile page');
-           return NextResponse.next();
-         }
-         
+      // Redirect to role selection ONLY if they don't have a role yet OR trying to access dashboard
+      if (pathname.startsWith("/dashboard")) {
+        const url = new URL(req.url);
+        const isOnboardingComplete = url.searchParams.get('onboarding_complete') === 'true';
+        const isPhase2Transition = url.searchParams.get('phase') === '2' || url.searchParams.get('phase') === 'cv_building';
+        
+        // Allow Phase 2 (CV builder) transition even if session hasn't updated yet
+        if (isPhase2Transition && token.role === 'STUDENT') {
+          console.log('🛡️ ✅ Allowing Phase II transition for student (session may not be updated yet)');
+          return NextResponse.next();
+        }
+        
+        if (isOnboardingComplete && pathname === '/dashboard/profile') {
+          console.log('🛡️ ✅ Allowing onboarding completion flow to profile page');
+          return NextResponse.next();
+        }
+        
+        // CRITICAL FIX: If onboardingPhase is 'complete' or 'cv_building', allow dashboard access
+        // Phase I is done, Phase II (CV) is optional and triggered when applying
+        if (token.onboardingPhase === 'complete' || token.onboardingPhase === 'cv_building') {
+          console.log('🛡️ ✅ Phase I complete (onboardingPhase:', token.onboardingPhase, '), allowing dashboard access');
+          return NextResponse.next();
+        }
+        
         if (!token.role) {
           console.log('🛡️ ❌ No role set, redirecting to role selection from:', pathname);
           return NextResponse.redirect(new URL("/auth/role-selection", req.url));
@@ -153,10 +163,10 @@ export default withAuth(
           console.log('🛡️ ❌ Company role but profile incomplete, redirecting to company onboarding from:', pathname);
           return NextResponse.redirect(new URL("/onboarding/company", req.url));
         } else if (token.role === 'STUDENT') {
-          console.log('🛡️ ❌ Student role but profile incomplete, redirecting to setup-profile from:', pathname);
+          console.log('🛡️ ❌ Student role but Phase I incomplete, redirecting to setup-profile from:', pathname);
           return NextResponse.redirect(new URL("/auth/setup-profile", req.url));
         }
-       }
+      }
     }
 
     console.log('🛡️ ✅ All checks passed, allowing access to:', pathname);
