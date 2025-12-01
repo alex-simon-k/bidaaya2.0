@@ -209,12 +209,6 @@ export default function DashboardPage() {
 
         {/* Phase 1 removed - users go directly to Phase 2 (CV builder) or Phase 3 (dashboard) */}
 
-        {/* Chat Widget */}
-        <ChatWidget
-          isOpen={chatWidgetOpen}
-          onToggle={() => setChatWidgetOpen(!chatWidgetOpen)}
-        />
-
         {/* Membership Popup */}
         <MembershipSelectionPopup
           isOpen={showMembershipPopup}
