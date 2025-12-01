@@ -2,18 +2,14 @@
 
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { 
   Crown, 
-  Sparkles, 
   Check,
   Zap,
-  ExternalLink,
   ArrowRight
 } from 'lucide-react'
 import { PRICING_PLANS } from '@/lib/pricing'
 import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
-import Link from 'next/link'
 
 interface UserSubscription {
   subscriptionPlan: string
@@ -141,187 +137,142 @@ export default function StudentSubscription() {
 
   return (
     <StudentLayoutWrapper>
-      <div className="min-h-screen bg-bidaaya-dark py-12 px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-block"
-          >
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Crown className="h-8 w-8 text-bidaaya-accent" />
-              <h1 className="text-4xl font-bold text-bidaaya-light">Land an Internship Faster</h1>
+      <div className="min-h-screen bg-black py-8 px-4 pb-24">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <Crown className="h-6 w-6 text-blue-400" />
+              <h1 className="text-3xl font-bold text-white">Land an Internship Faster</h1>
             </div>
-            <p className="text-lg text-bidaaya-light/70 max-w-2xl mx-auto">
+            <p className="text-white/70 text-sm text-center">
               Get more credits, unlock early access, and boost your job search
             </p>
-          </motion.div>
+          </div>
 
-          {/* Current Plan Badge */}
-          {currentPlanId !== 'free' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full"
-            >
-              <Check className="h-4 w-4" />
-              <span className="font-medium">
-                Current Plan: {currentPlanId === 'student_premium' ? 'Premium' : 'Pro'}
-              </span>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Monthly/Yearly Toggle */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <button
-            onClick={() => setBillingInterval('month')}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              billingInterval === 'month'
-                ? 'bg-bidaaya-accent text-white'
-                : 'bg-white/[0.04] text-bidaaya-light/60 hover:bg-white/[0.08]'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBillingInterval('year')}
-            className={`px-6 py-2 rounded-lg font-medium transition-all relative ${
-              billingInterval === 'year'
-                ? 'bg-bidaaya-accent text-white'
-                : 'bg-white/[0.04] text-bidaaya-light/60 hover:bg-white/[0.08]'
-            }`}
-          >
-            Yearly
-            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
-              Save 17%
+          {/* Monthly/Yearly Toggle */}
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <span className={`text-sm font-medium transition-colors ${
+              billingInterval === 'month' ? 'text-white' : 'text-gray-400'
+            }`}>
+              Monthly
             </span>
-          </button>
-        </div>
-
-        {/* Plans Grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {plans.map((plan, index) => {
-            const isCurrentPlan = currentPlanId === plan.id
-            const isDowngrade = (currentPlanId === 'student_pro' && plan.id === 'student_premium')
-            
-            return (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`relative bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-xl overflow-hidden ${
-                  plan.highlight ? 'ring-2 ring-bidaaya-accent' : ''
-                }`}
-              >
-                {/* Badge */}
-                {plan.badge && (
-                  <div className="absolute -top-2 -right-2 z-10">
-                    <div className={`bg-gradient-to-r ${plan.gradient} text-white px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg`}>
-                      <Sparkles className="h-3 w-3" />
-                      {plan.badge}
-                    </div>
-                  </div>
-                )}
-
-                {/* Header with Image */}
-                <div className={`bg-gradient-to-br ${plan.gradient} p-8 text-white relative overflow-hidden`}>
-                  <div className="absolute top-0 right-0 opacity-10">
-                    <img 
-                      src={plan.image} 
-                      alt={plan.name}
-                      className="w-32 h-32 object-contain"
-                    />
-                  </div>
-                  <div className="relative z-10">
-                    <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
-                    <p className="text-white/90 text-sm mb-4">{plan.displayName} Plan</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold">£{getDisplayPrice(plan)}</span>
-                      <span className="text-white/80">/{billingInterval === 'year' ? 'year' : 'month'}</span>
-                    </div>
-                    {billingInterval === 'year' && (
-                      <p className="text-xs text-white/70 mt-1">
-                        £{plan.price}/month billed annually
-                      </p>
-                    )}
-                    <div className="mt-3 flex items-center gap-2 text-sm bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 w-fit">
-                      <Zap className="h-4 w-4" />
-                      <span className="font-semibold">{plan.credits} credits/month</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div className="p-8">
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
-                        <span className="text-bidaaya-light/90">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA Button */}
-                  {isCurrentPlan ? (
-                    <div className="text-center py-3 bg-white/10 rounded-lg text-bidaaya-light/80 font-medium">
-                      Your Current Plan
-                    </div>
-                  ) : isDowngrade ? (
-                    <button
-                      onClick={handleManageSubscription}
-                      className="w-full py-3 border-2 border-white/20 text-bidaaya-light rounded-lg font-semibold hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
-                    >
-                      Downgrade to {plan.displayName}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleUpgrade(plan.id)}
-                      disabled={upgrading}
-                      className={`w-full py-3 bg-gradient-to-r ${plan.gradient} text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
-                    >
-                      {upgrading ? 'Loading...' : `Upgrade to ${plan.displayName}`}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
-
-        {/* Manage Subscription Link */}
-        {userSub?.hasStripeSubscription && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-center"
-          >
             <button
-              onClick={handleManageSubscription}
-              className="inline-flex items-center gap-2 text-bidaaya-accent hover:text-purple-400 font-medium"
+              onClick={() => setBillingInterval(prev => prev === 'month' ? 'year' : 'month')}
+              className="relative w-14 h-7 rounded-full bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
             >
-              <ExternalLink className="h-4 w-4" />
-              Manage Subscription & Billing
+              <span
+                className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform duration-200 ${
+                  billingInterval === 'year' ? 'translate-x-7' : 'translate-x-0'
+                }`}
+              />
             </button>
-          </motion.div>
-        )}
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-medium transition-colors ${
+                billingInterval === 'year' ? 'text-white' : 'text-gray-400'
+              }`}>
+                Yearly
+              </span>
+              <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded">
+                Save 17%
+              </span>
+            </div>
+          </div>
 
-        {/* Link to Settings */}
-        <div className="text-center mt-8">
-          <Link
-            href="/student/settings"
-            className="text-bidaaya-light/60 hover:text-bidaaya-light transition-colors"
-          >
-            Go to Settings & Credit Management
-          </Link>
-        </div>
+          {/* Plans - Stacked Vertically */}
+          <div className="space-y-6">
+            {plans.map((plan, index) => {
+              const isCurrentPlan = currentPlanId === plan.id
+              const isDowngrade = (currentPlanId === 'student_pro' && plan.id === 'student_premium')
+              const displayPrice = getDisplayPrice(plan)
+              const anchor = index === 0 ? 'left' : 'right' // First card left-anchored, second right-anchored
+              
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative bg-gradient-to-br ${plan.gradient} border ${plan.gradient.includes('orange') ? 'border-orange-500/30' : 'border-purple-500/30'} rounded-2xl p-6 overflow-hidden`}
+                >
+                  <div className={`flex items-start gap-4 ${
+                    anchor === 'left' ? 'flex-row' : 'flex-row-reverse'
+                  }`}>
+                    {/* Image - Anchored */}
+                    <div className={`flex-shrink-0 ${anchor === 'right' ? 'order-2' : ''}`}>
+                      <img 
+                        src={plan.image} 
+                        alt={plan.name}
+                        className="w-24 h-24 object-contain opacity-80"
+                      />
+                    </div>
+
+                    {/* Content - Anchored */}
+                    <div className={`flex-1 ${anchor === 'right' ? 'text-right' : ''}`}>
+                      <h3 className="text-2xl font-bold text-white mb-1">{plan.name}</h3>
+                      <p className="text-white/90 text-sm mb-3">{plan.displayName} Plan</p>
+                      
+                      {/* Price */}
+                      <div className={`text-white mb-2 ${anchor === 'right' ? 'text-right' : ''}`}>
+                        <span className="text-4xl font-bold">£{displayPrice}</span>
+                        <span className="text-lg ml-1">/{billingInterval === 'year' ? 'year' : 'month'}</span>
+                      </div>
+                      {billingInterval === 'year' && (
+                        <p className={`text-xs text-white/70 mb-3 ${anchor === 'right' ? 'text-right' : ''}`}>
+                          £{plan.price}/month billed annually
+                        </p>
+                      )}
+
+                      {/* Credits Badge */}
+                      <div className={`mb-4 ${anchor === 'right' ? 'flex justify-end' : ''}`}>
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
+                          plan.gradient.includes('orange')
+                            ? 'bg-orange-500/30 text-orange-200'
+                            : 'bg-purple-500/30 text-purple-200'
+                        }`}>
+                          <Zap className="w-3.5 h-3.5" />
+                          <span className="text-sm font-semibold">{plan.credits} credits/month</span>
+                        </div>
+                      </div>
+
+                      {/* Features - Only show for first plan */}
+                      {index === 0 && (
+                        <ul className="space-y-2 mb-4">
+                          {plan.features.slice(0, 5).map((feature, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
+                              <span className="text-sm text-white/90">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {/* CTA Button */}
+                      {isCurrentPlan ? (
+                        <div className="text-center py-3 bg-white/10 rounded-lg text-white/80 font-medium">
+                          Your Current Plan
+                        </div>
+                      ) : isDowngrade ? (
+                        <button
+                          onClick={handleManageSubscription}
+                          className="w-full py-3 border-2 border-white/20 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                        >
+                          Downgrade to {plan.displayName}
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleUpgrade(plan.id)}
+                          disabled={upgrading}
+                          className={`w-full py-3 bg-gradient-to-r ${plan.gradient} text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg`}
+                        >
+                          {upgrading ? 'Loading...' : `Upgrade to ${plan.displayName}`}
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     </StudentLayoutWrapper>
