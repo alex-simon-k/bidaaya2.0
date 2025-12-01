@@ -14,16 +14,18 @@ interface GlassFrameProps {
  */
 export function GlassFrame({ logoUrl, color, companyName }: GlassFrameProps) {
   return (
-    <div className="relative group w-32 h-40 mx-auto mt-6 mb-6 flex items-center justify-start pt-2">
+    <div className="relative group w-32 mx-auto my-6 flex flex-col items-center justify-center">
       
-      {/* 1. Ambient Glow (Behind) */}
-      <div 
-        className="absolute inset-0 rounded-[2rem] blur-xl opacity-20 transition-opacity duration-500 group-hover:opacity-40"
-        style={{ backgroundColor: color }}
-      />
+      {/* Logo Container with Glow */}
+      <div className="relative w-32 h-32">
+        {/* 1. Ambient Glow (Behind) */}
+        <div 
+          className="absolute inset-0 rounded-[2rem] blur-xl opacity-20 transition-opacity duration-500 group-hover:opacity-40"
+          style={{ backgroundColor: color }}
+        />
 
-      {/* 2. The Physical Container (The "Card" or "Case") */}
-      <div className="relative w-32 h-32 bg-gradient-to-br from-bidaaya-light/10 to-bidaaya-light/5 rounded-[2rem] shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3)] overflow-hidden border border-bidaaya-light/20">
+        {/* 2. The Physical Container (The "Card" or "Case") */}
+        <div className="relative w-full h-full bg-gradient-to-br from-bidaaya-light/10 to-bidaaya-light/5 rounded-[2rem] shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3)] overflow-hidden border border-bidaaya-light/20">
         
         {/* Specular Highlight (Shininess on top left) */}
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none z-20" />
@@ -45,15 +47,13 @@ export function GlassFrame({ logoUrl, color, companyName }: GlassFrameProps) {
             {/* Inner Gloss/Reflection over the logo */}
             <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent pointer-events-none" />
         </div>
-
-        {/* 4. Text Label (Status indicator) */}
-        <div className="absolute bottom-[-34px] left-0 right-0 text-center z-30 flex flex-col items-center justify-center">
-            <div className="flex items-center gap-1 px-2.5 py-1 bg-bidaaya-dark/80 backdrop-blur-md rounded-full border border-bidaaya-light/10 shadow-sm">
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: color }}></div>
-                <span className="text-[10px] font-semibold text-bidaaya-light uppercase tracking-wide">New</span>
-            </div>
         </div>
+      </div>
 
+      {/* NEW Badge - Outside logo container for better visibility */}
+      <div className="mt-2 flex items-center gap-1 px-2.5 py-1 bg-bidaaya-dark/80 backdrop-blur-md rounded-full border border-bidaaya-light/10 shadow-sm">
+        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: color }}></div>
+        <span className="text-[10px] font-semibold text-bidaaya-light uppercase tracking-wide">New</span>
       </div>
     </div>
   )
