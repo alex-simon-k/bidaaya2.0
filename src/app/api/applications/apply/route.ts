@@ -92,10 +92,24 @@ export async function POST(request: NextRequest) {
       const isPhase2Complete = (hasEducation || hasExperience) && hasSkills
 
       if (!isPhase2Complete) {
+        // Determine what's missing for better error message
+        const missingItems = []
+        if (!hasEducation && !hasExperience) {
+          missingItems.push('at least 1 Education or Experience entry')
+        }
+        if (!hasSkills) {
+          missingItems.push('at least 1 Skill')
+        }
+        
+        const errorMessage = missingItems.length > 0 
+          ? `Please complete your CV profile. You need: ${missingItems.join(' and ')}`
+          : 'Please complete your CV profile before applying to opportunities'
+        
         return NextResponse.json({ 
-          error: 'Please complete your CV profile before applying to opportunities',
+          error: errorMessage,
           code: 'PHASE_2_INCOMPLETE',
-          redirectTo: '/dashboard?cv_edit=true'
+          redirectTo: '/dashboard?cv_edit=true',
+          missing: missingItems
         }, { status: 403 })
       }
     }

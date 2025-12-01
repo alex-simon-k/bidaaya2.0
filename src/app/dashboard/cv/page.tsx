@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   User,
@@ -44,12 +45,49 @@ interface CVData {
 export default function CVProfilePage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [cvData, setCVData] = useState<CVData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Refs for scrolling to sections
+  const educationRef = useRef<HTMLDivElement>(null)
+  const experienceRef = useRef<HTMLDivElement>(null)
+  const projectsRef = useRef<HTMLDivElement>(null)
+  const skillsRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchCVData()
   }, [])
+  
+  // Handle edit parameter from profile page
+  useEffect(() => {
+    if (!isLoading && searchParams) {
+      const editSection = searchParams.get('edit')
+      if (editSection) {
+        // Scroll to the relevant section
+        setTimeout(() => {
+          switch (editSection) {
+            case 'education':
+              educationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              break
+            case 'experience':
+              experienceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              break
+            case 'projects':
+              projectsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              break
+            case 'skills':
+              skillsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              break
+            case 'profile':
+              profileRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              break
+          }
+        }, 100)
+      }
+    }
+  }, [isLoading, searchParams])
 
   const fetchCVData = async () => {
     try {
@@ -141,16 +179,25 @@ export default function CVProfilePage() {
   return (
     <div className="min-h-screen bg-bidaaya-dark pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-bidaaya-accent/20 to-blue-500/20 border-b border-bidaaya-light/10">
+      <div ref={profileRef} className="bg-gradient-to-r from-bidaaya-accent/20 to-blue-500/20 border-b border-bidaaya-light/10">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <Button
-            onClick={() => router.push('/dashboard')}
-            variant="ghost"
-            className="text-bidaaya-light hover:bg-bidaaya-light/10 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              onClick={() => router.push('/dashboard/profile')}
+              variant="ghost"
+              className="text-bidaaya-light hover:bg-bidaaya-light/10"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Profile View
+            </Button>
+            <Button
+              onClick={() => router.push('/dashboard')}
+              variant="ghost"
+              className="text-bidaaya-light/60 hover:bg-bidaaya-light/10"
+            >
+              Dashboard
+            </Button>
+          </div>
           
           <div className="flex items-start gap-4">
             <div className="w-20 h-20 rounded-full bg-bidaaya-accent/20 flex items-center justify-center text-2xl font-bold text-bidaaya-accent">
@@ -158,6 +205,7 @@ export default function CVProfilePage() {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-bidaaya-light">{profile.name}</h1>
+              <p className="text-sm text-bidaaya-light/60 mt-1">Edit your profile information below</p>
               <div className="flex flex-wrap gap-3 mt-2 text-sm text-bidaaya-light/60">
                 {profile.location && (
                   <div className="flex items-center gap-1">
@@ -187,9 +235,10 @@ export default function CVProfilePage() {
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Education */}
         <motion.div
+          ref={educationRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6"
+          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6 scroll-mt-4"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -245,10 +294,11 @@ export default function CVProfilePage() {
 
         {/* Experience */}
         <motion.div
+          ref={experienceRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6"
+          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6 scroll-mt-4"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -298,10 +348,11 @@ export default function CVProfilePage() {
 
         {/* Projects */}
         <motion.div
+          ref={projectsRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6"
+          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6 scroll-mt-4"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -359,10 +410,11 @@ export default function CVProfilePage() {
 
         {/* Skills */}
         <motion.div
+          ref={skillsRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6"
+          className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-lg p-6 scroll-mt-4"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -404,24 +456,72 @@ export default function CVProfilePage() {
           )}
         </motion.div>
 
-        {/* Completion Status */}
+        {/* Phase II Completion Status */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-green-500/10 border border-green-500/20 rounded-lg p-6 text-center"
+          className={`rounded-lg p-6 text-center border ${
+            (education.length > 0 || experience.length > 0) && skills.length > 0
+              ? 'bg-green-500/10 border-green-500/20'
+              : 'bg-yellow-500/10 border-yellow-500/20'
+          }`}
         >
-          <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-bidaaya-light mb-2">Profile Complete!</h3>
-          <p className="text-sm text-bidaaya-light/60 mb-4">
-            You can now apply to internships and get matched with opportunities
-          </p>
-          <Button
-            onClick={() => router.push('/dashboard')}
-            className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-          >
-            Browse Opportunities
-          </Button>
+          {(education.length > 0 || experience.length > 0) && skills.length > 0 ? (
+            <>
+              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-bidaaya-light mb-2">Phase II Complete! 🎉</h3>
+              <p className="text-sm text-bidaaya-light/60 mb-4">
+                You can now apply to internships and get matched with opportunities
+              </p>
+              <Button
+                onClick={() => router.push('/dashboard')}
+                className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+              >
+                Browse Opportunities
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">⚠️</span>
+              </div>
+              <h3 className="text-lg font-semibold text-bidaaya-light mb-2">Almost There!</h3>
+              <p className="text-sm text-bidaaya-light/60 mb-4">
+                To apply to opportunities, you need:
+              </p>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  {education.length > 0 || experience.length > 0 ? (
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-bidaaya-light/30" />
+                  )}
+                  <span className="text-bidaaya-light/80">
+                    At least 1 Education <strong>OR</strong> Experience entry
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  {skills.length > 0 ? (
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-bidaaya-light/30" />
+                  )}
+                  <span className="text-bidaaya-light/80">
+                    At least 1 Skill <strong>(Required)</strong>
+                  </span>
+                </div>
+              </div>
+              {skills.length === 0 && (
+                <Button
+                  onClick={() => router.push('/dashboard?cv_edit=skills')}
+                  className="bg-bidaaya-accent hover:bg-bidaaya-accent/90"
+                >
+                  Add Skills Now
+                </Button>
+              )}
+            </>
+          )}
         </motion.div>
       </div>
     </div>
