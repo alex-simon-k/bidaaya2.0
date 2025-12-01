@@ -64,8 +64,29 @@ export const EducationStep: React.FC<{
   });
 
   const handleSave = async () => {
-    if (!current.program || !current.institution) {
-      // Just a gentle nudge
+    // Validation with user-friendly alerts
+    if (!current.level) {
+      alert('Please select an education level');
+      return;
+    }
+    if (!current.program) {
+      alert('Please enter your program/degree name');
+      return;
+    }
+    if (!current.institution) {
+      alert('Please enter your institution name');
+      return;
+    }
+    if (!current.country) {
+      alert('Please select a country');
+      return;
+    }
+    if (!current.startDate) {
+      alert('Please select a start date');
+      return;
+    }
+    if (current.courses.length < 3) {
+      alert('Please add at least 3 relevant modules/courses. This helps us match you to opportunities.');
       return;
     }
     
@@ -80,8 +101,11 @@ export const EducationStep: React.FC<{
       
       setCurrent({ id: crypto.randomUUID(), level: '', program: '', institution: '', country: '', startDate: '', isCurrent: false, courses: [] });
       setIsAdding(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save education", error);
+      // Show the backend error message to the user
+      const errorMsg = error?.message || 'Failed to save education. Please check all required fields.';
+      alert(errorMsg);
     } finally {
       setIsSaving(false);
     }
@@ -119,11 +143,11 @@ export const EducationStep: React.FC<{
           <Checkbox label="Currently studying here" checked={current.isCurrent} onChange={c => setCurrent({...current, isCurrent: c})} />
           
           <TagInput 
-            label="Relevant Modules" 
+            label={`Relevant Modules (${current.courses.length}/3 minimum required)`}
             tags={current.courses} 
             onAddTag={t => setCurrent({...current, courses: [...current.courses, t]})}
             onRemoveTag={t => setCurrent({...current, courses: current.courses.filter(x => x !== t)})}
-            minTags={3} maxTags={6} placeholder="Add module..." required
+            minTags={3} maxTags={6} placeholder="e.g. Financial Accounting, Data Analysis, Marketing..." required
           />
           
           <div className="flex gap-3 mt-6">
@@ -188,6 +212,28 @@ export const ExperienceStep: React.FC<{
   });
 
   const handleSave = async () => {
+    // Validation
+    if (!current.jobTitle) {
+      alert('Please enter your job title');
+      return;
+    }
+    if (!current.company) {
+      alert('Please enter the company name');
+      return;
+    }
+    if (!current.employmentType) {
+      alert('Please select an employment type');
+      return;
+    }
+    if (!current.startDate) {
+      alert('Please select a start date');
+      return;
+    }
+    if (!current.description) {
+      alert('Please add a brief description of your role');
+      return;
+    }
+    
     setIsSaving(true);
     try {
       if (onAdd) {
@@ -199,8 +245,9 @@ export const ExperienceStep: React.FC<{
       
       setCurrent({ id: crypto.randomUUID(), jobTitle: '', company: '', employmentType: '', startDate: '', isCurrent: false, description: '' });
       setIsAdding(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save experience", error);
+      alert(error?.message || 'Failed to save experience. Please check all required fields.');
     } finally {
       setIsSaving(false);
     }
@@ -307,6 +354,16 @@ export const ProjectsStep: React.FC<{
   });
 
   const handleSave = async () => {
+    // Validation
+    if (!current.name) {
+      alert('Please enter your project name');
+      return;
+    }
+    if (current.skills.length === 0) {
+      alert('Please add at least 1 tool/skill used in this project');
+      return;
+    }
+    
     setIsSaving(true);
     try {
       if (onAdd) {
@@ -318,8 +375,9 @@ export const ProjectsStep: React.FC<{
       
       setCurrent({ id: crypto.randomUUID(), name: '', skills: [] });
       setIsAdding(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save project", error);
+      alert(error?.message || 'Failed to save project. Please check all required fields.');
     } finally {
       setIsSaving(false);
     }
@@ -410,7 +468,15 @@ export const SkillsStep: React.FC<{
   const [isSaving, setIsSaving] = useState(false);
 
   const handleAdd = async () => {
-    if (!current.name || !current.type) return; 
+    // Validation with user feedback
+    if (!current.name) {
+      alert('Please enter a skill name');
+      return;
+    }
+    if (!current.type) {
+      alert('Please select a skill type');
+      return;
+    }
     
     setIsSaving(true);
     try {
@@ -421,8 +487,9 @@ export const SkillsStep: React.FC<{
         update([...data, current]);
       }
       setCurrent({ id: crypto.randomUUID(), name: '', type: '' });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save skill", error);
+      alert(error?.message || 'Failed to save skill. Please check all required fields.');
     } finally {
       setIsSaving(false);
     }
