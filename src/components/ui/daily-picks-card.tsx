@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 import { OpportunityDetailModal } from '@/components/ui/opportunity-detail-modal'
 import { VisibilityMeter } from '@/components/ui/visibility-meter'
 
+import { useSession } from 'next-auth/react'
+
 interface DailyPick {
   id: string
   title: string
@@ -26,6 +28,7 @@ interface DailyPicksCardProps {
 }
 
 export function DailyPicksCard({ className }: DailyPicksCardProps) {
+  const { data: session } = useSession()
   const [isExpanded, setIsExpanded] = useState(false)
   const [dailyPicks, setDailyPicks] = useState<DailyPick[]>([])
   const [streak, setStreak] = useState(0)
@@ -76,6 +79,13 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
   }
 
   const handleMarkAsApplied = async (opportunityId: string) => {
+    // Check if Phase II is completed
+    if (!(session?.user as any)?.profileCompleted) {
+      console.log('⚠️ Phase II not completed, redirecting to builder...');
+      window.location.href = '/dashboard?cv_edit=true';
+      return;
+    }
+
     // Mark as applied
     try {
       const response = await fetch(`/api/external-opportunities/${opportunityId}/apply`, {

@@ -22,6 +22,8 @@ import { GlassFrame } from '@/components/ui/glass-frame'
 import { ActionRow, ButtonVariant } from '@/components/ui/action-row'
 import { CVEnhancementModal } from '@/components/ui/cv-enhancement-modal'
 
+import { useSession } from "next-auth/react"
+
 interface OpportunityDetailModalProps {
   isOpen: boolean
   onClose: () => void
@@ -99,6 +101,12 @@ export function OpportunityDetailModal({
   // --- Handlers ---
 
   const handleCVClick = () => {
+    // Check if Phase II is completed
+    if (!(session?.user as any)?.profileCompleted) {
+      console.log('⚠️ Phase II not completed, redirecting to builder...');
+      window.location.href = '/dashboard?cv_edit=true';
+      return;
+    }
     // Show credit confirmation first
     setShowCreditConfirm(true)
   }
@@ -188,6 +196,13 @@ export function OpportunityDetailModal({
   }
 
   const handleApply = () => {
+    // Check if Phase II is completed
+    if (!(session?.user as any)?.profileCompleted) {
+      console.log('⚠️ Phase II not completed, redirecting to builder...');
+      window.location.href = '/dashboard?cv_edit=true';
+      return;
+    }
+
     if (opportunity.applicationUrl) {
       window.open(opportunity.applicationUrl, '_blank')
       setIsApplying(true)

@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
+import { useSession } from "next-auth/react"
+
 interface OpportunityCardV2Props {
   opportunity: {
     id: string
@@ -36,6 +38,7 @@ export function OpportunityCardV2({
   onApply,
   onUnlock,
 }: OpportunityCardV2Props) {
+  const { data: session } = useSession()
   const isLocked = isEarlyRelease && opportunity.isLocked && userPlan !== 'STUDENT_PRO'
   const hasPro = userPlan === 'STUDENT_PRO'
   const hasPremium = userPlan === 'STUDENT_PREMIUM'
@@ -110,6 +113,13 @@ export function OpportunityCardV2({
   }
 
   const handleApply = () => {
+    // Check if Phase II is completed
+    if (!(session?.user as any)?.profileCompleted) {
+      console.log('⚠️ Phase II not completed, redirecting to builder...');
+      window.location.href = '/dashboard?cv_edit=true';
+      return;
+    }
+
     if (opportunity.type === 'external' && opportunity.applicationUrl) {
       window.open(opportunity.applicationUrl, '_blank')
     } else if (onApply) {

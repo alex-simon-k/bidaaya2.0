@@ -164,16 +164,35 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   };
 
   const handleGenerateCV = () => {
+    // Check if Phase II is completed
+    if (!(session?.user as any)?.profileCompleted) {
+      console.log('⚠️ Phase II not completed, redirecting to builder...');
+      window.location.href = '/dashboard?cv_edit=true';
+      return;
+    }
     // TODO: Navigate to CV generation
     alert('Generating custom CV for this opportunity...');
   };
 
   const handleGenerateCoverLetter = () => {
+    // Check if Phase II is completed
+    if (!(session?.user as any)?.profileCompleted) {
+      console.log('⚠️ Phase II not completed, redirecting to builder...');
+      window.location.href = '/dashboard?cv_edit=true';
+      return;
+    }
     // TODO: Navigate to cover letter generation
     alert('Generating custom cover letter for this opportunity...');
   };
 
   const handleMarkAsApplied = async (opportunityId: string) => {
+    // Check if Phase II is completed
+    if (!(session?.user as any)?.profileCompleted) {
+      console.log('⚠️ Phase II not completed, redirecting to builder...');
+      window.location.href = '/dashboard?cv_edit=true';
+      return;
+    }
+
     const opportunity = opportunities.find(opp => opp.id === opportunityId);
     if (!opportunity) return;
 
