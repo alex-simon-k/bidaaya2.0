@@ -240,12 +240,15 @@ export default function SetupProfilePage() {
     try {
       console.log('🔐 Submitting profile with email:', session.user.email);
       
+      // Submit everything in ONE call: form data + profileCompleted + onboardingPhase
       const response = await fetch('/api/user/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          email: session.user.email
+          email: session.user.email,
+          profileCompleted: true,  // ✅ Mark profile as completed
+          onboardingPhase: 'cv_building'  // ✅ Set to Phase II
         }),
       });
       
@@ -254,22 +257,7 @@ export default function SetupProfilePage() {
         throw new Error(errorData.message || 'Failed to update profile');
       }
       
-      console.log('✅ Profile updated successfully');
-      
-      // Set onboardingPhase to 'cv_building' to trigger Phase II (CV builder)
-      const phaseResponse = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          onboardingPhase: 'cv_building'
-        }),
-      });
-      
-      if (!phaseResponse.ok) {
-        console.error('Failed to set onboarding phase');
-      } else {
-        console.log('✅ Onboarding phase set to cv_building');
-      }
+      console.log('✅ Profile updated successfully with profileCompleted: true and onboardingPhase: cv_building');
       
       await update({ profileCompleted: true, onboardingPhase: 'cv_building' });
       markProfileCompleted()
