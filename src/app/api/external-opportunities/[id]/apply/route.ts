@@ -21,6 +21,38 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized - Students only' }, { status: 401 })
     }
 
+    // Check if user has completed Phase II (CV Builder minimum requirements)
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: {
+        _count: {
+          select: {
+            cvEducation: true,
+            cvExperience: true,
+            cvSkills: true
+          }
+        }
+      }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Enforce Phase II completion: Must have (Education OR Experience) AND Skills
+    const hasEducation = user._count.cvEducation > 0
+    const hasExperience = user._count.cvExperience > 0
+    const hasSkills = user._count.cvSkills > 0
+    const isPhase2Complete = (hasEducation || hasExperience) && hasSkills
+
+    if (!isPhase2Complete) {
+      return NextResponse.json({ 
+        error: 'Please complete your CV profile before applying to opportunities',
+        code: 'PHASE_2_INCOMPLETE',
+        redirectTo: '/dashboard?cv_edit=true'
+      }, { status: 403 })
+    }
+
     // Notes are optional - some clients may not send a JSON body
     let notes: string | undefined = undefined
     try {

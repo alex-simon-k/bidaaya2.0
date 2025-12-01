@@ -70,6 +70,13 @@ export async function POST(request: NextRequest) {
         highSchool: true,
         subjects: true,
         role: true,
+        _count: {
+          select: {
+            cvEducation: true,
+            cvExperience: true,
+            cvSkills: true
+          }
+        }
       }
     })
 
@@ -77,14 +84,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Check if student has completed Phase 2 (detailed profile)
+    // Check if student has completed Phase 2 (CV Builder with minimum requirements)
     if (user.role === 'STUDENT') {
-      const hasDetailedProfile = !!(user.university || user.highSchool || user.major || user.subjects);
-      if (!hasDetailedProfile) {
+      const hasEducation = user._count.cvEducation > 0
+      const hasExperience = user._count.cvExperience > 0
+      const hasSkills = user._count.cvSkills > 0
+      const isPhase2Complete = (hasEducation || hasExperience) && hasSkills
+
+      if (!isPhase2Complete) {
         return NextResponse.json({ 
-          error: 'Please complete your education details in your profile before applying',
-          code: 'PROFILE_INCOMPLETE'
-        }, { status: 400 })
+          error: 'Please complete your CV profile before applying to opportunities',
+          code: 'PHASE_2_INCOMPLETE',
+          redirectTo: '/dashboard?cv_edit=true'
+        }, { status: 403 })
       }
     }
 

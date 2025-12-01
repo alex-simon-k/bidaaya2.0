@@ -62,6 +62,16 @@ export function CVEnhancementModal({
       if (response.ok) {
         const data = await response.json()
         setQuestions(data.questions || [])
+      } else {
+        const errorData = await response.json()
+        
+        // If Phase II is incomplete, redirect to CV builder
+        if (errorData.code === 'PHASE_2_INCOMPLETE') {
+          alert('Please complete your CV profile (Phase II) before generating custom CVs')
+          window.location.href = '/dashboard?cv_edit=true'
+        } else {
+          console.error('Error fetching questions:', errorData.error)
+        }
       }
     } catch (error) {
       console.error('Error fetching questions:', error)

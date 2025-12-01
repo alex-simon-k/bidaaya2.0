@@ -52,6 +52,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Enforce Phase II completion before allowing CV enhancements
+    const hasEducation = user.cvEducation.length > 0
+    const hasExperience = user.cvExperience.length > 0
+    const hasSkills = user.cvSkills.length > 0
+    const isPhase2Complete = (hasEducation || hasExperience) && hasSkills
+
+    if (!isPhase2Complete) {
+      return NextResponse.json({ 
+        error: 'Please complete your CV profile (Phase II) before generating custom CVs',
+        code: 'PHASE_2_INCOMPLETE',
+        redirectTo: '/dashboard?cv_edit=true'
+      }, { status: 403 })
+    }
+
     // Analyze opportunity and student profile to generate targeted questions
     const questions = await generateSmartQuestions(
       {

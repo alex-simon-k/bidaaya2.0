@@ -196,7 +196,7 @@ export function OpportunityDetailModal({
     }
   }
 
-  const handleApply = () => {
+  const handleApply = async () => {
     // Check if Phase II is completed
     if (!(session?.user as any)?.profileCompleted) {
       console.log('⚠️ Phase II not completed, redirecting to builder...');
@@ -205,12 +205,39 @@ export function OpportunityDetailModal({
     }
 
     if (opportunity.applicationUrl) {
-      window.open(opportunity.applicationUrl, '_blank')
       setIsApplying(true)
-      setTimeout(() => {
+      
+      try {
+        // Track application in backend (will enforce Phase II check)
+        const response = await fetch(`/api/external-opportunities/${opportunity.id}/apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          // Open external application URL
+          window.open(opportunity.applicationUrl, '_blank')
+          setMarkedAsApplied(true)
+          showToast('success', 'Application Tracked', 'Good luck with your application!')
+        } else {
+          // Backend blocked the application
+          if (data.code === 'PHASE_2_INCOMPLETE') {
+            showToast('error', 'Profile Incomplete', 'Please complete your CV profile first')
+            setTimeout(() => {
+              window.location.href = '/dashboard?cv_edit=true'
+            }, 2000)
+          } else {
+            showToast('error', 'Error', data.error || 'Failed to track application')
+          }
+        }
+      } catch (error) {
+        console.error('Error tracking application:', error)
+        showToast('error', 'Error', 'Failed to track application')
+      } finally {
         setIsApplying(false)
-        setMarkedAsApplied(true)
-      }, 1000)
+      }
     }
   }
 
