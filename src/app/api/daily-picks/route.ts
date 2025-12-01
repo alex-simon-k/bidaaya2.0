@@ -200,8 +200,10 @@ export async function GET(request: NextRequest) {
         id: opp.id,
         title: opp.title,
         company: opp.company,
+        companyLogo: opp.companyLogo,
         location: opp.location,
         description: opp.description,
+        applicationUrl: opp.applicationUrl, // Add the application URL!
         postedDate: opp.addedAt,
         type: isEarlyAccess ? 'early_access' : 'external',
         isLocked: isEarlyAccess && !hasUnlocked,

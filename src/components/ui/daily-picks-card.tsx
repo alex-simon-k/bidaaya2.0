@@ -368,23 +368,6 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
             </>
           )}
 
-          {/* Bottom Navigation */}
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 z-[60]">
-            <Button
-              onClick={handleSkipPick}
-              variant="outline"
-              className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10 bg-bidaaya-dark/80 backdrop-blur-sm"
-            >
-              {currentPickIndex < dailyPicks.length - 1 ? (
-                <>
-                  Skip to Next
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </>
-              ) : (
-                "Close"
-              )}
-            </Button>
-          </div>
         </motion.div>
       )}
     </>
