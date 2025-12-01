@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Check, Zap } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { StudentLayoutWrapper } from '@/components/student-layout-wrapper'
 import { PRICING_PLANS } from '@/lib/pricing'
 
@@ -10,16 +10,7 @@ export default function PricingPage() {
   const { data: session } = useSession()
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month')
 
-  // ONLY student plans
-  const studentPlans = [
-    PRICING_PLANS.STUDENT_FREE,
-    PRICING_PLANS.STUDENT_PREMIUM,
-    PRICING_PLANS.STUDENT_PRO
-  ]
-
   const handleSubscribe = (planId: string, interval: 'month' | 'year') => {
-    // Redirect to Stripe checkout with plan info
-    // The subscription page will handle the actual Stripe checkout
     const params = new URLSearchParams({
       plan: planId,
       interval: interval
@@ -32,145 +23,126 @@ export default function PricingPage() {
     return monthlyPrice * 10 // 2 months free
   }
 
-  const content = (
-    <div className="w-full pt-16 px-4 pb-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-bidaaya-light mb-2">
-            Choose Your Plan
-          </h1>
-          <p className="text-bidaaya-light/60">
-            Get more credits to unlock opportunities
-          </p>
-        </div>
+  const plans = [
+    {
+      id: PRICING_PLANS.STUDENT_PREMIUM.id,
+      name: "Fries in the Bag",
+      price: PRICING_PLANS.STUDENT_PREMIUM.price,
+      credits: 100,
+      image: '/pricing/cooked-guy.png',
+      gradient: 'from-orange-500/20 to-red-500/20',
+      borderColor: 'border-orange-500/30',
+      buttonGradient: 'from-orange-500 to-red-500',
+      anchor: 'left'
+    },
+    {
+      id: PRICING_PLANS.STUDENT_PRO.id,
+      name: 'Unemployed Bro',
+      price: PRICING_PLANS.STUDENT_PRO.price,
+      credits: 200,
+      image: '/pricing/unemployed-guy.png',
+      gradient: 'from-bidaaya-accent/20 to-purple-500/20',
+      borderColor: 'border-bidaaya-accent/30',
+      buttonGradient: 'from-bidaaya-accent to-purple-500',
+      anchor: 'right'
+    }
+  ]
 
+  const content = (
+    <div className="w-full min-h-screen bg-black pt-16 px-4 pb-8">
+      <div className="max-w-5xl mx-auto">
         {/* Monthly/Yearly Toggle */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <button
-            onClick={() => setBillingInterval('month')}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              billingInterval === 'month'
-                ? 'bg-bidaaya-accent text-white'
-                : 'bg-bidaaya-light/10 text-bidaaya-light/60 hover:bg-bidaaya-light/20'
-            }`}
-          >
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <span className={`text-sm font-medium transition-colors ${
+            billingInterval === 'month' ? 'text-white' : 'text-gray-400'
+          }`}>
             Monthly
-          </button>
+          </span>
           <button
-            onClick={() => setBillingInterval('year')}
-            className={`px-6 py-2 rounded-lg font-medium transition-all relative ${
-              billingInterval === 'year'
-                ? 'bg-bidaaya-accent text-white'
-                : 'bg-bidaaya-light/10 text-bidaaya-light/60 hover:bg-bidaaya-light/20'
-            }`}
+            onClick={() => setBillingInterval(prev => prev === 'month' ? 'year' : 'month')}
+            className="relative w-14 h-7 rounded-full bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
           >
-            Yearly
-            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+            <span
+              className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform duration-200 ${
+                billingInterval === 'year' ? 'translate-x-7' : 'translate-x-0'
+              }`}
+            />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-medium transition-colors ${
+              billingInterval === 'year' ? 'text-white' : 'text-gray-400'
+            }`}>
+              Yearly
+            </span>
+            <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded">
               Save 17%
             </span>
-          </button>
+          </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {studentPlans.map((plan) => {
-            const planAny = plan as any
-            const displayPrice = billingInterval === 'year' && plan.price > 0
+        {/* Pricing Cards - Left and Right Anchored */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {plans.map((plan) => {
+            const displayPrice = billingInterval === 'year'
               ? getYearlyPrice(plan.price)
               : plan.price
             
+            const priceDisplay = billingInterval === 'year' 
+              ? `£${displayPrice} /yr`
+              : `/mo £${plan.price}`
+            
             return (
-            <div
-              key={plan.id}
-              className={`relative bg-bidaaya-light/5 border rounded-2xl p-6 ${
-                planAny.popular
-                  ? 'border-bidaaya-accent shadow-lg shadow-bidaaya-accent/20'
-                  : 'border-bidaaya-light/10'
-              }`}
-            >
-              {planAny.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-bidaaya-accent text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    POPULAR
-                  </span>
-                </div>
-              )}
+              <div
+                key={plan.id}
+                className={`relative bg-gradient-to-br ${plan.gradient} border ${plan.borderColor} rounded-2xl p-6 overflow-hidden ${
+                  plan.anchor === 'left' ? 'md:mr-auto md:max-w-sm' : 'md:ml-auto md:max-w-sm'
+                }`}
+              >
+                <div className={`flex items-start gap-4 ${
+                  plan.anchor === 'left' ? 'flex-row' : 'flex-row-reverse'
+                }`}>
+                  {/* Image */}
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={plan.image} 
+                      alt={plan.name}
+                      className="w-20 h-20 object-contain"
+                    />
+                  </div>
 
-              {planAny.badge && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    {planAny.badge}
-                  </span>
-                </div>
-              )}
+                  {/* Content */}
+                  <div className={`flex-1 ${plan.anchor === 'right' ? 'text-right' : ''}`}>
+                    <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                    <div className={`text-white mb-3 ${plan.anchor === 'right' ? 'text-right' : ''}`}>
+                      <span className="text-3xl font-bold">£{plan.price}</span>
+                      <span className="text-sm ml-1">{billingInterval === 'year' ? '/yr' : '/mo'}</span>
+                    </div>
+                    
+                    {/* Credits Badge */}
+                    <div className={`mb-4 ${plan.anchor === 'right' ? 'flex justify-end' : ''}`}>
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
+                        plan.anchor === 'left' 
+                          ? 'bg-orange-500/30 text-orange-200' 
+                          : 'bg-purple-500/30 text-purple-200'
+                      }`}>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span className="text-sm font-semibold">{plan.credits} credits</span>
+                      </div>
+                    </div>
 
-              <div className="text-center mb-6">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Zap className="h-5 w-5 text-bidaaya-accent" />
-                  <h3 className="text-xl font-bold text-bidaaya-light">
-                    {plan.name}
-                  </h3>
+                    {/* Button */}
+                    <button
+                      onClick={() => handleSubscribe(plan.id, billingInterval)}
+                      className={`w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r ${plan.buttonGradient} hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg`}
+                    >
+                      {plan.anchor === 'left' ? 'Get Started' : 'Upgrade to Pro'}
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-3xl font-bold text-bidaaya-light mb-1">
-                  {displayPrice === 0 ? 'Free' : `$${displayPrice}`}
-                </div>
-                <p className="text-sm text-bidaaya-light/60">
-                  {billingInterval === 'year' && plan.price > 0 ? 'per year' : 'per month'}
-                </p>
-                <p className="text-xs text-bidaaya-light/50 mt-1">
-                  {planAny.credits} credits / month
-                </p>
               </div>
-
-              <ul className="space-y-3 mb-6">
-                {plan.features.slice(0, 6).map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-bidaaya-accent flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-bidaaya-light/80">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {plan.price === 0 ? (
-                <div className="w-full py-3 rounded-xl font-semibold text-center bg-bidaaya-light/10 text-bidaaya-light/50">
-                  Current Plan
-                </div>
-              ) : (
-                <button
-                  onClick={() => handleSubscribe(plan.id, billingInterval)}
-                  className={`w-full py-3 rounded-xl font-semibold transition-all ${
-                    planAny.popular
-                      ? 'bg-bidaaya-accent text-white hover:bg-bidaaya-accent/90'
-                      : 'bg-bidaaya-light/10 text-bidaaya-light hover:bg-bidaaya-light/20'
-                  }`}
-                >
-                  Subscribe Now
-                </button>
-              )}
-            </div>
-          )})}
-        </div>
-
-        {/* Credit Costs Info */}
-        <div className="mt-8 max-w-2xl mx-auto bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-bidaaya-light mb-4 text-center">
-            How Credits Work
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-bidaaya-accent mb-1">5</div>
-              <p className="text-sm text-bidaaya-light/70">Internal Application</p>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-bidaaya-accent mb-1">7</div>
-              <p className="text-sm text-bidaaya-light/70">Company Proposal</p>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-bidaaya-accent mb-1">10</div>
-              <p className="text-sm text-bidaaya-light/70">Custom CV Build</p>
-            </div>
-          </div>
+            )
+          })}
         </div>
       </div>
     </div>
