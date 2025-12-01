@@ -100,9 +100,9 @@ export default withAuth(
       // Only redirect on specific action pages, not general dashboard browsing
       const restrictedPaths = [
         '/dashboard/projects/apply',
-        '/dashboard/chat',
+        // '/dashboard/chat', // Chat is now allowed for all students
         '/api/applications/',
-        '/api/chat'
+        // '/api/chat' // Chat API is now allowed
       ];
       
       const isRestrictedAction = restrictedPaths.some(path => pathname.startsWith(path));
