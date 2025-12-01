@@ -71,6 +71,48 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
         const projData = await projRes.json();
         const skillsData = await skillsRes.json();
 
+        // Map education data - API returns degreeTitle but Orbit expects program
+        const mappedEducation = (eduData.education || []).map((edu: any) => ({
+          id: edu.id,
+          level: edu.degreeType || edu.level || '',
+          program: edu.degreeTitle || edu.program || '',
+          institution: edu.institution || '',
+          country: edu.institutionLocation || edu.country || '',
+          startDate: edu.startDate ? new Date(edu.startDate).toISOString().split('T')[0].slice(0, 7) : '',
+          endDate: edu.endDate ? new Date(edu.endDate).toISOString().split('T')[0].slice(0, 7) : '',
+          isCurrent: edu.isCurrent || false,
+          courses: edu.modules || []
+        }));
+
+        // Map experience data
+        const mappedExperience = (expData.experiences || []).map((exp: any) => ({
+          id: exp.id,
+          jobTitle: exp.title || '',
+          company: exp.employer || '',
+          employmentType: exp.employmentType || '',
+          startDate: exp.startDate ? new Date(exp.startDate).toISOString().split('T')[0] : '',
+          endDate: exp.endDate ? new Date(exp.endDate).toISOString().split('T')[0] : '',
+          isCurrent: exp.isCurrent || false,
+          description: exp.summary || ''
+        }));
+
+        // Map projects data
+        const mappedProjects = (projData.projects || []).map((proj: any) => ({
+          id: proj.id,
+          name: proj.name || '',
+          skills: proj.techStack || [],
+          link: proj.projectUrl || '',
+          githubUrl: proj.githubUrl || ''
+        }));
+
+        // Map skills data
+        const mappedSkills = (skillsData.skills || []).map((skill: any) => ({
+          id: skill.id,
+          name: skill.skillName || skill.name || '',
+          type: skill.category || skill.type || '',
+          level: skill.proficiencyLevel || skill.level || ''
+        }));
+
         setData({
           profile: {
             fullName: profileData.user?.name || '',
@@ -82,10 +124,10 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
             portfolioUrl: profileData.user?.portfolio || '',
             githubUrl: profileData.user?.github || ''
           },
-          education: eduData.education || [],
-          experience: expData.experiences || [],
-          projects: projData.projects || [],
-          skills: skillsData.skills || []
+          education: mappedEducation,
+          experience: mappedExperience,
+          projects: mappedProjects,
+          skills: mappedSkills
         });
       } catch (error) {
         console.error("Failed to load profile data", error);
@@ -110,9 +152,9 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
   };
 
   const handleNext = async () => {
-    // We check errors to display them, but we allow proceeding regardless (Bypass Requirements)
     let currentErrors = {};
     
+    // Profile steps validation
     if (step === 1 || step === 2) {
       currentErrors = validateProfile(data.profile);
       // Sync profile data
@@ -134,12 +176,32 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
       } catch (error) {
         console.error("Failed to save profile step", error);
       }
-    } 
+    }
+    
+    // Phase II Minimum Requirements Check (on final review step or when completing)
+    if (step === 7) {
+      const hasEducationOrExperience = data.education.length > 0 || data.experience.length > 0;
+      const hasSkills = data.skills.length > 0;
+      
+      if (!hasEducationOrExperience || !hasSkills) {
+        const missingItems = [];
+        if (!hasEducationOrExperience) {
+          missingItems.push('at least 1 Education or Experience entry');
+        }
+        if (!hasSkills) {
+          missingItems.push('at least 1 Skill');
+        }
+        
+        alert(`To complete Phase II and apply to opportunities, you need:\n\n• ${missingItems.join('\n• ')}\n\nPlease go back and add the missing information.`);
+        setErrors({ phaseII: missingItems });
+        return; // Don't proceed
+      }
+    }
 
     // Update error state for UI feedback
     setErrors(currentErrors);
 
-    // Always proceed
+    // Proceed to next step or submit
     if (step < STEPS.length) {
       setStep(s => s + 1);
       window.scrollTo(0, 0);
@@ -334,7 +396,54 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
           {step === 7 && (
             <div className="animate-fade-in pb-10">
               <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Review</h2>
-              <p className="text-gray-400 mb-6 text-sm">Preview your Orbit profile card.</p>
+              <p className="text-gray-400 mb-4 text-sm">Preview your Orbit profile card.</p>
+              
+              {/* Phase II Requirements Check */}
+              <div className={`p-4 rounded-2xl mb-6 border ${
+                (data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0
+                  ? 'bg-green-500/10 border-green-500/30'
+                  : 'bg-yellow-500/10 border-yellow-500/30'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">
+                    {(data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0 ? '✅' : '⚠️'}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-white text-sm mb-2">
+                      {(data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0
+                        ? 'Phase II Complete!'
+                        : 'Phase II Requirements'}
+                    </h3>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex items-center gap-2">
+                        {data.education.length > 0 || data.experience.length > 0 ? (
+                          <span className="text-green-400">✓</span>
+                        ) : (
+                          <span className="text-yellow-400">○</span>
+                        )}
+                        <span className="text-gray-300">
+                          At least 1 Education <strong>OR</strong> Experience
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {data.skills.length > 0 ? (
+                          <span className="text-green-400">✓</span>
+                        ) : (
+                          <span className="text-yellow-400">○</span>
+                        )}
+                        <span className="text-gray-300">
+                          At least 1 Skill <strong>(Required)</strong>
+                        </span>
+                      </div>
+                    </div>
+                    {!((data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0) && (
+                      <p className="text-xs text-yellow-400/80 mt-2">
+                        Complete these to apply to opportunities
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
               
               <div className="relative group perspective-1000">
                 {/* ID Card Look */}

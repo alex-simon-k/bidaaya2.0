@@ -148,12 +148,20 @@ export const EducationStep: React.FC<{
   return (
     <div className="animate-fade-in pb-10">
       <SectionHeader title="Education" description="Your academic background." />
+      
+      {/* Minimum Requirement Indicator */}
+      <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+        <p className="text-xs text-blue-300">
+          <strong>Phase II Requirement:</strong> Add at least 1 Education <strong>OR</strong> Experience entry (Experience is next step)
+        </p>
+      </div>
+      
       <div className="space-y-3 mb-8">
         {data.map(edu => (
           <ItemCard 
             key={edu.id} 
             title={edu.program || 'Untitled Program'} 
-            subtitle={`${edu.institution} • ${edu.level}`} 
+            subtitle={`${edu.institution || 'undefined'} • ${edu.level || 'undefined'}`} 
             onDelete={() => handleRemove(edu.id)} 
           />
         ))}
@@ -254,13 +262,21 @@ export const ExperienceStep: React.FC<{
   return (
     <div className="animate-fade-in pb-10">
       <SectionHeader title="Experience" description="Internships & jobs." />
+      
+      {/* Minimum Requirement Indicator */}
+      <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+        <p className="text-xs text-blue-300">
+          <strong>Phase II Requirement:</strong> Add at least 1 Education (previous step) <strong>OR</strong> Experience entry
+        </p>
+      </div>
+      
       {data.length > 0 ? (
         <div className="space-y-3 mb-8">
           {data.map(exp => (
             <ItemCard 
               key={exp.id} 
               title={exp.jobTitle || 'Untitled Role'} 
-              subtitle={`${exp.company} • ${exp.employmentType}`} 
+              subtitle={`${exp.company || 'undefined'} • ${exp.employmentType || 'undefined'}`} 
               onDelete={() => handleRemove(exp.id)} 
             />
           ))}
@@ -356,6 +372,14 @@ export const ProjectsStep: React.FC<{
   return (
     <div className="animate-fade-in pb-10">
       <SectionHeader title="Projects" description="Showcase your best work." />
+      
+      {/* Optional Indicator */}
+      <div className="mb-6 p-3 rounded-xl bg-gray-500/10 border border-gray-500/20">
+        <p className="text-xs text-gray-300">
+          <strong>Optional:</strong> Projects help you stand out, but are not required for Phase II
+        </p>
+      </div>
+      
       <div className="space-y-3 mb-8">
         {data.map(proj => (
           <ItemCard 
@@ -420,6 +444,13 @@ export const SkillsStep: React.FC<{
   return (
     <div className="animate-fade-in pb-10">
       <SectionHeader title="Skills" description="What are your top strengths?" />
+      
+      {/* Minimum Requirement Indicator */}
+      <div className="mb-6 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+        <p className="text-xs text-yellow-300">
+          <strong>⚠️ Phase II Requirement:</strong> Add at least 1 Skill <strong>(REQUIRED to apply to opportunities)</strong>
+        </p>
+      </div>
       
       <div className="glass-panel p-5 rounded-3xl mb-8 bg-white/5">
         <div className="space-y-1">
