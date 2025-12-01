@@ -202,22 +202,40 @@ export const authOptions: NextAuthOptions = {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: email as string },
+            include: {
+              _count: {
+                select: {
+                  cvEducation: true,
+                  cvExperience: true,
+                  cvSkills: true
+                }
+              }
+            }
           });
 
           if (dbUser) {
             console.log('🔄 JWT callback - Database user found:');
             console.log('🔄 User ID:', dbUser.id);
             console.log('🔄 User role:', dbUser.role);
-            console.log('🔄 Email verified:', dbUser.emailVerified);
-            console.log('🔄 Profile completed:', dbUser.profileCompleted);
-            console.log('🔄 Subscription plan:', dbUser.subscriptionPlan);
-            console.log('🔄 Subscription status:', dbUser.subscriptionStatus);
+            console.log('🔄 DB Profile completed flag:', dbUser.profileCompleted);
+            console.log('🔄 CV Counts - Edu:', dbUser._count.cvEducation, 'Exp:', dbUser._count.cvExperience, 'Skills:', dbUser._count.cvSkills);
+
+            // STRICTLY recalculate profile completion based on actual data
+            const hasEducation = dbUser._count.cvEducation > 0;
+            const hasExperience = dbUser._count.cvExperience > 0;
+            const hasSkills = dbUser._count.cvSkills > 0;
+            
+            // A profile is complete only if they have Education OR Experience AND Skills
+            // This forces the new Orbit Profile Builder flow if data is missing
+            const isProfileTrulyComplete = (hasEducation || hasExperience) && hasSkills;
+            
+            console.log('🔄 Calculated isProfileTrulyComplete:', isProfileTrulyComplete);
 
             token.id = dbUser.id;
             token.role = dbUser.role;
             token.emailVerified = dbUser.emailVerified;
-            token.profileCompleted = dbUser.profileCompleted;
-            token.onboardingPhase = dbUser.onboardingPhase; // Track onboarding phase
+            token.profileCompleted = isProfileTrulyComplete; // Override with calculated value
+            token.onboardingPhase = isProfileTrulyComplete ? 'complete' : 'cv_building'; // Sync phase
             token.bio = dbUser.bio;
             token.university = dbUser.university;
             token.highSchool = dbUser.highSchool;
@@ -231,7 +249,7 @@ export const authOptions: NextAuthOptions = {
             console.log('🔄 JWT callback - Token updated with fresh database values');
             console.log('🔄 Updated subscription plan:', dbUser.subscriptionPlan);
             console.log('🔄 Updated subscription status:', dbUser.subscriptionStatus);
-            console.log('🔄 Updated onboarding phase:', dbUser.onboardingPhase);
+            console.log('🔄 Updated onboarding phase:', token.onboardingPhase);
           } else {
             console.log('🔄 JWT callback - No database user found for email:', email);
           }
