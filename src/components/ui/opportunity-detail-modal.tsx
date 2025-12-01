@@ -246,7 +246,7 @@ export function OpportunityDetailModal({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[400px] bg-[#0B0F1A] rounded-[40px] shadow-2xl overflow-hidden min-h-[850px] sm:min-h-0 sm:h-auto relative flex flex-col"
+              className="w-full max-w-[400px] max-h-[90vh] bg-[#0B0F1A] rounded-[40px] shadow-2xl overflow-hidden relative flex flex-col"
             >
               
               {/* Header Navigation */}
