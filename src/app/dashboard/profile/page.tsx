@@ -2,1390 +2,155 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { 
-  Camera, 
-  MapPin, 
-  Calendar, 
-  Briefcase, 
-  GraduationCap,
-  Star,
-  Award,
-  Activity,
-  Users,
-  Eye,
-  Edit2,
-  Plus,
-  Link,
-  Github,
-  Linkedin,
-  Globe,
-  Mail,
-  Phone,
-  Save,
-  X,
-  CheckCircle,
-  Zap,
-  TrendingUp,
-  Badge as BadgeIcon,
-  ArrowRight
-} from 'lucide-react'
-import { GuidedProfileTutorial } from '@/components/guided-profile-tutorial'
-import { BeautifulProfilePage } from '@/components/beautiful-profile-page'
-import { ProfileCompletionIndicator } from '@/components/profile-completion-indicator'
-
-interface ProfileData {
-  // Basic Info
-  id: string
-  name: string
-  email: string
-  profilePicture?: string
-  coverImage?: string
-  bio?: string
-  location?: string
-  website?: string
-  phone?: string
-  calendlyLink?: string // Add Calendly link field
-  
-  // Professional Info
-  title?: string
-  company?: string
-  university?: string
-  degree?: string
-  graduationYear?: number
-  major?: string
-  
-  // Additional fields for clean profile
-  highSchool?: string
-  subjects?: string
-  mena?: boolean
-  dateOfBirth?: string
-  education?: string
-  profileCompleted?: boolean
-  
-  // Skills & Experience
-  skills: string[]
-  interests: string[]
-  experience: {
-    title: string
-    company: string
-    duration: string
-    description: string
-  }[]
-  
-  // Social Links
-  socialLinks: {
-    linkedin?: string
-    github?: string
-    portfolio?: string
-    twitter?: string
-  }
-  
-  // Bidaaya Stats (Gamification)
-  stats: {
-    projectsCompleted: number
-    applicationsSubmitted: number
-    acceptanceRate: number
-    totalExperience: number // months
-    bidaayaLevel: number
-    badgesEarned: string[]
-    lastActiveDate: string
-    weeklyActivity: number // sign-ins per week
-    memberSince: string
-  }
-  
-  // Preferences
-  preferences: {
-    lookingForWork: boolean
-    availabilityStatus: 'available' | 'busy' | 'not_available'
-    remoteWork: boolean
-    projectTypes: string[]
-    timeCommitment: string
-  }
-}
-
-const ACTIVITY_LEVELS = {
-  high: { label: 'Highly Active', color: 'text-green-600', bgColor: 'bg-green-100', icon: '🔥' },
-  medium: { label: 'Active', color: 'text-blue-600', bgColor: 'bg-blue-100', icon: '⚡' },
-  low: { label: 'Less Active', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: '💤' }
-}
-
-const BADGES = {
-  'early_adopter': { name: 'Early Adopter', icon: '🌟', description: 'One of the first Bidaaya members' },
-  'project_starter': { name: 'Project Starter', icon: '🚀', description: 'Completed first project' },
-  'collaborator': { name: 'Great Collaborator', icon: '🤝', description: 'Highly rated by teammates' },
-  'consistent': { name: 'Consistent Contributor', icon: '📈', description: '10+ projects completed' },
-  'mentor': { name: 'Community Mentor', icon: '👨‍🏫', description: 'Helped other students succeed' },
-  'innovator': { name: 'Innovator', icon: '💡', description: 'Led breakthrough solutions' }
-}
+import { useRouter } from 'next/navigation'
+import { ProfileView } from '@/components/profile-viewer/ProfileView'
+import { UserData } from '@/components/profile-viewer/types'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const [isEditing, setIsEditing] = useState(false)
+  const [profileData, setProfileData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [editData, setEditData] = useState<Partial<ProfileData>>({})
-  const [activeTab, setActiveTab] = useState('overview')
-
-  // Guided experience state
-  const isGuided = searchParams.get('guided') === 'true'
-  const isWelcome = searchParams.get('welcome') === 'true'
-  const actionRequired = searchParams.get('action') === 'required'
-  const [guidedStep, setGuidedStep] = useState(1)
-  const [guidedProgress, setGuidedProgress] = useState(0)
-  const [showGuidedTutorial, setShowGuidedTutorial] = useState(false)
-  const [showActionRequiredBanner, setShowActionRequiredBanner] = useState(false)
-
-  const userRole = session?.user?.role as 'STUDENT' | 'COMPANY'
-
-  // Guided experience configuration for students
-  const guidedSteps = [
-    {
-      id: 1,
-      title: 'Add Your Educational Background',
-      description: 'Tell companies about your university and field of study',
-      fields: ['university', 'major'],
-      icon: '🎓'
-    },
-    {
-      id: 2,
-      title: 'Write Your Bio',
-      description: 'Share something interesting about yourself that makes you stand out',
-      fields: ['bio'],
-      icon: '✨'
-    },
-    {
-      id: 3,
-      title: 'Add Your Skills',
-      description: 'List your technical and soft skills to help with project matching',
-      fields: ['skills'],
-      icon: '🚀'
-    },
-    {
-      id: 4,
-      title: 'Set Your Interests',
-      description: 'Choose industries and project types that excite you',
-      fields: ['interests'],
-      icon: '🎯'
-    }
-  ]
-
-  // Calculate completion progress
-  const calculateGuidedProgress = () => {
-    if (!profileData) return 0
-    
-    const totalFields = guidedSteps.reduce((acc, step) => acc + step.fields.length, 0)
-    let completedFields = 0
-    
-    guidedSteps.forEach(step => {
-      step.fields.forEach(field => {
-        const value = profileData[field as keyof ProfileData]
-        if (value && (Array.isArray(value) ? value.length > 0 : value.toString().trim() !== '')) {
-          completedFields++
-        }
-      })
-    })
-    
-    return Math.round((completedFields / totalFields) * 100)
-  }
-
-  // Update progress when profile data changes
-  useEffect(() => {
-    if (profileData) {
-      // Auto-open tutorial if Phase 2 is incomplete (missing education details)
-      const hasDetailedProfile = !!(profileData?.university || profileData?.highSchool || profileData?.major || profileData?.subjects);
-      
-      // Also check if user clicked "Complete Profile" button
-      const shouldOpenTutorial = (!hasDetailedProfile && userRole === 'STUDENT') || isGuided;
-      
-      if (shouldOpenTutorial) {
-        setShowGuidedTutorial(true)
-        
-        // Show action required banner if redirected from application attempt
-        if (actionRequired) {
-          setShowActionRequiredBanner(true)
-        }
-      }
-      
-      if (isGuided) {
-        const progress = calculateGuidedProgress()
-        setGuidedProgress(progress)
-      }
-    }
-  }, [profileData, isGuided, isWelcome, userRole])
-
-  const transformApiResponse = (apiData: any): ProfileData => {
-    // Parse bio field to extract original bio if it contains discovery profile data
-    let actualBio = apiData.bio || ''
-    let discoveryProfile = null
-    
-    try {
-      if (apiData.bio && typeof apiData.bio === 'string') {
-        // Handle different JSON formats
-        let bioToCheck = apiData.bio.trim()
-        
-        // Fix common malformed JSON patterns
-        if (bioToCheck.startsWith('("') && bioToCheck.includes('discoveryProfile')) {
-          // Fix malformed JSON that starts with ("
-          bioToCheck = '{' + bioToCheck.substring(1)
-        }
-        
-        // Try to parse if it looks like JSON
-        if (bioToCheck.startsWith('{') && bioToCheck.includes('discoveryProfile')) {
-          const bioData = JSON.parse(bioToCheck)
-          if (bioData.originalBio !== undefined) {
-            actualBio = bioData.originalBio || ''
-            discoveryProfile = bioData.discoveryProfile
-          } else if (bioData.discoveryProfile) {
-            // If there's discovery profile but no originalBio, bio should be empty
-            actualBio = ''
-            discoveryProfile = bioData.discoveryProfile
-          }
-        }
-      }
-    } catch (e) {
-      console.log('Bio parsing failed, using raw bio:', e)
-      // If bio contains discovery data but parsing fails, clear it
-      if (apiData.bio && apiData.bio.includes('discoveryProfile')) {
-        actualBio = '' // Clear malformed discovery data
-      } else {
-        actualBio = apiData.bio || ''
-      }
-    }
-
-    return {
-      id: apiData.id || session?.user?.id || '',
-      name: apiData.name || session?.user?.name || '',
-      email: apiData.email || session?.user?.email || '',
-      bio: actualBio,
-      location: apiData.location || '',
-      university: apiData.university || '',
-      major: apiData.major || '',
-      graduationYear: apiData.graduationYear || undefined,
-      calendlyLink: apiData.calendlyLink || '', // Add Calendly link support
-      // Add fields for clean profile page
-      highSchool: apiData.highSchool || '',
-      subjects: apiData.subjects || '',
-      mena: apiData.mena || false,
-      dateOfBirth: apiData.dateOfBirth || '',
-      education: apiData.education || '',
-      profileCompleted: apiData.profileCompleted || false,
-      skills: Array.isArray(apiData.skills) ? apiData.skills : 
-              (apiData.skills ? apiData.skills.split(',').map((s: string) => s.trim()) : []),
-      interests: Array.isArray(apiData.interests) ? apiData.interests : [],
-      experience: Array.isArray(apiData.experience) ? apiData.experience : [],
-      socialLinks: {
-        linkedin: apiData.linkedin || '',
-        github: apiData.github || '',
-        portfolio: apiData.portfolio || '',
-        twitter: apiData.twitter || ''
-      },
-      stats: {
-        projectsCompleted: apiData.projectsCompleted || 0,
-        applicationsSubmitted: apiData.applicationsSubmitted || 0,
-        acceptanceRate: apiData.acceptanceRate || 0,
-        totalExperience: apiData.totalExperience || 0,
-        bidaayaLevel: apiData.bidaayaLevel || 1,
-        badgesEarned: Array.isArray(apiData.badgesEarned) ? apiData.badgesEarned : ['early_adopter'],
-        lastActiveDate: apiData.lastActiveDate || new Date().toISOString(),
-        weeklyActivity: apiData.weeklyActivity || 1,
-        memberSince: apiData.memberSince || apiData.createdAt || new Date().toISOString()
-      },
-      preferences: {
-        lookingForWork: apiData.lookingForWork ?? true,
-        availabilityStatus: apiData.availabilityStatus || 'available',
-        remoteWork: apiData.remoteWork ?? true,
-        projectTypes: Array.isArray(apiData.projectTypes) ? apiData.projectTypes : [],
-        timeCommitment: apiData.timeCommitment || 'part-time'
-      }
-    }
-  }
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login')
-    }
-    if (session?.user) {
-      fetchProfileData()
-    }
-  }, [session, status, router])
+    fetchProfileData()
+  }, [])
 
   const fetchProfileData = async () => {
     try {
-      const response = await fetch('/api/user/profile')
+      setIsLoading(true)
+      const response = await fetch('/api/cv/complete')
+      
       if (response.ok) {
         const data = await response.json()
-        console.log('🔍 Profile API Response:', data)
         
-        // Handle the API response structure { success: true, profile: user }
-        const rawProfileData = data.profile || data
-        console.log('🔍 Raw Profile Data:', rawProfileData)
-        
-        // Transform API response to match ProfileData interface
-        try {
-          const profileData = transformApiResponse(rawProfileData)
-          console.log('🔍 Transformed Profile Data:', profileData)
-          console.log('🔍 Initial calendlyLink value:', profileData.calendlyLink)
-          setProfileData(profileData)
-          setEditData(profileData)
-          console.log('🔍 EditData calendlyLink set to:', profileData.calendlyLink)
-        } catch (transformError) {
-          console.error('❌ Error transforming profile data:', transformError)
-          console.error('❌ Raw data that caused error:', rawProfileData)
-          // Fallback to default profile
-          createDefaultProfile()
+        // Map database data to ProfileView format
+        const mappedData: UserData = {
+          profile: {
+            fullName: data.profile.name || '',
+            dob: data.profile.dateOfBirth ? new Date(data.profile.dateOfBirth).toISOString().split('T')[0] : '',
+            email: data.profile.email || '',
+            whatsapp: data.profile.whatsapp || '',
+            location: data.profile.location || '',
+            linkedinUrl: data.profile.linkedin || '',
+            portfolioUrl: data.profile.portfolio || '',
+            githubUrl: data.profile.github || ''
+          },
+          education: data.education.map((edu: any) => ({
+            id: edu.id,
+            level: edu.degreeType || 'Bachelor\'s Degree',
+            program: edu.degreeTitle || edu.program || '',
+            institution: edu.institution || '',
+            country: edu.institutionLocation || edu.country || '',
+            startDate: edu.startDate ? new Date(edu.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '',
+            endDate: edu.endDate ? new Date(edu.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : undefined,
+            isCurrent: edu.isCurrent || false,
+            courses: edu.modules || []
+          })),
+          experience: data.experience.map((exp: any) => ({
+            id: exp.id,
+            jobTitle: exp.title || '',
+            company: exp.employer || '',
+            employmentType: exp.employmentType || 'Full-time',
+            startDate: exp.startDate ? new Date(exp.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '',
+            endDate: exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : undefined,
+            isCurrent: exp.isCurrent || false,
+            description: exp.summary || ''
+          })),
+          projects: data.projects.map((proj: any) => ({
+            id: proj.id,
+            name: proj.name || '',
+            skills: proj.techStack || [],
+            link: proj.projectUrl || undefined,
+            githubUrl: proj.githubUrl || undefined
+          })),
+          skills: data.skills.map((skill: any) => ({
+            id: skill.id,
+            name: skill.skillName || '',
+            type: skill.category || 'Technical',
+            level: skill.proficiency || undefined
+          }))
         }
-      } else {
-        // Create profile with default data
-        createDefaultProfile()
-      }
-      } catch (error) {
-      console.error('Error fetching profile:', error)
-      createDefaultProfile()
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-  const createDefaultProfile = () => {
-    const defaultProfile = transformApiResponse({})
-    setProfileData(defaultProfile)
-    setEditData(defaultProfile)
-  }
-
-  const handleSave = async () => {
-    try {
-      console.log('🔍 Saving profile with editData:', editData)
-      console.log('🔍 calendlyLink value being sent:', editData.calendlyLink)
-      
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData)
-      })
-
-      if (response.ok) {
-        const responseData = await response.json()
-        console.log('✅ Save response:', responseData)
-        // Handle the API response structure { success: true, profile: user }
-        const rawUpdatedData = responseData.profile || responseData
-        const updatedData = transformApiResponse(rawUpdatedData)
-        console.log('🔍 Updated calendlyLink after save:', updatedData.calendlyLink)
-        setProfileData(updatedData)
-        setIsEditing(false)
         
-        // Force refresh contact details check
-        if (updatedData.calendlyLink) {
-          console.log('✅ calendlyLink saved successfully, should resolve contact warning')
-          // Notify other components that calendlyLink was updated
-          window.postMessage({ type: 'CALENDLY_LINK_UPDATED', calendlyLink: updatedData.calendlyLink }, '*')
-        }
-      } else {
-        const errorData = await response.json()
-        console.error('❌ Save failed:', errorData)
+        setProfileData(mappedData)
       }
     } catch (error) {
-      console.error('Error saving profile:', error)
+      console.error('Error fetching profile data:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const getActivityLevel = (weeklyActivity: number) => {
-    if (weeklyActivity >= 5) return ACTIVITY_LEVELS.high
-    if (weeklyActivity >= 2) return ACTIVITY_LEVELS.medium
-    return ACTIVITY_LEVELS.low
-  }
-
-  const calculateCompletionScore = () => {
-    if (!profileData) return 0
-    const fields = [
-      profileData.bio,
-      profileData.location,
-      profileData.title,
-      profileData.skills.length > 0,
-      profileData.experience.length > 0,
-      profileData.socialLinks.linkedin || profileData.socialLinks.github
-    ]
-    return Math.round((fields.filter(Boolean).length / fields.length) * 100)
+  const handleEditSection = (sectionType: 'profile' | 'education' | 'experience' | 'projects' | 'skills') => {
+    // Redirect to CV builder (phase II) with the section to edit
+    router.push(`/dashboard/cv?edit=${sectionType}`)
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+          <p className="text-gray-400 text-sm">Loading your profile...</p>
+        </div>
       </div>
     )
   }
 
-  if (!profileData) return null
-
-  const activityLevel = getActivityLevel(profileData.stats?.weeklyActivity || 1)
-  const completionScore = calculateCompletionScore()
-
-  // Render different layouts based on user role
-  if (userRole === 'COMPANY') {
-    return renderCompanyProfile()
-  }
-
-  // Default student profile
-  return (
-    <>
-      {/* Action Required Banner */}
-      {showActionRequiredBanner && (
-        <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-amber-800">
-                  Complete Your Profile to Apply
-                </h3>
-                <div className="mt-2 text-sm text-amber-700">
-                  <p>Please complete your education details in the guided tutorial below to apply for projects.</p>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowActionRequiredBanner(false)}
-              className="text-amber-500 hover:text-amber-600"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Profile Completion Indicator */}
-      {userRole === 'STUDENT' && profileData && (
-        <div className="mb-6">
-          <ProfileCompletionIndicator 
-            profileData={profileData}
-            showApplicationRequirements={actionRequired}
-          />
-        </div>
-      )}
-      
-      {/* Use beautiful profile page for all users */}
-      <BeautifulProfilePage
-        profileData={profileData || {
-          id: '',
-          name: session?.user?.name || '',
-          email: session?.user?.email || ''
-        }}
-        onUpdate={async (data) => {
-          try {
-            const response = await fetch('/api/user/profile', {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-            })
-            
-            if (response.ok) {
-              // Refresh profile data
-              fetchProfileData()
-            }
-          } catch (error) {
-            console.error('Failed to update profile:', error)
-          }
-        }}
-      />
-      
-      {/* Guided Profile Tutorial */}
-      <GuidedProfileTutorial
-        isOpen={showGuidedTutorial}
-        onClose={() => setShowGuidedTutorial(false)}
-        userData={{
-          name: profileData?.name || '',
-          email: profileData?.email || ''
-        }}
-      />
-    </>
-  )
-
-  function renderCompanyProfile() {
+  if (!profileData) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Company Header Section */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
-            {/* Company Cover Image */}
-            <div className="h-48 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 relative">
-              {isEditing && (
-                <button className="absolute top-4 right-4 bg-black/20 text-white p-2 rounded-full hover:bg-black/40">
-                  <Camera className="h-4 w-4" />
-                </button>
-              )}
-              
-              {/* Company Logo */}
-              <div className="absolute -bottom-16 left-8">
-                                 <div className="w-32 h-32 bg-white rounded-2xl p-4 shadow-lg border-4 border-white">
-                   <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center text-white text-3xl font-bold">
-                     {profileData?.company?.charAt(0).toUpperCase() || profileData?.name?.charAt(0).toUpperCase() || 'C'}
-                   </div>
-                 </div>
-                {isEditing && (
-                  <button className="absolute bottom-2 right-2 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
-                    <Camera className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Company Profile Header */}
-            <div className="relative px-8 pb-8 pt-20">
-              {/* Edit Button */}
-              <div className="flex justify-end mb-6">
-                {isEditing ? (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <X className="h-4 w-4" />
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
-                    >
-                      <Save className="h-4 w-4" />
-                      Save Profile
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                    Edit Profile
-                  </button>
-                )}
-              </div>
-
-              {/* Company Info Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Company Details */}
-                <div className="lg:col-span-2">
-                  <div className="mb-6">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editData.company || ''}
-                        onChange={(e) => setEditData({...editData, company: e.target.value})}
-                        placeholder="Company Name"
-                        className="text-3xl font-bold text-gray-900 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500"
-                      />
-                                         ) : (
-                       <h1 className="text-3xl font-bold text-gray-900">{profileData?.company || 'Company Name'}</h1>
-                     )}
-                     
-                     {isEditing ? (
-                       <input
-                         type="text"
-                         value={editData.title || ''}
-                         onChange={(e) => setEditData({...editData, title: e.target.value})}
-                         placeholder="Industry / Company tagline"
-                         className="text-lg text-gray-600 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500 mt-2"
-                       />
-                     ) : (
-                       <p className="text-lg text-gray-600 mt-2">
-                         {profileData?.title || 'Industry / Company tagline'}
-                       </p>
-                     )}
-                  </div>
-
-                  {/* Company Meta Info */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData.location || ''}
-                          onChange={(e) => setEditData({...editData, location: e.target.value})}
-                          placeholder="Location"
-                          className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
-                        />
-                                             ) : (
-                         <span>{profileData?.location || 'Location'}</span>
-                       )}
-                     </div>
-                     
-                     <div className="flex items-center gap-1">
-                       <Users className="h-4 w-4" />
-                       <span>50+ employees</span> {/* This would come from company size field */}
-                     </div>
-                     
-                     <div className="flex items-center gap-1">
-                       <Calendar className="h-4 w-4" />
-                       <span>Founded {profileData?.stats ? new Date(profileData.stats.memberSince).getFullYear() : new Date().getFullYear()}</span>
-                     </div>
-                  </div>
-
-                  {/* Company Description */}
-                                  <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">About the Company</h3>
-                  {isEditing ? (
-                    <textarea
-                      value={editData.bio || ''}
-                      onChange={(e) => setEditData({...editData, bio: e.target.value})}
-                      placeholder="Tell students about your company culture, mission, and what makes you special..."
-                      rows={4}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                                       ) : (
-                     <p className="text-gray-700">
-                       {profileData?.bio || 'Tell students about your company culture, mission, and what makes you special...'}
-                     </p>
-                   )}
-                </div>
-
-                {/* Contact Details Section */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">📅 Student Contact Details</h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Add your Calendly link, booking URL, or contact details for students to reach you when shortlisted.
-                  </p>
-                  {isEditing ? (
-                    <div>
-                      <input
-                        type="url"
-                        value={editData.calendlyLink || ''}
-                        onChange={(e) => {
-                          const newValue = e.target.value
-                          console.log('🔍 calendlyLink input changed to:', newValue)
-                          setEditData({...editData, calendlyLink: newValue})
-                        }}
-                        onFocus={() => console.log('🔍 calendlyLink input focused, current value:', editData.calendlyLink)}
-                        placeholder="https://calendly.com/your-username/interview or contact email"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Example: https://calendly.com/company-name/30min or your.email@company.com
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      {profileData?.calendlyLink ? (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-green-600" />
-                          <a 
-                            href={profileData.calendlyLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            {profileData.calendlyLink}
-                          </a>
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 italic">No contact details added yet</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-                </div>
-
-                {/* Company Stats & Info */}
-                <div className="space-y-6">
-                  {/* Profile Completion */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Profile Completion</span>
-                      <span className="text-sm font-bold text-blue-600">{completionScore}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${completionScore}%` }}
-                      ></div>
-                    </div>
-                    {completionScore < 100 && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        Complete your profile to attract top students!
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Company Performance */}
-                  <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
-                        <TrendingUp className="h-4 w-4 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">Performance</div>
-                        <div className="text-xs text-gray-600">Bidaaya Impact</div>
-                      </div>
-                    </div>
-                    
-                                         <div className="grid grid-cols-2 gap-3 text-sm">
-                       <div className="text-center">
-                         <div className="font-bold text-emerald-600">{profileData?.stats?.projectsCompleted || 0}</div>
-                         <div className="text-gray-600">Projects</div>
-                       </div>
-                       <div className="text-center">
-                         <div className="font-bold text-blue-600">{profileData?.stats?.applicationsSubmitted || 0}</div>
-                         <div className="text-gray-600">Applications</div>
-                       </div>
-                     </div>
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">Quick Actions</h4>
-                    <div className="space-y-2">
-                      <button 
-                        onClick={() => router.push('/dashboard/projects/new')}
-                        className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 flex items-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Post New Project
-                      </button>
-                      <button 
-                        onClick={() => router.push('/dashboard/projects')}
-                        className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 flex items-center gap-2"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View Projects
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Company Tabs */}
-          <div className="bg-white rounded-lg shadow-lg mb-8">
-            <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-8">
-                {['overview', 'projects', 'team', 'culture'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${
-                      activeTab === tab
-                        ? 'border-emerald-500 text-emerald-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            <div className="p-8">
-              {activeTab === 'overview' && (
-                <div className="space-y-8">
-                  {/* Company Links */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Connect with Us</h3>
-                                         <div className="flex gap-3">
-                       {profileData?.socialLinks?.linkedin && (
-                         <a href={profileData.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                           <Linkedin className="h-4 w-4" />
-                           LinkedIn
-                         </a>
-                       )}
-                       {profileData?.website && (
-                         <a href={profileData.website} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
-                           <Globe className="h-4 w-4" />
-                           Website
-                         </a>
-                       )}
-                     </div>
-                  </div>
-
-                  {/* Company Values */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Company Values</h3>
-                      {isEditing && (
-                        <button className="text-blue-500 hover:text-blue-600 flex items-center gap-1">
-                          <Plus className="h-4 w-4" />
-                          Add Value
-                        </button>
-                      )}
-                    </div>
-                                         <div className="flex flex-wrap gap-2">
-                       {profileData?.skills && profileData.skills.length > 0 ? (
-                         profileData.skills.map((skill, index) => (
-                           <span
-                             key={index}
-                             className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm"
-                           >
-                             {skill}
-                           </span>
-                         ))
-                       ) : (
-                         <p className="text-gray-500">No company values added yet. Click edit to add what drives your company!</p>
-                       )}
-                     </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'projects' && (
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Active Projects</h3>
-                    <button 
-                      onClick={() => router.push('/dashboard/projects/new')}
-                      className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      New Project
-                    </button>
-                  </div>
-                  
-                  {(profileData?.stats?.projectsCompleted || 0) > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Placeholder for project cards */}
-                      <div className="border border-gray-200 rounded-lg p-6">
-                        <h4 className="font-semibold text-gray-900 mb-2">Project Name</h4>
-                        <p className="text-gray-600 text-sm mb-3">Project description goes here...</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>📍 Remote</span>
-                          <span>⏰ 3 months</span>
-                          <span>👥 5 students needed</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="text-gray-400 mb-4">
-                        <Briefcase className="h-12 w-12 mx-auto" />
-                      </div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h4>
-                      <p className="text-gray-600 mb-4">Create your first project to start connecting with students!</p>
-                      <button 
-                        onClick={() => router.push('/dashboard/projects/new')}
-                        className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600"
-                      >
-                        Create Project
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'team' && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Meet the Team</h3>
-                  <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                      <Users className="h-12 w-12 mx-auto" />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">Team Section Coming Soon</h4>
-                    <p className="text-gray-600">Showcase your team members and company culture here.</p>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'culture' && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Company Culture</h3>
-      <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                      <Star className="h-12 w-12 mx-auto" />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">Culture Section Coming Soon</h4>
-                    <p className="text-gray-600">Share photos, videos, and stories about your company culture.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">Failed to load profile data</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-6 py-2 bg-emerald-500 text-black rounded-lg hover:bg-emerald-400 transition-colors"
+          >
+            Back to Dashboard
+          </button>
         </div>
       </div>
     )
   }
 
-     function renderStudentProfile() {
   return (
-       <div className="w-full py-8 px-4 pt-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="bg-bidaaya-light/5 border border-bidaaya-light/10 rounded-2xl shadow-lg overflow-hidden mb-8">
-          {/* Cover Image */}
-          <div className="h-48 bg-gradient-to-r from-bidaaya-dark via-bidaaya-accent to-blue-600 relative">
-            {isEditing && (
-              <button className="absolute top-4 right-4 bg-black/20 text-white p-2 rounded-full hover:bg-black/40">
-                <Camera className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+    <div className="min-h-screen bg-black text-white flex justify-center selection:bg-emerald-500/30 overflow-y-auto">
+      {/* Background Ambience */}
+      <div className="fixed top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-purple-900/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] left-[-20%] w-[80vw] h-[80vw] bg-emerald-900/10 rounded-full blur-[120px] pointer-events-none" />
 
-          {/* Profile Header */}
-          <div className="relative px-8 pb-8">
-            {/* Profile Picture */}
-            <div className="absolute -top-16 left-8">
-              <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-bidaaya-dark p-2 shadow-lg">
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-bidaaya-accent to-blue-600 flex items-center justify-center text-white text-4xl font-bold">
-                    {profileData?.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                </div>
-                {isEditing && (
-                  <button className="absolute bottom-2 right-2 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
-                    <Camera className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Edit Button */}
-            <div className="flex justify-end pt-4">
-              {isEditing ? (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    Save Profile
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit Profile
-                </button>
-              )}
-            </div>
-
-            {/* Profile Info */}
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Basic Info */}
-              <div className="lg:col-span-2">
-                <div className="mb-6">
-                  {isEditing ? (
-          <input
-            type="text"
-                      value={editData.name || ''}
-                      onChange={(e) => setEditData({...editData, name: e.target.value})}
-                      className="text-3xl font-bold text-gray-900 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500"
-                    />
-                                  ) : (
-                  <h1 className="text-3xl font-bold text-gray-900">{profileData?.name || 'User Name'}</h1>
-                )}
-                  
-                  {isEditing ? (
-          <input
-                      type="text"
-                      value={editData.title || ''}
-                      onChange={(e) => setEditData({...editData, title: e.target.value})}
-                      placeholder="Your title (e.g., Computer Science Student)"
-                      className="text-lg text-gray-600 border-b border-gray-300 bg-transparent w-full focus:outline-none focus:border-blue-500 mt-2"
-                    />
-                                  ) : (
-                  <p className="text-lg text-gray-600 mt-2">
-                    {profileData?.title || `${userRole === 'STUDENT' ? 'Student' : 'Company'} Member`}
-                  </p>
-                )}
-        </div>
-
-                {/* Location & Contact */}
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {isEditing ? (
-              <input
-                type="text"
-                        value={editData.location || ''}
-                        onChange={(e) => setEditData({...editData, location: e.target.value})}
-                        placeholder="Location"
-                        className="border-b border-gray-300 bg-transparent focus:outline-none focus:border-blue-500"
-                      />
-                                    ) : (
-                  <span>{profileData?.location || 'Location not specified'}</span>
-                )}
-            </div>
-
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>Joined {profileData?.stats ? new Date(profileData.stats.memberSince).toLocaleDateString() : 'Recently'}</span>
-            </div>
-
-                  <div className="flex items-center gap-1">
-                    <Activity className="h-4 w-4" />
-                    <span className={activityLevel.color}>
-                      {activityLevel.icon} {activityLevel.label}
-                    </span>
-                  </div>
-            </div>
-
-                {/* Bio */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">About</h3>
-                  {isEditing ? (
-              <textarea
-                      value={editData.bio || ''}
-                      onChange={(e) => setEditData({...editData, bio: e.target.value})}
-                      placeholder="Tell us about yourself, your goals, and what you're passionate about..."
-                rows={4}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <p className="text-gray-700">
-                                             {profileData?.bio || 'No bio added yet. Click edit to add your story!'}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Stats & Activity */}
-              <div className="space-y-6">
-                {/* Profile Completion */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Profile Completion</span>
-                    <span className="text-sm font-bold text-blue-600">{completionScore}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${completionScore}%` }}
-                    ></div>
-                  </div>
-                  {completionScore < 100 && (
-                    <p className="text-xs text-gray-600 mt-1">
-                      Complete your profile to stand out to companies!
-                    </p>
-                  )}
-            </div>
-
-                {/* Bidaaya Level */}
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                      <Zap className="h-4 w-4 text-white" />
-                    </div>
-            <div>
-                      <div className="font-semibold text-gray-900">Level {profileData?.stats?.bidaayaLevel || 1}</div>
-                      <div className="text-xs text-gray-600">Bidaaya Member</div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="text-center">
-                      <div className="font-bold text-blue-600">{profileData?.stats?.projectsCompleted || 0}</div>
-                      <div className="text-gray-600">Projects</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-green-600">{profileData?.stats?.acceptanceRate || 0}%</div>
-                      <div className="text-gray-600">Success Rate</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Badges */}
-                {(profileData?.stats?.badgesEarned || []).length > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Award className="h-4 w-4" />
-                      Achievements
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {(profileData?.stats?.badgesEarned || []).map((badgeId) => {
-                        const badge = BADGES[badgeId as keyof typeof BADGES]
-                        return badge ? (
-                          <div
-                            key={badgeId}
-                            className="bg-white border border-gray-200 rounded-lg p-2 text-center min-w-[60px]"
-                            title={badge.description}
-                          >
-                            <div className="text-lg">{badge.icon}</div>
-                            <div className="text-xs text-gray-600 mt-1">{badge.name}</div>
-                          </div>
-                        ) : null
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Guided Experience Banner */}
-        {isGuided && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg shadow-lg mb-8 p-6 text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 rounded-full p-3">
-                  <span className="text-2xl">{guidedSteps[guidedStep - 1]?.icon}</span>
-                </div>
-                <div>
-                  {isWelcome && (
-                    <div className="mb-2">
-                      <span className="text-emerald-100 text-sm font-medium">🎉 Welcome to Bidaaya!</span>
-                    </div>
-                  )}
-                  <h3 className="text-xl font-bold">Complete Your Profile</h3>
-                  <p className="text-emerald-100">
-                    Help companies discover you by completing your profile ({guidedProgress}% done)
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold">{guidedProgress}%</div>
-                <div className="text-emerald-100 text-sm">Progress</div>
-              </div>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="mt-4 bg-white/20 rounded-full h-2">
-              <motion.div 
-                className="bg-white rounded-full h-2"
-                initial={{ width: 0 }}
-                animate={{ width: `${guidedProgress}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-
-            {/* Current Step */}
-            <div className="mt-4 bg-white/10 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold">{guidedSteps[guidedStep - 1]?.title}</h4>
-                  <p className="text-emerald-100 text-sm">{guidedSteps[guidedStep - 1]?.description}</p>
-                </div>
-                <button
-                  onClick={() => setShowGuidedTutorial(true)}
-                  className="bg-white text-emerald-600 px-4 py-2 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
-                >
-                  Start Tutorial
-                </button>
-              </div>
-            </div>
-
-            {/* Complete Profile CTA */}
-            {guidedProgress === 100 && (
-              <div className="mt-4 text-center">
-                <p className="text-emerald-100 mb-3">🎉 Amazing! Your profile is complete!</p>
-                <button
-                  onClick={() => router.push('/dashboard/projects?guided=true&first=true')}
-                  className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-bold hover:bg-emerald-50 transition-colors inline-flex items-center gap-2"
-                >
-                  Apply to Your First Project <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-lg mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-8">
-              {['overview', 'experience', 'skills', 'projects'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${
-                    activeTab === tab
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div className="p-8">
-            {activeTab === 'overview' && (
-              <div className="space-y-8">
-                {/* Skills */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Skills</h3>
-                    {isEditing && (
-                      <button className="text-blue-500 hover:text-blue-600 flex items-center gap-1">
-                        <Plus className="h-4 w-4" />
-                        Add Skill
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {(profileData?.skills || []).length > 0 ? (
-                      (profileData?.skills || []).map((skill, index) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {skill}
-                        </span>
-                      ))
-                    ) : (
-                      <p className="text-gray-500">No skills added yet. Click edit to add your skills!</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Social Links */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Connect</h3>
-                  <div className="flex gap-3">
-                    {profileData?.socialLinks?.linkedin && (
-                      <a href={profileData?.socialLinks?.linkedin} target="_blank" rel="noopener noreferrer"
-                         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        <Linkedin className="h-4 w-4" />
-                        LinkedIn
-                      </a>
-                    )}
-                    {profileData?.socialLinks?.github && (
-                      <a href={profileData?.socialLinks?.github} target="_blank" rel="noopener noreferrer"
-                         className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900">
-                        <Github className="h-4 w-4" />
-                        GitHub
-                      </a>
-                    )}
-                    {profileData?.website && (
-                      <a href={profileData?.website} target="_blank" rel="noopener noreferrer"
-                         className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                        <Globe className="h-4 w-4" />
-                        Website
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'experience' && (
-            <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Experience</h3>
-                  {isEditing && (
-                    <button className="text-blue-500 hover:text-blue-600 flex items-center gap-1">
-                      <Plus className="h-4 w-4" />
-                      Add Experience
-                    </button>
-                  )}
-            </div>
-
-                {(profileData?.experience || []).length > 0 ? (
-                  <div className="space-y-6">
-                    {(profileData?.experience || []).map((exp, index) => (
-                      <div key={index} className="border-l-2 border-blue-200 pl-6 relative">
-                        <div className="absolute -left-2 top-0 w-4 h-4 bg-blue-500 rounded-full"></div>
-                        <h4 className="font-semibold text-gray-900">{exp.title}</h4>
-                        <p className="text-blue-600">{exp.company}</p>
-                        <p className="text-sm text-gray-600 mb-2">{exp.duration}</p>
-                        <p className="text-gray-700">{exp.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No experience added yet. Click edit to add your work history!</p>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'skills' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Skills & Interests</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Technical Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {(profileData?.skills || []).map((skill, index) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-            </div>
-
-            <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Interests</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {(profileData?.interests || []).map((interest, index) => (
-                        <span
-                          key={index}
-                          className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {interest}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-            </div>
-            )}
-
-            {activeTab === 'projects' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Bidaaya Projects</h3>
-                
-                {(profileData?.stats?.projectsCompleted || 0) > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Placeholder for project cards */}
-                    <div className="border border-gray-200 rounded-lg p-6">
-                      <h4 className="font-semibold text-gray-900 mb-2">Project Name</h4>
-                      <p className="text-gray-600 text-sm mb-3">Project description goes here...</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>✅ Completed</span>
-                        <span>⭐ 4.8 rating</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                      <Briefcase className="h-12 w-12 mx-auto" />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h4>
-                    <p className="text-gray-600 mb-4">Start applying to projects to build your portfolio!</p>
+      <div className="w-full max-w-md px-5 py-10 relative z-10">
+        {/* Header with Back Button */}
+        <div className="mb-8">
           <button
-                      onClick={() => router.push('/dashboard/projects')}
-                      className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
           >
-                      Test Out AI Matchmaker
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back to Dashboard</span>
           </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          
+          <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-widest mb-2">Your Profile</h2>
+          <p className="text-gray-400 text-sm">View and manage your professional information</p>
         </div>
-      </div>
-    </div>
 
+        {/* Profile View Component */}
+        <ProfileView 
+          data={profileData}
+          onEditSection={handleEditSection}
+        />
+      </div>
+
+      {/* Custom Styles for glassmorphism */}
+      <style jsx global>{`
+        .glass-panel {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+      `}</style>
+    </div>
   )
-  }
-} 
+}

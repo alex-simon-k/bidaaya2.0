@@ -112,7 +112,7 @@ export function StudentLayoutWrapper({ children }: { children: React.ReactNode }
             </button>
 
             <button 
-              onClick={() => { router.push('/dashboard/cv'); setShowSidebar(false); }}
+              onClick={() => { router.push('/dashboard/profile'); setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
