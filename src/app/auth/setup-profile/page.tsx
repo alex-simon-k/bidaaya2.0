@@ -19,7 +19,6 @@ interface StudentProfileFormData {
   linkedin: string;
   mena: string;
   terms: boolean;
-  [key: string]: string | string[] | boolean;
 }
 
 // Custom ScrollPicker Component for Birthday
