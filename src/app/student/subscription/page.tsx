@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { 
   Crown, 
-  Check,
   Zap,
   ArrowRight
 } from 'lucide-react'
@@ -185,74 +184,54 @@ export default function StudentSubscription() {
               const isCurrentPlan = currentPlanId === plan.id
               const isDowngrade = (currentPlanId === 'student_pro' && plan.id === 'student_premium')
               const displayPrice = getDisplayPrice(plan)
-              const anchor = index === 0 ? 'left' : 'right' // First card left-anchored, second right-anchored
+              // Fries in the Bag: image on RIGHT, Unemployed Bro: image on LEFT
+              const imagePosition = index === 0 ? 'right' : 'left'
               
               return (
                 <div
                   key={plan.id}
-                  className={`relative bg-gradient-to-br ${plan.gradient} border ${plan.gradient.includes('orange') ? 'border-orange-500/30' : 'border-purple-500/30'} rounded-2xl p-6 overflow-hidden`}
+                  className={`relative bg-gradient-to-br ${plan.gradient} border ${plan.gradient.includes('orange') ? 'border-orange-500/30' : 'border-purple-500/30'} rounded-2xl p-5 overflow-hidden`}
                 >
-                  <div className={`flex items-start gap-4 ${
-                    anchor === 'left' ? 'flex-row' : 'flex-row-reverse'
+                  <div className={`flex items-center gap-4 ${
+                    imagePosition === 'right' ? 'flex-row' : 'flex-row-reverse'
                   }`}>
-                    {/* Image - Anchored */}
-                    <div className={`flex-shrink-0 ${anchor === 'right' ? 'order-2' : ''}`}>
-                      <img 
-                        src={plan.image} 
-                        alt={plan.name}
-                        className="w-24 h-24 object-contain opacity-80"
-                      />
-                    </div>
-
-                    {/* Content - Anchored */}
-                    <div className={`flex-1 ${anchor === 'right' ? 'text-right' : ''}`}>
+                    {/* Content */}
+                    <div className={`flex-1 ${imagePosition === 'left' ? 'text-right' : ''}`}>
                       <h3 className="text-2xl font-bold text-white mb-1">{plan.name}</h3>
                       <p className="text-white/90 text-sm mb-3">{plan.displayName} Plan</p>
                       
                       {/* Price */}
-                      <div className={`text-white mb-2 ${anchor === 'right' ? 'text-right' : ''}`}>
+                      <div className={`text-white mb-2 ${imagePosition === 'left' ? 'text-right' : ''}`}>
                         <span className="text-4xl font-bold">£{displayPrice}</span>
                         <span className="text-lg ml-1">/{billingInterval === 'year' ? 'year' : 'month'}</span>
                       </div>
                       {billingInterval === 'year' && (
-                        <p className={`text-xs text-white/70 mb-3 ${anchor === 'right' ? 'text-right' : ''}`}>
+                        <p className={`text-xs text-white/70 mb-3 ${imagePosition === 'left' ? 'text-right' : ''}`}>
                           £{plan.price}/month billed annually
                         </p>
                       )}
 
                       {/* Credits Badge */}
-                      <div className={`mb-4 ${anchor === 'right' ? 'flex justify-end' : ''}`}>
+                      <div className={`mb-4 ${imagePosition === 'left' ? 'flex justify-end' : ''}`}>
                         <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
                           plan.gradient.includes('orange')
-                            ? 'bg-orange-500/30 text-orange-200'
-                            : 'bg-purple-500/30 text-purple-200'
+                            ? 'bg-orange-500/40 text-orange-100'
+                            : 'bg-purple-500/40 text-purple-100'
                         }`}>
                           <Zap className="w-3.5 h-3.5" />
-                          <span className="text-sm font-semibold">{plan.credits} credits/month</span>
+                          <span className="text-sm font-semibold">{plan.credits} credits</span>
                         </div>
                       </div>
 
-                      {/* Features - Only show for first plan */}
-                      {index === 0 && (
-                        <ul className="space-y-2 mb-4">
-                          {plan.features.slice(0, 5).map((feature, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <Check className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                              <span className="text-sm text-white/90">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {/* CTA Button */}
+                      {/* CTA Button - More prominent */}
                       {isCurrentPlan ? (
-                        <div className="text-center py-3 bg-white/10 rounded-lg text-white/80 font-medium">
+                        <div className="text-center py-3.5 bg-white/20 rounded-xl text-white font-semibold border-2 border-white/30">
                           Your Current Plan
                         </div>
                       ) : isDowngrade ? (
                         <button
                           onClick={handleManageSubscription}
-                          className="w-full py-3 border-2 border-white/20 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                          className="w-full py-3.5 border-2 border-white/40 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-all flex items-center justify-center gap-2 shadow-lg"
                         >
                           Downgrade to {plan.displayName}
                           <ArrowRight className="h-4 w-4" />
@@ -261,12 +240,21 @@ export default function StudentSubscription() {
                         <button
                           onClick={() => handleUpgrade(plan.id)}
                           disabled={upgrading}
-                          className={`w-full py-3 bg-gradient-to-r ${plan.gradient} text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg`}
+                          className={`w-full py-3.5 bg-white text-black rounded-xl font-bold hover:opacity-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl border-2 border-white/50`}
                         >
                           {upgrading ? 'Loading...' : `Upgrade to ${plan.displayName}`}
-                          <ArrowRight className="h-4 w-4" />
+                          <ArrowRight className="h-5 w-5" />
                         </button>
                       )}
+                    </div>
+
+                    {/* Image - Anchored opposite sides */}
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={plan.image} 
+                        alt={plan.name}
+                        className="w-28 h-28 object-contain"
+                      />
                     </div>
                   </div>
                 </div>
