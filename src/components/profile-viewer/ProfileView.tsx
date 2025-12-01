@@ -38,7 +38,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
           <div className="flex items-start gap-3 flex-1">
             {/* Profile Picture */}
             <div className="relative group">
-              <div className="w-16 h-16 rounded-full bg-blue-500/20 border-2 border-blue-500/30 overflow-hidden flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-blue-500/20 border-2 border-blue-500/30 overflow-hidden flex items-center justify-center ring-2 ring-blue-500/20">
                 {profile.profilePicture ? (
                   <img src={profile.profilePicture} alt={profile.fullName} className="w-full h-full object-cover" />
                 ) : (
@@ -47,37 +47,57 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
                   </span>
                 )}
               </div>
-              <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
+              <label className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center backdrop-blur-sm">
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      // Handle file upload
-                      const reader = new FileReader();
-                      reader.onload = async (event) => {
-                        const base64 = event.target?.result as string;
-                        try {
-                          const response = await fetch('/api/user/profile', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: base64 })
-                          });
-                          if (response.ok) {
-                            window.location.reload();
-                          }
-                        } catch (error) {
-                          console.error('Error uploading profile picture:', error);
-                          alert('Failed to upload profile picture');
-                        }
-                      };
-                      reader.readAsDataURL(file);
+                    if (!file) return;
+                    
+                    // Validate file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert('Image size must be less than 5MB');
+                      return;
                     }
+                    
+                    // Validate file type
+                    if (!file.type.startsWith('image/')) {
+                      alert('Please select an image file');
+                      return;
+                    }
+                    
+                    // Handle file upload
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                      const base64 = event.target?.result as string;
+                      try {
+                        const response = await fetch('/api/user/profile', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ image: base64 })
+                        });
+                        
+                        if (response.ok) {
+                          // Reload to show new picture
+                          window.location.reload();
+                        } else {
+                          const error = await response.json();
+                          alert(error.error || 'Failed to upload profile picture');
+                        }
+                      } catch (error) {
+                        console.error('Error uploading profile picture:', error);
+                        alert('Failed to upload profile picture. Please try again.');
+                      }
+                    };
+                    reader.onerror = () => {
+                      alert('Error reading file. Please try again.');
+                    };
+                    reader.readAsDataURL(file);
                   }}
                 />
-                <span className="text-white text-xs font-medium">Change</span>
+                <span className="text-white text-xs font-medium">Change Photo</span>
               </label>
             </div>
             <div className="flex-1">
