@@ -45,17 +45,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update the user's role in the database
+    // Update the user's role in the database and ensure profileCompleted is false
     const updatedUser = await prisma.user.update({
       where: {
         email: email
       },
       data: {
-        role: role
+        role: role,
+        profileCompleted: false // Explicitly set to false to ensure onboarding flow
       }
     })
 
-    console.log(`✅ User role updated successfully: ${updatedUser.email} -> ${updatedUser.role}`)
+    console.log(`✅ User role updated successfully: ${updatedUser.email} -> ${updatedUser.role}, profileCompleted set to false`)
 
     return NextResponse.json({
       success: true,
