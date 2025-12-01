@@ -1,7 +1,6 @@
-'use client';
 
 import React from 'react';
-import { UserData } from './types';
+import { UserData } from '../types';
 import { 
   MapPin, Mail, Phone, ExternalLink, Briefcase, GraduationCap, 
   Code, FolderGit2, Edit3, Github, Linkedin, Globe, Calendar
@@ -9,7 +8,7 @@ import {
 
 interface ProfileViewProps {
   data: UserData;
-  onEditSection: (sectionType: 'profile' | 'education' | 'experience' | 'projects' | 'skills') => void;
+  onEditSection: (stepIndex: number) => void;
   className?: string;
 }
 
@@ -32,61 +31,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
       
       {/* --- HEADER SECTION --- */}
       <div className="glass-panel rounded-[2.5rem] p-6 mb-4 relative overflow-hidden border-white/10 shadow-2xl group">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 blur-[60px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 blur-[60px] rounded-full pointer-events-none -z-10" />
         
         <div className="flex justify-between items-start mb-4">
-          <div className="flex items-start gap-3 flex-1">
-            {/* Profile Picture */}
-            <div className="relative group">
-              <div className="w-16 h-16 rounded-full bg-blue-500/20 border-2 border-blue-500/30 overflow-hidden flex items-center justify-center">
-                {profile.profilePicture ? (
-                  <img src={profile.profilePicture} alt={profile.fullName} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-blue-400 text-xl font-bold">
-                    {profile.fullName?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
-                )}
-              </div>
-              <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      // Handle file upload
-                      const reader = new FileReader();
-                      reader.onload = async (event) => {
-                        const base64 = event.target?.result as string;
-                        try {
-                          const response = await fetch('/api/user/profile', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: base64 })
-                          });
-                          if (response.ok) {
-                            window.location.reload();
-                          }
-                        } catch (error) {
-                          console.error('Error uploading profile picture:', error);
-                          alert('Failed to upload profile picture');
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                />
-                <span className="text-white text-xs font-medium">Change</span>
-              </label>
-            </div>
-            <div className="flex-1">
+          <div>
              <h1 className="text-2xl font-bold text-white leading-tight tracking-tight">{profile.fullName || 'Your Name'}</h1>
-             <p className="text-blue-400 font-medium text-sm mt-1">{currentRole} {currentOrg && <span className="text-gray-400">at {currentOrg}</span>}</p>
-            </div>
+             <p className="text-emerald-400 font-medium text-sm mt-1">{currentRole} {currentOrg && <span className="text-gray-400">at {currentOrg}</span>}</p>
           </div>
           <button 
-            onClick={() => onEditSection('profile')}
+            onClick={() => onEditSection(1)}
             className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
           >
             <Edit3 className="w-4 h-4 text-gray-400" />
@@ -121,7 +74,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
             </a>
           )}
           {profile.portfolioUrl && (
-            <a href={profile.portfolioUrl} target="_blank" rel="noreferrer" className="p-2 bg-white/5 rounded-xl text-blue-400 hover:bg-white/10 transition-colors">
+            <a href={profile.portfolioUrl} target="_blank" rel="noreferrer" className="p-2 bg-white/5 rounded-xl text-emerald-400 hover:bg-white/10 transition-colors">
               <Globe className="w-5 h-5" />
             </a>
           )}
@@ -129,7 +82,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
              <span className="text-xs text-gray-500 py-2">No links added</span>
           )}
            <div className="flex-1" />
-           <button onClick={() => onEditSection('profile')} className="text-xs font-medium text-gray-500 hover:text-white transition-colors">Edit Links</button>
+           <button onClick={() => onEditSection(2)} className="text-xs font-medium text-gray-500 hover:text-white transition-colors">Edit Links</button>
         </div>
       </div>
 
@@ -137,7 +90,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3 px-2">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Skills</h3>
-          <button onClick={() => onEditSection('skills')} className="text-xs text-blue-500 hover:text-blue-400 font-medium">Edit</button>
+          <button onClick={() => onEditSection(6)} className="text-xs text-emerald-500 hover:text-emerald-400 font-medium">Edit</button>
         </div>
         <div className="flex flex-wrap gap-2">
           {skills.length > 0 ? skills.map(skill => (
@@ -156,7 +109,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3 px-2">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Experience</h3>
-          <button onClick={() => onEditSection('experience')} className="text-xs text-blue-500 hover:text-blue-400 font-medium">Edit</button>
+          <button onClick={() => onEditSection(4)} className="text-xs text-emerald-500 hover:text-emerald-400 font-medium">Edit</button>
         </div>
         <div className="space-y-3">
           {experience.length > 0 ? experience.map((exp, idx) => (
@@ -164,7 +117,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
                <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-gray-600 ring-4 ring-black" />
                <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                   <h4 className="font-bold text-white text-base">{exp.jobTitle}</h4>
-                  <p className="text-blue-400 text-sm font-medium mb-1">{exp.company}</p>
+                  <p className="text-emerald-400 text-sm font-medium mb-1">{exp.company}</p>
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                     <Calendar className="w-3 h-3" />
                     <span>{exp.startDate} — {exp.isCurrent ? 'Present' : exp.endDate}</span>
@@ -186,7 +139,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3 px-2">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Education</h3>
-          <button onClick={() => onEditSection('education')} className="text-xs text-blue-500 hover:text-blue-400 font-medium">Edit</button>
+          <button onClick={() => onEditSection(3)} className="text-xs text-emerald-500 hover:text-emerald-400 font-medium">Edit</button>
         </div>
         <div className="space-y-3">
           {education.length > 0 ? education.map(edu => (
@@ -201,8 +154,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
                   
                   {edu.courses.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
-                      {edu.courses.slice(0, 3).map((course, idx) => (
-                        <span key={idx} className="text-[10px] px-2 py-0.5 bg-white/5 rounded text-gray-400 border border-white/5">
+                      {edu.courses.slice(0, 3).map(course => (
+                        <span key={course} className="text-[10px] px-2 py-0.5 bg-white/5 rounded text-gray-400 border border-white/5">
                           {course}
                         </span>
                       ))}
@@ -223,7 +176,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
       <div className="mb-24">
         <div className="flex items-center justify-between mb-3 px-2">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Projects</h3>
-          <button onClick={() => onEditSection('projects')} className="text-xs text-blue-500 hover:text-blue-400 font-medium">Edit</button>
+          <button onClick={() => onEditSection(5)} className="text-xs text-emerald-500 hover:text-emerald-400 font-medium">Edit</button>
         </div>
         <div className="grid grid-cols-1 gap-3">
           {projects.length > 0 ? projects.map(proj => (
@@ -235,8 +188,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
                       {proj.link && <ExternalLink className="w-3 h-3 text-gray-500" />}
                     </h4>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {proj.skills.map((skill, idx) => (
-                        <span key={idx} className="text-xs text-blue-400/80">#{skill}</span>
+                      {proj.skills.map(skill => (
+                        <span key={skill} className="text-xs text-emerald-400/80">#{skill}</span>
                       ))}
                     </div>
                  </div>
@@ -256,4 +209,3 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ data, onEditSection, c
     </div>
   );
 };
-

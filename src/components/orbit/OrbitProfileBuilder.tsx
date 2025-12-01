@@ -33,15 +33,24 @@ const STEPS = [
 
 interface OrbitProfileBuilderProps {
   onComplete?: () => void;
+  initialStep?: number;
 }
 
-export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderProps) {
-  const [step, setStep] = useState(1);
+export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: OrbitProfileBuilderProps) {
+  const [step, setStep] = useState(initialStep);
   const [data, setData] = useState<UserData>(INITIAL_DATA);
   const [errors, setErrors] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Set initial step when prop changes
+  useEffect(() => {
+    if (initialStep) {
+      setStep(initialStep);
+      console.log('🎯 OrbitProfileBuilder: Setting initial step to', initialStep);
+    }
+  }, [initialStep]);
 
   // Reset scroll position on mount and step change
   useEffect(() => {
@@ -113,7 +122,7 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
           level: skill.proficiencyLevel || skill.level || ''
         }));
 
-        setData({
+        const loadedData = {
           profile: {
             fullName: profileData.user?.name || '',
             dob: profileData.user?.dateOfBirth ? new Date(profileData.user.dateOfBirth).toISOString().split('T')[0] : '',
@@ -128,9 +137,18 @@ export default function OrbitProfileBuilder({ onComplete }: OrbitProfileBuilderP
           experience: mappedExperience,
           projects: mappedProjects,
           skills: mappedSkills
+        };
+        
+        console.log('✅ OrbitProfileBuilder: Loaded data:', {
+          education: mappedEducation.length,
+          experience: mappedExperience.length,
+          projects: mappedProjects.length,
+          skills: mappedSkills.length
         });
+        
+        setData(loadedData);
       } catch (error) {
-        console.error("Failed to load profile data", error);
+        console.error("❌ Failed to load profile data", error);
       } finally {
         setIsLoading(false);
       }

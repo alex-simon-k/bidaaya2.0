@@ -7,7 +7,6 @@ export interface Profile {
   linkedinUrl?: string;
   portfolioUrl?: string;
   githubUrl?: string;
-  profilePicture?: string;
 }
 
 export interface Education {
@@ -91,4 +90,3 @@ export const PROFICIENCY_LEVELS = [
   'Advanced',
   'Expert'
 ];
-

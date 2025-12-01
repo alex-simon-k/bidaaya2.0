@@ -14,7 +14,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetchProfileData()
+      fetchProfileData()
   }, [])
 
   const fetchProfileData = async () => {
@@ -35,7 +35,8 @@ export default function ProfilePage() {
             location: data.profile.location || '',
             linkedinUrl: data.profile.linkedin || '',
             portfolioUrl: data.profile.portfolio || '',
-            githubUrl: data.profile.github || ''
+            githubUrl: data.profile.github || '',
+            profilePicture: data.profile.image || undefined
           },
           education: data.education.map((edu: any) => ({
             id: edu.id,
@@ -75,23 +76,31 @@ export default function ProfilePage() {
         
         setProfileData(mappedData)
       }
-    } catch (error) {
+      } catch (error) {
       console.error('Error fetching profile data:', error)
-    } finally {
-      setIsLoading(false)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
 
   const handleEditSection = (sectionType: 'profile' | 'education' | 'experience' | 'projects' | 'skills') => {
-    // Redirect to CV builder (phase II) with the section to edit
-    router.push(`/dashboard/cv?edit=${sectionType}`)
+    // Redirect to edit profile page (Phase II) with the section to edit
+    // Map profile sections to edit sections
+    const sectionMap: Record<string, string> = {
+      'profile': 'profile',
+      'education': 'education',
+      'experience': 'experience',
+      'projects': 'projects',
+      'skills': 'skills'
+    }
+    router.push(`/dashboard/edit-profile?section=${sectionMap[sectionType]}`)
   }
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+          <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
           <p className="text-gray-400 text-sm">Loading your profile...</p>
         </div>
       </div>
@@ -101,24 +110,24 @@ export default function ProfilePage() {
   if (!profileData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
+                       <div className="text-center">
           <p className="text-gray-400 mb-4">Failed to load profile data</p>
-          <button
+                      <button 
             onClick={() => router.push('/dashboard')}
-            className="px-6 py-2 bg-emerald-500 text-black rounded-lg hover:bg-emerald-400 transition-colors"
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors"
           >
             Back to Dashboard
-          </button>
+                      </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex justify-center selection:bg-emerald-500/30 overflow-y-auto">
+    <div className="min-h-screen bg-black text-white flex justify-center selection:bg-blue-500/30 overflow-y-auto">
       {/* Background Ambience */}
-      <div className="fixed top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-purple-900/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="fixed bottom-[-10%] left-[-20%] w-[80vw] h-[80vw] bg-emerald-900/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-indigo-900/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] left-[-20%] w-[80vw] h-[80vw] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md px-5 py-10 relative z-10">
         {/* Header with Back Button */}
@@ -131,7 +140,7 @@ export default function ProfilePage() {
             <span className="text-sm font-medium">Back to Dashboard</span>
           </button>
           
-          <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-widest mb-2">Your Profile</h2>
+          <h2 className="text-sm font-semibold text-blue-500 uppercase tracking-widest mb-2">Your Profile</h2>
           <p className="text-gray-400 text-sm">View and manage your professional information</p>
         </div>
 
@@ -153,4 +162,4 @@ export default function ProfilePage() {
       `}</style>
     </div>
   )
-}
+  }
