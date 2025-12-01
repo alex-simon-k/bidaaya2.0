@@ -256,7 +256,22 @@ export default function SetupProfilePage() {
       
       console.log('✅ Profile updated successfully');
       
-      await update({ profileCompleted: true });
+      // Set onboardingPhase to 'cv_building' to trigger Phase II (CV builder)
+      const phaseResponse = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          onboardingPhase: 'cv_building'
+        }),
+      });
+      
+      if (!phaseResponse.ok) {
+        console.error('Failed to set onboarding phase');
+      } else {
+        console.log('✅ Onboarding phase set to cv_building');
+      }
+      
+      await update({ profileCompleted: true, onboardingPhase: 'cv_building' });
       markProfileCompleted()
       updateStep('complete')
 
@@ -278,7 +293,6 @@ export default function SetupProfilePage() {
         }
       }
       
-      await update({ profileCompleted: true });
       await new Promise(resolve => setTimeout(resolve, 500));
       completeOnboarding();
       
@@ -288,8 +302,8 @@ export default function SetupProfilePage() {
       setIsProfileComplete(true);
       
       setTimeout(() => {
-        console.log('🚀 Redirecting to profile completion');
-        window.location.href = '/dashboard/profile?guided=true&welcome=true&onboarding_complete=true';
+        console.log('🚀 Redirecting to CV builder (Phase II)');
+        window.location.href = '/dashboard';
       }, 2500);
       
     } catch (err) {
