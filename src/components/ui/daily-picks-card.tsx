@@ -21,6 +21,7 @@ interface DailyPick {
   unlockCredits?: number
   matchScore?: number
   hasApplied?: boolean
+  applicationUrl?: string
 }
 
 interface DailyPicksCardProps {
@@ -78,7 +79,7 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
     }
   }
 
-  const handleMarkAsApplied = async (opportunityId: string) => {
+  const handleMarkAsApplied = async (opportunity: DailyPick) => {
     // Check if Phase II is completed
     if (!(session?.user as any)?.profileCompleted) {
       console.log('⚠️ Phase II not completed, redirecting to builder...');
@@ -86,9 +87,14 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
       return;
     }
 
+    // If there's an application URL, open it FIRST
+    if (opportunity.applicationUrl) {
+      window.open(opportunity.applicationUrl, '_blank')
+    }
+
     // Mark as applied
     try {
-      const response = await fetch(`/api/external-opportunities/${opportunityId}/apply`, {
+      const response = await fetch(`/api/external-opportunities/${opportunity.id}/apply`, {
         method: 'POST',
       })
 
@@ -344,7 +350,7 @@ export function DailyPicksCard({ className }: DailyPicksCardProps) {
               }}
               opportunity={selectedOpportunity}
               hasApplied={selectedOpportunity.hasApplied}
-              onMarkAsApplied={() => handleMarkAsApplied(selectedOpportunity.id)}
+              onMarkAsApplied={() => handleMarkAsApplied(selectedOpportunity)}
               userPlan="FREE"
             />
           </motion.div>

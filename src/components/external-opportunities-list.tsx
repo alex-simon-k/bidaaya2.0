@@ -126,6 +126,11 @@ export function ExternalOpportunitiesList({
   const confirmMarkAsApplied = async () => {
     if (!selectedOpportunity) return
 
+    // Open the application URL FIRST if it exists
+    if (selectedOpportunity.applicationUrl) {
+      window.open(selectedOpportunity.applicationUrl, '_blank')
+    }
+
     setIsApplying(true)
     try {
       const response = await fetch(`/api/external-opportunities/${selectedOpportunity.id}/apply`, {

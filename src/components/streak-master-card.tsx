@@ -105,8 +105,47 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
       return
     }
 
-    // Open the opportunity detail modal
-    setSelectedOpportunity(pick)
+    // Open the application URL IMMEDIATELY if it exists
+    if (pick.applicationUrl) {
+      window.open(pick.applicationUrl, '_blank')
+    }
+
+    // Mark as applied
+    await handleMarkAsAppliedForPick(pick)
+  }
+
+  const handleMarkAsAppliedForPick = async (pick: DailyPick) => {
+    try {
+      const response = await fetch(`/api/external-opportunities/${pick.id}/apply`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        // Update streak
+        const streakResponse = await fetch('/api/streak/update', {
+          method: 'POST',
+        })
+
+        if (streakResponse.ok) {
+          const streakData = await streakResponse.json()
+          setCurrentStreak(streakData.streak)
+          setMaxStreak(streakData.longestStreak)
+          
+          // Show celebration
+          setShowCelebration(true)
+          setTimeout(() => setShowCelebration(false), 3000)
+          
+          if (streakData.isNewRecord) {
+            alert(`🎉 Amazing! New record: ${streakData.streak} day streak!`)
+          }
+        }
+
+        // Refresh daily picks
+        fetchStreakData()
+      }
+    } catch (error) {
+      console.error('Error marking as applied:', error)
+    }
   }
 
   const handleMarkAsApplied = async () => {

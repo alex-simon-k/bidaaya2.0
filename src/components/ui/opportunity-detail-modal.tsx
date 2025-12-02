@@ -205,6 +205,9 @@ export function OpportunityDetailModal({
     }
 
     if (opportunity.applicationUrl) {
+      // Open external application URL IMMEDIATELY
+      window.open(opportunity.applicationUrl, '_blank')
+      
       setIsApplying(true)
       
       try {
@@ -217,8 +220,6 @@ export function OpportunityDetailModal({
         const data = await response.json()
 
         if (response.ok) {
-          // Open external application URL
-          window.open(opportunity.applicationUrl, '_blank')
           setMarkedAsApplied(true)
           showToast('success', 'Application Tracked', 'Good luck with your application!')
         } else {
@@ -237,6 +238,11 @@ export function OpportunityDetailModal({
         showToast('error', 'Error', 'Failed to track application')
       } finally {
         setIsApplying(false)
+      }
+    } else {
+      // No URL - just mark as applied
+      if (onMarkAsApplied) {
+        onMarkAsApplied()
       }
     }
   }
