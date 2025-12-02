@@ -61,14 +61,54 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
+    // Get current time and calculate UAE time (UTC+4)
+    // Daily picks refresh at 4am UAE time
+    const now = new Date()
+    const utcHour = now.getUTCHours()
+    const utcDate = new Date(now)
+    utcDate.setUTCHours(0, 0, 0, 0)
+    
+    // Calculate what day and hour it is in UAE (UTC+4)
+    // UAE hour = (UTC hour + 4) % 24
+    // If UTC hour + 4 >= 24, it's the next day in UAE
+    const uaeHour = (utcHour + 4) % 24
+    const isNextDayInUae = utcHour + 4 >= 24
+    
+    // Determine the refresh date
+    // Refresh happens at 4am UAE time
+    // If it's before 4am UAE, we're still showing previous day's picks
+    // If it's 4am or later UAE, we show today's picks
+    let refreshDate: Date
+    if (uaeHour < 4) {
+      // Before 4am UAE - still showing previous day
+      // If it's next day in UAE, previous day is today's UTC date
+      // Otherwise, previous day is yesterday's UTC date
+      if (isNextDayInUae) {
+        refreshDate = utcDate // Today's UTC date (which is yesterday in UAE)
+      } else {
+        refreshDate = new Date(utcDate.getTime() - 24 * 60 * 60 * 1000) // Yesterday UTC
+      }
+    } else {
+      // 4am or later UAE - showing today's picks
+      // If it's next day in UAE, today is tomorrow's UTC date
+      // Otherwise, today is today's UTC date
+      if (isNextDayInUae) {
+        refreshDate = new Date(utcDate.getTime() + 24 * 60 * 60 * 1000) // Tomorrow UTC
+      } else {
+        refreshDate = utcDate // Today UTC
+      }
+    }
+    
+    // Normalize last picks date for comparison
     const lastPicksDate = user.dailyPicksDate ? new Date(user.dailyPicksDate) : null
-    lastPicksDate?.setHours(0, 0, 0, 0)
+    const lastPicksDateNormalized = lastPicksDate ? new Date(lastPicksDate.getTime()) : null
+    if (lastPicksDateNormalized) {
+      lastPicksDateNormalized.setUTCHours(0, 0, 0, 0)
+    }
 
     // Check if we need to generate new daily picks
-    const needsNewPicks = !lastPicksDate || lastPicksDate.getTime() !== today.getTime()
+    const needsNewPicks = !lastPicksDateNormalized || 
+      lastPicksDateNormalized.getTime() !== refreshDate.getTime()
 
     // Get applied and unlocked opportunity IDs (needed in both branches)
     const appliedIds = user.externalOpportunityApps.map(app => app.externalOpportunityId)
@@ -139,7 +179,7 @@ export async function GET(request: NextRequest) {
       await prisma.user.update({
         where: { id: userId },
         data: {
-          dailyPicksDate: today,
+          dailyPicksDate: refreshDate,
           dailyPicksOpportunities: oppIds,
         },
       })
