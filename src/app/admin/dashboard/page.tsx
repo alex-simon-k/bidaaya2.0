@@ -127,12 +127,21 @@ export default function AdminDashboardPage() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Link
-            href="/admin/octoparse-upload"
+            href="/admin/daily-upload"
             className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-6 hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
           >
             <Upload className="w-8 h-8 mb-3" />
+            <h3 className="font-semibold text-lg mb-1">Daily Upload</h3>
+            <p className="text-blue-100 text-sm">Upload & compare CSV/JSON</p>
+          </Link>
+
+          <Link
+            href="/admin/octoparse-upload"
+            className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-lg p-6 hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+          >
+            <Upload className="w-8 h-8 mb-3" />
             <h3 className="font-semibold text-lg mb-1">OctoParse Upload</h3>
-            <p className="text-blue-100 text-sm">Upload scraped opportunities</p>
+            <p className="text-indigo-100 text-sm">Legacy upload system</p>
           </Link>
 
           <Link
