@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function DailyUploadPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [jsonData, setJsonData] = useState('')
@@ -14,9 +14,36 @@ export default function DailyUploadPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [result, setResult] = useState<any>(null)
 
-  if (!session?.user?.role || session.user.role !== 'ADMIN') {
-    router.push('/dashboard')
-    return null
+  useEffect(() => {
+    if (status === 'loading') return
+    
+    if (!session?.user || session.user.role !== 'ADMIN') {
+      router.push('/dashboard')
+      return
+    }
+  }, [session, status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session?.user || session.user.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600">Admin access required</p>
+        </div>
+      </div>
+    )
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
