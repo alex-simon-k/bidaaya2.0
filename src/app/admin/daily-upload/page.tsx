@@ -111,8 +111,10 @@ export default function DailyUploadPage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-3xl font-bold mb-2">Daily Opportunity Upload</h1>
           <p className="text-gray-600 mb-6">
-            Upload your daily CSV/JSON export. The system will automatically compare with existing opportunities
-            and only add new ones. New opportunities are marked as "new" for early access.
+            Upload your daily CSV/JSON export. The system will automatically:
+            <br />• <strong>Add new</strong> opportunities that are in your CSV but not in the database
+            <br />• <strong>Close</strong> opportunities that are in the database but not in your CSV (mark as inactive)
+            <br />• <strong>Leave unchanged</strong> opportunities that exist in both
           </p>
 
           {/* Upload Mode Toggle */}
@@ -225,10 +227,14 @@ export default function DailyUploadPage() {
                     Upload Complete
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div className="bg-white rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-green-600">{result.created || 0}</div>
                       <div className="text-sm text-gray-600">New Added</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-orange-600">{result.closed || 0}</div>
+                      <div className="text-sm text-gray-600">Closed</div>
                     </div>
                     <div className="bg-white rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-blue-600">{result.skipped || 0}</div>
@@ -262,6 +268,29 @@ export default function DailyUploadPage() {
                             </li>
                           )}
                         </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Closed Opportunities */}
+                  {result.closedOpportunities && result.closedOpportunities.length > 0 && (
+                    <div className="mb-4">
+                      <h3 className="font-medium text-orange-800 mb-2">
+                        Closed (No Longer in CSV) - First 50:
+                      </h3>
+                      <div className="bg-white rounded-lg p-3 max-h-48 overflow-y-auto">
+                        <ul className="space-y-1 text-sm">
+                          {result.closedOpportunities.map((opp: any, idx: number) => (
+                            <li key={idx} className="text-orange-700">
+                              • {opp.title} at {opp.company}
+                            </li>
+                          ))}
+                        </ul>
+                        {result.closed && result.closed > 50 && (
+                          <p className="text-orange-600 text-xs mt-2 italic">
+                            ... and {result.closed - 50} more closed opportunities
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -311,10 +340,11 @@ export default function DailyUploadPage() {
             </h3>
             <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
               <li>Upload your daily CSV/JSON export from your scraping tool</li>
-              <li>The system compares each opportunity with existing ones by title and URL</li>
-              <li>Only truly new opportunities are added to the database</li>
+              <li>The system compares each opportunity with existing active ones by title and URL</li>
+              <li><strong>New opportunities</strong> (in CSV but not in DB) are automatically added</li>
+              <li><strong>Closed opportunities</strong> (in DB but not in CSV) are marked as inactive</li>
+              <li><strong>Existing opportunities</strong> (in both) are left unchanged</li>
               <li>New opportunities are automatically marked as "new" for early access (48 hours)</li>
-              <li>Duplicates are skipped automatically</li>
             </ul>
             <div className="mt-3 text-sm text-blue-700">
               <strong>Required CSV columns:</strong> title, company, applicationUrl

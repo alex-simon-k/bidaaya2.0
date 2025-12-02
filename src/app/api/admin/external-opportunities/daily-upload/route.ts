@@ -8,11 +8,17 @@ export const dynamic = 'force-dynamic'
 const prisma = new PrismaClient()
 
 /**
- * Smart Daily CSV Upload - Compares with existing opportunities and only uploads new ones
+ * Smart Daily CSV Upload - Compares with existing opportunities
+ * 
+ * Workflow:
+ * 1. Upload CSV/JSON with current opportunities
+ * 2. Compare with existing active opportunities in DB
+ * 3. Mark opportunities as CLOSED (isActive=false) if they're NOT in the new CSV
+ * 4. Add NEW opportunities that are in CSV but not in DB
+ * 5. Leave existing opportunities that are in both unchanged
  * 
  * Accepts CSV file or JSON data
  * Compares by title (case-insensitive, fuzzy matching)
- * Only uploads truly new opportunities
  * Auto-marks new ones as isNewOpportunity with today's date
  */
 export async function POST(request: NextRequest) {
@@ -58,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`📊 Daily Upload: Processing ${opportunities.length} opportunities`)
 
-    // Get all existing opportunities for comparison
+    // Get all existing ACTIVE opportunities for comparison
     const existingOpps = await prisma.externalOpportunity.findMany({
       where: { isActive: true },
       select: {
@@ -69,27 +75,63 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Create lookup maps for fast comparison
-    const titleLookup = new Map<string, Set<string>>()
-    const urlLookup = new Set<string>()
+    console.log(`   Found ${existingOpps.length} active opportunities in database`)
+
+    // Create normalized title set from uploaded CSV for comparison
+    const uploadedTitleSet = new Set<string>()
+    const uploadedTitleCompanyMap = new Map<string, Set<string>>() // normalized title -> companies
+    const uploadedUrlSet = new Set<string>()
+
+    for (const row of opportunities) {
+      const title = row.Title || row.title || row.jobTitle || row['Job Title']
+      const companyName = row.Name || row.name || row.company || row.Company || row.employer
+      const applicationUrl = row.Title_URL || row.title_url || row.titleUrl || row.url || row.applicationUrl || row.link
+
+      if (title && companyName) {
+        const normalizedTitle = normalizeTitle(title)
+        const normalizedCompany = companyName.toLowerCase().trim()
+        uploadedTitleSet.add(normalizedTitle)
+        
+        if (!uploadedTitleCompanyMap.has(normalizedTitle)) {
+          uploadedTitleCompanyMap.set(normalizedTitle, new Set())
+        }
+        uploadedTitleCompanyMap.get(normalizedTitle)!.add(normalizedCompany)
+      }
+
+      if (applicationUrl) {
+        uploadedUrlSet.add(normalizeUrl(applicationUrl))
+      }
+    }
+
+    // Create lookup maps for existing opportunities
+    const existingTitleLookup = new Map<string, Set<string>>() // normalized title -> companies
+    const existingUrlLookup = new Set<string>()
+    const existingOppsByTitle = new Map<string, any[]>() // normalized title -> opportunity objects
 
     for (const opp of existingOpps) {
       const normalizedTitle = normalizeTitle(opp.title)
-      if (!titleLookup.has(normalizedTitle)) {
-        titleLookup.set(normalizedTitle, new Set())
+      const normalizedCompany = opp.company.toLowerCase().trim()
+      
+      if (!existingTitleLookup.has(normalizedTitle)) {
+        existingTitleLookup.set(normalizedTitle, new Set())
+        existingOppsByTitle.set(normalizedTitle, [])
       }
-      titleLookup.get(normalizedTitle)!.add(opp.company.toLowerCase())
+      existingTitleLookup.get(normalizedTitle)!.add(normalizedCompany)
+      existingOppsByTitle.get(normalizedTitle)!.push(opp)
+      
       if (opp.applicationUrl) {
-        urlLookup.add(normalizeUrl(opp.applicationUrl))
+        existingUrlLookup.add(normalizeUrl(opp.applicationUrl))
       }
     }
 
     const results = {
       created: 0,
+      closed: 0,
       skipped: 0,
       failed: 0,
       errors: [] as string[],
       newOpportunities: [] as any[],
+      closedOpportunities: [] as any[],
       skippedOpportunities: [] as any[]
     }
 
@@ -99,6 +141,78 @@ export async function POST(request: NextRequest) {
     // Mark new opportunities as new for early access (48 hours)
     const publishedAt = now
     const earlyAccessUntil = new Date(now.getTime() + 48 * 60 * 60 * 1000) // 48 hours
+
+    // STEP 1: Mark opportunities as CLOSED if they're NOT in the new CSV
+    console.log(`   Step 1: Checking for opportunities to close...`)
+    const opportunitiesToClose: any[] = []
+
+    for (const opp of existingOpps) {
+      const normalizedTitle = normalizeTitle(opp.title)
+      const normalizedCompany = opp.company.toLowerCase().trim()
+      
+      // Check if this opportunity exists in the uploaded CSV
+      let foundInUpload = false
+      
+      // Check by URL first (most reliable)
+      if (opp.applicationUrl && uploadedUrlSet.has(normalizeUrl(opp.applicationUrl))) {
+        foundInUpload = true
+      }
+      
+      // Check by title + company
+      if (!foundInUpload) {
+        const uploadedCompanies = uploadedTitleCompanyMap.get(normalizedTitle)
+        if (uploadedCompanies && uploadedCompanies.has(normalizedCompany)) {
+          foundInUpload = true
+        }
+      }
+      
+      // Check for similar titles (fuzzy matching)
+      if (!foundInUpload) {
+        for (const uploadedTitle of uploadedTitleSet) {
+          if (areTitlesSimilar(normalizedTitle, uploadedTitle)) {
+            const uploadedCompanies = uploadedTitleCompanyMap.get(uploadedTitle)
+            if (uploadedCompanies && uploadedCompanies.has(normalizedCompany)) {
+              foundInUpload = true
+              break
+            }
+          }
+        }
+      }
+      
+      // If not found in upload, mark as closed
+      if (!foundInUpload) {
+        opportunitiesToClose.push(opp)
+      }
+    }
+
+    // Close opportunities that are no longer in the CSV
+    for (const opp of opportunitiesToClose) {
+      try {
+        await prisma.externalOpportunity.update({
+          where: { id: opp.id },
+          data: {
+            isActive: false,
+            updatedAt: now
+          }
+        })
+        results.closed++
+        results.closedOpportunities.push({
+          id: opp.id,
+          title: opp.title,
+          company: opp.company,
+        })
+      } catch (error) {
+        results.failed++
+        results.errors.push(
+          `Failed to close "${opp.title}" at ${opp.company}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      }
+    }
+
+    console.log(`   Closed ${results.closed} opportunities that are no longer in CSV`)
+
+    // STEP 2: Add new opportunities from CSV
+    console.log(`   Step 2: Checking for new opportunities to add...`)
 
     for (const row of opportunities) {
       try {
@@ -130,7 +244,8 @@ export async function POST(request: NextRequest) {
         const normalizedUrl = normalizeUrl(applicationUrl)
 
         // Check if already exists by URL (most reliable)
-        if (urlLookup.has(normalizedUrl)) {
+        if (existingUrlLookup.has(normalizedUrl)) {
+          // Opportunity already exists - skip (don't modify)
           results.skipped++
           results.skippedOpportunities.push({
             title: title.trim(),
@@ -140,9 +255,10 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Check if exists by title + company (fuzzy match)
-        const titleMatches = titleLookup.get(normalizedTitle)
-        if (titleMatches && titleMatches.has(normalizedCompany)) {
+        // Check if exists by title + company
+        const existingCompanies = existingTitleLookup.get(normalizedTitle)
+        if (existingCompanies && existingCompanies.has(normalizedCompany)) {
+          // Opportunity already exists - skip (don't modify)
           results.skipped++
           results.skippedOpportunities.push({
             title: title.trim(),
@@ -154,7 +270,7 @@ export async function POST(request: NextRequest) {
 
         // Check for similar titles (fuzzy matching)
         let isDuplicate = false
-        for (const [existingTitle, companies] of titleLookup.entries()) {
+        for (const [existingTitle, companies] of existingTitleLookup.entries()) {
           if (areTitlesSimilar(normalizedTitle, existingTitle) && companies.has(normalizedCompany)) {
             isDuplicate = true
             break
@@ -162,6 +278,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (isDuplicate) {
+          // Opportunity already exists - skip (don't modify)
           results.skipped++
           results.skippedOpportunities.push({
             title: title.trim(),
@@ -197,12 +314,12 @@ export async function POST(request: NextRequest) {
           }
         })
 
-        // Update lookup maps
-        if (!titleLookup.has(normalizedTitle)) {
-          titleLookup.set(normalizedTitle, new Set())
+        // Update lookup maps for future comparisons
+        if (!existingTitleLookup.has(normalizedTitle)) {
+          existingTitleLookup.set(normalizedTitle, new Set())
         }
-        titleLookup.get(normalizedTitle)!.add(normalizedCompany)
-        urlLookup.add(normalizedUrl)
+        existingTitleLookup.get(normalizedTitle)!.add(normalizedCompany)
+        existingUrlLookup.add(normalizedUrl)
 
         results.created++
         results.newOpportunities.push({
@@ -221,16 +338,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`✅ Daily Upload Complete: ${results.created} new, ${results.skipped} skipped, ${results.failed} failed`)
+    console.log(`✅ Daily Upload Complete: ${results.created} new, ${results.closed} closed, ${results.skipped} skipped, ${results.failed} failed`)
 
     return NextResponse.json({
       success: true,
-      message: `Daily upload complete: ${results.created} new opportunities added, ${results.skipped} skipped (already exist), ${results.failed} failed`,
+      message: `Daily upload complete: ${results.created} new opportunities added, ${results.closed} opportunities closed (no longer in CSV), ${results.skipped} skipped (already exist), ${results.failed} failed`,
       created: results.created,
+      closed: results.closed,
       skipped: results.skipped,
       failed: results.failed,
       total: opportunities.length,
+      existingTotal: existingOpps.length,
       newOpportunities: results.newOpportunities,
+      closedOpportunities: results.closedOpportunities.slice(0, 50), // Limit to first 50
       skippedOpportunities: results.skippedOpportunities.slice(0, 20), // Limit to first 20
       errors: results.errors.length > 0 ? results.errors.slice(0, 20) : undefined,
     })
