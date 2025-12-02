@@ -513,12 +513,15 @@ export function AIAssistantCard({ className }: AIAssistantCardProps) {
             </button>
 
             <button 
-              onClick={() => router.push('/dashboard/cvs')}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
+              onClick={() => {
+                alert('🔒 My CVs feature is currently locked. This feature will be available soon.')
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <FileText className="h-5 w-5" />
                 <span className="font-medium">My CVs</span>
+                <Lock className="h-3 w-3 ml-1" />
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>

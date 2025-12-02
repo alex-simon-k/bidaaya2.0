@@ -441,13 +441,15 @@ export default function DashboardLayout({
                 >
                   📝 Applications
                 </Link>
-                <Link 
-                  href="/dashboard/cvs" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    alert('🔒 My CVs feature is currently locked. This feature will be available soon.')
+                  }}
+                  className="block w-full text-left px-3 py-3 text-base font-medium text-gray-500 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  📄 My CVs
-                </Link>
+                  📄 My CVs 🔒
+                </button>
                 <Link 
                   href="/student/subscription" 
                   onClick={() => setIsMenuOpen(false)}
