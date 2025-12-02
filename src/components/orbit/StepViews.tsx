@@ -54,14 +54,22 @@ export const EducationStep: React.FC<{
   data: Education[]; 
   update: (d: Education[]) => void;
   onAdd?: (item: Education) => Promise<Education>;
+  onUpdate?: (id: string, item: Education) => Promise<Education>;
   onDelete?: (id: string) => Promise<void>;
-}> = ({ data, update, onAdd, onDelete }) => {
-  const [isAdding, setIsAdding] = useState(data.length === 0);
+}> = ({ data, update, onAdd, onUpdate, onDelete }) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [current, setCurrent] = useState<Education>({
     id: crypto.randomUUID(),
     level: '', program: '', institution: '', country: '', startDate: '', isCurrent: false, courses: []
   });
+
+  const handleEdit = (edu: Education) => {
+    setCurrent(edu);
+    setIsEditing(edu.id);
+    setIsAdding(false);
+  };
 
   const handleSave = async () => {
     // Validation with user-friendly alerts
@@ -92,11 +100,25 @@ export const EducationStep: React.FC<{
     
     setIsSaving(true);
     try {
-      if (onAdd) {
-        const savedItem = await onAdd(current);
-        update([...data, savedItem]);
+      if (isEditing) {
+        // Update existing education
+        if (onUpdate) {
+          const updatedItem = await onUpdate(isEditing, current);
+          const updatedData = data.map(edu => edu.id === isEditing ? updatedItem : edu);
+          update(updatedData);
+        } else {
+          const updatedData = data.map(edu => edu.id === isEditing ? current : edu);
+          update(updatedData);
+        }
+        setIsEditing(null);
       } else {
-        update([...data, current]);
+        // Add new education
+        if (onAdd) {
+          const savedItem = await onAdd(current);
+          update([...data, savedItem]);
+        } else {
+          update([...data, current]);
+        }
       }
       
       setCurrent({ id: crypto.randomUUID(), level: '', program: '', institution: '', country: '', startDate: '', isCurrent: false, courses: [] });
@@ -109,6 +131,12 @@ export const EducationStep: React.FC<{
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    setCurrent({ id: crypto.randomUUID(), level: '', program: '', institution: '', country: '', startDate: '', isCurrent: false, courses: [] });
+    setIsAdding(false);
+    setIsEditing(null);
   };
 
   const handleRemove = async (id: string) => {
@@ -124,10 +152,10 @@ export const EducationStep: React.FC<{
     }
   };
 
-  if (isAdding) {
+  if (isAdding || isEditing) {
     return (
       <div className="animate-fade-in pb-32">
-        <h2 className="text-2xl font-bold mb-5">Add Education</h2>
+        <h2 className="text-2xl font-bold mb-5">{isEditing ? 'Edit Education' : 'Add Education'}</h2>
         <div className="space-y-1">
           <Select label="Level" value={current.level} onChange={e => setCurrent({...current, level: e.target.value})} options={EDUCATION_LEVELS} required />
           <Input label="Program / Degree" value={current.program} onChange={e => setCurrent({...current, program: e.target.value})} placeholder="e.g. BSc Computer Science" required />
@@ -158,11 +186,9 @@ export const EducationStep: React.FC<{
             >
               {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : 'Save'}
             </button>
-            {data.length > 0 && (
-              <button onClick={() => setIsAdding(false)} className="px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
-                Cancel
-              </button>
-            )}
+            <button onClick={handleCancel} className="px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -174,24 +200,44 @@ export const EducationStep: React.FC<{
       <SectionHeader title="Education" description="Your academic background." />
       
       {/* Minimum Requirement Indicator */}
-      <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-        <p className="text-xs text-blue-300">
-          <strong>Phase II Requirement:</strong> Add at least 1 Education <strong>OR</strong> Experience entry (Experience is next step)
-        </p>
-      </div>
+      {data.length === 0 && (
+        <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+          <p className="text-xs text-blue-300">
+            <strong>Profile Requirement:</strong> Add at least 1 Education <strong>OR</strong> Experience entry to complete your profile
+          </p>
+        </div>
+      )}
       
-      <div className="space-y-3 mb-8">
-        {data.map(edu => (
-          <ItemCard 
-            key={edu.id} 
-            title={edu.program || 'Untitled Program'} 
-            subtitle={`${edu.institution || 'undefined'} • ${edu.level || 'undefined'}`} 
-            onDelete={() => handleRemove(edu.id)} 
-          />
-        ))}
-      </div>
-      <button onClick={() => setIsAdding(true)} className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-gray-400 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all flex items-center justify-center gap-3 active:scale-95">
-        <Plus className="w-5 h-5" /> <span className="font-medium text-base">Add Education</span>
+      {data.length > 0 && (
+        <div className="space-y-3 mb-6">
+          <p className="text-sm text-gray-400 mb-4 px-1">Your education entries ({data.length})</p>
+          {data.map(edu => {
+            const displayProgram = edu.program || 'Program not specified';
+            const displayInstitution = edu.institution || 'Institution not specified';
+            const displayLevel = edu.level || '';
+            const subtitle = displayLevel 
+              ? `${displayInstitution} • ${displayLevel}` 
+              : displayInstitution;
+            
+            return (
+              <ItemCard 
+                key={edu.id} 
+                title={displayProgram}
+                subtitle={subtitle}
+                onDelete={() => handleRemove(edu.id)}
+                onClick={() => handleEdit(edu)}
+              />
+            );
+          })}
+        </div>
+      )}
+      
+      <button 
+        onClick={() => setIsAdding(true)} 
+        className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-gray-400 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all flex items-center justify-center gap-3 active:scale-95"
+      >
+        <Plus className="w-5 h-5" /> 
+        <span className="font-medium text-base">{data.length > 0 ? 'Add Another Education' : 'Add Education'}</span>
       </button>
     </div>
   );
@@ -311,11 +357,13 @@ export const ExperienceStep: React.FC<{
       <SectionHeader title="Experience" description="Internships & jobs." />
       
       {/* Minimum Requirement Indicator */}
-      <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-        <p className="text-xs text-blue-300">
-          <strong>Phase II Requirement:</strong> Add at least 1 Education (previous step) <strong>OR</strong> Experience entry
-        </p>
-      </div>
+      {data.length === 0 && (
+        <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+          <p className="text-xs text-blue-300">
+            <strong>Profile Requirement:</strong> Add at least 1 Education (previous step) <strong>OR</strong> Experience entry to complete your profile
+          </p>
+        </div>
+      )}
       
       {data.length > 0 ? (
         <div className="space-y-3 mb-8">

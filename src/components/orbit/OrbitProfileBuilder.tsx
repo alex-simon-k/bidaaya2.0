@@ -81,7 +81,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
         const skillsData = await skillsRes.json();
 
         // Map education data - API returns degreeTitle but Orbit expects program
-        const mappedEducation = (eduData.education || []).map((edu: any) => ({
+        const mappedEducation = (eduData.education || eduData.educations || []).map((edu: any) => ({
           id: edu.id,
           level: edu.degreeType || edu.level || '',
           program: edu.degreeTitle || edu.program || '',
@@ -210,7 +210,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
           missingItems.push('at least 1 Skill');
         }
         
-        alert(`To complete Phase II and apply to opportunities, you need:\n\n• ${missingItems.join('\n• ')}\n\nPlease go back and add the missing information.`);
+        alert(`To complete your profile and apply to opportunities, you need:\n\n• ${missingItems.join('\n• ')}\n\nPlease go back and add the missing information.`);
         setErrors({ phaseII: missingItems });
         return; // Don't proceed
       }
@@ -279,6 +279,29 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
             modules: item.courses
         })
     });
+    const json = await res.json();
+    return json.education;
+  };
+
+  const handleUpdateEducation = async (id: string, item: Education) => {
+    const res = await fetch(`/api/cv/education/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            level: item.level,
+            program: item.program,
+            institution: item.institution,
+            country: item.country,
+            startDate: item.startDate,
+            endDate: item.endDate,
+            isCurrent: item.isCurrent,
+            modules: item.courses
+        })
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to update education');
+    }
     const json = await res.json();
     return json.education;
   };
@@ -406,7 +429,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
         <div className="flex-1 animate-fade-in">
           {step === 1 && <PersonalStep data={data.profile} update={p => setData({...data, profile: p})} errors={errors} />}
           {step === 2 && <LinksStep data={data.profile} update={p => setData({...data, profile: p})} errors={errors} />}
-          {step === 3 && <EducationStep data={data.education} update={e => setData({...data, education: e})} onAdd={handleAddEducation} onDelete={handleDeleteEducation} />}
+          {step === 3 && <EducationStep data={data.education} update={e => setData({...data, education: e})} onAdd={handleAddEducation} onUpdate={handleUpdateEducation} onDelete={handleDeleteEducation} />}
           {step === 4 && <ExperienceStep data={data.experience} update={e => setData({...data, experience: e})} onAdd={handleAddExperience} onDelete={handleDeleteExperience} />}
           {step === 5 && <ProjectsStep data={data.projects} update={p => setData({...data, projects: p})} onAdd={handleAddProject} onDelete={handleDeleteProject} />}
           {step === 6 && <SkillsStep data={data.skills} update={s => setData({...data, skills: s})} onAdd={handleAddSkill} onDelete={handleDeleteSkill} />}
@@ -429,8 +452,8 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
                   <div className="flex-1">
                     <h3 className="font-semibold text-white text-sm mb-2">
                       {(data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0
-                        ? 'Phase II Complete!'
-                        : 'Phase II Requirements'}
+                        ? 'Profile Complete!'
+                        : 'Complete Your Profile'}
                     </h3>
                     <div className="space-y-1.5 text-xs">
                       <div className="flex items-center gap-2">
