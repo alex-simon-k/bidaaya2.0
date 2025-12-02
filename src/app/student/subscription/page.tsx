@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { 
-  Crown, 
   Zap,
   ArrowRight
 } from 'lucide-react'
@@ -140,10 +139,7 @@ export default function StudentSubscription() {
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <Crown className="h-6 w-6 text-blue-400" />
-              <h1 className="text-3xl font-bold text-white">Land an Internship Faster</h1>
-            </div>
+            <h1 className="text-2xl font-bold text-white mb-3 whitespace-nowrap">Land an Internship Faster</h1>
             <p className="text-white/70 text-sm text-center">
               Get more credits, unlock early access, and boost your job search
             </p>
@@ -223,15 +219,15 @@ export default function StudentSubscription() {
                         </div>
                       </div>
 
-                      {/* CTA Button - More prominent */}
+                      {/* CTA Button - iOS-style glass effect */}
                       {isCurrentPlan ? (
-                        <div className="text-center py-3.5 bg-white/20 rounded-xl text-white font-semibold border-2 border-white/30">
+                        <div className="text-center py-3.5 bg-white/10 backdrop-blur-xl rounded-2xl text-white font-semibold border border-white/20 shadow-lg">
                           Your Current Plan
                         </div>
                       ) : isDowngrade ? (
                         <button
                           onClick={handleManageSubscription}
-                          className="w-full py-3.5 border-2 border-white/40 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-all flex items-center justify-center gap-2 shadow-lg"
+                          className="w-full py-3.5 bg-white/10 backdrop-blur-xl border border-white/30 text-white rounded-2xl font-bold hover:bg-white/15 transition-all flex items-center justify-center gap-2 shadow-lg"
                         >
                           Downgrade to {plan.displayName}
                           <ArrowRight className="h-4 w-4" />
@@ -240,7 +236,7 @@ export default function StudentSubscription() {
                         <button
                           onClick={() => handleUpgrade(plan.id)}
                           disabled={upgrading}
-                          className={`w-full py-3.5 bg-white text-black rounded-xl font-bold hover:opacity-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl border-2 border-white/50`}
+                          className="w-full py-3.5 bg-white/20 backdrop-blur-xl border border-white/40 text-white rounded-2xl font-bold hover:bg-white/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl"
                         >
                           {upgrading ? 'Loading...' : `Upgrade to ${plan.displayName}`}
                           <ArrowRight className="h-5 w-5" />
