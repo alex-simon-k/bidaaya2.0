@@ -198,21 +198,95 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
     
     // Minimum Requirements Check (on final review step or when completing)
     if (step === 7) {
-      const hasEducationOrExperience = data.education.length > 0 || data.experience.length > 0;
-      const hasSkills = data.skills.length > 0;
-      
-      if (!hasEducationOrExperience || !hasSkills) {
-        const missingItems = [];
-        if (!hasEducationOrExperience) {
-          missingItems.push('at least 1 Education or Experience entry');
-        }
-        if (!hasSkills) {
-          missingItems.push('at least 1 Skill');
+      // Refresh data from API to ensure we have the latest state
+      try {
+        const [eduRes, expRes, skillsRes] = await Promise.all([
+          fetch('/api/cv/education'),
+          fetch('/api/cv/experience'),
+          fetch('/api/cv/skills')
+        ]);
+        
+        const eduData = await eduRes.json();
+        const expData = await expRes.json();
+        const skillsData = await skillsRes.json();
+        
+        const educationCount = (eduData.education || eduData.educations || []).length;
+        const experienceCount = (expData.experiences || []).length;
+        const skillsCount = (skillsData.skills || []).length;
+        
+        const hasEducationOrExperience = educationCount > 0 || experienceCount > 0;
+        const hasSkills = skillsCount > 0;
+        
+        if (!hasEducationOrExperience || !hasSkills) {
+          const missingItems = [];
+          if (!hasEducationOrExperience) {
+            missingItems.push('at least 1 Education or Experience entry');
+          }
+          if (!hasSkills) {
+            missingItems.push('at least 1 Skill');
+          }
+          
+          alert(`To complete your profile and apply to opportunities, you need:\n\n• ${missingItems.join('\n• ')}\n\nPlease go back and add the missing information.`);
+          setErrors({ phaseII: missingItems });
+          return; // Don't proceed
         }
         
-        alert(`To complete your profile and apply to opportunities, you need:\n\n• ${missingItems.join('\n• ')}\n\nPlease go back and add the missing information.`);
-        setErrors({ phaseII: missingItems });
-        return; // Don't proceed
+        // Update local state with fresh data
+        const mappedEducation = (eduData.education || eduData.educations || []).map((edu: any) => ({
+          id: edu.id,
+          level: edu.degreeType || edu.level || '',
+          program: edu.degreeTitle || edu.program || '',
+          institution: edu.institution || '',
+          country: edu.institutionLocation || edu.country || '',
+          startDate: edu.startDate ? new Date(edu.startDate).toISOString().split('T')[0].slice(0, 7) : '',
+          endDate: edu.endDate ? new Date(edu.endDate).toISOString().split('T')[0].slice(0, 7) : '',
+          isCurrent: edu.isCurrent || false,
+          courses: edu.modules || []
+        }));
+        
+        const mappedExperience = (expData.experiences || []).map((exp: any) => ({
+          id: exp.id,
+          jobTitle: exp.title || '',
+          company: exp.employer || '',
+          employmentType: exp.employmentType || '',
+          startDate: exp.startDate ? new Date(exp.startDate).toISOString().split('T')[0].slice(0, 7) : '',
+          endDate: exp.endDate ? new Date(exp.endDate).toISOString().split('T')[0].slice(0, 7) : '',
+          isCurrent: exp.isCurrent || false,
+          description: exp.summary || ''
+        }));
+        
+        const mappedSkills = (skillsData.skills || []).map((skill: any) => ({
+          id: skill.id,
+          name: skill.skillName || '',
+          type: skill.category || 'Technical',
+          level: skill.proficiency || undefined
+        }));
+        
+        setData({
+          ...data,
+          education: mappedEducation,
+          experience: mappedExperience,
+          skills: mappedSkills
+        });
+      } catch (error) {
+        console.error('Failed to refresh data for validation:', error);
+        // Fallback to local state check
+        const hasEducationOrExperience = data.education.length > 0 || data.experience.length > 0;
+        const hasSkills = data.skills.length > 0;
+        
+        if (!hasEducationOrExperience || !hasSkills) {
+          const missingItems = [];
+          if (!hasEducationOrExperience) {
+            missingItems.push('at least 1 Education or Experience entry');
+          }
+          if (!hasSkills) {
+            missingItems.push('at least 1 Skill');
+          }
+          
+          alert(`To complete your profile and apply to opportunities, you need:\n\n• ${missingItems.join('\n• ')}\n\nPlease go back and add the missing information.`);
+          setErrors({ phaseII: missingItems });
+          return;
+        }
       }
     }
 
