@@ -136,30 +136,32 @@ export default function StudentSubscription() {
   return (
     <StudentLayoutWrapper>
       <div className="min-h-screen" style={{ backgroundColor: '#050505' }}>
-        <div className="py-8 px-4 pb-24">
+        <div className="pt-20 px-4 pb-24 safe-top">
           <div className="max-w-2xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-white mb-3 whitespace-nowrap">Land an Internship Faster</h1>
-              <p className="text-white/70 text-sm text-center">
+              <h1 className="text-3xl font-bold text-white mb-3">Land an Internship Faster</h1>
+              <p className="text-white/70 text-base text-center">
                 Get more credits, unlock early access, and boost your job search
               </p>
             </div>
 
-            {/* Segmented Control - Sliding Pill */}
-            <div className="flex items-center justify-center mb-8">
+            {/* Segmented Control - Fixed Sliding Pill */}
+            <div className="flex items-center justify-center mb-10">
               <div className="relative inline-flex items-center bg-white/5 backdrop-blur-xl rounded-full p-1 border border-white/10">
                 {/* Sliding Background */}
                 <div
                   className={`absolute top-1 bottom-1 rounded-full bg-white/10 backdrop-blur-sm transition-all duration-300 ease-out ${
-                    billingInterval === 'month' ? 'left-1 right-1/2' : 'left-1/2 right-1'
+                    billingInterval === 'month' 
+                      ? 'left-1 right-[calc(50%+2px)]' 
+                      : 'left-[calc(50%+2px)] right-1'
                   }`}
                 />
                 
                 {/* Monthly Button */}
                 <button
                   onClick={() => setBillingInterval('month')}
-                  className={`relative z-10 px-6 py-2 text-sm font-medium rounded-full transition-colors ${
+                  className={`relative z-10 px-8 py-2.5 text-sm font-semibold rounded-full transition-colors whitespace-nowrap ${
                     billingInterval === 'month' ? 'text-white' : 'text-white/60'
                   }`}
                 >
@@ -169,87 +171,57 @@ export default function StudentSubscription() {
                 {/* Yearly Button */}
                 <button
                   onClick={() => setBillingInterval('year')}
-                  className={`relative z-10 px-6 py-2 text-sm font-medium rounded-full transition-colors flex items-center gap-2 ${
+                  className={`relative z-10 px-8 py-2.5 text-sm font-semibold rounded-full transition-colors flex items-center gap-2 whitespace-nowrap ${
                     billingInterval === 'year' ? 'text-white' : 'text-white/60'
                   }`}
                 >
                   Yearly
-                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
                     Save 17%
                   </span>
                 </button>
               </div>
             </div>
 
-            {/* Plans - Stacked Vertically with Glassmorphism */}
-            <div className="space-y-6">
+            {/* Plans - Stacked Vertically with Better Spacing */}
+            <div className="space-y-8">
               {plans.map((plan, index) => {
                 const isCurrentPlan = currentPlanId === plan.id
                 const isDowngrade = (currentPlanId === 'student_pro' && plan.id === 'student_premium')
                 const displayPrice = getDisplayPrice(plan)
                 // Fries in the Bag: image on RIGHT, Unemployed Bro: image on LEFT
                 const imagePosition = index === 0 ? 'right' : 'left'
-                const glowColor = plan.gradient.includes('orange') 
-                  ? 'rgba(249, 115, 22, 0.3)' 
-                  : 'rgba(168, 85, 247, 0.3)'
                 
                 return (
                   <div
                     key={plan.id}
                     className="relative"
                   >
-                    {/* Ambient Glow Behind Card */}
-                    <div 
-                      className="absolute inset-0 rounded-3xl blur-2xl opacity-50 -z-10"
-                      style={{ 
-                        background: glowColor,
-                        transform: 'scale(1.1)'
-                      }}
-                    />
-                    
-                    {/* Glass Card */}
-                    <div className="relative bg-white/5 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 overflow-hidden"
-                      style={{
-                        backgroundImage: 'linear-gradient(to bottom right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.01) 100%)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                      }}
-                    >
-                      {/* Gradient Border Effect */}
-                      <div 
-                        className="absolute inset-0 rounded-3xl opacity-20"
-                        style={{
-                          background: plan.gradient.includes('orange')
-                            ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.3), rgba(239, 68, 68, 0.2))'
-                            : 'linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(139, 92, 246, 0.2))',
-                          padding: '1px',
-                          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                          WebkitMaskComposite: 'xor',
-                          maskComposite: 'exclude'
-                        }}
-                      />
-                      
-                      <div className={`flex items-center gap-6 ${
+                    {/* Glass Card - Clean Design */}
+                    <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 overflow-hidden">
+                      <div className={`flex items-start gap-6 ${
                         imagePosition === 'right' ? 'flex-row' : 'flex-row-reverse'
                       }`}>
                         {/* Content */}
                         <div className={`flex-1 ${imagePosition === 'left' ? 'text-right' : ''}`}>
-                          {/* Plan Name with Gradient */}
-                          <h3 
-                            className="text-2xl font-bold mb-1 bg-clip-text text-transparent"
-                            style={{
-                              backgroundImage: plan.gradient.includes('orange')
-                                ? 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)'
-                                : 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)'
-                            }}
-                          >
+                          {/* Plan Name */}
+                          <h3 className="text-2xl font-bold text-white mb-1">
                             {plan.name}
                           </h3>
-                          <p className="text-white/60 text-sm mb-4">{plan.displayName} Plan</p>
+                          <p className="text-white/60 text-sm mb-6">{plan.displayName} Plan</p>
                           
-                          {/* Massive Price - Thin and Bright */}
-                          <div className={`mb-3 ${imagePosition === 'left' ? 'text-right' : ''}`}>
-                            <span className="text-6xl font-thin text-white tracking-tight">£{displayPrice}</span>
-                            <span className="text-xl text-white/70 ml-2 font-light">/{billingInterval === 'year' ? 'year' : 'month'}</span>
+                          {/* Credits Badge - Prominent */}
+                          <div className={`mb-4 ${imagePosition === 'left' ? 'flex justify-end' : ''}`}>
+                            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-bidaaya-accent/20 to-purple-500/20 border-2 border-bidaaya-accent/40 backdrop-blur-sm">
+                              <Zap className="w-5 h-5 text-bidaaya-accent" />
+                              <span className="text-lg font-bold text-white">{plan.credits} credits</span>
+                            </div>
+                          </div>
+                          
+                          {/* Price - Smaller, Less Emphasis */}
+                          <div className={`mb-6 ${imagePosition === 'left' ? 'text-right' : ''}`}>
+                            <span className="text-3xl font-semibold text-white/90">£{displayPrice}</span>
+                            <span className="text-base text-white/60 ml-1">/{billingInterval === 'year' ? 'year' : 'month'}</span>
                           </div>
                           {billingInterval === 'year' && (
                             <p className={`text-xs text-white/50 mb-4 ${imagePosition === 'left' ? 'text-right' : ''}`}>
@@ -257,15 +229,7 @@ export default function StudentSubscription() {
                             </p>
                           )}
 
-                          {/* Credits Badge */}
-                          <div className={`mb-5 ${imagePosition === 'left' ? 'flex justify-end' : ''}`}>
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
-                              <Zap className="w-3.5 h-3.5 text-white/80" />
-                              <span className="text-sm font-medium text-white/90">{plan.credits} credits</span>
-                            </div>
-                          </div>
-
-                          {/* CTA Button - Full Gradient, Pill Shape */}
+                          {/* CTA Button */}
                           {isCurrentPlan ? (
                             <div className="text-center py-3.5 bg-white/5 backdrop-blur-xl rounded-full text-white/80 font-semibold border border-white/10">
                               Your Current Plan
@@ -282,10 +246,7 @@ export default function StudentSubscription() {
                             <button
                               onClick={() => handleUpgrade(plan.id)}
                               disabled={upgrading}
-                              className={`w-full py-3.5 bg-gradient-to-r ${plan.gradient} text-white rounded-full font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg`}
-                              style={{
-                                boxShadow: `0 4px 20px ${glowColor}, inset 0 1px 0 rgba(255, 255, 255, 0.2)`
-                              }}
+                              className={`w-full py-3.5 bg-gradient-to-r ${plan.gradient} text-white rounded-full font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
                             >
                               {upgrading ? 'Loading...' : `Upgrade to ${plan.displayName}`}
                               <ArrowRight className="h-5 w-5" />
@@ -293,20 +254,13 @@ export default function StudentSubscription() {
                           )}
                         </div>
 
-                        {/* Image with Glow */}
-                        <div className="flex-shrink-0 relative">
-                          {/* Glow behind image */}
-                          <div 
-                            className="absolute inset-0 rounded-full blur-xl opacity-60"
-                            style={{ background: glowColor }}
-                          />
+                        {/* Image - Full Coverage */}
+                        <div className="flex-shrink-0 relative w-32 h-32">
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl" />
                           <img 
                             src={plan.image} 
                             alt={plan.name}
-                            className="relative w-28 h-28 object-contain"
-                            style={{
-                              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.1))'
-                            }}
+                            className="relative w-full h-full object-cover rounded-2xl"
                           />
                         </div>
                       </div>
