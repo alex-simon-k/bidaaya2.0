@@ -202,9 +202,22 @@ export const EducationStep: React.FC<{
       {/* Minimum Requirement Indicator */}
       {data.length === 0 && (
         <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-          <p className="text-xs text-blue-300">
-            <strong>Profile Requirement:</strong> Add at least 1 Education <strong>OR</strong> Experience entry to complete your profile
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-blue-400 text-lg">✗</span>
+            <p className="text-xs text-blue-300">
+              Add at least 1 Education <strong>OR</strong> Experience entry to complete your profile
+            </p>
+          </div>
+        </div>
+      )}
+      {data.length > 0 && (
+        <div className="mb-6 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+          <div className="flex items-center gap-2">
+            <span className="text-green-400 text-lg">✓</span>
+            <p className="text-xs text-green-300">
+              Education requirement met ({data.length} entr{data.length !== 1 ? 'ies' : 'y'} added)
+            </p>
+          </div>
         </div>
       )}
       
@@ -359,9 +372,22 @@ export const ExperienceStep: React.FC<{
       {/* Minimum Requirement Indicator */}
       {data.length === 0 && (
         <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-          <p className="text-xs text-blue-300">
-            <strong>Profile Requirement:</strong> Add at least 1 Education (previous step) <strong>OR</strong> Experience entry to complete your profile
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-blue-400 text-lg">✗</span>
+            <p className="text-xs text-blue-300">
+              Add at least 1 Education <strong>OR</strong> Experience entry to complete your profile
+            </p>
+          </div>
+        </div>
+      )}
+      {data.length > 0 && (
+        <div className="mb-6 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+          <div className="flex items-center gap-2">
+            <span className="text-green-400 text-lg">✓</span>
+            <p className="text-xs text-green-300">
+              Experience requirement met ({data.length} entr{data.length !== 1 ? 'ies' : 'y'} added)
+            </p>
+          </div>
         </div>
       )}
       
@@ -481,9 +507,12 @@ export const ProjectsStep: React.FC<{
       
       {/* Optional Indicator */}
       <div className="mb-6 p-3 rounded-xl bg-gray-500/10 border border-gray-500/20">
-        <p className="text-xs text-gray-300">
-          <strong>Optional:</strong> Projects help you stand out, but are not required for Phase II
-        </p>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-lg">○</span>
+          <p className="text-xs text-gray-300">
+            <strong>Optional:</strong> Projects help you stand out
+          </p>
+        </div>
       </div>
       
       <div className="space-y-3 mb-8">
@@ -537,7 +566,8 @@ export const SkillsStep: React.FC<{
       setCurrent({ id: crypto.randomUUID(), name: '', type: '' });
     } catch (error: any) {
       console.error("Failed to save skill", error);
-      alert(error?.message || 'Failed to save skill. Please check all required fields.');
+      const errorMessage = error?.message || error?.error || 'Failed to save skill. Please check all required fields.';
+      alert(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -561,11 +591,26 @@ export const SkillsStep: React.FC<{
       <SectionHeader title="Skills" description="What are your top strengths?" />
       
       {/* Minimum Requirement Indicator */}
-      <div className="mb-6 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-        <p className="text-xs text-yellow-300">
-          <strong>⚠️ Phase II Requirement:</strong> Add at least 1 Skill <strong>(REQUIRED to apply to opportunities)</strong>
-        </p>
-      </div>
+      {data.length === 0 && (
+        <div className="mb-6 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-400 text-lg">✗</span>
+            <p className="text-xs text-yellow-300">
+              Add at least 1 Skill <strong>(Required to apply to opportunities)</strong>
+            </p>
+          </div>
+        </div>
+      )}
+      {data.length > 0 && (
+        <div className="mb-6 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+          <div className="flex items-center gap-2">
+            <span className="text-green-400 text-lg">✓</span>
+            <p className="text-xs text-green-300">
+              Skills requirement met ({data.length} skill{data.length !== 1 ? 's' : ''} added)
+            </p>
+          </div>
+        </div>
+      )}
       
       <div className="glass-panel p-5 rounded-3xl mb-8 bg-white/5">
         <div className="space-y-1">

@@ -196,7 +196,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
       }
     }
     
-    // Phase II Minimum Requirements Check (on final review step or when completing)
+    // Minimum Requirements Check (on final review step or when completing)
     if (step === 7) {
       const hasEducationOrExperience = data.education.length > 0 || data.experience.length > 0;
       const hasSkills = data.skills.length > 0;
@@ -345,15 +345,54 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
   };
 
   const handleAddSkill = async (item: Skill) => {
+    // Map frontend values to API expected values
+    const categoryMap: Record<string, string> = {
+      'Technical': 'hard_skill',
+      'Soft Skill': 'soft_skill',
+      'Tool': 'tool'
+    };
+    
+    const proficiencyMap: Record<string, string> = {
+      'Beginner': 'beginner',
+      'Intermediate': 'intermediate',
+      'Advanced': 'advanced',
+      'Expert': 'expert'
+    };
+    
+    // Determine category - check if already in API format or needs mapping
+    let category = item.type;
+    if (categoryMap[item.type]) {
+      category = categoryMap[item.type];
+    } else if (!['hard_skill', 'soft_skill', 'tool'].includes(item.type)) {
+      // Fallback: try to infer from type if not recognized
+      category = 'hard_skill'; // Default fallback
+    }
+    
+    // Determine proficiency - check if already in API format or needs mapping
+    let proficiency: string | null = null;
+    if (item.level) {
+      if (proficiencyMap[item.level]) {
+        proficiency = proficiencyMap[item.level];
+      } else if (['beginner', 'intermediate', 'advanced', 'expert'].includes(item.level.toLowerCase())) {
+        proficiency = item.level.toLowerCase();
+      }
+    }
+    
     const res = await fetch('/api/cv/skills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            name: item.name,
-            type: item.type,
-            level: item.level
+            skillName: item.name,
+            category: category,
+            proficiency: proficiency
         })
     });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to add skill');
+    }
+    
     const json = await res.json();
     return json.skill;
   };
@@ -439,7 +478,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
               <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Review</h2>
               <p className="text-gray-400 mb-4 text-sm">Preview your Orbit profile card.</p>
               
-              {/* Phase II Requirements Check */}
+              {/* Requirements Check */}
               <div className={`p-4 rounded-2xl mb-6 border ${
                 (data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0
                   ? 'bg-green-500/10 border-green-500/30'
@@ -447,7 +486,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
               }`}>
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">
-                    {(data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0 ? '✅' : '⚠️'}
+                    {(data.education.length > 0 || data.experience.length > 0) && data.skills.length > 0 ? '✓' : '✗'}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-white text-sm mb-2">
@@ -460,7 +499,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
                         {data.education.length > 0 || data.experience.length > 0 ? (
                           <span className="text-green-400">✓</span>
                         ) : (
-                          <span className="text-yellow-400">○</span>
+                          <span className="text-yellow-400">✗</span>
                         )}
                         <span className="text-gray-300">
                           At least 1 Education <strong>OR</strong> Experience
@@ -470,7 +509,7 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
                         {data.skills.length > 0 ? (
                           <span className="text-green-400">✓</span>
                         ) : (
-                          <span className="text-yellow-400">○</span>
+                          <span className="text-yellow-400">✗</span>
                         )}
                         <span className="text-gray-300">
                           At least 1 Skill <strong>(Required)</strong>
