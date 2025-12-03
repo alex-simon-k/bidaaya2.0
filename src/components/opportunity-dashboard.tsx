@@ -527,15 +527,19 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
             {/* CV and Cover Letter Builders - Compact */}
             <div className="grid grid-cols-2 gap-2.5">
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-gradient-to-br from-bidaaya-accent/20 to-purple-500/20 border border-bidaaya-accent/30 rounded-xl p-3 hover:from-bidaaya-accent/30 hover:to-purple-500/30 transition-all duration-300 group"
-              >
-                <FileText className="h-6 w-6 text-bidaaya-accent mb-2 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xs font-semibold text-bidaaya-light">Build Custom CV</h3>
-              </motion.button>
+              {/* Custom CV Builder - TEMPORARILY DISABLED */}
+              {/* TODO: Re-enable when custom CV feature is ready */}
+              {false && (
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-gradient-to-br from-bidaaya-accent/20 to-purple-500/20 border border-bidaaya-accent/30 rounded-xl p-3 hover:from-bidaaya-accent/30 hover:to-purple-500/30 transition-all duration-300 group"
+                >
+                  <FileText className="h-6 w-6 text-bidaaya-accent mb-2 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-xs font-semibold text-bidaaya-light">Build Custom CV</h3>
+                </motion.button>
+              )}
 
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
@@ -784,7 +788,9 @@ function OpportunityCard({
                 View Details
                 <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
-              {isExternal && (
+              {/* Generate CV - TEMPORARILY DISABLED */}
+              {/* TODO: Re-enable when custom CV feature is ready */}
+              {false && isExternal && (
                 <Button variant="outline" className="border-bidaaya-light/20 text-bidaaya-light hover:bg-bidaaya-light/10">
                   <FileText className="h-4 w-4 mr-2" />
                   Generate CV

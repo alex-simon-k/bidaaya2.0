@@ -406,24 +406,27 @@ export function OpportunityDetailModal({
                     {/* Main Action Group */}
                     <div className="flex flex-col rounded-3xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.2)] bg-bidaaya-dark/60 border border-bidaaya-light/10 mb-6">
                       
-                      {/* 1. Custom CV */}
-                      <ActionRow 
-                        icon={<FileText className="w-5 h-5" />}
-                        label="Custom CV"
-                        subLabel={isCVUnlocked ? "Downloaded successfully" : "Tailored for this role"}
-                        isToggled={isCVUnlocked}
-                        isLoading={isGeneratingCV}
-                        rightAction={
-                          !isCVUnlocked ? (
-                            <UnlockButton cost={5} onClick={handleCVClick} label="Generate" />
-                          ) : (
-                            <div className="flex items-center gap-2 text-green-400 pr-2">
-                              <span className="text-xs font-semibold">Ready</span>
-                              <CheckCircle2 className="w-5 h-5 fill-green-500/20" />
-                            </div>
-                          )
-                        }
-                      />
+                      {/* 1. Custom CV - TEMPORARILY DISABLED */}
+                      {/* TODO: Re-enable when custom CV feature is ready */}
+                      {false && (
+                        <ActionRow 
+                          icon={<FileText className="w-5 h-5" />}
+                          label="Custom CV"
+                          subLabel={isCVUnlocked ? "Downloaded successfully" : "Tailored for this role"}
+                          isToggled={isCVUnlocked}
+                          isLoading={isGeneratingCV}
+                          rightAction={
+                            !isCVUnlocked ? (
+                              <UnlockButton cost={5} onClick={handleCVClick} label="Generate" />
+                            ) : (
+                              <div className="flex items-center gap-2 text-green-400 pr-2">
+                                <span className="text-xs font-semibold">Ready</span>
+                                <CheckCircle2 className="w-5 h-5 fill-green-500/20" />
+                              </div>
+                            )
+                          }
+                        />
+                      )}
                       
                       {/* 2. Cover Letter - LOCKED (Coming Soon) */}
                       <ActionRow 
