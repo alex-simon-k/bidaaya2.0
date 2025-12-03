@@ -70,7 +70,6 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [earlyAccessDismissed, setEarlyAccessDismissed] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [appliedOpportunities, setAppliedOpportunities] = useState<Set<string>>(new Set());
   const [agentActive, setAgentActive] = useState(false);
@@ -552,15 +551,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Early Access Banner - Compact & Dismissable */}
-            {earlyAccessOpportunity && !earlyAccessDismissed && (
-              <EarlyAccessBanner
-                opportunity={earlyAccessOpportunity}
-                onDismiss={() => setEarlyAccessDismissed(true)}
-                onClick={() => handleOpportunityClick(earlyAccessOpportunity)}
-                isLocked={earlyAccessOpportunity.isLocked}
-              />
-            )}
+            {/* Early Access Banner removed - now shown in StreakMasterCard above Daily Picks */}
 
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
