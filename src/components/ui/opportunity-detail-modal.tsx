@@ -76,6 +76,7 @@ export function OpportunityDetailModal({
   
   // Applied Status
   const [markedAsApplied, setMarkedAsApplied] = useState(hasApplied)
+  const [isUnlocked, setIsUnlocked] = useState(!opportunity.isLocked)
 
   // Fetch user credits when modal opens
   React.useEffect(() => {
@@ -88,8 +89,9 @@ export function OpportunityDetailModal({
       // Reset state when modal opens
       setMarkedAsApplied(hasApplied)
       setIsCVUnlocked(false)
+      setIsUnlocked(!opportunity.isLocked)
     }
-  }, [isOpen, hasApplied])
+  }, [isOpen, hasApplied, opportunity.isLocked])
 
   // Extract company color from logo or use default
   const getCompanyColor = () => {
@@ -360,7 +362,7 @@ export function OpportunityDetailModal({
                 </div>
 
                 {/* Check if locked (Early Access) */}
-                {opportunity.isLocked && opportunity.type === 'early_access' ? (
+                {opportunity.isLocked && opportunity.type === 'early_access' && !isUnlocked ? (
                   <div className="flex flex-col items-center justify-center text-center py-8 mb-6">
                     <div className="w-16 h-16 rounded-full bg-bidaaya-accent/10 flex items-center justify-center mb-4">
                       <Lock className="h-8 w-8 text-bidaaya-accent" />
@@ -373,7 +375,12 @@ export function OpportunityDetailModal({
                     </p>
                     {userPlan === 'STUDENT_PRO' && onUnlock ? (
                       <Button
-                        onClick={() => onUnlock(opportunity.id, 'external')}
+                        onClick={async () => {
+                          if (onUnlock) {
+                            await onUnlock(opportunity.id, 'external')
+                            setIsUnlocked(true)
+                          }
+                        }}
                         className="w-full bg-green-500 hover:bg-green-600 text-white py-6 text-base font-semibold"
                       >
                         <Unlock className="h-5 w-5 mr-2" />
@@ -381,7 +388,12 @@ export function OpportunityDetailModal({
                       </Button>
                     ) : onUnlock ? (
                       <Button
-                        onClick={() => onUnlock(opportunity.id, 'external')}
+                        onClick={async () => {
+                          if (onUnlock) {
+                            await onUnlock(opportunity.id, 'external')
+                            setIsUnlocked(true)
+                          }
+                        }}
                         className="w-full bg-bidaaya-accent hover:bg-bidaaya-accent/90 text-white py-6 text-base font-semibold"
                       >
                         <Lock className="h-5 w-5 mr-2" />

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Flame, Eye, Check, ChevronRight, Zap } from 'lucide-react'
+import { Flame, Eye, Check, ChevronRight, Zap, Sparkles, Clock, Lock } from 'lucide-react'
 import { IsometricHeatmap } from './isometric-heatmap'
 import { VisibilityTier } from '@/types/streak'
 import { useSession } from 'next-auth/react'
@@ -38,6 +38,7 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null)
   const [showCelebration, setShowCelebration] = useState(false)
+  const [earlyAccessOpportunity, setEarlyAccessOpportunity] = useState<any>(null)
 
   // Fetch streak data and daily picks
   useEffect(() => {
@@ -47,10 +48,11 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
   const fetchStreakData = async () => {
     setIsLoading(true)
     try {
-      // Fetch daily picks and streak info
-      const [picksResponse, historyResponse] = await Promise.all([
+      // Fetch daily picks, streak info, history, and early access opportunities
+      const [picksResponse, historyResponse, dashboardResponse] = await Promise.all([
         fetch('/api/daily-picks'),
-        fetch('/api/applications/history')
+        fetch('/api/applications/history'),
+        fetch('/api/opportunities/dashboard-simple')
       ])
 
       if (picksResponse.ok) {
@@ -64,6 +66,13 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
         const historyData = await historyResponse.json()
         setHistory(historyData.history || Array(28).fill(0))
         setTotalApplications(historyData.totalApplications || 0)
+      }
+
+      // Fetch early access opportunity
+      if (dashboardResponse.ok) {
+        const dashboardData = await dashboardResponse.json()
+        const earlyAccess = dashboardData.opportunities?.find((opp: any) => opp.type === 'early_access')
+        setEarlyAccessOpportunity(earlyAccess || null)
       }
     } catch (error) {
       console.error('Error fetching streak data:', error)
@@ -145,6 +154,50 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
       }
     } catch (error) {
       console.error('Error marking as applied:', error)
+    }
+  }
+
+  const handleUnlockEarlyAccess = async (opportunityId: string) => {
+    try {
+      const response = await fetch('/api/opportunities/unlock-early-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opportunityId,
+          opportunityType: 'external'
+        })
+      })
+
+      if (response.ok) {
+        // Update the early access opportunity state immediately
+        if (earlyAccessOpportunity && earlyAccessOpportunity.id === opportunityId) {
+          setEarlyAccessOpportunity({
+            ...earlyAccessOpportunity,
+            isLocked: false
+          })
+          // If modal is open, update it too
+          if (selectedOpportunity && selectedOpportunity.id === opportunityId) {
+            setSelectedOpportunity({
+              ...selectedOpportunity,
+              isLocked: false
+            })
+          } else {
+            // Open the modal after unlocking
+            setSelectedOpportunity({
+              ...earlyAccessOpportunity,
+              isLocked: false
+            })
+          }
+        }
+        // Refresh data to sync with backend
+        await fetchStreakData()
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to unlock')
+      }
+    } catch (error) {
+      console.error('Error unlocking early access:', error)
+      alert('Failed to unlock early access')
     }
   }
 
@@ -273,6 +326,89 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
               </div>
             </div>
 
+            {/* --- EARLY ACCESS SECTION --- */}
+            {earlyAccessOpportunity && (
+              <div className="mb-6">
+                <div
+                  onClick={() => {
+                    if (!earlyAccessOpportunity.isLocked) {
+                      setSelectedOpportunity(earlyAccessOpportunity)
+                    }
+                  }}
+                  className={`relative rounded-xl border transition-all duration-300 cursor-pointer ${
+                    earlyAccessOpportunity.isLocked
+                      ? 'border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10'
+                      : 'border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:border-indigo-500/50'
+                  }`}
+                >
+                  <div className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="h-5 w-5 text-yellow-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-sm font-bold text-white">Early Access</h3>
+                          {earlyAccessOpportunity.earlyAccessUntil && (
+                            <span className="flex items-center gap-1 text-[10px] text-yellow-400 bg-yellow-500/20 px-2 py-0.5 rounded-full font-semibold">
+                              <Clock className="h-2.5 w-2.5" />
+                              {(() => {
+                                try {
+                                  const until = new Date(earlyAccessOpportunity.earlyAccessUntil)
+                                  const diffHours = Math.floor((until.getTime() - Date.now()) / (1000 * 60 * 60))
+                                  return diffHours > 0 ? `${diffHours}h left` : 'Ending soon'
+                                } catch {
+                                  return 'Ending soon'
+                                }
+                              })()}
+                            </span>
+                          )}
+                        </div>
+                        {earlyAccessOpportunity.isLocked ? (
+                          <div className="relative">
+                            <div className="absolute inset-0 backdrop-blur-sm bg-slate-900/30 rounded-lg flex items-center justify-center z-10">
+                              <Lock className="h-5 w-5 text-yellow-400" />
+                            </div>
+                            <div className="blur-[2px] select-none">
+                              <p className="text-xs text-white/80 line-clamp-1">{earlyAccessOpportunity.title}</p>
+                              <p className="text-[10px] text-white/60 line-clamp-1">{earlyAccessOpportunity.company}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-xs text-white/80 line-clamp-1">{earlyAccessOpportunity.title}</p>
+                            <p className="text-[10px] text-white/60 line-clamp-1">{earlyAccessOpportunity.company}</p>
+                          </>
+                        )}
+                      </div>
+                      {earlyAccessOpportunity.isLocked ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleUnlockEarlyAccess(earlyAccessOpportunity.id)
+                          }}
+                          className="h-9 px-4 rounded-lg text-xs font-bold bg-yellow-500 text-white hover:bg-yellow-600 shadow-lg shadow-yellow-900/20 flex items-center gap-1.5"
+                        >
+                          <Lock className="w-3.5 h-3.5" />
+                          Unlock
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedOpportunity(earlyAccessOpportunity)
+                          }}
+                          className="h-9 px-4 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-900/20 flex items-center gap-1.5"
+                        >
+                          View <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* --- MIDDLE SECTION: DAILY PICKS --- */}
             <div className="mb-8">
                <div className="flex justify-between items-end mb-4">
@@ -361,8 +497,13 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
         <OpportunityDetailModal
           opportunity={selectedOpportunity}
           isOpen={!!selectedOpportunity}
-          onClose={() => setSelectedOpportunity(null)}
+          onClose={() => {
+            setSelectedOpportunity(null)
+            // Refresh data when modal closes to update unlock status
+            fetchStreakData()
+          }}
           onMarkAsApplied={handleMarkAsApplied}
+          onUnlock={handleUnlockEarlyAccess}
           hasApplied={dailyPicks.find(p => p.id === selectedOpportunity.id)?.hasApplied || false}
           userPlan={(session?.user as any)?.subscriptionPlan || 'FREE'}
         />
