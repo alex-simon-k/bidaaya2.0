@@ -287,16 +287,14 @@ export function OpportunityCardV2({
           </>
         ) : (
           <>
-            {/* Custom CV - TEMPORARILY DISABLED */}
-            {/* TODO: Re-enable when custom CV feature is ready */}
-            {false && (
-              <Button
-                onClick={handleApply}
-                className="flex-1 bg-bidaaya-accent hover:bg-bidaaya-accent/90"
-              >
-                Custom CV
-              </Button>
-            )}
+            <Button
+              onClick={handleApply}
+              disabled
+              className="flex-1 bg-bidaaya-accent/50 hover:bg-bidaaya-accent/50 cursor-not-allowed opacity-60"
+            >
+              Custom CV
+              <span className="ml-2 text-xs opacity-75">(Coming Soon)</span>
+            </Button>
             <Button
               onClick={handleApply}
               variant="outline"
