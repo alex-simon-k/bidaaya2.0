@@ -98,20 +98,20 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
       return
     }
 
-    // If locked, handle unlock logic
-    if (pick.isLocked) {
-      // Show unlock modal or handle credit deduction
-      console.log('Opportunity is locked, needs unlock')
-      return
-    }
-
-    // Open the application URL IMMEDIATELY if it exists
-    if (pick.applicationUrl) {
-      window.open(pick.applicationUrl, '_blank')
-    }
-
-    // Mark as applied
-    await handleMarkAsAppliedForPick(pick)
+    // Open the opportunity detail modal instead of directly applying
+    // Convert DailyPick to the format expected by OpportunityDetailModal
+    setSelectedOpportunity({
+      id: pick.id,
+      title: pick.title,
+      company: pick.company,
+      location: pick.location,
+      type: pick.type,
+      matchScore: pick.matchScore,
+      applicationUrl: pick.applicationUrl,
+      description: pick.description,
+      isLocked: pick.isLocked,
+      unlockCredits: pick.unlockCredits,
+    })
   }
 
   const handleMarkAsAppliedForPick = async (pick: DailyPick) => {
@@ -152,6 +152,11 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
     if (!selectedOpportunity) return
     
     try {
+      // Open application URL if it exists
+      if (selectedOpportunity.applicationUrl) {
+        window.open(selectedOpportunity.applicationUrl, '_blank')
+      }
+
       const response = await fetch(`/api/external-opportunities/${selectedOpportunity.id}/apply`, {
         method: 'POST',
       })
@@ -358,6 +363,8 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
           isOpen={!!selectedOpportunity}
           onClose={() => setSelectedOpportunity(null)}
           onMarkAsApplied={handleMarkAsApplied}
+          hasApplied={dailyPicks.find(p => p.id === selectedOpportunity.id)?.hasApplied || false}
+          userPlan={(session?.user as any)?.subscriptionPlan || 'FREE'}
         />
       )}
     </>
