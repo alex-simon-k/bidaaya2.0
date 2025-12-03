@@ -151,32 +151,36 @@ export async function POST(request: NextRequest) {
       const normalizedCompany = opp.company.toLowerCase().trim()
       
       // Check if this opportunity exists in the uploaded CSV
+      // Priority: Title match (90%+) -> then check company if multiple matches
       let foundInUpload = false
       
-      // Check by URL first (most reliable)
-      if (opp.applicationUrl && uploadedUrlSet.has(normalizeUrl(opp.applicationUrl))) {
-        foundInUpload = true
-      }
-      
-      // Check by title + company
-      if (!foundInUpload) {
+      // First: Check by exact normalized title match
+      if (uploadedTitleSet.has(normalizedTitle)) {
         const uploadedCompanies = uploadedTitleCompanyMap.get(normalizedTitle)
         if (uploadedCompanies && uploadedCompanies.has(normalizedCompany)) {
           foundInUpload = true
         }
       }
       
-      // Check for similar titles (fuzzy matching)
+      // Second: Check by fuzzy title match (90%+ similarity)
       if (!foundInUpload) {
         for (const uploadedTitle of uploadedTitleSet) {
-          if (areTitlesSimilar(normalizedTitle, uploadedTitle)) {
+          const similarity = calculateSimilarity(normalizedTitle, uploadedTitle)
+          if (similarity >= 0.90) { // 90% threshold
             const uploadedCompanies = uploadedTitleCompanyMap.get(uploadedTitle)
-            if (uploadedCompanies && uploadedCompanies.has(normalizedCompany)) {
+            // If high confidence match (>95%), accept even without company match
+            // Otherwise, require company match for 90-95% similarity
+            if (similarity >= 0.95 || (uploadedCompanies && uploadedCompanies.has(normalizedCompany))) {
               foundInUpload = true
               break
             }
           }
         }
+      }
+      
+      // Third: Check by URL (fallback)
+      if (!foundInUpload && opp.applicationUrl && uploadedUrlSet.has(normalizeUrl(opp.applicationUrl))) {
+        foundInUpload = true
       }
       
       // If not found in upload, mark as closed
@@ -243,38 +247,39 @@ export async function POST(request: NextRequest) {
         const normalizedCompany = companyName.toLowerCase().trim()
         const normalizedUrl = normalizeUrl(applicationUrl)
 
-        // Check if already exists by URL (most reliable)
-        if (existingUrlLookup.has(normalizedUrl)) {
-          // Opportunity already exists - skip (don't modify)
-          results.skipped++
-          results.skippedOpportunities.push({
-            title: title.trim(),
-            company: companyName.trim(),
-            reason: 'URL already exists'
-          })
-          continue
-        }
-
-        // Check if exists by title + company
-        const existingCompanies = existingTitleLookup.get(normalizedTitle)
-        if (existingCompanies && existingCompanies.has(normalizedCompany)) {
-          // Opportunity already exists - skip (don't modify)
-          results.skipped++
-          results.skippedOpportunities.push({
-            title: title.trim(),
-            company: companyName.trim(),
-            reason: 'Title + Company already exists'
-          })
-          continue
-        }
-
-        // Check for similar titles (fuzzy matching)
+        // Check if already exists - Priority: Title match (90%+) -> Company -> URL
         let isDuplicate = false
-        for (const [existingTitle, companies] of existingTitleLookup.entries()) {
-          if (areTitlesSimilar(normalizedTitle, existingTitle) && companies.has(normalizedCompany)) {
+        let duplicateReason = ''
+
+        // First: Check by exact normalized title match
+        if (existingTitleLookup.has(normalizedTitle)) {
+          const existingCompanies = existingTitleLookup.get(normalizedTitle)!
+          if (existingCompanies.has(normalizedCompany)) {
             isDuplicate = true
-            break
+            duplicateReason = 'Exact title + company match'
           }
+        }
+
+        // Second: Check by fuzzy title match (90%+ similarity)
+        if (!isDuplicate) {
+          for (const [existingTitle, companies] of existingTitleLookup.entries()) {
+            const similarity = calculateSimilarity(normalizedTitle, existingTitle)
+            if (similarity >= 0.90) { // 90% threshold
+              // If high confidence match (>95%), accept even without company match
+              // Otherwise, require company match for 90-95% similarity
+              if (similarity >= 0.95 || companies.has(normalizedCompany)) {
+                isDuplicate = true
+                duplicateReason = `Similar title match (${Math.round(similarity * 100)}%)${similarity < 0.95 ? ' + company' : ''}`
+                break
+              }
+            }
+          }
+        }
+
+        // Third: Check by URL (fallback)
+        if (!isDuplicate && existingUrlLookup.has(normalizedUrl)) {
+          isDuplicate = true
+          duplicateReason = 'URL already exists'
         }
 
         if (isDuplicate) {
@@ -283,7 +288,7 @@ export async function POST(request: NextRequest) {
           results.skippedOpportunities.push({
             title: title.trim(),
             company: companyName.trim(),
-            reason: 'Similar title + company already exists'
+            reason: duplicateReason
           })
           continue
         }
@@ -441,22 +446,11 @@ function normalizeUrl(url: string): string {
 }
 
 /**
- * Check if two titles are similar (fuzzy matching)
+ * Check if two titles are similar (fuzzy matching) - uses 90% threshold
  */
 function areTitlesSimilar(title1: string, title2: string): boolean {
-  // Exact match after normalization
-  if (title1 === title2) return true
-  
-  // Check if one contains the other (for variations like "Software Engineer" vs "Senior Software Engineer")
-  if (title1.includes(title2) || title2.includes(title1)) {
-    // But not too different in length (max 30% difference)
-    const lengthDiff = Math.abs(title1.length - title2.length) / Math.max(title1.length, title2.length)
-    if (lengthDiff < 0.3) return true
-  }
-  
-  // Calculate simple similarity (Levenshtein-like)
   const similarity = calculateSimilarity(title1, title2)
-  return similarity > 0.85 // 85% similarity threshold
+  return similarity >= 0.90 // 90% similarity threshold
 }
 
 /**
