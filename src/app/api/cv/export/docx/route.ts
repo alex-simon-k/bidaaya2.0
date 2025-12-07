@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
+import { CREDIT_COSTS } from '@/lib/credits'
 import { CVGenerator, GeneratedCV } from '@/lib/cv-generator'
 import { CVWordExportV3 } from '@/lib/cv-word-export-v3-template'
 import { CVWordExportV4 } from '@/lib/cv-word-export-v4'
@@ -181,6 +182,23 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id
 
+    // Check credits first
+    const cost = CREDIT_COSTS.CUSTOM_CV
+
+    // @ts-ignore
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { credits: true }
+    })
+
+    if (!user || (user.credits || 0) < cost) {
+      return NextResponse.json({
+        error: 'Insufficient credits',
+        required: cost,
+        current: user?.credits || 0
+      }, { status: 402 })
+    }
+
     // Generate generic CV
     const cv = await CVGenerator.generateGenericCV(userId)
 
@@ -189,6 +207,26 @@ export async function GET(request: NextRequest) {
         error: 'No CV data available. Please complete your profile through the chat.',
       }, { status: 400 })
     }
+
+    // Deduct credits
+    // @ts-ignore
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { credits: { decrement: cost } }
+      }),
+      prisma.creditTransaction.create({
+        data: {
+          userId,
+          amount: -cost,
+          type: 'spent',
+          action: 'customCV', // Ensure this matches allowed types or is essentially a string
+          description: 'Custom CV Download',
+          balanceBefore: user.credits,
+          balanceAfter: user.credits - cost,
+        }
+      })
+    ])
 
     // Generate Word document using V4
     const doc = await CVWordExportV4.generateWordDocument(cv)

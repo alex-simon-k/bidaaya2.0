@@ -74,6 +74,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const [appliedOpportunities, setAppliedOpportunities] = useState<Set<string>>(new Set());
   const [agentActive, setAgentActive] = useState(false);
   const [agentExpanded, setAgentExpanded] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
 
   useEffect(() => {
     loadDashboardData();
@@ -532,8 +534,26 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 transition={{ delay: 0.1 }}
                 onClick={async () => {
                   try {
+                    setIsExporting(true)
+                    setExportProgress(10)
+
+                    // Simulate progress while waiting for response
+                    const progressInterval = setInterval(() => {
+                      setExportProgress(prev => {
+                        if (prev >= 90) {
+                          clearInterval(progressInterval)
+                          return 90
+                        }
+                        return prev + 10
+                      })
+                    }, 500)
+
                     const response = await fetch('/api/cv/export/docx')
+
+                    clearInterval(progressInterval)
+
                     if (response.ok) {
+                      setExportProgress(100)
                       const blob = await response.blob()
                       const url = window.URL.createObjectURL(blob)
                       const a = document.createElement('a')
@@ -544,11 +564,25 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                       a.click()
                       window.URL.revokeObjectURL(url)
                       document.body.removeChild(a)
+
+                      // Wait a bit to show 100% then close
+                      setTimeout(() => {
+                        setIsExporting(false)
+                        setExportProgress(0)
+                        // Refresh to update credits
+                        loadDashboardData()
+                      }, 1000)
                     } else {
-                      alert('Failed to generate CV. Please try again.')
+                      setIsExporting(false)
+                      if (response.status === 402) {
+                        alert('Insufficient credits to generate CV.')
+                      } else {
+                        alert('Failed to generate CV. Please try again.')
+                      }
                     }
                   } catch (error) {
                     console.error('Download error:', error)
+                    setIsExporting(false)
                     alert('An error occurred while downloading the CV.')
                   }
                 }}
@@ -663,6 +697,45 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           opportunityType={selectedOpportunity.type === 'internal' ? 'internal' : 'external'}
           opportunityTitle={selectedOpportunity.title}
         />
+      )}
+
+      {/* Export Progress Modal */}
+      {isExporting && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-bidaaya-dark border border-bidaaya-light/10 rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-6 relative">
+                <div className="w-16 h-16 rounded-full bg-bidaaya-accent/20 flex items-center justify-center animate-pulse">
+                  <FileText className="h-8 w-8 text-bidaaya-accent" />
+                </div>
+                {exportProgress === 100 && (
+                  <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                    <span className="text-white text-xs font-bold">✓</span>
+                  </div>
+                )}
+              </div>
+
+              <h3 className="text-xl font-bold text-white mb-2">
+                {exportProgress === 100 ? 'Download Complete!' : 'Generating your CV...'}
+              </h3>
+              <p className="text-bidaaya-light/60 text-sm mb-6">
+                {exportProgress === 100
+                  ? 'Your custom CV is ready.'
+                  : 'Formatting specific to standard guidelines...'}
+              </p>
+
+              <div className="w-full bg-bidaaya-light/10 rounded-full h-2 mb-2 overflow-hidden">
+                <div
+                  className="bg-bidaaya-accent h-full transition-all duration-300 ease-out"
+                  style={{ width: `${exportProgress}%` }}
+                />
+              </div>
+              <div className="w-full flex justify-between text-xs text-bidaaya-light/40">
+                <span>{exportProgress}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

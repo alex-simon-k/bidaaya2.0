@@ -21,6 +21,7 @@ import {
     TabStopType,
     TabStopPosition,
     HeadingLevel,
+    TableLayoutType,
 } from 'docx'
 import { GeneratedCV } from './cv-generator'
 import { TextFormatter } from './text-formatter'
@@ -152,6 +153,7 @@ export class CVWordExportV4 {
         // We will place all the content inside a 1-column table that has a RIGHT BORDER.
 
         const mainContainerTable = new Table({
+            layout: TableLayoutType.FIXED,
             width: { size: 100, type: WidthType.PERCENTAGE },
             borders: {
                 top: { style: BorderStyle.NONE, size: 0 },
@@ -165,6 +167,7 @@ export class CVWordExportV4 {
                 new TableRow({
                     children: [
                         new TableCell({
+                            width: { size: 100, type: WidthType.PERCENTAGE },
                             children: sections,
                             margins: {
                                 right: convertInchesToTwip(0.2), // "Text ends just before the vertical line"
