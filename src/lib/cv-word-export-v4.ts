@@ -152,37 +152,6 @@ export class CVWordExportV4 {
         // To achieve the "Right edge... thin vertical grey line" effect:
         // We will place all the content inside a 1-column table that has a RIGHT BORDER.
 
-        const mainContainerTable = new Table({
-            width: { size: 10000, type: WidthType.DXA }, // Fixed width ~7 inches (10000 twips)
-            borders: {
-                top: { style: BorderStyle.NONE, size: 0 },
-                bottom: { style: BorderStyle.NONE, size: 0 },
-                left: { style: BorderStyle.NONE, size: 0 },
-                right: { style: BorderStyle.NONE, size: 0 }, // REMOVED VERTICAL LINE
-                insideHorizontal: { style: BorderStyle.NONE, size: 0 },
-                insideVertical: { style: BorderStyle.NONE, size: 0 },
-            },
-            rows: [
-                new TableRow({
-                    children: [
-                        new TableCell({
-                            width: { size: 10000, type: WidthType.DXA },
-                            children: sections,
-                            margins: {
-                                right: convertInchesToTwip(0.2), // "Text ends just before the vertical line"
-                            },
-                            borders: {
-                                top: { style: BorderStyle.NONE },
-                                bottom: { style: BorderStyle.NONE },
-                                left: { style: BorderStyle.NONE },
-                                right: { style: BorderStyle.NONE }, // The table handles the border
-                            },
-                        })
-                    ]
-                })
-            ]
-        })
-
         return new Document({
             styles: {
                 default: {
@@ -211,7 +180,7 @@ export class CVWordExportV4 {
                         },
                     },
                 },
-                children: [mainContainerTable],
+                children: sections,
             }],
         })
     }
@@ -254,6 +223,7 @@ export class CVWordExportV4 {
     ): Table {
         // We use a nested table for the row to ensure perfect alignment
         return new Table({
+            layout: TableLayoutType.FIXED,
             width: { size: 10000, type: WidthType.DXA },
             borders: {
                 top: { style: BorderStyle.NONE, size: 0 },
