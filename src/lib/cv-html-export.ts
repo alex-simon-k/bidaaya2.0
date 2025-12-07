@@ -125,7 +125,7 @@ export class CVHTMLExport {
     // 4. Extracurriculars
     if (cv.achievements && cv.achievements.length > 0) {
       content += `<h2>EXTRACURRICULARS</h2>`
-      cv.achievements.forEach(ach => {
+      cv.achievements.forEach((ach: any) => {
         content += `
           <table>
             <tr>
