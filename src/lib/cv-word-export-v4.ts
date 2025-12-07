@@ -22,6 +22,7 @@ import {
     TabStopPosition,
     HeadingLevel,
     TableLayoutType,
+    Tab,
 } from 'docx'
 import { GeneratedCV } from './cv-generator'
 import { TextFormatter } from './text-formatter'
@@ -226,7 +227,7 @@ export class CVWordExportV4 {
             tabStops: [
                 {
                     type: TabStopType.RIGHT,
-                    position: 10000, // Align to right margin (~7 inches)
+                    position: TabStopPosition.MAX, // Align to right margin automatically
                 },
             ],
             children: [
@@ -237,11 +238,7 @@ export class CVWordExportV4 {
                     font: FONT_FAMILY,
                     size: FONT_SIZE_BODY,
                 }),
-                new TextRun({
-                    text: "\t", // Tab character
-                    font: FONT_FAMILY,
-                    size: FONT_SIZE_BODY,
-                }),
+                new Tab(),
                 new TextRun({
                     text: rightText,
                     bold: styles.rightBold,
