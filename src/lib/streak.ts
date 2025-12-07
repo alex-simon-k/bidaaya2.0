@@ -21,8 +21,61 @@ type StreakErrorResult = {
 }
 
 /**
+ * Validate and get the ACTUAL streak (resets to 0 if broken)
+ * Checks if the streak is still valid - if yesterday was missed, streak breaks and resets to 0
+ */
+export async function getActualStreak(prisma: PrismaClient, userId: string): Promise<number> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      currentStreak: true,
+      lastStreakDate: true,
+    },
+  })
+
+  if (!user || !user.lastStreakDate) {
+    return 0
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const lastStreakDate = new Date(user.lastStreakDate)
+  lastStreakDate.setHours(0, 0, 0, 0)
+
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  // If last application was today, streak is still valid
+  if (lastStreakDate.getTime() === today.getTime()) {
+    return user.currentStreak || 0
+  }
+
+  // If last application was yesterday, streak is still valid (they maintained it yesterday)
+  if (lastStreakDate.getTime() === yesterday.getTime()) {
+    return user.currentStreak || 0
+  }
+
+  // If last application was before yesterday, there's a gap - streak is broken, reset to 0
+  // This means they didn't apply yesterday, so the streak breaks
+  if (lastStreakDate.getTime() < yesterday.getTime()) {
+    // Update the database to reflect the broken streak
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        currentStreak: 0,
+      },
+    })
+    return 0
+  }
+
+  return user.currentStreak || 0
+}
+
+/**
  * Get the VISUAL streak for display (decays gradually instead of resetting immediately)
  * This provides a "momentum" effect where missing days doesn't instantly kill all progress
+ * Used for the visibility meter - separate from actual streak
  */
 export async function getVisualStreak(prisma: PrismaClient, userId: string): Promise<number> {
   const user = await prisma.user.findUnique({
@@ -129,25 +182,17 @@ export async function updateUserStreak(prisma: PrismaClient, userId: string) {
   yesterday.setDate(yesterday.getDate() - 1)
 
   if (!lastStreakDate || lastStreakDate.getTime() === yesterday.getTime()) {
-    // Continue streak
+    // Continue streak - they applied yesterday, so increment
     newStreak += 1
   } else if (lastStreakDate.getTime() < yesterday.getTime()) {
-    // Streak broken - but apply protection if they reached 10+ days
-    const daysMissed = Math.floor((today.getTime() - lastStreakDate.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (newStreak >= 10) {
-      // PROTECTED: Decay gradually instead of resetting
-      // Each day missed: halve the streak
-      // Day 1: 10 → 5
-      // Day 2: 5 → 2
-      // Day 3: 2 → 1
-      // Day 4+: 1 (reset)
-      newStreak = Math.max(1, Math.floor(newStreak * Math.pow(0.5, daysMissed)))
-      console.log(`🛡️ Streak protection applied: ${user.currentStreak} → ${newStreak} (missed ${daysMissed} days)`)
-    } else {
-      // No protection - reset to 1
-      newStreak = 1
-    }
+    // Streak was broken (yesterday was missed), but they're applying today
+    // Start a new streak at 1 (not 0, since they're applying today)
+    newStreak = 1
+    console.log(`❌ Streak was broken (missed yesterday), starting new streak: ${user.currentStreak} → 1`)
+  } else if (lastStreakDate.getTime() === today.getTime()) {
+    // They already applied today - don't increment again
+    // This shouldn't normally happen, but handle it gracefully
+    newStreak = user.currentStreak || 0
   }
 
   const newLongest = Math.max(newStreak, user.longestStreak || 0)

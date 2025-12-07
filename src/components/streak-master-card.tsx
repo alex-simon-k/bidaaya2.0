@@ -28,7 +28,8 @@ interface StreakMasterCardProps {
 
 export function StreakMasterCard({ className }: StreakMasterCardProps) {
   const { data: session } = useSession()
-  const [currentStreak, setCurrentStreak] = useState(0)
+  const [currentStreak, setCurrentStreak] = useState(0) // Actual streak (resets to 0 when broken)
+  const [visualStreak, setVisualStreak] = useState(0) // Visual streak for visibility meter (decays gradually)
   const [maxStreak, setMaxStreak] = useState(0)
   const [visibilityMultiplier, setVisibilityMultiplier] = useState(1.0)
   const [tier, setTier] = useState<VisibilityTier>(VisibilityTier.INVISIBLE)
@@ -58,7 +59,8 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
       if (picksResponse.ok) {
         const picksData = await picksResponse.json()
         setDailyPicks(picksData.dailyPicks || [])
-        setCurrentStreak(picksData.streak?.actual || 0)
+        setCurrentStreak(picksData.streak?.actual || 0) // Actual streak (resets to 0 when broken)
+        setVisualStreak(picksData.streak?.current || 0) // Visual streak for visibility meter (decays gradually)
         setMaxStreak(picksData.streak?.longest || 0)
       }
 
@@ -83,21 +85,22 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
     }
   }
 
-  // Calculate Visibility Multiplier based on Streak
+  // Calculate Visibility Multiplier based on Visual Streak (decays gradually)
+  // The visibility meter uses visual streak, not actual streak
   useEffect(() => {
-    // Formula: Base 1.0x + (Streak * 0.15)
+    // Formula: Base 1.0x + (Visual Streak * 0.15)
     // Capped at 5.0x for realism
-    const rawMultiplier = 1.0 + (currentStreak * 0.15)
+    const rawMultiplier = 1.0 + (visualStreak * 0.15)
     const multiplier = Math.min(Math.round(rawMultiplier * 10) / 10, 5.0)
     
     let newTier = VisibilityTier.INVISIBLE
-    if (currentStreak >= 20) newTier = VisibilityTier.TOP_TALENT
-    else if (currentStreak >= 10) newTier = VisibilityTier.RISING_STAR
-    else if (currentStreak >= 3) newTier = VisibilityTier.VISIBLE
+    if (visualStreak >= 20) newTier = VisibilityTier.TOP_TALENT
+    else if (visualStreak >= 10) newTier = VisibilityTier.RISING_STAR
+    else if (visualStreak >= 3) newTier = VisibilityTier.VISIBLE
 
     setVisibilityMultiplier(multiplier)
     setTier(newTier)
-  }, [currentStreak])
+  }, [visualStreak])
 
   const handleApply = async (pick: DailyPick) => {
     // Check if Phase II is completed
