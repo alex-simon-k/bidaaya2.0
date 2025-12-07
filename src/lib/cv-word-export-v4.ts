@@ -210,7 +210,8 @@ export class CVWordExportV4 {
         ]
     }
 
-    // Helper: Create 2-Column Row (Left 75%, Right 25%)
+    // Helper: Create 2-Column Row (Left | Right) using Tab Stops
+    // This replaces the Table approach to guarantee no vertical crushing.
     private static createEntryRow(
         leftText: string,
         rightText: string,
@@ -220,62 +221,36 @@ export class CVWordExportV4 {
             rightBold?: boolean,
             rightItalic?: boolean
         }
-    ): Table {
-        // We use a nested table for the row to ensure perfect alignment
-        return new Table({
-            layout: TableLayoutType.FIXED,
-            width: { size: 10000, type: WidthType.DXA },
-            borders: {
-                top: { style: BorderStyle.NONE, size: 0 },
-                bottom: { style: BorderStyle.NONE, size: 0 },
-                left: { style: BorderStyle.NONE, size: 0 },
-                right: { style: BorderStyle.NONE, size: 0 },
-                insideHorizontal: { style: BorderStyle.NONE, size: 0 },
-                insideVertical: { style: BorderStyle.NONE, size: 0 },
-            },
-            rows: [
-                new TableRow({
-                    children: [
-                        // Left Column (~75%)
-                        new TableCell({
-                            width: { size: 7500, type: WidthType.DXA },
-                            children: [
-                                new Paragraph({
-                                    children: [
-                                        new TextRun({
-                                            text: leftText,
-                                            bold: styles.leftBold,
-                                            italics: styles.leftItalic,
-                                            font: FONT_FAMILY,
-                                            size: FONT_SIZE_BODY,
-                                        })
-                                    ],
-                                    spacing: { after: 0 },
-                                })
-                            ],
-                        }),
-                        // Right Column (~25%) - Right Aligned
-                        new TableCell({
-                            width: { size: 2500, type: WidthType.DXA },
-                            children: [
-                                new Paragraph({
-                                    children: [
-                                        new TextRun({
-                                            text: rightText,
-                                            bold: styles.rightBold,
-                                            italics: styles.rightItalic,
-                                            font: FONT_FAMILY,
-                                            size: FONT_SIZE_BODY,
-                                        })
-                                    ],
-                                    alignment: AlignmentType.RIGHT,
-                                    spacing: { after: 0 },
-                                })
-                            ],
-                        })
-                    ]
+    ): Paragraph {
+        return new Paragraph({
+            tabStops: [
+                {
+                    type: TabStopType.RIGHT,
+                    position: 10000, // Align to right margin (~7 inches)
+                },
+            ],
+            children: [
+                new TextRun({
+                    text: leftText,
+                    bold: styles.leftBold,
+                    italics: styles.leftItalic,
+                    font: FONT_FAMILY,
+                    size: FONT_SIZE_BODY,
+                }),
+                new TextRun({
+                    text: "\t", // Tab character
+                    font: FONT_FAMILY,
+                    size: FONT_SIZE_BODY,
+                }),
+                new TextRun({
+                    text: rightText,
+                    bold: styles.rightBold,
+                    italics: styles.rightItalic,
+                    font: FONT_FAMILY,
+                    size: FONT_SIZE_BODY,
                 })
-            ]
+            ],
+            spacing: { after: 0 },
         })
     }
 
