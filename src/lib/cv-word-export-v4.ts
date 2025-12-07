@@ -153,7 +153,6 @@ export class CVWordExportV4 {
         // We will place all the content inside a 1-column table that has a RIGHT BORDER.
 
         const mainContainerTable = new Table({
-            layout: TableLayoutType.FIXED,
             width: { size: 5000, type: WidthType.PERCENTAGE }, // 100% = 5000 units (fiftieths of a percent)
             borders: {
                 top: { style: BorderStyle.NONE, size: 0 },
