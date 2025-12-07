@@ -76,6 +76,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const [agentExpanded, setAgentExpanded] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const [showRecommendations, setShowRecommendations] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -565,11 +566,10 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                       window.URL.revokeObjectURL(url)
                       document.body.removeChild(a)
 
-                      // Wait a bit to show 100% then close
+                      // Wait a bit to show 100% then show recommendations
                       setTimeout(() => {
-                        setIsExporting(false)
-                        setExportProgress(0)
-                        // Refresh to update credits
+                        setShowRecommendations(true)
+                        // Refresh to update credits in background
                         loadDashboardData()
                       }, 1000)
                     } else {
@@ -703,37 +703,87 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       {isExporting && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-bidaaya-dark border border-bidaaya-light/10 rounded-2xl p-8 max-w-sm w-full shadow-2xl">
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-6 relative">
-                <div className="w-16 h-16 rounded-full bg-bidaaya-accent/20 flex items-center justify-center animate-pulse">
-                  <FileText className="h-8 w-8 text-bidaaya-accent" />
-                </div>
-                {exportProgress === 100 && (
-                  <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
-                    <span className="text-white text-xs font-bold">✓</span>
+            {!showRecommendations ? (
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-6 relative">
+                  <div className="w-16 h-16 rounded-full bg-bidaaya-accent/20 flex items-center justify-center animate-pulse">
+                    <FileText className="h-8 w-8 text-bidaaya-accent" />
                   </div>
-                )}
-              </div>
+                  {exportProgress === 100 && (
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                      <span className="text-white text-xs font-bold">✓</span>
+                    </div>
+                  )}
+                </div>
 
-              <h3 className="text-xl font-bold text-white mb-2">
-                {exportProgress === 100 ? 'Download Complete!' : 'Generating your CV...'}
-              </h3>
-              <p className="text-bidaaya-light/60 text-sm mb-6">
-                {exportProgress === 100
-                  ? 'Your custom CV is ready.'
-                  : 'Formatting specific to standard guidelines...'}
-              </p>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  {exportProgress === 100 ? 'Download Complete!' : 'Generating your CV...'}
+                </h3>
+                <p className="text-bidaaya-light/60 text-sm mb-6">
+                  {exportProgress === 100
+                    ? 'Your custom CV is ready.'
+                    : 'Formatting specific to standard guidelines...'}
+                </p>
 
-              <div className="w-full bg-bidaaya-light/10 rounded-full h-2 mb-2 overflow-hidden">
-                <div
-                  className="bg-bidaaya-accent h-full transition-all duration-300 ease-out"
-                  style={{ width: `${exportProgress}%` }}
-                />
+                <div className="w-full bg-bidaaya-light/10 rounded-full h-2 mb-2 overflow-hidden">
+                  <div
+                    className="bg-bidaaya-accent h-full transition-all duration-300 ease-out"
+                    style={{ width: `${exportProgress}%` }}
+                  />
+                </div>
+                <div className="w-full flex justify-between text-xs text-bidaaya-light/40">
+                  <span>{exportProgress}%</span>
+                </div>
               </div>
-              <div className="w-full flex justify-between text-xs text-bidaaya-light/40">
-                <span>{exportProgress}%</span>
+            ) : (
+              <div className="flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+                  <Sparkles className="h-8 w-8 text-green-500" />
+                </div>
+
+                <h3 className="text-xl font-bold text-white mb-2">Success!</h3>
+                <p className="text-bidaaya-light/60 text-sm mb-6">
+                  We recommend opening your CV with:
+                </p>
+
+                <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                  {/* Google Drive/Docs Recommendation */}
+                  <div className="bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-colors cursor-default group">
+                    <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center p-2 group-hover:scale-110 transition-transform">
+                      <img
+                        src="/icons/google-docs.png"
+                        alt="Google Docs"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-bidaaya-light">Google Docs</span>
+                  </div>
+
+                  {/* Microsoft Word Recommendation */}
+                  <div className="bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-colors cursor-default group">
+                    <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center p-2 group-hover:scale-110 transition-transform">
+                      <img
+                        src="/icons/word.png"
+                        alt="Microsoft Word"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-bidaaya-light">Microsoft Word</span>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    setIsExporting(false)
+                    setExportProgress(0)
+                    setShowRecommendations(false)
+                  }}
+                  className="w-full bg-white text-black hover:bg-white/90"
+                >
+                  Done
+                </Button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
