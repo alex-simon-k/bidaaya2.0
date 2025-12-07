@@ -227,7 +227,7 @@ export class CVWordExportV4 {
             tabStops: [
                 {
                     type: TabStopType.RIGHT,
-                    position: TabStopPosition.MAX, // Align to right margin automatically
+                    position: 10000, // Align to right margin (~7 inches)
                 },
             ],
             children: [
@@ -238,7 +238,9 @@ export class CVWordExportV4 {
                     font: FONT_FAMILY,
                     size: FONT_SIZE_BODY,
                 }),
-                new Tab(),
+                new TextRun({
+                    children: [new Tab()],
+                }),
                 new TextRun({
                     text: rightText,
                     bold: styles.rightBold,
