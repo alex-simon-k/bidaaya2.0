@@ -147,9 +147,7 @@ export async function POST(request: NextRequest) {
 
     // Generate filename
     const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
-    const customPart = cv.customizedFor !== 'General Purpose' ? `_${cv.customizedFor.replace(/[^a-z0-9]/gi, '_')}` : ''
-    const filename = `CV_${sanitizedName}${customPart}.docx`
-
+    const filename = `CV_${sanitizedName}_Custom.docx`
     console.log('✅ Word document generated:', filename)
 
     // Return as downloadable file

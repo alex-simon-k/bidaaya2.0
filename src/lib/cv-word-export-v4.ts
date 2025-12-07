@@ -153,7 +153,7 @@ export class CVWordExportV4 {
         // We will place all the content inside a 1-column table that has a RIGHT BORDER.
 
         const mainContainerTable = new Table({
-            width: { size: 5000, type: WidthType.PERCENTAGE }, // 100% = 5000 units (fiftieths of a percent)
+            width: { size: 10000, type: WidthType.DXA }, // Fixed width ~7 inches (10000 twips)
             borders: {
                 top: { style: BorderStyle.NONE, size: 0 },
                 bottom: { style: BorderStyle.NONE, size: 0 },
@@ -166,7 +166,7 @@ export class CVWordExportV4 {
                 new TableRow({
                     children: [
                         new TableCell({
-                            width: { size: 5000, type: WidthType.PERCENTAGE },
+                            width: { size: 10000, type: WidthType.DXA },
                             children: sections,
                             margins: {
                                 right: convertInchesToTwip(0.2), // "Text ends just before the vertical line"
@@ -254,7 +254,7 @@ export class CVWordExportV4 {
     ): Table {
         // We use a nested table for the row to ensure perfect alignment
         return new Table({
-            width: { size: 5000, type: WidthType.PERCENTAGE },
+            width: { size: 10000, type: WidthType.DXA },
             borders: {
                 top: { style: BorderStyle.NONE, size: 0 },
                 bottom: { style: BorderStyle.NONE, size: 0 },
@@ -268,7 +268,7 @@ export class CVWordExportV4 {
                     children: [
                         // Left Column (~75%)
                         new TableCell({
-                            width: { size: 3750, type: WidthType.PERCENTAGE },
+                            width: { size: 7500, type: WidthType.DXA },
                             children: [
                                 new Paragraph({
                                     children: [
@@ -286,7 +286,7 @@ export class CVWordExportV4 {
                         }),
                         // Right Column (~25%) - Right Aligned
                         new TableCell({
-                            width: { size: 1250, type: WidthType.PERCENTAGE },
+                            width: { size: 2500, type: WidthType.DXA },
                             children: [
                                 new Paragraph({
                                     children: [
