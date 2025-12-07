@@ -84,7 +84,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
     try {
       // Add cache busting timestamp to force fresh data
       const timestamp = Date.now();
-      
+
       // Load opportunities - USE SIMPLIFIED API
       const oppResponse = await fetch(`/api/opportunities/dashboard-simple?t=${timestamp}`, {
         cache: 'no-store' // Force no caching
@@ -114,7 +114,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
         const prefsData = await prefsResponse.json();
         setAgentActive(prefsData.preferences?.agentActive || false);
       }
-      
+
       console.log('✅ Dashboard refreshed successfully');
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -133,14 +133,14 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Close the modal
         setDetailModalOpen(false);
         setSelectedOpportunity(null);
-        
+
         // Refresh dashboard to get updated data
         await loadDashboardData();
-        
+
         // Show success message
         alert(data.message || 'Opportunity unlocked! You can now view full details and apply.');
       } else {
@@ -210,28 +210,28 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
       } else {
         // For internal opportunities, use generic tracking
         response = await fetch('/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          opportunityTitle: opportunity.title,
-          opportunityCompany: opportunity.company,
-          opportunityUrl: opportunity.applicationUrl,
-          opportunityLocation: opportunity.location,
-          notes: `Match score: ${opportunity.matchScore || 0}%`,
-        }),
-      });
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            opportunityTitle: opportunity.title,
+            opportunityCompany: opportunity.company,
+            opportunityUrl: opportunity.applicationUrl,
+            opportunityLocation: opportunity.location,
+            notes: `Match score: ${opportunity.matchScore || 0}%`,
+          }),
+        });
       }
 
       if (response.ok) {
         setAppliedOpportunities(prev => new Set(prev).add(opportunityId));
-        
+
         // Close modal if it's open
         setDetailModalOpen(false);
         setSelectedOpportunity(null);
-        
+
         // Refresh dashboard to show next early access opportunity
         await loadDashboardData();
-        
+
         alert('Application tracked! View it in My Applications.');
       } else {
         const data = await response.json();
@@ -242,7 +242,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           setSelectedOpportunity(null);
           await loadDashboardData();
         } else {
-        alert(data.error || 'Failed to mark as applied');
+          alert(data.error || 'Failed to mark as applied');
         }
       }
     } catch (error) {
@@ -271,14 +271,14 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
   const earlyAccessOpportunities = opportunities.filter(opp => opp.type === 'early_access');
   const bidaayaOpportunities = opportunities.filter(opp => opp.type === 'internal');
   const externalOpportunities = opportunities.filter(opp => opp.type === 'external');
-  
+
   console.log(`📊 Frontend Display: ${earlyAccessOpportunities.length} early access, ${bidaayaOpportunities.length} internal, ${externalOpportunities.length} external`);
 
   return (
     <div className="min-h-screen bg-[#0B0F1A]">
       {/* Sidebar Overlay */}
       {showSidebar && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-40"
           onClick={() => setShowSidebar(false)}
         />
@@ -294,9 +294,9 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg overflow-hidden">
-                <img 
-                  src="/android-chrome-192x192.png" 
-                  alt="Bidaaya Logo" 
+                <img
+                  src="/android-chrome-192x192.png"
+                  alt="Bidaaya Logo"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -325,19 +325,19 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1">
-            <button 
+            <button
               onClick={() => { window.location.href = '/dashboard'; setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5" />
-              <span className="font-medium">Dashboard</span>
+                <span className="font-medium">Dashboard</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
-            <button 
-              onClick={() => { 
+            <button
+              onClick={() => {
                 alert('🔒 Companies feature coming soon! Send personalized proposals to Bidaaya partner companies using credits.');
               }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/10 transition-colors"
@@ -350,7 +350,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
-            <button 
+            <button
               onClick={() => { window.location.href = '/dashboard/profile'; setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
@@ -361,8 +361,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
-            <button 
-              onClick={() => { 
+            <button
+              onClick={() => {
                 alert('🔒 Jobless Meter feature coming soon! Compare your streaks and scores with friends, see who\'s leading, and stay motivated together.');
               }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light/60 hover:bg-bidaaya-light/10 transition-colors"
@@ -375,7 +375,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
-            <button 
+            <button
               onClick={() => { window.location.href = '/dashboard/applications'; setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
@@ -386,8 +386,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
-            <button 
-              onClick={() => { 
+            <button
+              onClick={() => {
                 setShowSidebar(false)
                 alert('🔒 My CVs feature is currently locked. This feature will be available soon.')
               }}
@@ -401,7 +401,7 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
-            <button 
+            <button
               onClick={() => { window.location.href = '/student/subscription'; setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
@@ -412,12 +412,12 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
             </button>
 
-            <button 
+            <button
               onClick={() => { window.location.href = '/student/settings'; setShowSidebar(false); }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-bidaaya-light hover:bg-bidaaya-light/10 transition-colors"
             >
               <div className="flex items-center gap-3">
-              <Settings className="h-5 w-5" />
+                <Settings className="h-5 w-5" />
                 <span className="font-medium">Settings & Credits</span>
               </div>
               <ChevronRight className="h-4 w-4 text-bidaaya-light/40" />
@@ -441,13 +441,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 </p>
               </div>
             </div>
-          <button
-            onClick={() => window.location.href = '/api/auth/signout'}
+            <button
+              onClick={() => window.location.href = '/api/auth/signout'}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-bidaaya-light/80 hover:bg-bidaaya-light/10 transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
+            >
+              <LogOut className="h-5 w-5" />
               <span className="font-medium">Sign out</span>
-          </button>
+            </button>
           </div>
         </div>
       </div>
@@ -530,12 +530,32 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                disabled
-                className="bg-gradient-to-br from-bidaaya-accent/10 to-purple-500/10 border border-bidaaya-accent/20 rounded-xl p-3 opacity-60 cursor-not-allowed transition-all duration-300 group"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/cv/export/docx')
+                    if (response.ok) {
+                      const blob = await response.blob()
+                      const url = window.URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      // Use a generic name or fetch user name if available (session is available in scope)
+                      a.download = `CV_Bidaaya.docx`
+                      document.body.appendChild(a)
+                      a.click()
+                      window.URL.revokeObjectURL(url)
+                      document.body.removeChild(a)
+                    } else {
+                      alert('Failed to generate CV. Please try again.')
+                    }
+                  } catch (error) {
+                    console.error('Download error:', error)
+                    alert('An error occurred while downloading the CV.')
+                  }
+                }}
+                className="bg-gradient-to-br from-bidaaya-accent/10 to-purple-500/10 border border-bidaaya-accent/20 rounded-xl p-3 hover:bg-bidaaya-accent/20 transition-all duration-300 group cursor-pointer"
               >
-                <FileText className="h-6 w-6 text-bidaaya-accent/60 mb-2 transition-transform" />
-                <h3 className="text-xs font-semibold text-bidaaya-light/60">Build Custom CV</h3>
-                <span className="text-[10px] text-bidaaya-light/40 mt-1">Coming Soon</span>
+                <FileText className="h-6 w-6 text-bidaaya-accent mb-2 group-hover:scale-110 transition-transform" />
+                <h3 className="text-xs font-semibold text-bidaaya-light">Build Custom CV</h3>
               </motion.button>
 
               <motion.button
@@ -556,8 +576,8 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <img 
-                  src="/icons/top-matches.svg" 
+                <img
+                  src="/icons/top-matches.svg"
                   alt="Other Opportunities"
                   className="h-6 w-6 sm:h-7 sm:w-7 object-contain"
                 />
@@ -590,11 +610,11 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                     onClick={() => handleOpportunityClick(opp)}
                   />
                 ))}
-              
+
               {/* Fill empty slots */}
               {[...bidaayaOpportunities, ...externalOpportunities].length < (agentExpanded ? 4 : 6) && (
-                Array.from({ 
-                  length: (agentExpanded ? 4 : 6) - [...bidaayaOpportunities, ...externalOpportunities].length 
+                Array.from({
+                  length: (agentExpanded ? 4 : 6) - [...bidaayaOpportunities, ...externalOpportunities].length
                 }).map((_, i) => (
                   <div
                     key={`empty-${i}`}
@@ -658,8 +678,8 @@ interface OpportunityCardProps {
   userPlan?: string;
 }
 
-function OpportunityCard({ 
-  opportunity, 
+function OpportunityCard({
+  opportunity,
   isExternal = false,
   onUnlock,
   onReportMismatch,
@@ -670,7 +690,7 @@ function OpportunityCard({
   const hasPro = userPlan === 'STUDENT_PRO';
   const hasPremium = userPlan === 'STUDENT_PREMIUM';
   const hasFreeUnlocks = hasPremium && earlyAccessUnlocksRemaining > 0;
-  
+
   // STUDENT_PRO: Unlimited early access (free)
   // STUDENT_PREMIUM: 5 free unlocks/month, then credits
   // FREE: Credits only
@@ -718,7 +738,7 @@ function OpportunityCard({
             <span className="text-2xl font-bold text-bidaaya-accent">{opportunity.matchScore}%</span>
           </div>
           <div className="w-full bg-bidaaya-light/10 rounded-full h-2">
-            <div 
+            <div
               className="bg-gradient-to-r from-bidaaya-accent to-green-400 h-2 rounded-full transition-all"
               style={{ width: `${opportunity.matchScore}%` }}
             />
@@ -778,8 +798,8 @@ function OpportunityCard({
                 <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
               {isExternal && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   disabled
                   className="border-bidaaya-light/10 text-bidaaya-light/40 hover:bg-bidaaya-light/5 cursor-not-allowed opacity-60"
                 >
