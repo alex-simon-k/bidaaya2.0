@@ -1,0 +1,13 @@
+To set up the LinkedIn cookie for LOCAL use:
+
+1. Create a .env file in the project root:
+   nano .env
+   (or use any text editor)
+
+2. Add this line:
+   LI_AT_COOKIE=your_cookie_value_here
+
+3. Save and run:
+   python3 scripts/linkedin-uae-internship-scraper.py --test
+
+The .env file is already in .gitignore, so it won't be committed.

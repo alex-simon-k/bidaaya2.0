@@ -9,6 +9,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { CVGenerator, GeneratedCV } from '@/lib/cv-generator'
 import { CVWordExportV3 } from '@/lib/cv-word-export-v3-template'
+import { CVWordExportV4 } from '@/lib/cv-word-export-v4'
 import { Packer } from 'docx'
 import { PrismaClient } from '@prisma/client'
 
@@ -25,7 +26,7 @@ interface ExportRequest {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Generate CV (generic, custom, or from history)
     let cv: GeneratedCV | null = null
-    
+
     // 1. Try fetching from history if ID provided
     if (generatedCvId) {
       try {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
         const record = await prisma.generatedCV.findUnique({
           where: { id: generatedCvId },
         })
-        
+
         if (record && record.userId === userId) {
           cv = record.cvData as unknown as GeneratedCV
           console.log('✅ Using saved GeneratedCV data:', generatedCvId)
@@ -137,8 +138,8 @@ export async function POST(request: NextRequest) {
 
     console.log('📝 Generating Word document...')
 
-    // Generate Word document using V3 (simple, reliable approach)
-    const doc = await CVWordExportV3.generateWordDocument(cv)
+    // Generate Word document using V4 (Standard Guidelines)
+    const doc = await CVWordExportV4.generateWordDocument(cv)
 
     // Convert to buffer
     const buffer = await Packer.toBuffer(doc)
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -189,8 +190,8 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Generate Word document using V3
-    const doc = await CVWordExportV3.generateWordDocument(cv)
+    // Generate Word document using V4
+    const doc = await CVWordExportV4.generateWordDocument(cv)
     const buffer = await Packer.toBuffer(doc)
     const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
     const filename = `CV_${sanitizedName}.docx`
