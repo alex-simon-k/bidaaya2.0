@@ -140,23 +140,24 @@ export async function POST(request: NextRequest) {
 
     console.log('📝 Generating Word document...')
 
-    // Generate HTML -> DOCX
-    const docBuffer = await CVHTMLExport.generateWordDocument(cv)
+    // Generate Word document using V4 (Programmatic with fixed DXA widths)
+    const doc = await CVWordExportV4.generateWordDocument(cv)
+    const buffer = await Packer.toBuffer(doc)
 
     // Generate filename
     const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
     const customPart = cv.customizedFor !== 'General Purpose' ? `_${cv.customizedFor.replace(/[^a-z0-9]/gi, '_')}` : ''
     const filename = `CV_${sanitizedName}${customPart}.docx`
 
-    console.log('✅ Word document generated:', filename)
+    console.log('✅ Word document generated (V4 DXA):', filename)
 
     // Return as downloadable file
-    return new NextResponse(docBuffer, {
+    return new NextResponse(buffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': docBuffer.length.toString(),
+        'Content-Length': buffer.length.toString(),
       },
     })
 
@@ -226,17 +227,18 @@ export async function GET(request: NextRequest) {
       })
     ])
 
-    // Generate HTML -> DOCX
-    const docBuffer = await CVHTMLExport.generateWordDocument(cv)
+    // Generate Word document using V4
+    const doc = await CVWordExportV4.generateWordDocument(cv)
+    const buffer = await Packer.toBuffer(doc)
     const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
     const filename = `CV_${sanitizedName}.docx`
 
-    return new NextResponse(docBuffer, {
+    return new NextResponse(buffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': docBuffer.length.toString(),
+        'Content-Length': buffer.length.toString(),
       },
     })
 

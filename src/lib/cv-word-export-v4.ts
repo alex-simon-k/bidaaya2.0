@@ -158,7 +158,7 @@ export class CVWordExportV4 {
                 top: { style: BorderStyle.NONE, size: 0 },
                 bottom: { style: BorderStyle.NONE, size: 0 },
                 left: { style: BorderStyle.NONE, size: 0 },
-                right: { style: BorderStyle.SINGLE, size: 6, color: COLOR_GREY_LINE }, // Thin grey line
+                right: { style: BorderStyle.NONE, size: 0 }, // REMOVED VERTICAL LINE
                 insideHorizontal: { style: BorderStyle.NONE, size: 0 },
                 insideVertical: { style: BorderStyle.NONE, size: 0 },
             },
