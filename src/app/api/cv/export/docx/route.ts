@@ -11,6 +11,7 @@ import { CREDIT_COSTS } from '@/lib/credits'
 import { CVGenerator, GeneratedCV } from '@/lib/cv-generator'
 import { CVWordExportV3 } from '@/lib/cv-word-export-v3-template'
 import { CVWordExportV4 } from '@/lib/cv-word-export-v4'
+import { CVHTMLExport } from '@/lib/cv-html-export'
 import { Packer } from 'docx'
 import { PrismaClient } from '@prisma/client'
 
@@ -139,24 +140,23 @@ export async function POST(request: NextRequest) {
 
     console.log('📝 Generating Word document...')
 
-    // Generate Word document using V4 (Standard Guidelines)
-    const doc = await CVWordExportV4.generateWordDocument(cv)
-
-    // Convert to buffer
-    const buffer = await Packer.toBuffer(doc)
+    // Generate HTML -> DOCX
+    const docBuffer = await CVHTMLExport.generateWordDocument(cv)
 
     // Generate filename
     const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
-    const filename = `CV_${sanitizedName}_Custom.docx`
+    const customPart = cv.customizedFor !== 'General Purpose' ? `_${cv.customizedFor.replace(/[^a-z0-9]/gi, '_')}` : ''
+    const filename = `CV_${sanitizedName}${customPart}.docx`
+
     console.log('✅ Word document generated:', filename)
 
     // Return as downloadable file
-    return new NextResponse(buffer, {
+    return new NextResponse(docBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': buffer.length.toString(),
+        'Content-Length': docBuffer.length.toString(),
       },
     })
 
@@ -226,18 +226,17 @@ export async function GET(request: NextRequest) {
       })
     ])
 
-    // Generate Word document using V4
-    const doc = await CVWordExportV4.generateWordDocument(cv)
-    const buffer = await Packer.toBuffer(doc)
+    // Generate HTML -> DOCX
+    const docBuffer = await CVHTMLExport.generateWordDocument(cv)
     const sanitizedName = cv.profile.name.replace(/[^a-z0-9]/gi, '_')
     const filename = `CV_${sanitizedName}.docx`
 
-    return new NextResponse(buffer, {
+    return new NextResponse(docBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': buffer.length.toString(),
+        'Content-Length': docBuffer.length.toString(),
       },
     })
 
