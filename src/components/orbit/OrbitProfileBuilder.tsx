@@ -385,13 +385,50 @@ export default function OrbitProfileBuilder({ onComplete, initialStep = 1 }: Orb
   };
 
   const handleAddExperience = async (item: Experience) => {
+    // Map frontend employment type to API format
+    const employmentTypeMap: Record<string, string> = {
+      'Internship': 'internship',
+      'Full-time': 'full_time',
+      'Part-time': 'part_time',
+      'Contract': 'contract',
+      'Freelance': 'freelance',
+      'Volunteer': 'volunteer'
+    };
+    
+    const mappedEmploymentType = employmentTypeMap[item.employmentType] || item.employmentType.toLowerCase().replace('-', '_');
+    
     const res = await fetch('/api/cv/experience', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
+        body: JSON.stringify({
+          title: item.jobTitle,
+          employer: item.company,
+          employmentType: mappedEmploymentType,
+          startDate: item.startDate ? item.startDate.slice(0, 7) : '', // Ensure YYYY-MM format
+          endDate: item.endDate ? item.endDate.slice(0, 7) : undefined,
+          isCurrent: item.isCurrent,
+          summary: item.description
+        })
     });
+    
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to add experience');
+    }
+    
     const json = await res.json();
-    return json.experience;
+    
+    // Map the API response back to Experience format
+    return {
+      id: json.experience.id,
+      jobTitle: json.experience.title,
+      company: json.experience.employer,
+      employmentType: json.experience.employmentType,
+      startDate: json.experience.startDate ? new Date(json.experience.startDate).toISOString().split('T')[0] : '',
+      endDate: json.experience.endDate ? new Date(json.experience.endDate).toISOString().split('T')[0] : undefined,
+      isCurrent: json.experience.isCurrent,
+      description: json.experience.summary || ''
+    };
   };
 
   const handleDeleteExperience = async (id: string) => {
