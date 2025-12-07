@@ -154,7 +154,7 @@ export class CVWordExportV4 {
 
         const mainContainerTable = new Table({
             layout: TableLayoutType.FIXED,
-            width: { size: 100, type: WidthType.PERCENTAGE },
+            width: { size: 5000, type: WidthType.PERCENTAGE }, // 100% = 5000 units (fiftieths of a percent)
             borders: {
                 top: { style: BorderStyle.NONE, size: 0 },
                 bottom: { style: BorderStyle.NONE, size: 0 },
@@ -167,7 +167,7 @@ export class CVWordExportV4 {
                 new TableRow({
                     children: [
                         new TableCell({
-                            width: { size: 100, type: WidthType.PERCENTAGE },
+                            width: { size: 5000, type: WidthType.PERCENTAGE },
                             children: sections,
                             margins: {
                                 right: convertInchesToTwip(0.2), // "Text ends just before the vertical line"
@@ -255,7 +255,7 @@ export class CVWordExportV4 {
     ): Table {
         // We use a nested table for the row to ensure perfect alignment
         return new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
+            width: { size: 5000, type: WidthType.PERCENTAGE },
             borders: {
                 top: { style: BorderStyle.NONE, size: 0 },
                 bottom: { style: BorderStyle.NONE, size: 0 },
@@ -269,7 +269,7 @@ export class CVWordExportV4 {
                     children: [
                         // Left Column (~75%)
                         new TableCell({
-                            width: { size: 75, type: WidthType.PERCENTAGE },
+                            width: { size: 3750, type: WidthType.PERCENTAGE },
                             children: [
                                 new Paragraph({
                                     children: [
@@ -287,7 +287,7 @@ export class CVWordExportV4 {
                         }),
                         // Right Column (~25%) - Right Aligned
                         new TableCell({
-                            width: { size: 25, type: WidthType.PERCENTAGE },
+                            width: { size: 1250, type: WidthType.PERCENTAGE },
                             children: [
                                 new Paragraph({
                                     children: [
