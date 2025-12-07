@@ -32,15 +32,8 @@ export class CVHTMLExport {
     const styles = `
       body { font-family: '${FONT_FAMILY}'; font-size: 11pt; color: #000000; line-height: 1.15; margin: 0; padding: 0; }
       
-      /* Remove the right border if it was causing issues, or keep it if strictly required. 
-         The user's text doesn't explicitly show it, but the guide did. 
-         I will keep it but ensure it's clean and doesn't interfere with flow.
-         User said "This is not at all how I wanted", referring to the *result*. 
-         I'll trust the CLEAN layout from the text. 
-         Let's comment out the border-right for now to be safe, or make it very subtle.
-         Actually, the original requirement was specific. I will keep it but make sure table borders are GONE.
-      */
-      .main-container { padding-right: 15px; } 
+      /* Container - clean, no borders */
+      .main-container { width: 100%; } 
 
       /* Header */
       .header-name { text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 4px; text-transform: capitalize; }
@@ -48,37 +41,48 @@ export class CVHTMLExport {
       .header-contact span { color: #000000; }
       .header-contact a { color: #0563C1; text-decoration: underline; }
       
-      /* Section Headers */
+      /* Section Headers - The "Line" the user wants */
       h2 { 
         font-size: 11pt; 
         font-weight: bold; 
         text-transform: uppercase; 
-        border-bottom: 1px solid #000000; /* Black solid line */
+        border-bottom: 1px solid #000000;
         padding-bottom: 3px; 
         margin-top: 15px; 
         margin-bottom: 10px;
       }
       
-      /* Tables for Layout - STRICTLY NO BORDERS */
-      table { width: 100%; border-collapse: collapse; margin-bottom: 0; table-layout: fixed; border: none; }
-      td { vertical-align: top; padding: 0; border: none; }
+      /* Tables for Layout - INVISIBLE STRUCTURE only */
+      table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        border: none !important; 
+        margin-bottom: 0; 
+        table-layout: fixed; 
+        background-color: transparent;
+      }
       
+      td { 
+        vertical-align: top; 
+        padding: 0; 
+        border: none !important; 
+        background-color: transparent;
+      }
+      
+      /* Columns */
       .col-left { width: 75%; padding-right: 10px; text-align: left; }
       .col-right { width: 25%; text-align: right; white-space: nowrap; }
       
+      /* Typography */
       .entry-title { font-weight: bold; font-size: 11pt; } 
-      /* "University" is bold? text says "University" (bold implied by position?). 
-         Guide: "Organization (left, bold)". Yes. */
-         
       .entry-subtitle { font-style: italic; font-size: 11pt; }
       
       /* Bullets */
-      ul { margin: 0; padding-left: 15px; margin-top: 2px; list-style-type: disc; }
-      li { margin-bottom: 0; padding-left: 5px; }
+      ul { margin: 0; padding-left: 25px; margin-top: 2px; }
+      li { margin-bottom: 0; }
       
       .label { font-weight: bold; font-style: italic; }
       
-      /* Spacing */
       .entry-table { margin-bottom: 8px; }
     `
 
@@ -98,7 +102,7 @@ export class CVHTMLExport {
     content += `<h2>EDUCATION</h2>`
     cv.education.forEach(edu => {
       content += `
-        <table class="entry-table">
+        <table class="entry-table" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td class="col-left entry-title">${TextFormatter.formatCompanyName(edu.institution)}</td>
             <td class="col-right entry-title">${TextFormatter.formatLocation(edu.location || '')}</td>
@@ -117,7 +121,7 @@ export class CVHTMLExport {
       content += `<h2>EXPERIENCE</h2>`
       cv.experience.forEach(exp => {
         content += `
-          <table class="entry-table">
+          <table class="entry-table" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td class="col-left entry-title">${TextFormatter.formatCompanyName(exp.employer)}</td>
               <td class="col-right entry-title">${TextFormatter.formatLocation(exp.location || '')}</td>
@@ -144,7 +148,7 @@ export class CVHTMLExport {
       content += `<h2>EXTRACURRICULARS</h2>`
       cv.achievements.forEach((ach: any) => {
         content += `
-          <table class="entry-table">
+          <table class="entry-table" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td class="col-left entry-title">${TextFormatter.formatCompanyName(ach.name)}</td>
               <td class="col-right entry-title">${TextFormatter.formatLocation(ach.location || '')}</td>
