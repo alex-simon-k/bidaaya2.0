@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useMemo } from 'react';
-import { Send } from 'lucide-react';
 
 export interface DailyMetric {
   date: string; // ISO date or simple string
@@ -47,23 +46,15 @@ export function StreakCard({
   }, [data]);
 
   return (
-    <div className="w-full max-w-[26rem] bg-black rounded-[2.5rem] p-8 shadow-2xl border border-white/10 font-sans relative overflow-hidden select-none">
+    <div className="w-full max-w-[26rem] bg-black rounded-[2.5rem] p-5 shadow-2xl border border-white/10 font-sans relative overflow-hidden select-none">
       
       {/* Header */}
-      <div className="flex justify-between items-start mb-8 relative z-10">
-        <div className="flex items-start gap-4">
-          {/* Icon Badge */}
-          <div className="mt-1 p-2 bg-neutral-900 rounded-full border border-neutral-800/80">
-             <Send className="w-5 h-5 text-red-500 fill-current translate-x-[-1px] translate-y-[1px]" strokeWidth={2.5} />
-          </div>
-          
-          <div className="flex flex-col pt-1">
-            <h2 className="text-neutral-500 text-[11px] font-bold uppercase tracking-widest leading-none mb-1.5">{subtitle}</h2>
-            <h1 className="text-white text-2xl font-bold tracking-tight leading-none">{title}</h1>
-          </div>
+      <div className="flex justify-between items-center mb-4 relative z-10">
+        <div>
+          <h2 className="text-neutral-500 text-[11px] font-bold uppercase tracking-widest leading-none">{subtitle}</h2>
         </div>
         
-        <div className="text-right pt-2">
+        <div className="text-right">
            <span className="text-neutral-500 text-[10px] font-bold uppercase tracking-wide block mb-0.5">updated</span>
            <span className="text-neutral-300 text-sm font-medium">{lastUpdated}</span>
         </div>
@@ -71,7 +62,7 @@ export function StreakCard({
 
       {/* Chart Area */}
       <div className="flex flex-col gap-2 relative z-10">
-        <div className="flex justify-between items-end h-24 w-full">
+        <div className="flex justify-between items-end h-20 w-full">
           {processedData.map((day, i) => {
             return (
               <div key={i} className="flex flex-col items-center flex-1 h-full group">
