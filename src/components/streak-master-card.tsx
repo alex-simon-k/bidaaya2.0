@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Flame, Eye, Check, ChevronRight, Zap, Sparkles, Clock, Lock } from 'lucide-react'
-import { IsometricHeatmap } from './isometric-heatmap'
+import { StreakCard } from './streak-card'
+import { transformHistoryToDailyMetrics, formatLastUpdated } from '@/lib/streak-data-transform'
 import { VisibilityTier } from '@/types/streak'
 import { useSession } from 'next-auth/react'
 import { OpportunityDetailModal } from '@/components/ui/opportunity-detail-modal'
@@ -36,10 +37,16 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
   const [totalApplications, setTotalApplications] = useState(0)
   const [dailyPicks, setDailyPicks] = useState<DailyPick[]>([])
   const [history, setHistory] = useState<number[]>([])
+  const [historyLastUpdated, setHistoryLastUpdated] = useState<Date>(new Date())
   const [isLoading, setIsLoading] = useState(true)
   const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null)
   const [showCelebration, setShowCelebration] = useState(false)
   const [earlyAccessOpportunity, setEarlyAccessOpportunity] = useState<any>(null)
+
+  // Transform history data to DailyMetric format for StreakCard
+  const dailyMetrics = useMemo(() => {
+    return transformHistoryToDailyMetrics(history)
+  }, [history])
 
   // Fetch streak data and daily picks
   useEffect(() => {
@@ -68,6 +75,7 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
         const historyData = await historyResponse.json()
         setHistory(historyData.history || Array(28).fill(0))
         setTotalApplications(historyData.totalApplications || 0)
+        setHistoryLastUpdated(new Date())
       }
 
       // Fetch early access opportunity
@@ -474,20 +482,15 @@ export function StreakMasterCard({ className }: StreakMasterCardProps) {
                </div>
             </div>
 
-            {/* --- BOTTOM SECTION: 3D HEATMAP --- */}
+            {/* --- BOTTOM SECTION: STREAK CARD --- */}
             <div className="relative pt-6 border-t border-slate-800/50">
-              <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  Consistency Map
-                </span>
-                <span className="text-[10px] text-slate-600">
-                  Last 28 Days
-                </span>
-              </div>
-              
-              {/* The Heatmap Component */}
-              <div className="bg-slate-900/30 rounded-xl border border-slate-800/50 p-2">
-                <IsometricHeatmap history={history} />
+              <div className="flex justify-center">
+                <StreakCard
+                  title="Internship Apps"
+                  subtitle="Daily Tracking"
+                  data={dailyMetrics}
+                  lastUpdated={formatLastUpdated(historyLastUpdated)}
+                />
               </div>
             </div>
 
