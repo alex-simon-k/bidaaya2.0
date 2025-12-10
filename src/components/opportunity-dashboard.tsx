@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   Sparkles,
   Briefcase,
@@ -750,10 +751,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                   {/* Google Drive/Docs Recommendation */}
                   <div className="bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-colors cursor-default group">
                     <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center p-2 group-hover:scale-110 transition-transform">
-                      <img
+                      <Image
                         src="/icons/google-docs.png"
                         alt="Google Docs"
-                        className="w-full h-full object-contain"
+                        width={32}
+                        height={32}
+                        className="object-contain"
+                        unoptimized
                       />
                     </div>
                     <span className="text-xs font-medium text-bidaaya-light">Google Docs</span>
@@ -762,10 +766,13 @@ export function OpportunityDashboard({ onChatClick, onSidebarClick }: Opportunit
                   {/* Microsoft Word Recommendation */}
                   <div className="bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-colors cursor-default group">
                     <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center p-2 group-hover:scale-110 transition-transform">
-                      <img
+                      <Image
                         src="/icons/word.png"
                         alt="Microsoft Word"
-                        className="w-full h-full object-contain"
+                        width={32}
+                        height={32}
+                        className="object-contain"
+                        unoptimized
                       />
                     </div>
                     <span className="text-xs font-medium text-bidaaya-light">Microsoft Word</span>
