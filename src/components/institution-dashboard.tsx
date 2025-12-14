@@ -36,11 +36,12 @@ import { generateMockInstitutionData } from '@/lib/mock-institution-data'
 
 interface InstitutionDashboardProps {
   slug: string
+  logoUrl?: string
 }
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#84cc16']
 
-export function InstitutionDashboard({ slug }: InstitutionDashboardProps) {
+export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProps) {
   const [analytics, setAnalytics] = useState<InstitutionAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -237,11 +238,26 @@ export function InstitutionDashboard({ slug }: InstitutionDashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                {analytics.institution.type === 'university' ? (
-                  <GraduationCap className="h-8 w-8 text-bidaaya-accent" />
-                ) : (
-                  <School className="h-8 w-8 text-bidaaya-accent" />
-                )}
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={analytics.institution.name}
+                    className="h-8 w-8 object-contain"
+                    onError={(e) => {
+                      // Fallback to icon if logo fails to load
+                      e.currentTarget.style.display = 'none'
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                      if (fallback) fallback.style.display = 'block'
+                    }}
+                  />
+                ) : null}
+                <div style={{ display: logoUrl ? 'none' : 'block' }}>
+                  {analytics.institution.type === 'university' ? (
+                    <GraduationCap className="h-8 w-8 text-bidaaya-accent" />
+                  ) : (
+                    <School className="h-8 w-8 text-bidaaya-accent" />
+                  )}
+                </div>
                 <h1 className="text-3xl font-bold text-white">
                   {analytics.institution.name}
                 </h1>

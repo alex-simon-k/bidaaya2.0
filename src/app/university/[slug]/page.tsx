@@ -12,12 +12,7 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
   const decodedSlug = decodeURIComponent(params.slug)
   const { institutionInfo } = mapSlugToInstitution(decodedSlug)
 
-  // If no institution found, show error in dashboard
-  if (!institutionInfo) {
-    return <InstitutionDashboard slug={decodedSlug} />
-  }
-
-  // Get logo URL - you can customize this based on slug
+  // Get logo URL function (needed for both landing and dashboard)
   const getLogoUrl = (slug: string, institutionInfo: InstitutionInfo | null) => {
     const normalizedSlug = slug.toLowerCase().trim()
     
@@ -48,6 +43,12 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
     // Default to demo logo for any unrecognized slug
     return '/images/university-logos/demo.png'
   }
+
+  // If no institution found, show error in dashboard
+  if (!institutionInfo) {
+    return <InstitutionDashboard slug={decodedSlug} logoUrl={getLogoUrl(decodedSlug, null)} />
+  }
+
 
   // Show landing page first, then dashboard on click
   if (!showDashboard) {
