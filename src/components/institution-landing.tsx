@@ -86,7 +86,7 @@ export function InstitutionLanding({
           )}
           style={{
             minWidth: "320px",
-            minHeight: "400px",
+            minHeight: "480px",
             perspective: "1000px",
           }}
           onMouseEnter={() => setIsHovered(true)}
@@ -210,7 +210,7 @@ export function InstitutionLanding({
 
           {/* Institution Title */}
           <h3
-            className="text-2xl font-bold text-white mt-6 transition-all duration-300 text-center px-4"
+            className="text-2xl font-bold text-white mt-6 mb-2 transition-all duration-300 text-center px-4"
             style={{
               transform: isHovered ? "translateY(4px)" : "translateY(0)",
             }}
@@ -220,7 +220,7 @@ export function InstitutionLanding({
 
           {/* Institution Type Badge */}
           <span
-            className="px-4 py-1.5 mt-2 bg-bidaaya-accent/20 text-bidaaya-accent text-sm rounded-full font-medium transition-all duration-300"
+            className="px-4 py-1.5 mb-8 bg-bidaaya-accent/20 text-bidaaya-accent text-sm rounded-full font-medium transition-all duration-300"
             style={{
               opacity: isHovered ? 0.8 : 1,
             }}
@@ -228,17 +228,20 @@ export function InstitutionLanding({
             {institutionType === 'university' ? 'University' : institutionType === 'school' ? 'School' : 'Institution'}
           </span>
 
-          {/* Bottom section with hint and button */}
-          <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-3">
-            {/* Hover hint - only show when not hovered */}
+          {/* Bottom section with hint and button - positioned with more spacing */}
+          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-4">
+            {/* Hover hint - only show when not hovered, with better spacing */}
             <motion.div
-              initial={{ opacity: 0.7 }}
+              initial={{ opacity: 0 }}
               animate={{
-                opacity: isHovered ? 0 : 0.7,
-                y: isHovered ? 10 : 0,
+                opacity: isHovered ? 0 : 0.6,
+                y: isHovered ? 5 : 0,
               }}
               transition={{ duration: 0.3 }}
-              className="flex items-center gap-2 text-xs text-slate-400"
+              className="flex items-center gap-2 text-xs text-slate-400 font-medium"
+              style={{
+                pointerEvents: 'none',
+              }}
             >
               <span>Hover to preview</span>
             </motion.div>
