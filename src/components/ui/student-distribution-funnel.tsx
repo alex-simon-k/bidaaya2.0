@@ -10,11 +10,10 @@ import {
   FunnelAxis,
   FunnelAxisLabel,
   FunnelAxisLine,
-  ChartData,
 } from 'reaviz';
 
 // TypeScript interface for FunnelChart data points
-interface FunnelDataPoint extends ChartData {
+interface FunnelDataPoint {
   key: string;
   data: number;
 }

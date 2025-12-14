@@ -7,9 +7,8 @@
  */
 
 import { StudentDistributionFunnel } from './student-distribution-funnel';
-import { ChartData } from 'reaviz';
 
-interface FunnelDataPoint extends ChartData {
+interface FunnelDataPoint {
   key: string;
   data: number;
 }
