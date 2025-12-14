@@ -59,6 +59,7 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
         institutionShortName={institutionInfo.shortName}
         institutionType={institutionInfo.type}
         logoUrl={getLogoUrl(decodedSlug, institutionInfo)}
+        region={institutionInfo.region}
         onEnter={() => setShowDashboard(true)}
       />
     )

@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { InstitutionAnalytics } from '@/lib/institution-analytics'
 import { generateMockInstitutionData } from '@/lib/mock-institution-data'
+import { LocationMap } from '@/components/ui/expand-map'
 
 interface InstitutionDashboardProps {
   slug: string
@@ -40,6 +41,19 @@ interface InstitutionDashboardProps {
 }
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#84cc16']
+
+// Helper function to get coordinates for regions
+function getCoordinatesForRegion(region: string): string {
+  const coordinatesMap: Record<string, string> = {
+    'Dubai': '25.2048° N, 55.2708° E',
+    'Sharjah': '25.3573° N, 55.4033° E',
+    'Abu Dhabi': '24.4539° N, 54.3773° E',
+    'Al Ain': '24.2075° N, 55.7447° E',
+    'Ajman': '25.4052° N, 55.5136° E',
+    'UAE': '24.0000° N, 54.0000° E'
+  }
+  return coordinatesMap[region] || '24.0000° N, 54.0000° E'
+}
 
 export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProps) {
   const [analytics, setAnalytics] = useState<InstitutionAnalytics | null>(null)
@@ -265,9 +279,15 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                   {institutionTypeLabel}
                 </span>
               </div>
-              <p className="text-slate-400">
-                {analytics.institution.region} • {analytics.institution.shortName}
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="text-slate-400">
+                  {analytics.institution.region} • {analytics.institution.shortName}
+                </p>
+                <LocationMap 
+                  location={analytics.institution.region} 
+                  coordinates={getCoordinatesForRegion(analytics.institution.region)}
+                />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <button

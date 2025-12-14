@@ -4,6 +4,7 @@ import { useState, useRef, forwardRef } from 'react'
 import { motion } from 'framer-motion'
 import { GraduationCap, School, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LocationMap } from '@/components/ui/expand-map'
 
 interface InstitutionLandingProps {
   slug: string
@@ -11,7 +12,21 @@ interface InstitutionLandingProps {
   institutionShortName: string
   institutionType: 'university' | 'school' | 'mixed'
   logoUrl?: string
+  region?: string
   onEnter: () => void
+}
+
+// Helper function to get coordinates for regions
+function getCoordinatesForRegion(region: string): string {
+  const coordinatesMap: Record<string, string> = {
+    'Dubai': '25.2048° N, 55.2708° E',
+    'Sharjah': '25.3573° N, 55.4033° E',
+    'Abu Dhabi': '24.4539° N, 54.3773° E',
+    'Al Ain': '24.2075° N, 55.7447° E',
+    'Ajman': '25.4052° N, 55.5136° E',
+    'UAE': '24.0000° N, 54.0000° E'
+  }
+  return coordinatesMap[region] || '24.0000° N, 54.0000° E'
 }
 
 interface GraphPreview {
@@ -26,6 +41,7 @@ export function InstitutionLanding({
   institutionShortName,
   institutionType,
   logoUrl,
+  region = 'UAE',
   onEnter
 }: InstitutionLandingProps) {
   const [isHovered, setIsHovered] = useState(false)
@@ -234,13 +250,21 @@ export function InstitutionLanding({
 
           {/* Institution Type Badge */}
           <span
-            className="px-4 py-1.5 mb-8 bg-bidaaya-accent/20 text-bidaaya-accent text-sm rounded-full font-medium transition-all duration-300"
+            className="px-4 py-1.5 mb-4 bg-bidaaya-accent/20 text-bidaaya-accent text-sm rounded-full font-medium transition-all duration-300"
             style={{
               opacity: isHovered ? 0.8 : 1,
             }}
           >
             {institutionType === 'university' ? 'University' : institutionType === 'school' ? 'School' : 'Institution'}
           </span>
+
+          {/* Location Map */}
+          <div className="mb-6">
+            <LocationMap 
+              location={region} 
+              coordinates={getCoordinatesForRegion(region)}
+            />
+          </div>
 
           {/* Bottom section with hint and button - positioned with more spacing */}
           <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-4">
