@@ -18,7 +18,7 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
   }
 
   // Get logo URL - you can customize this based on slug
-  const getLogoUrl = (slug: string, institutionInfo: typeof institutionInfo) => {
+  const getLogoUrl = (slug: string, institutionInfo: InstitutionInfo | null) => {
     const normalizedSlug = slug.toLowerCase().trim()
     
     // Map slugs to logo paths - add your actual logo files to /public/images/university-logos/
