@@ -491,11 +491,13 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="glass-panel rounded-xl p-6 border border-slate-800 flex items-center justify-center"
+            className="w-full"
+            style={{ minHeight: '300px' }}
           >
             <LocationMap 
               location={analytics.institution.region} 
               coordinates={getCoordinatesForRegion(analytics.institution.region)}
+              className="w-full h-full"
             />
           </motion.div>
 

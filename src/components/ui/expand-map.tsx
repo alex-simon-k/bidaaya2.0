@@ -52,7 +52,7 @@ export function LocationMap({
   return (
     <motion.div
       ref={containerRef}
-      className={cn("relative cursor-pointer select-none", className)}
+      className={cn("relative cursor-pointer select-none w-full h-full min-h-[300px]", className)}
       style={{
         perspective: 1000,
       }}
@@ -62,15 +62,14 @@ export function LocationMap({
       onClick={handleClick}
     >
       <motion.div
-        className="relative overflow-hidden rounded-2xl glass-panel border border-slate-800"
+        className="relative overflow-hidden rounded-xl glass-panel border border-slate-800 w-full h-full p-6"
         style={{
           rotateX: springRotateX,
           rotateY: springRotateY,
           transformStyle: "preserve-3d",
         }}
         animate={{
-          width: isExpanded ? 360 : 240,
-          height: isExpanded ? 280 : 140,
+          scale: isExpanded ? 1.02 : 1,
         }}
         transition={{
           type: "spring",
@@ -343,7 +342,7 @@ export function LocationMap({
 
       {/* Click hint */}
       <motion.p
-        className="absolute -bottom-6 left-1/2 text-[10px] text-slate-400 whitespace-nowrap"
+        className="absolute bottom-2 left-1/2 text-[10px] text-slate-400 whitespace-nowrap"
         style={{ x: "-50%" }}
         initial={{ opacity: 0 }}
         animate={{
