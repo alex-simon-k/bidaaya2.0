@@ -18,7 +18,9 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
   }
 
   // Get logo URL - you can customize this based on slug
-  const getLogoUrl = (slug: string) => {
+  const getLogoUrl = (slug: string, institutionInfo: typeof institutionInfo) => {
+    const normalizedSlug = slug.toLowerCase().trim()
+    
     // Map slugs to logo paths - add your actual logo files to /public/images/university-logos/
     const logoMap: Record<string, string> = {
       'aud': '/images/university-logos/aud.png',
@@ -30,9 +32,22 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
       'uaeu': '/images/university-logos/uaeu.png',
       'au': '/images/university-logos/au.png',
       'uos': '/images/university-logos/uos.png',
-      'slug': '/images/university-logos/demo.png'
+      'slug': '/images/university-logos/demo.png',
+      'demo': '/images/university-logos/demo.png'
     }
-    return logoMap[slug.toLowerCase()] || undefined
+    
+    // Check if slug matches a known logo
+    if (logoMap[normalizedSlug]) {
+      return logoMap[normalizedSlug]
+    }
+    
+    // Check if institution ID matches (for fallback cases)
+    if (institutionInfo && logoMap[institutionInfo.id]) {
+      return logoMap[institutionInfo.id]
+    }
+    
+    // Default to demo logo for any unrecognized slug
+    return '/images/university-logos/demo.png'
   }
 
   // Show landing page first, then dashboard on click
@@ -43,7 +58,7 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
         institutionName={institutionInfo.name}
         institutionShortName={institutionInfo.shortName}
         institutionType={institutionInfo.type}
-        logoUrl={getLogoUrl(decodedSlug)}
+        logoUrl={getLogoUrl(decodedSlug, institutionInfo)}
         onEnter={() => setShowDashboard(true)}
       />
     )

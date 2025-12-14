@@ -166,27 +166,41 @@ export function InstitutionLanding({
             >
               {/* Logo or Icon */}
               {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={institutionName}
-                  className="w-20 h-20 object-contain mb-1"
-                  onError={(e) => {
-                    // Fallback to icon if logo fails to load
-                    e.currentTarget.style.display = 'none'
-                    const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                    if (fallback) fallback.style.display = 'block'
-                  }}
-                />
-              ) : null}
-              
-              {/* Fallback Icon */}
-              <div className={`mb-1 ${logoUrl ? 'hidden' : 'block'}`}>
-                {institutionType === 'university' ? (
-                  <GraduationCap className="w-16 h-16 text-bidaaya-accent" />
-                ) : (
-                  <School className="w-16 h-16 text-bidaaya-accent" />
-                )}
-              </div>
+                <>
+                  <img
+                    src={logoUrl}
+                    alt={institutionName}
+                    className="w-20 h-20 object-contain mb-1"
+                    style={{ display: 'block' }}
+                    onError={(e) => {
+                      // Fallback to icon if logo fails to load
+                      console.error('Logo failed to load:', logoUrl)
+                      e.currentTarget.style.display = 'none'
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                      if (fallback) {
+                        fallback.style.display = 'block'
+                      }
+                    }}
+                  />
+                  {/* Hidden fallback icon for error case */}
+                  <div className="mb-1" style={{ display: 'none' }}>
+                    {institutionType === 'university' ? (
+                      <GraduationCap className="w-16 h-16 text-bidaaya-accent" />
+                    ) : (
+                      <School className="w-16 h-16 text-bidaaya-accent" />
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* Fallback Icon - only show if no logoUrl provided */
+                <div className="mb-1">
+                  {institutionType === 'university' ? (
+                    <GraduationCap className="w-16 h-16 text-bidaaya-accent" />
+                  ) : (
+                    <School className="w-16 h-16 text-bidaaya-accent" />
+                  )}
+                </div>
+              )}
               
               {/* Institution Name - ensure it's not URL encoded */}
               <h2 className="text-xs font-bold text-white text-center leading-tight px-1 truncate w-full">
