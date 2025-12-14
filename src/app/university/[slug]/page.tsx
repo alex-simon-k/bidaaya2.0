@@ -32,7 +32,6 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
       'uaeu': '/images/university-logos/uaeu.png',
       'au': '/images/university-logos/au.png',
       'uos': '/images/university-logos/uos.png',
-      'slug': '/images/university-logos/demo.png',
       'demo': '/images/university-logos/demo.png'
     }
     

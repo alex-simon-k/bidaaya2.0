@@ -119,6 +119,21 @@ export function mapSlugToInstitution(slug: string): {
     }
   }
 
+  // Handle demo slug specifically
+  if (slugLower === 'demo') {
+    return {
+      universityName: null,
+      schoolName: null,
+      institutionInfo: {
+        id: 'demo',
+        name: 'UOBD',
+        shortName: 'UOBD',
+        region: 'UAE',
+        type: 'university'
+      }
+    }
+  }
+
   // If no university match, return as potential school
   return {
     universityName: null,

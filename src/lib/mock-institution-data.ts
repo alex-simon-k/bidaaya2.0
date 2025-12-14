@@ -18,10 +18,10 @@ export function generateMockInstitutionData(slug: string): InstitutionAnalytics 
     'uaeu': { name: 'United Arab Emirates University', shortName: 'UAEU', region: 'Al Ain', logoUrl: '/images/university-logos/uaeu.png' },
     'au': { name: 'Ajman University', shortName: 'AU', region: 'Ajman', logoUrl: '/images/university-logos/au.png' },
     'uos': { name: 'University of Sharjah', shortName: 'UoS', region: 'Sharjah', logoUrl: '/images/university-logos/uos.png' },
-    'slug': { name: 'Demo Institution', shortName: 'DEMO', region: 'UAE', logoUrl: '/images/university-logos/demo.png' }
+    'demo': { name: 'UOBD', shortName: 'UOBD', region: 'UAE', logoUrl: '/images/university-logos/demo.png' }
   }
 
-  const institutionInfo = institutionNames[slug] || institutionNames['slug']
+  const institutionInfo = institutionNames[slug] || institutionNames['demo']
 
   // Generate dates for the last 30 days
   const generateDates = () => {
