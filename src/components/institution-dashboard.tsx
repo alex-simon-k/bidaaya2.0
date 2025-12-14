@@ -277,15 +277,9 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                   {institutionTypeLabel}
                 </span>
               </div>
-              <div className="flex items-center gap-4">
-                <p className="text-slate-400">
-                  {analytics.institution.region} • {analytics.institution.shortName}
-                </p>
-                <LocationMap 
-                  location={analytics.institution.region} 
-                  coordinates={getCoordinatesForRegion(analytics.institution.region)}
-                />
-              </div>
+              <p className="text-slate-400">
+                {analytics.institution.region} • {analytics.institution.shortName}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -492,11 +486,24 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Major/Subject Distribution */}
+          {/* Location Map Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
+            className="glass-panel rounded-xl p-6 border border-slate-800 flex items-center justify-center"
+          >
+            <LocationMap 
+              location={analytics.institution.region} 
+              coordinates={getCoordinatesForRegion(analytics.institution.region)}
+            />
+          </motion.div>
+
+          {/* Major/Subject Distribution */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
             className="glass-panel rounded-xl p-6 border border-slate-800"
           >
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -528,7 +535,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.7 }}
             className="glass-panel rounded-xl p-6 border border-slate-800"
           >
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
