@@ -155,7 +155,7 @@ export function InstitutionLanding({
 
             {/* Front layer - contains logo/name */}
             <div
-              className="absolute w-40 h-32 bg-slate-900 rounded-lg shadow-lg border border-slate-700 flex flex-col items-center justify-center p-4"
+              className="absolute w-40 h-32 bg-slate-900 rounded-lg shadow-lg border border-slate-700 flex flex-col items-center justify-center p-3"
               style={{
                 top: "calc(50% - 64px + 4px)",
                 transformOrigin: "bottom center",
@@ -169,20 +169,27 @@ export function InstitutionLanding({
                 <img
                   src={logoUrl}
                   alt={institutionName}
-                  className="w-16 h-16 object-contain mb-2"
+                  className="w-20 h-20 object-contain mb-1"
+                  onError={(e) => {
+                    // Fallback to icon if logo fails to load
+                    e.currentTarget.style.display = 'none'
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                    if (fallback) fallback.style.display = 'block'
+                  }}
                 />
-              ) : (
-                <div className="mb-2">
-                  {institutionType === 'university' ? (
-                    <GraduationCap className="w-16 h-16 text-bidaaya-accent" />
-                  ) : (
-                    <School className="w-16 h-16 text-bidaaya-accent" />
-                  )}
-                </div>
-              )}
+              ) : null}
               
-              {/* Institution Name */}
-              <h2 className="text-sm font-bold text-white text-center leading-tight">
+              {/* Fallback Icon */}
+              <div className={`mb-1 ${logoUrl ? 'hidden' : 'block'}`}>
+                {institutionType === 'university' ? (
+                  <GraduationCap className="w-16 h-16 text-bidaaya-accent" />
+                ) : (
+                  <School className="w-16 h-16 text-bidaaya-accent" />
+                )}
+              </div>
+              
+              {/* Institution Name - ensure it's not URL encoded */}
+              <h2 className="text-xs font-bold text-white text-center leading-tight px-1 truncate w-full">
                 {institutionShortName}
               </h2>
             </div>
@@ -203,7 +210,7 @@ export function InstitutionLanding({
 
           {/* Institution Title */}
           <h3
-            className="text-2xl font-bold text-white mt-6 transition-all duration-300 text-center"
+            className="text-2xl font-bold text-white mt-6 transition-all duration-300 text-center px-4"
             style={{
               transform: isHovered ? "translateY(4px)" : "translateY(0)",
             }}
@@ -221,42 +228,48 @@ export function InstitutionLanding({
             {institutionType === 'university' ? 'University' : institutionType === 'school' ? 'School' : 'Institution'}
           </span>
 
-          {/* Hover hint */}
-          <div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 text-xs text-slate-400 transition-all duration-300"
-            style={{
-              opacity: isHovered ? 0 : 0.7,
-              transform: isHovered ? "translateY(10px)" : "translateY(0)",
-            }}
-          >
-            <span>Hover to preview</span>
-          </div>
+          {/* Bottom section with hint and button */}
+          <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-3">
+            {/* Hover hint - only show when not hovered */}
+            <motion.div
+              initial={{ opacity: 0.7 }}
+              animate={{
+                opacity: isHovered ? 0 : 0.7,
+                y: isHovered ? 10 : 0,
+              }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-2 text-xs text-slate-400"
+            >
+              <span>Hover to preview</span>
+            </motion.div>
 
-          {/* Enter Button - appears on hover */}
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{
-              opacity: isHovered ? 1 : 0,
-              y: isHovered ? 0 : 10,
-            }}
-            transition={{ duration: 0.3 }}
-            onClick={handleEnterClick}
-            className={cn(
-              "absolute bottom-6 left-1/2 -translate-x-1/2",
-              "flex items-center gap-2 px-6 py-3",
-              "bg-bidaaya-accent text-bidaaya-dark",
-              "rounded-lg font-medium",
-              "hover:bg-bidaaya-accent/90",
-              "transition-all duration-200",
-              "shadow-lg shadow-bidaaya-accent/20"
-            )}
-            style={{
-              pointerEvents: isHovered ? 'auto' : 'none',
-            }}
-          >
-            <span>Enter Dashboard</span>
-            <ArrowRight className="w-4 h-4" />
-          </motion.button>
+            {/* Enter Button - appears on hover */}
+            <motion.button
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{
+                opacity: isHovered ? 1 : 0,
+                y: isHovered ? 0 : 10,
+                scale: isHovered ? 1 : 0.95,
+              }}
+              transition={{ duration: 0.3 }}
+              onClick={handleEnterClick}
+              className={cn(
+                "flex items-center gap-2 px-6 py-3",
+                "bg-bidaaya-accent text-bidaaya-dark",
+                "rounded-lg font-medium",
+                "hover:bg-bidaaya-accent/90",
+                "transition-all duration-200",
+                "shadow-lg shadow-bidaaya-accent/20",
+                "whitespace-nowrap"
+              )}
+              style={{
+                pointerEvents: isHovered ? 'auto' : 'none',
+              }}
+            >
+              <span>Enter Dashboard</span>
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     </div>
@@ -314,8 +327,8 @@ const GraphPreviewCard = forwardRef<HTMLDivElement, GraphPreviewCardProps>(
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-bidaaya-accent/20 via-purple-500/20 to-pink-500/20" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-        <p className="absolute bottom-2 left-2 right-2 text-[10px] font-medium text-white truncate">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent" />
+        <p className="absolute bottom-2 left-2 right-2 text-[10px] font-semibold text-white truncate drop-shadow-lg">
           {title}
         </p>
       </div>

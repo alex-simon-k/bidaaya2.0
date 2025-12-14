@@ -32,6 +32,7 @@ import {
   Filter
 } from 'lucide-react'
 import { InstitutionAnalytics } from '@/lib/institution-analytics'
+import { generateMockInstitutionData } from '@/lib/mock-institution-data'
 
 interface InstitutionDashboardProps {
   slug: string
@@ -56,19 +57,31 @@ export function InstitutionDashboard({ slug }: InstitutionDashboardProps) {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await fetch(`/api/university/${slug}/analytics`)
       
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('Institution not found')
-        } else {
-          setError('Failed to load analytics')
+      // Use mock data for demo purposes
+      // TODO: Replace with real API call when ready
+      const USE_MOCK_DATA = true
+      
+      if (USE_MOCK_DATA) {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500))
+        const mockData = generateMockInstitutionData(slug)
+        setAnalytics(mockData)
+      } else {
+        const response = await fetch(`/api/university/${slug}/analytics`)
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Institution not found')
+          } else {
+            setError('Failed to load analytics')
+          }
+          return
         }
-        return
-      }
 
-      const data = await response.json()
-      setAnalytics(data)
+        const data = await response.json()
+        setAnalytics(data)
+      }
     } catch (err) {
       console.error('Error fetching analytics:', err)
       setError('Failed to load analytics')
