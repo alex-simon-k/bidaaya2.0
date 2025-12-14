@@ -297,6 +297,7 @@ export async function getInstitutionAnalytics(
     where: { userId: { in: studentIds } },
     select: {
       id: true,
+      userId: true,
       appliedAt: true,
       externalOpportunityId: true
     }
