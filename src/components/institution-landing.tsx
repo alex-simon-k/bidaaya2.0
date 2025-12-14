@@ -226,7 +226,7 @@ export function InstitutionLanding({
 
           {/* Institution Title */}
           <h3
-            className="text-2xl font-bold text-white mt-6 mb-2 transition-all duration-300 text-center px-4"
+            className="text-2xl font-light text-white mt-6 mb-2 transition-all duration-300 text-center px-4 tracking-tight"
             style={{
               transform: isHovered ? "translateY(4px)" : "translateY(0)",
             }}

@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Instrument_Sans } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 
 const inter = Inter({ subsets: ["latin"] });
-const instrumentSans = Instrument_Sans({ 
+const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
-  variable: "--font-instrument-sans",
+  weight: ['200', '300', '400', '500', '600', '700'],
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
@@ -88,7 +89,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="theme-color" content="#0a081a" />
       </head>
-      <body className={`${inter.className} ${instrumentSans.variable}`}>
+      <body className={`${inter.className} ${plusJakartaSans.variable}`}>
         <AuthProvider>
           {children}
         </AuthProvider>

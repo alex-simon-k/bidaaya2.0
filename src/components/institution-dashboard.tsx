@@ -270,7 +270,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                     <School className="h-8 w-8 text-bidaaya-accent" />
                   )}
                 </div>
-                <h1 className="text-3xl font-bold text-white">
+                <h1 className="text-3xl font-light text-white tracking-tight">
                   {analytics.institution.name}
                 </h1>
                 <span className="px-3 py-1 bg-bidaaya-accent/20 text-bidaaya-accent text-sm rounded-full">
@@ -424,10 +424,10 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           transition={{ delay: 0.4 }}
           className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
         >
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Target className="h-5 w-5 text-bidaaya-accent" />
-            Most Viewed Opportunities
-          </h2>
+              <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
+                <Target className="h-5 w-5 text-bidaaya-accent" />
+                Most Viewed Opportunities
+              </h2>
           {analytics.opportunities.mostViewed.length > 0 ? (
             <div className="space-y-4">
               <ResponsiveContainer width="100%" height={300}>
