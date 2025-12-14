@@ -322,7 +322,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             className="glass-panel rounded-xl p-12 border border-slate-800 text-center"
           >
             <Users className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">No Student Data Available</h2>
+            <h2 className="text-2xl font-light text-white mb-2 tracking-tight">No Student Data Available</h2>
             <p className="text-slate-400 max-w-md mx-auto">
               This institution doesn't have any students registered on Bidaaya yet. 
               Check back later or contact us if you believe this is an error.
@@ -340,7 +340,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">
+                <label className="block text-sm font-light text-slate-400 mb-2 tracking-tight">
                   {analytics.institution.type === 'university' ? 'Major' : 'Subject'}
                 </label>
                 <select
@@ -357,7 +357,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">
+                <label className="block text-sm font-light text-slate-400 mb-2 tracking-tight">
                   Graduation Year
                 </label>
                 <select
@@ -406,8 +406,8 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
               </div>
-              <h3 className="text-sm font-medium text-slate-400 mb-1">{stat.title}</h3>
-              <p className="text-3xl font-bold text-white">{stat.value}</p>
+              <h3 className="text-sm font-light text-slate-400 mb-1 tracking-tight">{stat.title}</h3>
+              <p className="text-3xl font-light text-white tracking-tight">{stat.value}</p>
             </motion.div>
             ))}
           </div>
@@ -462,7 +462,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                     className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
                   >
                     <div className="flex-1">
-                      <p className="text-white font-medium">{opp.title}</p>
+                      <p className="text-white font-light tracking-tight">{opp.title}</p>
                       <p className="text-sm text-slate-400">{opp.company || 'External'}</p>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
@@ -506,10 +506,10 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             transition={{ delay: 0.6 }}
             className="glass-panel rounded-xl p-6 border border-slate-800"
           >
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-bidaaya-accent" />
-              {analytics.institution.type === 'university' ? 'Major' : 'Subject'} Distribution
-            </h2>
+              <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
+                <GraduationCap className="h-5 w-5 text-bidaaya-accent" />
+                {analytics.institution.type === 'university' ? 'Major' : 'Subject'} Distribution
+              </h2>
             {analytics.charts.majorDistribution.length > 0 ? (
               <div className="w-full flex justify-center items-center overflow-hidden" style={{ height: '300px', minHeight: '300px' }}>
                 <RadarChart
@@ -538,7 +538,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             transition={{ delay: 0.7 }}
             className="glass-panel rounded-xl p-6 border border-slate-800"
           >
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
               <Target className="h-5 w-5 text-bidaaya-accent" />
               Top Skills
             </h2>
@@ -575,7 +575,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           transition={{ delay: 0.7 }}
           className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
         >
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
             <Calendar className="h-5 w-5 text-bidaaya-accent" />
             Applications Over Time
           </h2>
@@ -608,7 +608,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           transition={{ delay: 0.8 }}
           className="glass-panel rounded-xl p-6 border border-slate-800"
         >
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
             <Award className="h-5 w-5 text-bidaaya-accent" />
             Top Students by Streak
           </h2>
@@ -624,18 +624,18 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                       {index + 1}
                     </div>
                     <div>
-                      <p className="text-white font-medium">{student.name || 'Anonymous'}</p>
+                      <p className="text-white font-light tracking-tight">{student.name || 'Anonymous'}</p>
                       <p className="text-sm text-slate-400">{student.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="text-center">
                       <p className="text-sm text-slate-400">Streak</p>
-                      <p className="text-lg font-bold text-bidaaya-accent">{student.streak}</p>
+                      <p className="text-lg font-light text-bidaaya-accent tracking-tight">{student.streak}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-slate-400">Applications</p>
-                      <p className="text-lg font-bold text-white">{student.applications}</p>
+                      <p className="text-sm text-slate-400 font-light">Applications</p>
+                      <p className="text-lg font-light text-white tracking-tight">{student.applications}</p>
                     </div>
                   </div>
                 </div>
