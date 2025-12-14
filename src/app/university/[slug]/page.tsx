@@ -64,5 +64,5 @@ export default function UniversityDashboardPage({ params }: { params: { slug: st
     )
   }
 
-  return <InstitutionDashboard slug={decodedSlug} />
+  return <InstitutionDashboard slug={decodedSlug} logoUrl={getLogoUrl(decodedSlug, institutionInfo)} />
 }
