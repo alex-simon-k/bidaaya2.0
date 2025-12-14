@@ -11,12 +11,10 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   LineChart,
   Line
 } from 'recharts'
+import { RadarChart } from '@/components/ui/radar-chart'
 import {
   Users,
   Briefcase,
@@ -506,32 +504,21 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               {analytics.institution.type === 'university' ? 'Major' : 'Subject'} Distribution
             </h2>
             {analytics.charts.majorDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={analytics.charts.majorDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {analytics.charts.majorDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1e293b',
-                      border: '1px solid #334155',
-                      borderRadius: '8px',
-                      color: '#f1f5f9'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="w-full flex justify-center items-center overflow-hidden" style={{ height: '300px', minHeight: '300px' }}>
+                <RadarChart
+                  width={350}
+                  height={300}
+                  data={analytics.charts.majorDistribution}
+                  levels={5}
+                  margin={{ top: 50, right: 50, bottom: 50, left: 50 }}
+                  fillColor="#3b82f6"
+                  strokeColor="#3b82f6"
+                  pointColor="#60a5fa"
+                  gridColor="#475569"
+                  backgroundColor="transparent"
+                  labelColor="#94a3b8"
+                />
+              </div>
             ) : (
               <p className="text-slate-400 text-center py-8">No distribution data available</p>
             )}
