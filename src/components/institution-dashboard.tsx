@@ -43,6 +43,7 @@ import { CourseActivityChart } from '@/components/ui/course-activity-chart'
 import { OpportunityDistributionChart } from '@/components/ui/opportunity-distribution-chart'
 import { BenchmarkToggle } from '@/components/ui/benchmark-toggle'
 import { CompactStatsMonitor } from '@/components/ui/compact-stats-monitor'
+import { StudentStageQuadrants } from '@/components/ui/student-stage-quadrants'
 
 interface InstitutionDashboardProps {
   slug: string
@@ -499,39 +500,18 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           )}
         </motion.div>
 
-        {/* Student Distribution Funnel */}
+        {/* Student Stage Quadrants */}
         {analytics.students.byStage && analytics.students.byStage.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            className="glass-panel rounded-xl p-4 border border-slate-800 mb-8 flex justify-center items-center"
+            className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
           >
-            <div className="w-full flex justify-center">
-              <StudentDistributionFunnel
-                title="Student Distribution by Stage"
-                data={analytics.students.byStage.map((item) => ({
-                  key: item.stage,
-                  data: item.count,
-                }))}
-                primaryMetric={{
-                  label: 'Total Students',
-                  value: analytics.stats.totalStudents,
-                  change: '+12%',
-                  changeType: 'increase',
-                  comparisonText: `Compared to ${Math.round(analytics.stats.totalStudents / 1.12)} last month`,
-                }}
-                secondaryMetric={{
-                  label: 'In Workforce',
-                  value: analytics.students.byStage.find((s) => s.stage === 'Workforce')?.count || 0,
-                  change: '+8%',
-                  changeType: 'increase',
-                  comparisonText: 'Compared to last month',
-                }}
-                colorScheme={['#3b82f6']}
-                className="w-full"
-              />
-            </div>
+            <StudentStageQuadrants
+              data={analytics.students.byStage}
+              totalStudents={analytics.stats.totalStudents}
+            />
           </motion.div>
         )}
 
