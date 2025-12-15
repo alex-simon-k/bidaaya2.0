@@ -43,7 +43,7 @@ import { CourseActivityChart } from '@/components/ui/course-activity-chart'
 import { OpportunityDistributionChart } from '@/components/ui/opportunity-distribution-chart'
 import { BenchmarkToggle } from '@/components/ui/benchmark-toggle'
 import { CompactStatsMonitor } from '@/components/ui/compact-stats-monitor'
-import { StudentStageQuadrants } from '@/components/ui/student-stage-quadrants'
+import { ApplicationSuccessFunnel } from '@/components/ui/application-success-funnel'
 import { CompactTopStudents } from '@/components/ui/compact-top-students'
 
 interface InstitutionDashboardProps {
@@ -501,16 +501,16 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           )}
         </motion.div>
 
-        {/* Student Stage Quadrants */}
-        {analytics.students.byStage && analytics.students.byStage.length > 0 && (
+        {/* Application Success Funnel */}
+        {analytics.students.applicationFunnel && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
             className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
           >
-            <StudentStageQuadrants
-              data={analytics.students.byStage}
+            <ApplicationSuccessFunnel
+              data={analytics.students.applicationFunnel}
               totalStudents={analytics.stats.totalStudents}
             />
           </motion.div>

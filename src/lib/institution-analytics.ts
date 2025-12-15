@@ -59,6 +59,16 @@ export interface InstitutionAnalytics {
     byStage?: Array<{ stage: string; count: number }>
     byAgeGroup?: Array<{ ageGroup: string; count: number }>
     byYearGroup?: Array<{ yearGroup: string; count: number }>
+    applicationFunnel?: {
+      applied: number
+      interviewed: number
+      offers: number
+      rejections: number
+      appliedPercentage: number
+      interviewedPercentage: number
+      offersPercentage: number
+      rejectionsPercentage: number
+    }
   }
   skills: Array<{ skill: string; count: number; percentage: number }>
   applications: {
@@ -325,7 +335,8 @@ export async function getInstitutionAnalytics(
         topByStreak: [], 
         byStage: [],
         byAgeGroup: [],
-        byYearGroup: []
+        byYearGroup: [],
+        applicationFunnel: undefined
       },
       skills: [],
       applications: { byStatus: [], overTime: [] },
@@ -400,6 +411,7 @@ export async function getInstitutionAnalytics(
       userId: true,
       appliedAt: true,
       externalOpportunityId: true,
+      status: true,
       opportunity: {
         select: {
           title: true,
@@ -601,6 +613,56 @@ export async function getInstitutionAnalytics(
   const byStatus = Array.from(statusMap.entries())
     .map(([status, count]) => ({ status, count }))
 
+  // Application funnel: Calculate success rates
+  const studentsWhoApplied = new Set<string>()
+  const studentsInterviewed = new Set<string>()
+  const studentsWithOffers = new Set<string>()
+  const studentsRejected = new Set<string>()
+
+  // Track internal applications
+  applications.forEach(app => {
+    studentsWhoApplied.add(app.userId)
+    if (app.status === 'INTERVIEWED' || app.status === 'SHORTLISTED') {
+      studentsInterviewed.add(app.userId)
+    }
+    if (app.status === 'ACCEPTED') {
+      studentsWithOffers.add(app.userId)
+    }
+    if (app.status === 'REJECTED') {
+      studentsRejected.add(app.userId)
+    }
+  })
+
+  // Track external applications with their status
+  externalApplications.forEach(app => {
+    studentsWhoApplied.add(app.userId)
+    if (app.status === 'INTERVIEW_SCHEDULED' || app.status === 'INTERVIEWED' || app.status === 'FINAL_ROUND') {
+      studentsInterviewed.add(app.userId)
+    }
+    if (app.status === 'OFFER_RECEIVED' || app.status === 'ACCEPTED') {
+      studentsWithOffers.add(app.userId)
+    }
+    if (app.status === 'REJECTED') {
+      studentsRejected.add(app.userId)
+    }
+  })
+
+  const appliedCount = studentsWhoApplied.size
+  const interviewedCount = studentsInterviewed.size
+  const offersCount = studentsWithOffers.size
+  const rejectionsCount = studentsRejected.size
+
+  const applicationFunnel = appliedCount > 0 ? {
+    applied: appliedCount,
+    interviewed: interviewedCount,
+    offers: offersCount,
+    rejections: rejectionsCount,
+    appliedPercentage: 100, // Base: 100% of those who applied
+    interviewedPercentage: (interviewedCount / appliedCount) * 100,
+    offersPercentage: (offersCount / appliedCount) * 100,
+    rejectionsPercentage: (rejectionsCount / appliedCount) * 100
+  } : undefined
+
   // Course (major) distribution - applications by major
   const courseDistributionMap = new Map<string, number>()
   const courseSuccessMap = new Map<string, { total: number; accepted: number; interviewed: number }>()
@@ -765,7 +827,8 @@ export async function getInstitutionAnalytics(
       topByStreak,
       byStage: [], // TODO: Implement real student stage distribution logic
       byAgeGroup,
-      byYearGroup
+      byYearGroup,
+      applicationFunnel
     },
     skills,
     applications: {

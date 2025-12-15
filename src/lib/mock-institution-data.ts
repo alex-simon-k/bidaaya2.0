@@ -146,7 +146,17 @@ export function generateMockInstitutionData(slug: string): InstitutionAnalytics 
         { yearGroup: 'University Year 4', count: 189 },
         { yearGroup: 'Masters', count: 98 },
         { yearGroup: 'Graduated', count: 53 }
-      ]
+      ],
+      applicationFunnel: {
+        applied: 892,
+        interviewed: 445,
+        offers: 178,
+        rejections: 267,
+        appliedPercentage: 100,
+        interviewedPercentage: 49.9,
+        offersPercentage: 20.0,
+        rejectionsPercentage: 29.9
+      }
     },
     skills: [
       { skill: 'JavaScript', count: 456, percentage: 18.2 },
