@@ -35,7 +35,7 @@ import { LocationMap } from '@/components/ui/expand-map'
 import { StudentDistributionFunnel } from '@/components/ui/student-distribution-funnel'
 import { AgeDistributionFunnel } from '@/components/ui/age-distribution-funnel'
 import { AgeDistributionBar } from '@/components/ui/age-distribution-bar'
-import { YearGroupFunnel } from '@/components/ui/year-group-funnel'
+import { YearGroupDistributionBar } from '@/components/ui/year-group-distribution-bar'
 import { CourseDistributionChart } from '@/components/ui/course-distribution-chart'
 import { CourseSuccessRatesChart } from '@/components/ui/course-success-rates-chart'
 import { CourseInterviewRatesChart } from '@/components/ui/course-interview-rates-chart'
@@ -687,12 +687,11 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0 }}
-            className="glass-panel rounded-xl p-4 border border-slate-800 mb-8 flex justify-center items-center"
+            className="glass-panel rounded-xl p-4 border border-slate-800 mb-8"
           >
-            <YearGroupFunnel
+            <YearGroupDistributionBar
               data={analytics.students.byYearGroup}
               institutionType={analytics.institution.type}
-              totalStudents={analytics.stats.totalStudents}
               benchmarkData={benchmarkData?.yearGroups}
               showBenchmark={showBenchmark}
               className="w-full"
