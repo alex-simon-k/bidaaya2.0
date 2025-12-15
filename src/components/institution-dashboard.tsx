@@ -44,6 +44,7 @@ import { OpportunityDistributionChart } from '@/components/ui/opportunity-distri
 import { BenchmarkToggle } from '@/components/ui/benchmark-toggle'
 import { CompactStatsMonitor } from '@/components/ui/compact-stats-monitor'
 import { StudentStageQuadrants } from '@/components/ui/student-stage-quadrants'
+import { CompactTopStudents } from '@/components/ui/compact-top-students'
 
 interface InstitutionDashboardProps {
   slug: string
@@ -639,44 +640,12 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+          className="glass-panel rounded-xl p-4 border border-slate-800 mb-8"
         >
-          <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
-            <Award className="h-5 w-5 text-bidaaya-accent" />
-            Top Students by Streak
-          </h2>
-          {analytics.students.topByStreak.length > 0 ? (
-            <div className="space-y-3">
-              {analytics.students.topByStreak.map((student, index) => (
-                <div
-                  key={student.id}
-                  className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800/70 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-bidaaya-accent/20 flex items-center justify-center text-bidaaya-accent font-bold">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="text-white font-light tracking-tight">{student.name || 'Anonymous'}</p>
-                      <p className="text-sm text-slate-400">{student.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <p className="text-sm text-slate-400">Streak</p>
-                      <p className="text-lg font-light text-bidaaya-accent tracking-tight">{student.streak}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-slate-400 font-light">Applications</p>
-                      <p className="text-lg font-light text-white tracking-tight">{student.applications}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-slate-400 text-center py-8">No student data available</p>
-          )}
+          <CompactTopStudents
+            students={analytics.students.topByStreak}
+            maxDisplay={15}
+          />
         </motion.div>
 
         {/* Age Distribution Charts */}
