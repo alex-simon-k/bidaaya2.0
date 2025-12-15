@@ -40,10 +40,10 @@ export function OpportunityDistributionChart({
 
   return (
     <div className={className}>
-      <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
+      <h2 className="text-lg font-light text-white mb-4 flex items-center gap-2 tracking-tight">
         Opportunity Applied For Distribution
       </h2>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis type="number" stroke="#94a3b8" />

@@ -474,7 +474,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               </h2>
           {analytics.opportunities.mostViewed.length > 0 ? (
             <div className="space-y-4">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={analytics.opportunities.mostViewed.slice(0, 10)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis 
@@ -534,7 +534,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            className="glass-panel rounded-xl p-6 border border-slate-800 mb-8 flex justify-center items-center overflow-x-auto"
+            className="glass-panel rounded-xl p-4 border border-slate-800 mb-8 flex justify-center items-center"
           >
             <div className="w-full flex justify-center">
               <StudentDistributionFunnel
@@ -593,10 +593,10 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                 {analytics.institution.type === 'university' ? 'Major' : 'Subject'} Distribution
               </h2>
             {analytics.charts.majorDistribution.length > 0 ? (
-              <div className="w-full flex justify-center items-center overflow-hidden" style={{ height: '300px', minHeight: '300px' }}>
+              <div className="w-full flex justify-center items-center overflow-hidden" style={{ height: '250px', minHeight: '250px' }}>
                 <RadarChart
-                  width={350}
-                  height={300}
+                  width={300}
+                  height={250}
                   data={analytics.charts.majorDistribution}
                   levels={5}
                   margin={{ top: 50, right: 50, bottom: 50, left: 50 }}
@@ -625,7 +625,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               Top Skills
             </h2>
             {analytics.charts.skillsDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <BarChart
                   data={analytics.charts.skillsDistribution}
                   layout="vertical"
@@ -662,7 +662,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             Applications Over Time
           </h2>
           {analytics.charts.applicationsOverTime.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={analytics.charts.applicationsOverTime}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis dataKey="date" stroke="#94a3b8" />
@@ -730,12 +730,12 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
 
         {/* Age Distribution Charts */}
         {analytics.students.byAgeGroup && analytics.students.byAgeGroup.length > 0 && (
-          <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8 flex justify-center items-center overflow-x-auto"
+              className="glass-panel rounded-xl p-4 border border-slate-800 flex justify-center items-center"
             >
               <AgeDistributionFunnel
                 data={analytics.students.byAgeGroup}
@@ -750,7 +750,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.95 }}
-              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+              className="glass-panel rounded-xl p-6 border border-slate-800"
             >
               <AgeDistributionBar
                 data={analytics.students.byAgeGroup}
@@ -758,7 +758,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                 showBenchmark={showBenchmark}
               />
             </motion.div>
-          </>
+          </div>
         )}
 
         {/* Year Group Distribution */}
@@ -767,7 +767,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0 }}
-            className="glass-panel rounded-xl p-6 border border-slate-800 mb-8 flex justify-center items-center overflow-x-auto"
+            className="glass-panel rounded-xl p-4 border border-slate-800 mb-8 flex justify-center items-center"
           >
             <YearGroupFunnel
               data={analytics.students.byYearGroup}
@@ -782,12 +782,12 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
 
         {/* Course Analytics */}
         {analytics.courses && (
-          <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.05 }}
-              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+              className="glass-panel rounded-xl p-6 border border-slate-800"
             >
               <CourseDistributionChart
                 data={analytics.courses.distribution}
@@ -800,7 +800,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.1 }}
-              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+              className="glass-panel rounded-xl p-6 border border-slate-800"
             >
               <CourseSuccessRatesChart
                 data={analytics.courses.successRates}
@@ -813,7 +813,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.15 }}
-              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+              className="glass-panel rounded-xl p-6 border border-slate-800"
             >
               <CourseInterviewRatesChart
                 data={analytics.courses.interviewRates}
@@ -826,7 +826,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2 }}
-              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+              className="glass-panel rounded-xl p-6 border border-slate-800"
             >
               <CourseActivityChart
                 data={analytics.courses.activity}
@@ -834,7 +834,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
                 showBenchmark={showBenchmark}
               />
             </motion.div>
-          </>
+          </div>
         )}
 
         {/* Opportunity Distribution */}
