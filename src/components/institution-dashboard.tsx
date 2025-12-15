@@ -42,6 +42,7 @@ import { CourseInterviewRatesChart } from '@/components/ui/course-interview-rate
 import { CourseActivityChart } from '@/components/ui/course-activity-chart'
 import { OpportunityDistributionChart } from '@/components/ui/opportunity-distribution-chart'
 import { BenchmarkToggle } from '@/components/ui/benchmark-toggle'
+import { CompactStatsMonitor } from '@/components/ui/compact-stats-monitor'
 
 interface InstitutionDashboardProps {
   slug: string
@@ -252,36 +253,6 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
     ? 'School' 
     : 'Institution'
 
-  const statCards = [
-    {
-      title: 'Total Students',
-      value: analytics.stats.totalStudents,
-      icon: Users,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10'
-    },
-    {
-      title: 'Total Applications',
-      value: analytics.stats.totalApplications,
-      icon: Briefcase,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10'
-    },
-    {
-      title: 'Average Streak',
-      value: analytics.stats.averageStreak.toFixed(1),
-      icon: TrendingUp,
-      color: 'text-pink-400',
-      bgColor: 'bg-pink-500/10'
-    },
-    {
-      title: 'Profile Completion',
-      value: `${analytics.stats.profileCompletionRate.toFixed(1)}%`,
-      icon: Award,
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/10'
-    }
-  ]
 
   return (
     <div className="min-h-screen bg-bidaaya-dark text-bidaaya-light">
@@ -438,27 +409,23 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           </motion.div>
         )}
 
-        {/* Stats Cards */}
+        {/* Compact Stats Monitor */}
         {!hasNoData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {statCards.map((stat, index) => (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="glass-panel rounded-xl p-6 border border-slate-800"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-              </div>
-              <h3 className="text-sm font-light text-slate-400 mb-1 tracking-tight">{stat.title}</h3>
-              <p className="text-3xl font-light text-white tracking-tight">{stat.value}</p>
-            </motion.div>
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <CompactStatsMonitor
+              stats={{
+                totalStudents: analytics.stats.totalStudents,
+                totalApplications: analytics.stats.totalApplications,
+                averageStreak: analytics.stats.averageStreak,
+                profileCompletionRate: analytics.stats.profileCompletionRate,
+              }}
+            />
+          </motion.div>
         )}
 
         {/* Charts and Data Sections - Only show if there's data */}
