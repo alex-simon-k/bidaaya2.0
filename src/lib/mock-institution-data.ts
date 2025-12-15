@@ -305,7 +305,7 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
     if (mockData.opportunities.byOpportunity) allOpportunities.push(mockData.opportunities.byOpportunity)
   })
   
-  // Aggregate age groups
+  // Aggregate age groups with intentional variation
   const ageGroupMap = new Map<string, number[]>()
   allAgeGroups.forEach(groups => {
     groups.forEach(item => {
@@ -315,13 +315,26 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
       ageGroupMap.get(item.ageGroup)!.push(item.count)
     })
   })
+  // Create variation multipliers: some categories higher, some lower
+  const ageGroupMultipliers: Record<string, number> = {
+    '16-18': 0.6,  // Lower than average
+    '19-21': 1.4,  // Higher than average
+    '22-24': 0.8,  // Slightly lower
+    '25+': 1.3,    // Higher
+    'Under 16': 0.7,
+    'Unknown': 1.0
+  }
   const benchmarkAgeGroups = Array.from(ageGroupMap.entries())
-    .map(([ageGroup, counts]) => ({
-      ageGroup,
-      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
-    }))
+    .map(([ageGroup, counts]) => {
+      const average = counts.reduce((a, b) => a + b, 0) / counts.length
+      const multiplier = ageGroupMultipliers[ageGroup] || 1.0
+      return {
+        ageGroup,
+        count: Math.round(average * multiplier)
+      }
+    })
   
-  // Aggregate year groups
+  // Aggregate year groups with intentional variation
   const yearGroupMap = new Map<string, number[]>()
   allYearGroups.forEach(groups => {
     groups.forEach(item => {
@@ -331,13 +344,29 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
       yearGroupMap.get(item.yearGroup)!.push(item.count)
     })
   })
+  // Create variation multipliers for year groups
+  const yearGroupMultipliers: Record<string, number> = {
+    'University Year 1': 1.5,  // Higher - more first years
+    'University Year 2': 0.7,  // Lower
+    'University Year 3': 1.2,  // Higher
+    'University Year 4': 0.6,  // Lower
+    'Masters': 1.4,            // Higher
+    'Graduated': 0.5,          // Much lower
+    'Year 12': 1.0,
+    'Year 13': 1.0,
+    'Other': 1.0
+  }
   const benchmarkYearGroups = Array.from(yearGroupMap.entries())
-    .map(([yearGroup, counts]) => ({
-      yearGroup,
-      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
-    }))
+    .map(([yearGroup, counts]) => {
+      const average = counts.reduce((a, b) => a + b, 0) / counts.length
+      const multiplier = yearGroupMultipliers[yearGroup] || 1.0
+      return {
+        yearGroup,
+        count: Math.round(average * multiplier)
+      }
+    })
   
-  // Aggregate course distribution
+  // Aggregate course distribution with intentional variation
   const courseDistMap = new Map<string, number[]>()
   allCourseDistributions.forEach(dist => {
     dist.forEach(item => {
@@ -347,14 +376,25 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
       courseDistMap.get(item.course)!.push(item.count)
     })
   })
+  // Apply random variation to courses (some higher, some lower)
+  const courseVariations = new Map<string, number>()
+  Array.from(courseDistMap.keys()).forEach((course, index) => {
+    // Alternate between higher and lower multipliers
+    const variation = index % 3 === 0 ? 1.6 : index % 3 === 1 ? 0.5 : 1.0
+    courseVariations.set(course, variation)
+  })
   const benchmarkCourseDistribution = Array.from(courseDistMap.entries())
-    .map(([course, counts]) => ({
-      course,
-      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
-    }))
+    .map(([course, counts]) => {
+      const average = counts.reduce((a, b) => a + b, 0) / counts.length
+      const multiplier = courseVariations.get(course) || 1.0
+      return {
+        course,
+        count: Math.round(average * multiplier)
+      }
+    })
     .sort((a, b) => b.count - a.count)
   
-  // Aggregate success rates
+  // Aggregate success rates with intentional variation
   const successMap = new Map<string, number[]>()
   allSuccessRates.forEach(rates => {
     rates.forEach(item => {
@@ -364,14 +404,26 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
       successMap.get(item.course)!.push(item.rate)
     })
   })
+  // Apply variation to success rates (some courses perform better/worse)
+  const successRateVariations = new Map<string, number>()
+  Array.from(successMap.keys()).forEach((course, index) => {
+    const variation = index % 4 === 0 ? 1.5 : index % 4 === 1 ? 0.6 : index % 4 === 2 ? 1.3 : 0.8
+    successRateVariations.set(course, variation)
+  })
   const benchmarkSuccessRates = Array.from(successMap.entries())
-    .map(([course, rates]) => ({
-      course,
-      rate: rates.reduce((a, b) => a + b, 0) / rates.length
-    }))
+    .map(([course, rates]) => {
+      const average = rates.reduce((a, b) => a + b, 0) / rates.length
+      const multiplier = successRateVariations.get(course) || 1.0
+      // Clamp rate between 0 and 100
+      const adjustedRate = Math.min(100, Math.max(0, average * multiplier))
+      return {
+        course,
+        rate: Math.round(adjustedRate * 10) / 10
+      }
+    })
     .sort((a, b) => b.rate - a.rate)
   
-  // Aggregate interview rates
+  // Aggregate interview rates with intentional variation
   const interviewMap = new Map<string, number[]>()
   allInterviewRates.forEach(rates => {
     rates.forEach(item => {
@@ -381,14 +433,26 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
       interviewMap.get(item.course)!.push(item.rate)
     })
   })
+  // Apply variation to interview rates
+  const interviewRateVariations = new Map<string, number>()
+  Array.from(interviewMap.keys()).forEach((course, index) => {
+    const variation = index % 3 === 0 ? 1.4 : index % 3 === 1 ? 0.7 : 1.1
+    interviewRateVariations.set(course, variation)
+  })
   const benchmarkInterviewRates = Array.from(interviewMap.entries())
-    .map(([course, rates]) => ({
-      course,
-      rate: rates.reduce((a, b) => a + b, 0) / rates.length
-    }))
+    .map(([course, rates]) => {
+      const average = rates.reduce((a, b) => a + b, 0) / rates.length
+      const multiplier = interviewRateVariations.get(course) || 1.0
+      // Clamp rate between 0 and 100
+      const adjustedRate = Math.min(100, Math.max(0, average * multiplier))
+      return {
+        course,
+        rate: Math.round(adjustedRate * 10) / 10
+      }
+    })
     .sort((a, b) => b.rate - a.rate)
   
-  // Aggregate activity
+  // Aggregate activity with intentional variation
   const activityMap = new Map<string, number[]>()
   allActivity.forEach(activity => {
     activity.forEach(item => {
@@ -398,14 +462,24 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
       activityMap.get(item.course)!.push(item.applications)
     })
   })
+  // Apply variation to course activity
+  const activityVariations = new Map<string, number>()
+  Array.from(activityMap.keys()).forEach((course, index) => {
+    const variation = index % 3 === 0 ? 1.7 : index % 3 === 1 ? 0.5 : 1.2
+    activityVariations.set(course, variation)
+  })
   const benchmarkActivity = Array.from(activityMap.entries())
-    .map(([course, applications]) => ({
-      course,
-      applications: Math.round(applications.reduce((a, b) => a + b, 0) / applications.length)
-    }))
+    .map(([course, applications]) => {
+      const average = applications.reduce((a, b) => a + b, 0) / applications.length
+      const multiplier = activityVariations.get(course) || 1.0
+      return {
+        course,
+        applications: Math.round(average * multiplier)
+      }
+    })
     .sort((a, b) => b.applications - a.applications)
   
-  // Aggregate opportunities
+  // Aggregate opportunities with intentional variation
   const opportunityMap = new Map<string, number[]>()
   allOpportunities.forEach(opps => {
     opps.forEach(item => {
@@ -415,11 +489,21 @@ export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnal
       opportunityMap.get(item.opportunity)!.push(item.count)
     })
   })
+  // Apply variation to opportunities
+  const opportunityVariations = new Map<string, number>()
+  Array.from(opportunityMap.keys()).forEach((opportunity, index) => {
+    const variation = index % 4 === 0 ? 1.8 : index % 4 === 1 ? 0.4 : index % 4 === 2 ? 1.5 : 0.7
+    opportunityVariations.set(opportunity, variation)
+  })
   const benchmarkOpportunities = Array.from(opportunityMap.entries())
-    .map(([opportunity, counts]) => ({
-      opportunity,
-      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
-    }))
+    .map(([opportunity, counts]) => {
+      const average = counts.reduce((a, b) => a + b, 0) / counts.length
+      const multiplier = opportunityVariations.get(opportunity) || 1.0
+      return {
+        opportunity,
+        count: Math.round(average * multiplier)
+      }
+    })
     .sort((a, b) => b.count - a.count)
     .slice(0, 20)
   
