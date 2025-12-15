@@ -32,6 +32,16 @@ import {
 import { InstitutionAnalytics } from '@/lib/institution-analytics'
 import { generateMockInstitutionData } from '@/lib/mock-institution-data'
 import { LocationMap } from '@/components/ui/expand-map'
+import { StudentDistributionFunnel } from '@/components/ui/student-distribution-funnel'
+import { AgeDistributionFunnel } from '@/components/ui/age-distribution-funnel'
+import { AgeDistributionBar } from '@/components/ui/age-distribution-bar'
+import { YearGroupFunnel } from '@/components/ui/year-group-funnel'
+import { CourseDistributionChart } from '@/components/ui/course-distribution-chart'
+import { CourseSuccessRatesChart } from '@/components/ui/course-success-rates-chart'
+import { CourseInterviewRatesChart } from '@/components/ui/course-interview-rates-chart'
+import { CourseActivityChart } from '@/components/ui/course-activity-chart'
+import { OpportunityDistributionChart } from '@/components/ui/opportunity-distribution-chart'
+import { BenchmarkToggle } from '@/components/ui/benchmark-toggle'
 
 interface InstitutionDashboardProps {
   slug: string
@@ -61,10 +71,37 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null)
   const [selectedGraduationYear, setSelectedGraduationYear] = useState<number | null>(null)
   const [showFilters, setShowFilters] = useState(false)
+  const [showBenchmark, setShowBenchmark] = useState(false)
+  const [benchmarkData, setBenchmarkData] = useState<InstitutionAnalytics['benchmark'] | null>(null)
+  const [loadingBenchmark, setLoadingBenchmark] = useState(false)
 
   useEffect(() => {
     fetchAnalytics()
   }, [slug])
+
+  useEffect(() => {
+    if (showBenchmark && analytics) {
+      fetchBenchmarkData()
+    } else {
+      setBenchmarkData(null)
+    }
+  }, [showBenchmark, slug])
+
+  const fetchBenchmarkData = async () => {
+    try {
+      setLoadingBenchmark(true)
+      const response = await fetch(`/api/university/benchmark?excludeSlug=${slug}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        setBenchmarkData(data)
+      }
+    } catch (err) {
+      console.error('Error fetching benchmark data:', err)
+    } finally {
+      setLoadingBenchmark(false)
+    }
+  }
 
   const fetchAnalytics = async () => {
     try {
@@ -282,6 +319,13 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               </p>
             </div>
             <div className="flex items-center gap-3">
+              {!hasNoData && (
+                <BenchmarkToggle
+                  enabled={showBenchmark}
+                  onToggle={setShowBenchmark}
+                  isLoading={loadingBenchmark}
+                />
+              )}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg hover:bg-slate-700 transition-colors"
@@ -484,6 +528,42 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           )}
         </motion.div>
 
+        {/* Student Distribution Funnel */}
+        {analytics.students.byStage && analytics.students.byStage.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="glass-panel rounded-xl p-6 border border-slate-800 mb-8 flex justify-center items-center overflow-x-auto"
+          >
+            <div className="w-full flex justify-center">
+              <StudentDistributionFunnel
+                title="Student Distribution by Stage"
+                data={analytics.students.byStage.map((item) => ({
+                  key: item.stage,
+                  data: item.count,
+                }))}
+                primaryMetric={{
+                  label: 'Total Students',
+                  value: analytics.stats.totalStudents,
+                  change: '+12%',
+                  changeType: 'increase',
+                  comparisonText: `Compared to ${Math.round(analytics.stats.totalStudents / 1.12)} last month`,
+                }}
+                secondaryMetric={{
+                  label: 'In Workforce',
+                  value: analytics.students.byStage.find((s) => s.stage === 'Workforce')?.count || 0,
+                  change: '+8%',
+                  changeType: 'increase',
+                  comparisonText: 'Compared to last month',
+                }}
+                colorScheme={['#3b82f6']}
+                className="w-full"
+              />
+            </div>
+          </motion.div>
+        )}
+
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Location Map Card */}
@@ -608,7 +688,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="glass-panel rounded-xl p-6 border border-slate-800"
+          className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
         >
           <h2 className="text-xl font-light text-white mb-6 flex items-center gap-2 tracking-tight">
             <Award className="h-5 w-5 text-bidaaya-accent" />
@@ -647,6 +727,131 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
             <p className="text-slate-400 text-center py-8">No student data available</p>
           )}
         </motion.div>
+
+        {/* Age Distribution Charts */}
+        {analytics.students.byAgeGroup && analytics.students.byAgeGroup.length > 0 && (
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8 flex justify-center items-center overflow-x-auto"
+            >
+              <AgeDistributionFunnel
+                data={analytics.students.byAgeGroup}
+                totalStudents={analytics.stats.totalStudents}
+                benchmarkData={benchmarkData?.ageGroups}
+                showBenchmark={showBenchmark}
+                className="w-full"
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.95 }}
+              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+            >
+              <AgeDistributionBar
+                data={analytics.students.byAgeGroup}
+                benchmarkData={benchmarkData?.ageGroups}
+                showBenchmark={showBenchmark}
+              />
+            </motion.div>
+          </>
+        )}
+
+        {/* Year Group Distribution */}
+        {analytics.students.byYearGroup && analytics.students.byYearGroup.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            className="glass-panel rounded-xl p-6 border border-slate-800 mb-8 flex justify-center items-center overflow-x-auto"
+          >
+            <YearGroupFunnel
+              data={analytics.students.byYearGroup}
+              institutionType={analytics.institution.type}
+              totalStudents={analytics.stats.totalStudents}
+              benchmarkData={benchmarkData?.yearGroups}
+              showBenchmark={showBenchmark}
+              className="w-full"
+            />
+          </motion.div>
+        )}
+
+        {/* Course Analytics */}
+        {analytics.courses && (
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.05 }}
+              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+            >
+              <CourseDistributionChart
+                data={analytics.courses.distribution}
+                benchmarkData={benchmarkData?.courses?.distribution}
+                showBenchmark={showBenchmark}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1 }}
+              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+            >
+              <CourseSuccessRatesChart
+                data={analytics.courses.successRates}
+                benchmarkData={benchmarkData?.courses?.successRates}
+                showBenchmark={showBenchmark}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.15 }}
+              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+            >
+              <CourseInterviewRatesChart
+                data={analytics.courses.interviewRates}
+                benchmarkData={benchmarkData?.courses?.interviewRates}
+                showBenchmark={showBenchmark}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+              className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+            >
+              <CourseActivityChart
+                data={analytics.courses.activity}
+                benchmarkData={benchmarkData?.courses?.activity}
+                showBenchmark={showBenchmark}
+              />
+            </motion.div>
+          </>
+        )}
+
+        {/* Opportunity Distribution */}
+        {analytics.opportunities.byOpportunity && analytics.opportunities.byOpportunity.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.25 }}
+            className="glass-panel rounded-xl p-6 border border-slate-800 mb-8"
+          >
+            <OpportunityDistributionChart
+              data={analytics.opportunities.byOpportunity}
+              benchmarkData={benchmarkData?.opportunities}
+              showBenchmark={showBenchmark}
+            />
+          </motion.div>
+        )}
           </>
         )}
       </div>

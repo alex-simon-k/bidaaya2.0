@@ -123,7 +123,7 @@ export function StudentDistributionFunnel({
 
   return (
     <div
-      className={`flex flex-col justify-between pt-4 pb-4 bg-white dark:bg-black rounded-3xl shadow-[11px_21px_3px_rgba(0,0,0,0.06),14px_27px_7px_rgba(0,0,0,0.10),19px_38px_14px_rgba(0,0,0,0.13),27px_54px_27px_rgba(0,0,0,0.16),39px_78px_50px_rgba(0,0,0,0.20),55px_110px_86px_rgba(0,0,0,0.26)] w-[600px] h-[714px] overflow-hidden text-black dark:text-white transition-colors duration-300 ${className}`}
+      className={`flex flex-col justify-between pt-4 pb-4 bg-white dark:bg-black rounded-3xl shadow-[11px_21px_3px_rgba(0,0,0,0.06),14px_27px_7px_rgba(0,0,0,0.10),19px_38px_14px_rgba(0,0,0,0.13),27px_54px_27px_rgba(0,0,0,0.16),39px_78px_50px_rgba(0,0,0,0.20),55px_110px_86px_rgba(0,0,0,0.26)] w-full max-w-[600px] min-w-[400px] h-[714px] overflow-hidden text-black dark:text-white transition-colors duration-300 ${className}`}
     >
       <div className="flex justify-between items-center p-7 pt-6 pb-8">
         <h3 className="text-3xl text-left font-bold">{title}</h3>
@@ -144,6 +144,7 @@ export function StudentDistributionFunnel({
       <div className="h-[250px] w-full px-4">
         <FunnelChart
           id="studentDistributionFunnel"
+          width={550}
           height={250}
           data={validatedData}
           series={

@@ -72,6 +72,18 @@ export function generateMockInstitutionData(slug: string): InstitutionAnalytics 
         { id: '3', title: 'Data Analyst Position', company: 'Data Solutions', viewCount: 267, applicationCount: 54, category: 'Analytics' },
         { id: '4', title: 'Business Development Intern', company: 'Startup Hub', viewCount: 234, applicationCount: 43, category: 'Business' },
         { id: '5', title: 'Graphic Designer', company: 'Creative Studio', viewCount: 198, applicationCount: 38, category: 'Design' }
+      ],
+      byOpportunity: [
+        { opportunity: 'Software Engineering Intern - Tech Corp', count: 89 },
+        { opportunity: 'Marketing Assistant - Marketing Agency', count: 67 },
+        { opportunity: 'Data Analyst Position - Data Solutions', count: 54 },
+        { opportunity: 'Business Development Intern - Startup Hub', count: 43 },
+        { opportunity: 'Graphic Designer - Creative Studio', count: 38 },
+        { opportunity: 'Finance Analyst - Finance Group', count: 32 },
+        { opportunity: 'Product Manager - Product Co', count: 28 },
+        { opportunity: 'Content Writer - Media House', count: 25 },
+        { opportunity: 'HR Coordinator - HR Solutions', count: 21 },
+        { opportunity: 'Sales Representative - Sales Corp', count: 19 }
       ]
     },
     students: {
@@ -106,6 +118,34 @@ export function generateMockInstitutionData(slug: string): InstitutionAnalytics 
         { id: '8', name: 'Mariam Said', email: 'mariam@example.com', streak: 19, applications: 10 },
         { id: '9', name: 'Khalid Mohammed', email: 'khalid@example.com', streak: 16, applications: 9 },
         { id: '10', name: 'Noor Abdullah', email: 'noor@example.com', streak: 14, applications: 8 }
+      ],
+      byStage: [
+        { stage: 'Year 10', count: 450 },
+        { stage: 'Year 11', count: 380 },
+        { stage: 'Year 12', count: 320 },
+        { stage: 'Year 13', count: 280 },
+        { stage: 'First Year Uni', count: 220 },
+        { stage: 'Second Year Uni', count: 180 },
+        { stage: 'Third Year Uni', count: 150 },
+        { stage: 'Workforce', count: 120 }
+      ],
+      byAgeGroup: [
+        { ageGroup: '16-18', count: 234 },
+        { ageGroup: '19-21', count: 456 },
+        { ageGroup: '22-24', count: 389 },
+        { ageGroup: '25+', count: 168 }
+      ],
+      byYearGroup: institutionType === 'school' ? [
+        { yearGroup: 'Year 12', count: 320 },
+        { yearGroup: 'Year 13', count: 280 },
+        { yearGroup: 'Other', count: 647 }
+      ] : [
+        { yearGroup: 'University Year 1', count: 342 },
+        { yearGroup: 'University Year 2', count: 298 },
+        { yearGroup: 'University Year 3', count: 267 },
+        { yearGroup: 'University Year 4', count: 189 },
+        { yearGroup: 'Masters', count: 98 },
+        { yearGroup: 'Graduated', count: 53 }
       ]
     },
     skills: [
@@ -132,6 +172,60 @@ export function generateMockInstitutionData(slug: string): InstitutionAnalytics 
         date,
         count: Math.floor(Math.random() * 50) + 20 + Math.sin(index / 5) * 15
       }))
+    },
+    courses: {
+      distribution: institutionType === 'university' ? [
+        { course: 'Computer Science', count: 892 },
+        { course: 'Business Administration', count: 756 },
+        { course: 'Engineering', count: 634 },
+        { course: 'Marketing', count: 523 },
+        { course: 'Finance', count: 451 }
+      ] : [
+        { course: 'Mathematics', count: 456 },
+        { course: 'Science', count: 389 },
+        { course: 'English', count: 342 },
+        { course: 'Business Studies', count: 298 },
+        { course: 'Arts', count: 267 }
+      ],
+      successRates: institutionType === 'university' ? [
+        { course: 'Computer Science', rate: 18.5, total: 892, accepted: 165 },
+        { course: 'Engineering', rate: 16.2, total: 634, accepted: 103 },
+        { course: 'Business Administration', rate: 14.8, total: 756, accepted: 112 },
+        { course: 'Finance', rate: 13.5, total: 451, accepted: 61 },
+        { course: 'Marketing', rate: 12.3, total: 523, accepted: 64 }
+      ] : [
+        { course: 'Mathematics', rate: 15.2, total: 456, accepted: 69 },
+        { course: 'Science', rate: 14.1, total: 389, accepted: 55 },
+        { course: 'Business Studies', rate: 13.4, total: 298, accepted: 40 },
+        { course: 'English', rate: 12.8, total: 342, accepted: 44 },
+        { course: 'Arts', rate: 11.6, total: 267, accepted: 31 }
+      ],
+      interviewRates: institutionType === 'university' ? [
+        { course: 'Computer Science', rate: 42.3, total: 892, interviewed: 377 },
+        { course: 'Engineering', rate: 38.7, total: 634, interviewed: 245 },
+        { course: 'Business Administration', rate: 35.2, total: 756, interviewed: 266 },
+        { course: 'Finance', rate: 33.1, total: 451, interviewed: 149 },
+        { course: 'Marketing', rate: 31.5, total: 523, interviewed: 165 }
+      ] : [
+        { course: 'Mathematics', rate: 36.8, total: 456, interviewed: 168 },
+        { course: 'Science', rate: 34.2, total: 389, interviewed: 133 },
+        { course: 'Business Studies', rate: 32.9, total: 298, interviewed: 98 },
+        { course: 'English', rate: 31.6, total: 342, interviewed: 108 },
+        { course: 'Arts', rate: 29.2, total: 267, interviewed: 78 }
+      ],
+      activity: institutionType === 'university' ? [
+        { course: 'Computer Science', applications: 892 },
+        { course: 'Business Administration', applications: 756 },
+        { course: 'Engineering', applications: 634 },
+        { course: 'Marketing', applications: 523 },
+        { course: 'Finance', applications: 451 }
+      ] : [
+        { course: 'Mathematics', applications: 456 },
+        { course: 'Science', applications: 389 },
+        { course: 'English', applications: 342 },
+        { course: 'Business Studies', applications: 298 },
+        { course: 'Arts', applications: 267 }
+      ]
     },
     charts: {
       majorDistribution: institutionType === 'university' ? [
