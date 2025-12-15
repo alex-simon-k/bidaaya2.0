@@ -258,3 +258,170 @@ export function generateMockInstitutionData(slug: string): InstitutionAnalytics 
     }
   }
 }
+
+/**
+ * Generate mock benchmark analytics data
+ */
+export function generateMockBenchmarkData(excludeSlug?: string): InstitutionAnalytics['benchmark'] {
+  const STANDARD_UNIVERSITIES = [
+    'aud', 'aus', 'cud', 'hw', 'zu', 'ku', 'uaeu', 'au', 'uos', 'demo'
+  ]
+  
+  const benchmarkSlugs = excludeSlug 
+    ? STANDARD_UNIVERSITIES.filter(slug => slug !== excludeSlug.toLowerCase())
+    : STANDARD_UNIVERSITIES
+  
+  // Generate mock data for each university and aggregate
+  const allAgeGroups: Array<{ ageGroup: string; count: number }>[] = []
+  const allYearGroups: Array<{ yearGroup: string; count: number }>[] = []
+  const allCourseDistributions: Array<{ course: string; count: number }>[] = []
+  const allSuccessRates: Array<{ course: string; rate: number }>[] = []
+  const allInterviewRates: Array<{ course: string; rate: number }>[] = []
+  const allActivity: Array<{ course: string; applications: number }>[] = []
+  const allOpportunities: Array<{ opportunity: string; count: number }>[] = []
+  
+  benchmarkSlugs.forEach(slug => {
+    const mockData = generateMockInstitutionData(slug)
+    if (mockData.students.byAgeGroup) allAgeGroups.push(mockData.students.byAgeGroup)
+    if (mockData.students.byYearGroup) allYearGroups.push(mockData.students.byYearGroup)
+    if (mockData.courses?.distribution) allCourseDistributions.push(mockData.courses.distribution)
+    if (mockData.courses?.successRates) {
+      allSuccessRates.push(mockData.courses.successRates.map(c => ({ course: c.course, rate: c.rate })))
+    }
+    if (mockData.courses?.interviewRates) {
+      allInterviewRates.push(mockData.courses.interviewRates.map(c => ({ course: c.course, rate: c.rate })))
+    }
+    if (mockData.courses?.activity) allActivity.push(mockData.courses.activity)
+    if (mockData.opportunities.byOpportunity) allOpportunities.push(mockData.opportunities.byOpportunity)
+  })
+  
+  // Aggregate age groups
+  const ageGroupMap = new Map<string, number[]>()
+  allAgeGroups.forEach(groups => {
+    groups.forEach(item => {
+      if (!ageGroupMap.has(item.ageGroup)) {
+        ageGroupMap.set(item.ageGroup, [])
+      }
+      ageGroupMap.get(item.ageGroup)!.push(item.count)
+    })
+  })
+  const benchmarkAgeGroups = Array.from(ageGroupMap.entries())
+    .map(([ageGroup, counts]) => ({
+      ageGroup,
+      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
+    }))
+  
+  // Aggregate year groups
+  const yearGroupMap = new Map<string, number[]>()
+  allYearGroups.forEach(groups => {
+    groups.forEach(item => {
+      if (!yearGroupMap.has(item.yearGroup)) {
+        yearGroupMap.set(item.yearGroup, [])
+      }
+      yearGroupMap.get(item.yearGroup)!.push(item.count)
+    })
+  })
+  const benchmarkYearGroups = Array.from(yearGroupMap.entries())
+    .map(([yearGroup, counts]) => ({
+      yearGroup,
+      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
+    }))
+  
+  // Aggregate course distribution
+  const courseDistMap = new Map<string, number[]>()
+  allCourseDistributions.forEach(dist => {
+    dist.forEach(item => {
+      if (!courseDistMap.has(item.course)) {
+        courseDistMap.set(item.course, [])
+      }
+      courseDistMap.get(item.course)!.push(item.count)
+    })
+  })
+  const benchmarkCourseDistribution = Array.from(courseDistMap.entries())
+    .map(([course, counts]) => ({
+      course,
+      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
+    }))
+    .sort((a, b) => b.count - a.count)
+  
+  // Aggregate success rates
+  const successMap = new Map<string, number[]>()
+  allSuccessRates.forEach(rates => {
+    rates.forEach(item => {
+      if (!successMap.has(item.course)) {
+        successMap.set(item.course, [])
+      }
+      successMap.get(item.course)!.push(item.rate)
+    })
+  })
+  const benchmarkSuccessRates = Array.from(successMap.entries())
+    .map(([course, rates]) => ({
+      course,
+      rate: rates.reduce((a, b) => a + b, 0) / rates.length
+    }))
+    .sort((a, b) => b.rate - a.rate)
+  
+  // Aggregate interview rates
+  const interviewMap = new Map<string, number[]>()
+  allInterviewRates.forEach(rates => {
+    rates.forEach(item => {
+      if (!interviewMap.has(item.course)) {
+        interviewMap.set(item.course, [])
+      }
+      interviewMap.get(item.course)!.push(item.rate)
+    })
+  })
+  const benchmarkInterviewRates = Array.from(interviewMap.entries())
+    .map(([course, rates]) => ({
+      course,
+      rate: rates.reduce((a, b) => a + b, 0) / rates.length
+    }))
+    .sort((a, b) => b.rate - a.rate)
+  
+  // Aggregate activity
+  const activityMap = new Map<string, number[]>()
+  allActivity.forEach(activity => {
+    activity.forEach(item => {
+      if (!activityMap.has(item.course)) {
+        activityMap.set(item.course, [])
+      }
+      activityMap.get(item.course)!.push(item.applications)
+    })
+  })
+  const benchmarkActivity = Array.from(activityMap.entries())
+    .map(([course, applications]) => ({
+      course,
+      applications: Math.round(applications.reduce((a, b) => a + b, 0) / applications.length)
+    }))
+    .sort((a, b) => b.applications - a.applications)
+  
+  // Aggregate opportunities
+  const opportunityMap = new Map<string, number[]>()
+  allOpportunities.forEach(opps => {
+    opps.forEach(item => {
+      if (!opportunityMap.has(item.opportunity)) {
+        opportunityMap.set(item.opportunity, [])
+      }
+      opportunityMap.get(item.opportunity)!.push(item.count)
+    })
+  })
+  const benchmarkOpportunities = Array.from(opportunityMap.entries())
+    .map(([opportunity, counts]) => ({
+      opportunity,
+      count: Math.round(counts.reduce((a, b) => a + b, 0) / counts.length)
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20)
+  
+  return {
+    ageGroups: benchmarkAgeGroups,
+    yearGroups: benchmarkYearGroups,
+    courses: {
+      distribution: benchmarkCourseDistribution,
+      successRates: benchmarkSuccessRates,
+      interviewRates: benchmarkInterviewRates,
+      activity: benchmarkActivity
+    },
+    opportunities: benchmarkOpportunities
+  }
+}

@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBenchmarkAnalytics } from '@/lib/institution-analytics'
+import { generateMockBenchmarkData } from '@/lib/mock-institution-data'
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const excludeSlug = searchParams.get('excludeSlug') || undefined
 
-    const benchmarkData = await getBenchmarkAnalytics(excludeSlug)
+    // Use mock data for demo purposes (same as dashboard)
+    const USE_MOCK_DATA = true
+
+    let benchmarkData
+    if (USE_MOCK_DATA) {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300))
+      benchmarkData = generateMockBenchmarkData(excludeSlug)
+    } else {
+      benchmarkData = await getBenchmarkAnalytics(excludeSlug)
+    }
 
     if (!benchmarkData) {
       return NextResponse.json(

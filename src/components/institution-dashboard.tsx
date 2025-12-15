@@ -85,7 +85,7 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
     } else {
       setBenchmarkData(null)
     }
-  }, [showBenchmark, slug])
+  }, [showBenchmark, analytics, slug])
 
   const fetchBenchmarkData = async () => {
     try {
@@ -94,7 +94,11 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
       
       if (response.ok) {
         const data = await response.json()
+        console.log('Benchmark data fetched:', data)
         setBenchmarkData(data)
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to fetch benchmark data:', response.status, errorData)
       }
     } catch (err) {
       console.error('Error fetching benchmark data:', err)
