@@ -86,20 +86,22 @@ export function CompactTopStudents({
                   </div>
 
                   {/* Right: Action Buttons */}
-                  <div className="flex flex-col gap-1 flex-shrink-0">
+                  <div className="flex flex-col gap-1.5 flex-shrink-0 items-end">
                     <button
                       onClick={() => handleSendEncouragement(student.id, student.name || 'Student')}
-                      className="flex items-center justify-center w-7 h-7 text-[10px] bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded transition-colors border border-blue-500/30"
+                      className="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 min-w-[60px] bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded transition-colors border border-blue-500/30 group"
                       title="Send Encouragement"
                     >
                       <MessageSquare className="w-3 h-3" />
+                      <span className="text-[9px] font-medium text-blue-400 group-hover:text-blue-300">Well Done</span>
                     </button>
                     <button
                       onClick={() => handleSponsor(student.id, student.name || 'Student')}
-                      className="flex items-center justify-center w-7 h-7 text-[10px] bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded transition-colors border border-purple-500/30"
+                      className="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 min-w-[60px] bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded transition-colors border border-purple-500/30 group"
                       title="Sponsor Student"
                     >
                       <Heart className="w-3 h-3" />
+                      <span className="text-[9px] font-medium text-purple-400 group-hover:text-purple-300">Sponsor</span>
                     </button>
                   </div>
                 </div>

@@ -123,7 +123,7 @@ export function StudentDistributionFunnel({
 
   return (
     <div
-      className={`flex flex-col justify-between pt-3 pb-3 bg-white dark:bg-black rounded-xl shadow-lg w-full h-auto overflow-hidden text-black dark:text-white transition-colors duration-300 ${className}`}
+      className={`flex flex-col justify-between pt-3 pb-3 bg-transparent rounded-xl w-full h-auto overflow-hidden text-white transition-colors duration-300 ${className}`}
     >
       <div className="flex justify-between items-center p-4 pb-3">
         <h3 className="text-lg text-left font-semibold">{title}</h3>
@@ -131,7 +131,7 @@ export function StudentDistributionFunnel({
           aria-label="Select time range"
           value={selectedTimeRange}
           onChange={handleTimeRangeChange}
-          className="p-2 text-xs rounded-md bg-gray-100 text-gray-800 dark:bg-[#262631] dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {timeRangeOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -162,7 +162,7 @@ export function StudentDistributionFunnel({
               axis={
                 <FunnelAxis
                   label={
-                    <FunnelAxisLabel className="font-bold text-xs text-gray-600 dark:text-gray-400 transition-colors duration-300" />
+                    <FunnelAxisLabel className="font-semibold text-xs text-slate-300 transition-colors duration-300" />
                   }
                   line={<FunnelAxisLine strokeColor={funnelAxisLineColor} />}
                 />
@@ -176,31 +176,31 @@ export function StudentDistributionFunnel({
         <div className="flex w-full pl-4 pr-4 justify-between pb-2 pt-2">
           {primaryMetric && (
             <div className="flex flex-col gap-1 w-1/2">
-              <span className="text-sm text-gray-500 dark:text-[#9A9AAF]">{primaryMetric.label}</span>
+              <span className="text-sm text-slate-400 font-medium uppercase tracking-wide">{primaryMetric.label}</span>
               <div className="flex items-center gap-2">
                 <CountUp
-                  className="font-mono text-2xl font-semibold"
+                  className="font-mono text-2xl font-bold text-white"
                   start={0}
                   end={primaryMetric.value}
                   duration={2.5}
                 />
                 <div
-                  className={`flex bg-[rgb(232,64,69)]/40 p-1 pl-1.5 pr-1.5 items-center rounded-full text-xs ${
+                  className={`flex p-1 pl-1.5 pr-1.5 items-center rounded-full text-xs ${
                     primaryMetric.changeType === 'increase'
-                      ? 'text-[#F08083]'
-                      : 'bg-[rgb(64,229,209)]/40 text-[#40E5D1]'
+                      ? 'bg-[rgb(16,185,129)]/40 text-[#10b981]'
+                      : 'bg-[rgb(239,68,68)]/40 text-[#ef4444]'
                   }`}
                 >
                   {primaryMetric.changeType === 'increase' ? (
-                    <UpArrowIcon className="w-3 h-3" />
+                    <UpArrowIcon className="w-3 h-3" strokeColor="#10b981" />
                   ) : (
-                    <DownArrowIcon className="w-3 h-3" />
+                    <DownArrowIcon className="w-3 h-3" strokeColor="#ef4444" />
                   )}
                   {primaryMetric.change.replace('-', '').replace('+', '')}
                 </div>
               </div>
               {primaryMetric.comparisonText && (
-                <span className="text-gray-500 dark:text-[#9A9AAF] text-xs transition-colors duration-300">
+                <span className="text-slate-400 text-xs transition-colors duration-300">
                   {primaryMetric.comparisonText}
                 </span>
               )}
@@ -208,10 +208,10 @@ export function StudentDistributionFunnel({
           )}
           {secondaryMetric && (
             <div className="flex flex-col gap-1 w-1/2">
-              <span className="text-sm text-gray-500 dark:text-[#9A9AAF]">{secondaryMetric.label}</span>
+              <span className="text-sm text-slate-400 font-medium uppercase tracking-wide">{secondaryMetric.label}</span>
               <div className="flex items-center gap-2">
                 <CountUp
-                  className="font-mono text-2xl font-semibold"
+                  className="font-mono text-2xl font-bold text-white"
                   start={0}
                   end={secondaryMetric.value}
                   duration={2.5}
@@ -219,20 +219,20 @@ export function StudentDistributionFunnel({
                 <div
                   className={`flex p-1 pl-1.5 pr-1.5 items-center rounded-full text-xs ${
                     secondaryMetric.changeType === 'increase'
-                      ? 'bg-[rgb(232,64,69)]/40 text-[#F08083]'
-                      : 'bg-[rgb(64,229,209)]/40 text-[#40E5D1]'
+                      ? 'bg-[rgb(16,185,129)]/40 text-[#10b981]'
+                      : 'bg-[rgb(239,68,68)]/40 text-[#ef4444]'
                   }`}
                 >
                   {secondaryMetric.changeType === 'increase' ? (
-                    <UpArrowIcon className="w-3 h-3" />
+                    <UpArrowIcon className="w-3 h-3" strokeColor="#10b981" />
                   ) : (
-                    <DownArrowIcon className="w-3 h-3" />
+                    <DownArrowIcon className="w-3 h-3" strokeColor="#ef4444" />
                   )}
                   {secondaryMetric.change.replace('-', '').replace('+', '')}
                 </div>
               </div>
               {secondaryMetric.comparisonText && (
-                <span className="text-gray-500 dark:text-[#9A9AAF] text-xs transition-colors duration-300">
+                <span className="text-slate-400 text-xs transition-colors duration-300">
                   {secondaryMetric.comparisonText}
                 </span>
               )}
@@ -242,7 +242,7 @@ export function StudentDistributionFunnel({
       )}
 
       {metrics.length > 0 && (
-        <div className="flex flex-col pl-4 pr-4 font-mono divide-y divide-gray-200 dark:divide-[#262631] transition-colors duration-300">
+        <div className="flex flex-col pl-4 pr-4 divide-y divide-slate-700 transition-colors duration-300">
           {metrics.map((item, index) => (
             <motion.div
               key={item.label}
@@ -251,24 +251,24 @@ export function StudentDistributionFunnel({
               transition={{ delay: index * 0.05 }}
               className="flex w-full pb-2 pt-2 items-center gap-2"
             >
-              <div className="flex flex-row gap-2 items-center text-sm w-1/2 text-gray-500 dark:text-[#9A9AAF] transition-colors duration-300">
+              <div className="flex flex-row gap-2 items-center text-sm w-1/2 text-slate-400 font-medium uppercase tracking-wide transition-colors duration-300">
                 <span className="truncate" title={item.label}>
                   {item.label}
                 </span>
               </div>
               <div className="flex gap-2 w-1/2 justify-end items-center">
-                <span className="font-semibold text-base">{item.value}</span>
+                <span className="font-mono font-bold text-lg text-white">{item.value}</span>
                 <div
                   className={`flex p-1 pl-1.5 pr-1.5 items-center rounded-full text-xs ${
                     item.changeType === 'increase'
-                      ? 'bg-[rgb(232,64,69)]/40 text-[#F08083]'
-                      : 'bg-[rgb(64,229,209)]/40 text-[#40E5D1]'
+                      ? 'bg-[rgb(16,185,129)]/40 text-[#10b981]'
+                      : 'bg-[rgb(239,68,68)]/40 text-[#ef4444]'
                   }`}
                 >
                   {item.changeType === 'increase' ? (
-                    <UpArrowIcon className="w-3 h-3" />
+                    <UpArrowIcon className="w-3 h-3" strokeColor="#10b981" />
                   ) : (
-                    <DownArrowIcon className="w-3 h-3" />
+                    <DownArrowIcon className="w-3 h-3" strokeColor="#ef4444" />
                   )}
                   {item.change.replace('-', '').replace('+', '')}
                 </div>
