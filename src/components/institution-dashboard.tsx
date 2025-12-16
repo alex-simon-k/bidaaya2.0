@@ -27,7 +27,9 @@ import {
   Building2,
   Activity,
   Download,
-  Filter
+  Filter,
+  BarChart3,
+  Globe
 } from 'lucide-react'
 import { InstitutionAnalytics } from '@/lib/institution-analytics'
 import { generateMockInstitutionData } from '@/lib/mock-institution-data'
@@ -45,6 +47,7 @@ import { BenchmarkToggle } from '@/components/ui/benchmark-toggle'
 import { CompactStatsMonitor } from '@/components/ui/compact-stats-monitor'
 import { ApplicationSuccessFunnel } from '@/components/ui/application-success-funnel'
 import { CompactTopStudents } from '@/components/ui/compact-top-students'
+import { AlumniHub } from '@/components/alumni-hub'
 
 interface InstitutionDashboardProps {
   slug: string
@@ -67,6 +70,7 @@ function getCoordinatesForRegion(region: string): string {
 }
 
 export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProps) {
+  const [activeTab, setActiveTab] = useState<'analytics' | 'alumni'>('analytics')
   const [analytics, setAnalytics] = useState<InstitutionAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -333,8 +337,46 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="border-b border-slate-800 bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'analytics'
+                  ? 'border-bidaaya-accent text-bidaaya-accent'
+                  : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600'
+              }`}
+            >
+              <BarChart3 className="inline-block w-4 h-4 mr-2" />
+              Analytics Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('alumni')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'alumni'
+                  ? 'border-bidaaya-accent text-bidaaya-accent'
+                  : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600'
+              }`}
+            >
+              <Globe className="inline-block w-4 h-4 mr-2" />
+              Alumni Hub
+            </button>
+          </nav>
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Render Alumni Hub if selected */}
+        {activeTab === 'alumni' && (
+          <AlumniHub institutionSlug={slug} />
+        )}
+
+        {/* Render Analytics Dashboard if selected */}
+        {activeTab === 'analytics' && (
+          <>
         {/* Empty State */}
         {hasNoData && (
           <motion.div
@@ -770,6 +812,8 @@ export function InstitutionDashboard({ slug, logoUrl }: InstitutionDashboardProp
               showBenchmark={showBenchmark}
             />
           </motion.div>
+        )}
+          </>
         )}
           </>
         )}
